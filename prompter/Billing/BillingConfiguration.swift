@@ -1,0 +1,32 @@
+import Foundation
+
+/// Where the **public** RevenueCat SDK key comes from, and what happens when it is absent (M5.13).
+///
+/// Only the *public* client key belongs in the app. RevenueCat secret keys and Apple private
+/// credentials must never be embedded or committed — they live in the RevenueCat dashboard and App
+/// Store Connect respectively.
+///
+/// The key is read from the `RevenueCatPublicKey` Info.plist entry, which is fed by a build setting
+/// so it can differ per configuration without living in source.
+///
+/// **Absent configuration is a first-class state, not a crash and not free Premium.** With no key the
+/// app runs fully: scripts, editing, the demo and the free daily allowance all work, and Premium is
+/// simply unpurchasable. That is what makes it safe to ship this code before the dashboard exists.
+enum BillingConfiguration {
+    /// Entitlement identifier agreed in `BUILD_SPEC.md`. Reconciled against the dashboard before
+    /// sandbox validation — see `docs/RELEASE_READINESS.md`.
+    static let entitlementIdentifier = "premium"
+
+    static var publicAPIKey: String? {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "RevenueCatPublicKey") as? String else {
+            return nil
+        }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        // An unsubstituted build setting (`$(REVENUECAT_PUBLIC_KEY)`) or an empty string both mean
+        // "not configured" rather than a key that happens to be invalid.
+        guard !trimmed.isEmpty, !trimmed.hasPrefix("$(") else { return nil }
+        return trimmed
+    }
+
+    static var isConfigured: Bool { publicAPIKey != nil }
+}

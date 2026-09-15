@@ -1,0 +1,36 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : { "_askToBuyEnabled" : false },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [],
+      "name" : "Prompter Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "displayPrice" : "6.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21500002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited reading time.",
+              "displayName" : "Prompter Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "REPLACE_WITH_REGISTERED_PRODUCT_ID",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Prompter Premium Monthly",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : { "major" : 3, "minor" : 0 }
+}
