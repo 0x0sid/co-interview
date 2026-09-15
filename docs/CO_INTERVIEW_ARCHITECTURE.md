@@ -1,5 +1,13 @@
 # Co-Interview — inherited architecture
 
+> **Fork-day survey, kept as history (note added 2026-09-16).** Its observations and defect list remain
+> accurate for the code. Its reuse verdicts ("probably wrong for an interview app", "decide the matching
+> question first") predate the confirmed copilot direction, which preserves teleprompter scrolling,
+> matching and spoken-word fading. Current mapping and proposals are in
+> [`CO_INTERVIEW_COPILOT_ARCHITECTURE.md`](CO_INTERVIEW_COPILOT_ARCHITECTURE.md). The `DeviceLogAuditTests`
+> row below describes the private clone; that test was removed from the public snapshot. The text below is
+> otherwise unchanged from the fork.
+
 Everything under **Observations** was read from the source at fork time. Everything under
 **Proposals** is a suggestion and is labelled as such.
 

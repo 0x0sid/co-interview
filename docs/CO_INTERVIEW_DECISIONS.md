@@ -97,3 +97,64 @@ while this repository carries Prompter's full 89-commit history. See the publica
 **No credentials would be exposed.** The material that warrants a decision is the device transcripts,
 the screen recordings, and the personal identifiers — all of which are retained in history and cannot
 be removed by deleting files in a new commit.
+
+
+## 2026-09-16 — Interview copilot direction confirmed; planning track opened
+
+### Confirmed by the owner
+
+Co-Interview becomes an **interview copilot used on an iPhone**. Confirmed requirements, recorded in
+full (C1–C13) in [`CO_INTERVIEW_COPILOT_BRIEF.md`](CO_INTERVIEW_COPILOT_BRIEF.md) §1:
+
+- preserve normal script reading, voice-following scrolling and spoken-word styling;
+- listen to available interview speech and keep conversation context, including while the user reads;
+- detect questions and requests that call for an answer, and generate suggested answers;
+- present answers in the existing teleprompter reading experience, for successive and follow-up questions;
+- swipe left/right between question-and-answer cards;
+- organize preparation around **projects** with user-supplied documents that are processed so
+  suggestions can use them;
+- support interviews across subjects, not only job or software interviews;
+- the interview happens "on phone" — this confirms the **device only**, not the audio route.
+
+**Consequences for earlier records.** This supersedes the fork-day statement that no interview
+functionality is approved, and the fork-day "Inherited components pending a product decision": the
+teleprompter scrolling, script matching and spoken-word fading are now intended for reuse.
+`Billing/`, Prompter's pricing, subscriptions, daily allowance and release milestones remain **not**
+Co-Interview requirements.
+
+### Not decided — recommendations only, labelled as such
+
+Everything in the copilot architecture, implementation plan and open questions is a **proposal**. In
+particular, these are **unapproved recommendations**:
+
+- *Recommendation:* first-release audio route is acoustic capture only (in person, or another device on
+  speaker). Same-phone call capture is **not** proposed: no documented iOS route exists (Q1).
+- *Recommendation:* on-device speech recognition, text-only cloud answer generation through an
+  app-owned backend relay; OpenAI models evaluated from current documentation (Q2, Q3).
+- *Recommendation:* small-context grounding over processed documents within a project budget;
+  retrieval later (architecture §7.3).
+- *Recommendation:* first-release formats TXT, Markdown, PDF with text layer, DOCX conditionally;
+  proposed limits (Q6).
+- *Recommendation:* no audio or transcript persistence; saved sessions hold questions, answer versions
+  and sources (Q5).
+- *Recommendation:* card, versioning and reading rules in the brief §4.4.
+- *Recommendation:* first implementation increment is a debug-only device spike measuring acoustic
+  capture and speech/reading interference.
+
+### Documentation changes in this round
+
+- New: `CO_INTERVIEW_COPILOT_BRIEF.md`, `CO_INTERVIEW_COPILOT_ARCHITECTURE.md`,
+  `CO_INTERVIEW_COPILOT_IMPLEMENTATION_PLAN.md`, `CO_INTERVIEW_COPILOT_OPEN_QUESTIONS.md`.
+- `CO_INTERVIEW_START_HERE.md`: copilot planning track linked; obsolete checkout path (`~/Desktop/co-interview`
+  → `~/Desktop/co-interview-public`), first-commit description and remote status corrected.
+- `CO_INTERVIEW_DEVELOPMENT.md`: checkout path, public-snapshot test baseline (113 reported; capture-derived
+  suites removed) and remote status corrected; the fork-point baseline is kept, labelled historical.
+- `CO_INTERVIEW_PRODUCT_BRIEF.md`, `CO_INTERVIEW_ARCHITECTURE.md`: a dated provenance note at the top;
+  bodies unchanged.
+- The 2026-09-15 entries above are left as written. Their remote status ("nothing pushed") and history
+  description describe the private clone at that time; the public snapshot has since been published
+  with fresh history.
+- Inherited Prompter documents are unchanged and remain historical references.
+
+No code, model, store, dependency, speech behaviour, billing or service was changed. Prompter is
+untouched.

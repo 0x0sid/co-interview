@@ -9,7 +9,7 @@
 ## Build and test
 
 ```bash
-cd ~/Desktop/co-interview
+cd ~/Desktop/co-interview-public
 
 # Build
 xcodebuild build -project co-interview.xcodeproj -scheme Co-Interview \
@@ -33,12 +33,16 @@ xcrun xcresulttool get test-results summary --path /tmp/ci.xcresult
 
 ### Known inherited test failures
 
-`DeviceLogAuditTests/auditEveryCapturedDeviceSession()` **fails** — three captured utterances where
-Prompter's cursor lost a genuinely reading user. It was failing before the fork and is unrelated to
-Co-Interview. `SpokenTokenMarkingTests/restartClearsTheSpokenSet()` is **intermittent**; it passes in
-isolation and the cause is unproven.
+**Public snapshot (`32a583c`, corrected 2026-09-16):** the suite reportedly passes **113 tests**
+(`prompterTests/` declares 113 `@Test` functions; not re-run in the planning round — re-establish with a
+clean run and `xcresulttool` before relying on it). `DeviceLogAuditTests` was **removed** for
+publication along with 14 other capture-derived test files, so the three **LOST** cursor-loss cases are
+still unresolved but **no longer covered by any test here**. `SpokenTokenMarkingTests/restartClearsTheSpokenSet()`
+remains **intermittent**; it passes in isolation and the cause is unproven. See
+`CO_INTERVIEW_SNAPSHOT_NOTICE.md`.
 
-Baseline at the fork point (Prompter `57e46e5`): **170 collected · 169 passed · 1 failed · 0 skipped**.
+*Historical, private clone only:* at the fork point (Prompter `57e46e5`) the suite was **170 collected ·
+169 passed · 1 failed · 0 skipped**, the failure being `DeviceLogAuditTests/auditEveryCapturedDeviceSession()`.
 
 ### Simulator troubleshooting
 
@@ -57,12 +61,11 @@ failure.
 
 ## Remote
 
-`origin` → `git@github.com:0x0sid/co-interview.git` (public, currently **empty**, **nothing pushed**).
-Prompter's remote was removed at the fork, so pushing from here cannot reach Prompter's repository.
-
-**Before the first push**, read the publication assessment in `CO_INTERVIEW_DECISIONS.md`: this
-repository retains Prompter's full history, which includes real device transcripts and screen
-recordings.
+`origin` → `git@github.com:0x0sid/co-interview.git` — public. **Corrected 2026-09-16:** the sanitized
+snapshot is published; `git ls-remote` shows `main` at `32a583c`. This repository has fresh history and
+does **not** contain Prompter's development history, device transcripts or screen recordings — those
+remain only in the private clone `~/Desktop/co-interview`, which must never be pushed. Prompter's remote
+was removed at the fork, so pushing from here cannot reach Prompter's repository. Do not force-push.
 
 ## Dependencies
 
@@ -85,6 +88,6 @@ rather than leaving it dormant.
 
 - **`docs/CO_INTERVIEW_START_HERE.md`** — the entry point.
 - Everything else under `docs/` prefixed `CO_INTERVIEW_` is current.
-- All other `docs/` files, plus `AGENT_PROGRESS.md`, `DEVICE_TEST.md` and `M4_DEVICE_TEST.md`, are
-  **inherited Prompter history**. They describe Prompter's roadmap and release criteria, which are
+- All other `docs/` files are **inherited Prompter history** (`AGENT_PROGRESS.md`, `DEVICE_TEST.md` and
+  `M4_DEVICE_TEST.md` exist only in the private clone; they were removed from this public snapshot). They describe Prompter's roadmap and release criteria, which are
   **not** Co-Interview's.

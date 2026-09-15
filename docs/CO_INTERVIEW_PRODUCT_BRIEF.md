@@ -1,5 +1,11 @@
 # Co-Interview — product brief
 
+> **Fork-day document, kept as history (note added 2026-09-16).** The owner has since confirmed the
+> interview-copilot direction. Current product intent is in
+> [`CO_INTERVIEW_COPILOT_BRIEF.md`](CO_INTERVIEW_COPILOT_BRIEF.md) and unresolved decisions in
+> [`CO_INTERVIEW_COPILOT_OPEN_QUESTIONS.md`](CO_INTERVIEW_COPILOT_OPEN_QUESTIONS.md). The text below is
+> unchanged from the fork.
+
 ## Confirmed
 
 Only these four things are decided. Everything else in this document is a question.
