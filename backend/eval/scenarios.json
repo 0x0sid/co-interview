@@ -1,0 +1,209 @@
+{
+  "note": "Synthetic evaluation scenarios for the copilot pipeline. Entirely fictional: no real person, organisation or captured speech. Mirrors prompter/Copilot/SyntheticInterview.swift and SyntheticProjectFixture.swift — keep the two in step.",
+  "projects": {
+    "fixture-transport-en": {
+      "name": "Northbridge transport programme (fixture)",
+      "language": "en",
+      "instructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "passages": [
+        {
+          "id": "cv#1",
+          "documentTitle": "Summary of experience (fixture)",
+          "documentVersion": "2026-08-14",
+          "locator": "§ Roles",
+          "text": "Led the Eastgate corridor upgrade for four years: 14 kilometres of bus lane, a team of nine, and a capital budget of 22 million. Before that, three years as service planner for the regional operator."
+        },
+        {
+          "id": "cv#2",
+          "documentTitle": "Summary of experience (fixture)",
+          "documentVersion": "2026-08-14",
+          "locator": "§ Outcomes",
+          "text": "On Eastgate, average journey time fell by 18 per cent and on-time departures rose from 71 to 89 per cent over two years. Complaints about crowding fell by a third after the timetable rewrite in the second year."
+        },
+        {
+          "id": "brief#1",
+          "documentTitle": "Northbridge programme brief (fixture)",
+          "documentVersion": "2026-09-01",
+          "locator": "p. 1",
+          "text": "The Northbridge corridor carries 40,000 passenger journeys a day. The programme must deliver signal priority at 23 junctions and a new interchange at Mill Street by the end of the second year, within a capital envelope of 31 million."
+        },
+        {
+          "id": "brief#2",
+          "documentTitle": "Northbridge programme brief (fixture)",
+          "documentVersion": "2026-09-01",
+          "locator": "p. 4",
+          "text": "Known risks: utility diversions under Mill Street, a contested compulsory purchase of two frontages, and a depot power upgrade that the operator has not yet scheduled. The board meets monthly and expects a single-page risk note each cycle."
+        },
+        {
+          "id": "notes#1",
+          "documentTitle": "Stakeholder notes (fixture)",
+          "documentVersion": "2026-09-10",
+          "locator": "§ Meetings",
+          "text": "The retailers' association objects to loading restrictions on Mill Street. The transport committee chair has asked for evening service frequency to be protected in any timetable change."
+        }
+      ]
+    },
+    "fixture-hopital-fr": {
+      "name": "Revue du service de cardiologie (fixture)",
+      "language": "fr",
+      "instructions": "Je passe un entretien devant le comité de revue du service de cardiologie. Réponds à la première personne, dans un registre parlé et sobre, en privilégiant les chiffres de mes documents. Si une question demande un détail absent des documents, dis-le au lieu de l'inventer.",
+      "passages": [
+        {
+          "id": "rapport#1",
+          "documentTitle": "Rapport d'activité (fixture)",
+          "documentVersion": "2026-07-30",
+          "locator": "p. 2",
+          "text": "Le service a pris en charge 3 200 patients l'an dernier, dont 460 en urgence. Le délai médian avant consultation est passé de 34 à 21 jours après la réorganisation des plages horaires."
+        },
+        {
+          "id": "rapport#2",
+          "documentTitle": "Rapport d'activité (fixture)",
+          "documentVersion": "2026-07-30",
+          "locator": "p. 5",
+          "text": "Deux postes d'infirmier restent vacants depuis neuf mois. Le taux d'occupation des lits atteint 94 pour cent en hiver, contre 81 pour cent le reste de l'année."
+        },
+        {
+          "id": "protocole#1",
+          "documentTitle": "Protocole de suivi (fixture)",
+          "documentVersion": "2026-08-22",
+          "locator": "§ 3",
+          "text": "Le protocole de suivi post-opératoire prévoit un appel à 48 heures, une consultation à trois semaines et un contrôle à six mois. L'observance mesurée sur l'appel à 48 heures est de 88 pour cent."
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "en-short-direct",
+      "project": "fixture-transport-en",
+      "kind": "short direct question",
+      "speech": "How many journeys a day does the corridor carry?",
+      "expect": "new_question",
+      "expectSources": ["brief#1"],
+      "mustMention": ["40,000"]
+    },
+    {
+      "id": "en-request-no-question-mark",
+      "project": "fixture-transport-en",
+      "kind": "request without punctuation",
+      "speech": "Tell me about the corridor you ran before this one",
+      "expect": "new_question",
+      "expectSources": ["cv#1"]
+    },
+    {
+      "id": "en-multi-sentence",
+      "project": "fixture-transport-en",
+      "kind": "multi-sentence question",
+      "speech": "I want to understand the risks. What worries you most about Mill Street?",
+      "expect": "new_question",
+      "expectSources": ["brief#2"]
+    },
+    {
+      "id": "en-followup-reusing-answer-words",
+      "project": "fixture-transport-en",
+      "kind": "follow-up reusing answer vocabulary",
+      "speech": "And what about the depot power upgrade you just mentioned?",
+      "activeAnswerText": "The main risks are utility diversions under Mill Street, a contested compulsory purchase, and a depot power upgrade the operator has not scheduled yet.",
+      "expect": "new_question",
+      "expectSources": ["brief#2"]
+    },
+    {
+      "id": "en-correction",
+      "project": "fixture-transport-en",
+      "kind": "correction of the previous question",
+      "speech": "Sorry, I meant the utility diversions, not the depot.",
+      "knownQuestions": [{ "id": "11111111-1111-1111-1111-111111111111", "text": "What about the depot power upgrade?" }],
+      "expect": "continuation"
+    },
+    {
+      "id": "en-user-reading-aloud",
+      "project": "fixture-transport-en",
+      "kind": "user reading a suggestion that contains a question",
+      "speech": "So what did that achieve? On Eastgate, average journey time fell by eighteen per cent and punctuality rose from seventy one to eighty nine per cent.",
+      "activeAnswerText": "So what did that achieve? On Eastgate, average journey time fell by eighteen per cent and punctuality rose from seventy one to eighty nine per cent.",
+      "expect": "none"
+    },
+    {
+      "id": "en-backchannel",
+      "project": "fixture-transport-en",
+      "kind": "backchannel, not a question",
+      "speech": "Right. Understood. Good.",
+      "expect": "none"
+    },
+    {
+      "id": "en-incomplete",
+      "project": "fixture-transport-en",
+      "kind": "question still being asked",
+      "speech": "And could you tell me a bit about how you",
+      "expect": "incomplete"
+    },
+    {
+      "id": "en-overlapping-speech",
+      "project": "fixture-transport-en",
+      "kind": "overlapping speech, question embedded",
+      "speech": "yes exactly and so what I wanted to ask sorry go on no please what is your timetable for signal priority",
+      "expect": "new_question",
+      "expectSources": ["brief#1"]
+    },
+    {
+      "id": "en-rapid-second",
+      "project": "fixture-transport-en",
+      "kind": "second of two rapid questions",
+      "speech": "And who signs off the risk note each month?",
+      "knownQuestions": [{ "id": "22222222-2222-2222-2222-222222222222", "text": "What is your timetable for signal priority?" }],
+      "expect": "new_question",
+      "expectSources": ["brief#2"]
+    },
+    {
+      "id": "en-unsupported",
+      "project": "fixture-transport-en",
+      "kind": "no supporting document information",
+      "speech": "Explain how the pension scheme transfer would work for the team.",
+      "expect": "new_question",
+      "expectSources": [],
+      "expectHonestGap": true
+    },
+    {
+      "id": "fr-request",
+      "project": "fixture-hopital-fr",
+      "kind": "request without question mark (French)",
+      "speech": "Parlez-moi de l'activité du service l'an dernier.",
+      "expect": "new_question",
+      "expectSources": ["rapport#1"],
+      "mustMention": ["3 200", "3200"]
+    },
+    {
+      "id": "fr-multi-sentence",
+      "project": "fixture-hopital-fr",
+      "kind": "multi-sentence question (French)",
+      "speech": "Je voudrais comprendre les délais. Comment ont-ils évolué après la réorganisation ?",
+      "expect": "new_question",
+      "expectSources": ["rapport#1"]
+    },
+    {
+      "id": "fr-correction",
+      "project": "fixture-hopital-fr",
+      "kind": "correction (French)",
+      "speech": "En fait, je pensais au taux d'occupation, pas aux postes vacants.",
+      "knownQuestions": [{ "id": "33333333-3333-3333-3333-333333333333", "text": "Où en sont les postes vacants ?" }],
+      "expect": "continuation"
+    },
+    {
+      "id": "fr-document-fact",
+      "project": "fixture-hopital-fr",
+      "kind": "document-specific fact (French)",
+      "speech": "Expliquez le protocole de suivi après l'opération.",
+      "expect": "new_question",
+      "expectSources": ["protocole#1"]
+    },
+    {
+      "id": "fr-unsupported",
+      "project": "fixture-hopital-fr",
+      "kind": "no supporting document information (French)",
+      "speech": "Expliquez comment le budget d'investissement est voté par la région.",
+      "expect": "new_question",
+      "expectSources": [],
+      "expectHonestGap": true
+    }
+  ]
+}

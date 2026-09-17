@@ -35,8 +35,15 @@ These carry forward the repository's hard-won safeguards and are **not relaxed**
 
 ## Order and dependencies
 
+> **Amended 2026-09-16.** The owner directed an earlier, bounded **pipeline prototype** (Increment 0
+> below) to measure continuous listening and low-latency, document-grounded generation, using the
+> selected API pipeline in architecture §8.2.1. It runs ahead of Increments 1–8, which are unchanged.
+> Increment 0 does not include file import, persistence, billing, deployment or submission, and its
+> results are recorded in [`CO_INTERVIEW_AI_PIPELINE.md`](CO_INTERVIEW_AI_PIPELINE.md).
+
 | # | Increment | Depends on increments | Blocked by decisions |
 |---|---|---|---|
+| 0 | **Continuous-listening / generation pipeline prototype** (owner-directed) | — | none to build; real-API measurement needs Q3 credentials |
 | 1 | Audio and alignment feasibility spike | — | Q1, Q7 |
 | 2 | Reader extraction, no behaviour change | — | — |
 | 3 | Question cards and navigation, synthetic events | 2 | — |
@@ -54,6 +61,34 @@ core of the confirmed UX, testable with no AI at all. Grounding quality is measu
 projects (6) before live wiring (7), so live failures can be attributed to detection or audio rather than
 to generation. Increments 1 and 2 are independent and could be reordered if the owner prefers; 2 does
 not depend on Q1.
+
+---
+
+## Increment 0 — Continuous-listening and generation pipeline prototype *(owner-directed)*
+
+**Objective.** Build and measure the end-to-end pipeline — continuous on-device transcription →
+question detection (`gpt-5.4-nano`) → parallel document retrieval over a synthetic project →
+streamed answer (`gpt-5.4-mini`) → stable reading text in cards — behind a development-only entry
+point, with a minimal authenticated backend.
+
+| | |
+|---|---|
+| **Included** | `Copilot/` module: continuous `InterviewAudioInput` independent of generation; `ConversationLog` with application-owned utterance and question IDs, dedupe and revisions; `DetectionPolicy` + `QuestionDetector` (structured: none / incomplete / new / continuation); `PassageRetriever` over a synthetic project fixture behind a `ProjectContextProviding` interface; `AnswerGenerator` with streaming, bounded concurrency, a queue, cancellation and stale-event rejection; `StreamingAnswerAssembler` committing whole sentences to an immutable readable prefix; `ReadingAlignment` extracted from `PromptViewModel`; a card UI with reading, navigation and manual "Answer this"; a zero-dependency backend (`backend/`) with bearer auth, limits, timeouts, cancellation, a development-only fake provider and an honest unavailable state; a scenario evaluation harness (English and French) |
+| **Excluded** | File import and document processing, persistence of sessions, a second transcription provider, deployment, billing, camera, App Store work, any change to script reading behaviour |
+| **Likely modules** | New `prompter/Copilot/`, new `prompter/Prompt/ReadingAlignment.swift`, `Prompt/PromptViewModel.swift` (delegation only), `DebugTools/DebugMenuScreen.swift`, new `backend/` |
+| **Owner decisions** | None to build. Real-API measurement and the mini-vs-nano comparison need provider credentials (Q3), supplied by the owner outside chat |
+| **Acceptance** | Capture continues through classification, generation, reading, navigation, cancellation and provider failure; listening pause and reading pause are distinct; no fake answers when configuration is missing; committed readable text never changes while streaming; late responses attach to the correct version; session end rejects later events; new cards never steal focus; evaluation harness produces median/p95 per stage with sample size and failures |
+| **Automated verification** | New `prompterTests/Copilot/` suite plus the full inherited suite, read from the result bundle |
+| **Device verification** | Not performed in this increment — deferred to Increment 1, which owns the device audio protocol |
+| **Safe stopping point** | Development-only entry point; production surface unchanged; no credentials committed |
+
+**Delivered (2026-09-17).** Everything above, plus a configurable provider layer: direct OpenAI and
+OpenRouter behind one contract, verified route/capability registry, profiles, bounded fallback, route
+metadata, and a **tapable entry point** — Home → *Interview Copilot* → *Start demo* / *Start live* —
+because the copilot was previously reachable only through a launch argument, so a normal launch showed
+only the teleprompter. Results and verification status: [`CO_INTERVIEW_AI_PIPELINE.md`](CO_INTERVIEW_AI_PIPELINE.md).
+**Still not measured:** real provider latency and answer quality (no credential), and device audio
+(Increment 1).
 
 ---
 

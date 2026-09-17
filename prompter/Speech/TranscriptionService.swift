@@ -240,21 +240,29 @@ final class FakeTranscriptionService: Transcribing, @unchecked Sendable {
     }
 
     private let results: [ScriptedResult]
+    private let playbackRate: Double
     private var playTask: Task<Void, Never>?
 
-    init(results: [ScriptedResult]) {
+    /// `playbackRate` shortens the *waiting* between scripted results without touching their
+    /// timestamps. That distinction matters: `elapsed` is audio time, and everything downstream —
+    /// turn segmentation, the detector's cooldown, the matcher's silence freeze — reasons in that
+    /// clock. Compressing the timestamps instead would fabricate an interview whose speakers never
+    /// pause, which is not a faster test but a different (and unrealistic) one.
+    init(results: [ScriptedResult], playbackRate: Double = 1) {
         self.results = results
+        self.playbackRate = max(0.0001, playbackRate)
     }
 
     func start(locale: Locale, contextualStrings: [String]) async throws -> AsyncStream<TranscriptDelta> {
         let stream = TranscriptStream()
         let (deltaStream, continuation) = AsyncStream<TranscriptDelta>.makeStream()
         let scripted = results
+        let rate = playbackRate
 
         playTask = Task {
             var previousElapsed: TimeInterval = 0
             for result in scripted {
-                let delay = result.elapsed - previousElapsed
+                let delay = (result.elapsed - previousElapsed) / rate
                 previousElapsed = result.elapsed
                 if delay > 0 {
                     try? await Task.sleep(for: .seconds(delay))

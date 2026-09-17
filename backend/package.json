@@ -1,0 +1,16 @@
+{
+  "name": "co-interview-copilot-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Development backend for the Co-Interview copilot: holds provider credentials server-side and normalises OpenAI and OpenRouter into one streaming contract.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/config-test.mjs && node test/contract-test.mjs && node test/openrouter-test.mjs",
+    "verify-routes": "node tools/verify-routes.mjs",
+    "eval": "node eval/run-eval.mjs"
+  }
+}

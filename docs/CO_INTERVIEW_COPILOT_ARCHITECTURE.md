@@ -538,7 +538,37 @@ recognition. Fallback if Increment 1 shows on-device far-field recognition is in
 | Backend | Mint ephemeral client secrets; iOS WebRTC/WebSocket client (documented examples are JavaScript/Python) | Relay for Responses streaming (holds the key) | Both relay and ephemeral secrets |
 | Reuses inherited code | Little | **Most** | Partial |
 
-**Recommendation (not approved): Option C**, with C′ kept as a measured fallback. It keeps audio on the
+### 8.2.1 Selected pipeline (owner-directed, 2026-09-16)
+
+The owner selected the initial implementation, so **Option C is the implemented pipeline**, not a
+recommendation. Verified against OpenAI documentation on 2026-09-16 before coding:
+
+| Choice | Verification |
+|---|---|
+| On-device `SpeechTranscriber` for continuous microphone input | Existing code (§1.1) |
+| OpenAI **Responses API** for detection and generation | Both models list `v1/responses` as Supported |
+| [`gpt-5.4-nano`](https://developers.openai.com/api/docs/models/gpt-5.4-nano) — question classification and extraction | Exists; snapshot `gpt-5.4-nano-2026-03-17`; streaming and `structured_outputs` supported; "Reasoning.effort supports: none (default), low, medium, high and xhigh"; $0.20/$0.02/$1.25 per 1M |
+| [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini) — streamed suggested answers | Exists; snapshot `gpt-5.4-mini-2026-03-17`; streaming and `structured_outputs` supported; same reasoning-effort list; $0.75/$0.075/$4.50 per 1M |
+| `reasoning: { effort: "none" }` for both | Documented for both models, and the documented default |
+| Existing `SlidingWindowMatcher` for reading alignment | Unchanged |
+| Backend boundary holding the provider key | §8.4 |
+
+**No incompatibility was found**, so no substitution was needed. Neither model is claimed to be the
+fastest available; they are the selected starting point, to be re-evaluated with measurements.
+
+Other verified request details used by the prototype: `stream: true` (SSE), `store: false`,
+`max_output_tokens`, `text.format` = `{ type: "json_schema", name, schema, strict: true }`,
+`safety_identifier`, `prompt_cache_key`. Streamed text arrives as `response.output_text.delta` and ends
+with `response.completed`. `prompt_cache_options` is documented as "Supported for `gpt-5.6` and later
+models", so the prototype does not send it.
+
+`gpt-live-transcribe` through Realtime transcription stays documented (§8.2, Option C′) as the
+alternative if on-device transcription fails the latency or accuracy evaluation. **Only one production
+transcription provider is implemented in this increment.**
+
+---
+
+**Original recommendation, retained for provenance: Option C**, with C′ kept as a measured fallback. It keeps audio on the
 device, reuses the tested speech pipeline, gives the app explicit control over question boundaries,
 reading overlap and citations, and degrades gracefully offline.
 

@@ -9,14 +9,17 @@ Co-Interview is a **new, independent app** forked from the Prompter codebase on 
 Prompter is an iOS teleprompter that follows a reader's voice; **Prompter development is paused**.
 
 **The inherited interface is scaffolding, not a product.** Nothing in the current UI has been
-approved as Co-Interview. No interview feature has been built.
+approved as Co-Interview. The copilot prototype below is development-only.
 
-## Current planning track — the interview copilot (2026-09-16)
+## Current track — the interview copilot (updated 2026-09-17)
 
-The owner confirmed a direction: Co-Interview becomes an **interview copilot on iPhone** that keeps the
-voice-following teleprompter, listens to the interview, detects questions, and shows document-grounded
-suggested answers as swipeable cards in the existing reader. **This is a plan for review. No copilot
-code exists.** Start with these, in order:
+Co-Interview is becoming an **interview copilot on iPhone**: it keeps the voice-following
+teleprompter, listens to the interview, detects questions, and shows document-grounded suggested
+answers as swipeable cards in the existing reader.
+
+**A working prototype now exists** behind a development-only entry point (see *Trying the copilot
+prototype* below). It is not a shipping feature: answers come from a sample project, document import
+is not built, and no real provider measurement has been taken. Start with these, in order:
 
 | Document | Owns |
 |---|---|
@@ -24,6 +27,7 @@ code exists.** Start with these, in order:
 | [`CO_INTERVIEW_COPILOT_ARCHITECTURE.md`](CO_INTERVIEW_COPILOT_ARCHITECTURE.md) | Code mapping, boundaries, data models, document lifecycle, audio feasibility, AI options, data handling |
 | [`CO_INTERVIEW_COPILOT_IMPLEMENTATION_PLAN.md`](CO_INTERVIEW_COPILOT_IMPLEMENTATION_PLAN.md) | Ordered increments, acceptance criteria, verification, stopping points |
 | [`CO_INTERVIEW_COPILOT_OPEN_QUESTIONS.md`](CO_INTERVIEW_COPILOT_OPEN_QUESTIONS.md) | Unresolved owner decisions only, each with a recommendation |
+| [`CO_INTERVIEW_AI_PIPELINE.md`](CO_INTERVIEW_AI_PIPELINE.md) | **The built prototype**: detection and answer pipeline, providers and profiles, configuration, routing and failover, streaming, how to reach it in the app, and what has actually been verified |
 | [`CO_INTERVIEW_DECISIONS.md`](CO_INTERVIEW_DECISIONS.md) | Dated record of what was decided |
 
 Each category of information has one owner above; other documents link rather than restate it. The
@@ -72,10 +76,13 @@ transcription with permission handling · a settings screen · a substantial tes
 spoken-word fading, script-based recovery, daily usage limits and the subscription paywall. See
 `CO_INTERVIEW_ARCHITECTURE.md`.
 
-**Not built at all:** every interview-specific feature. There is no interview workflow, no
-question handling, no participant model, no recording policy, no consent flow. The copilot plan proposes
-reusing the teleprompter scrolling, script matching and spoken-word fading for answer reading (the
-confirmed direction preserves them); see the copilot architecture.
+**Built as a development prototype (2026-09-17):** continuous listening, question detection, grounded
+answer generation over a sample project, answer cards with the inherited reader, and a two-gateway
+backend (OpenAI, OpenRouter). See [`CO_INTERVIEW_AI_PIPELINE.md`](CO_INTERVIEW_AI_PIPELINE.md).
+
+**Still not built:** document import, projects, persistence of sessions, participant notice, consent
+flow, and any recording policy. Teleprompter scrolling, script matching and spoken-word fading are
+**reused** for answer reading rather than discarded.
 
 **Tests.** The public snapshot reportedly passes **113 tests** (`prompterTests/` declares 113 `@Test`
 functions). Capture-derived regression coverage was removed for publication and known tracking defects
@@ -96,6 +103,20 @@ pricing, entitlement, paywall and 10-minutes-per-day limit are **not** Co-Interv
 
 Everything else under `docs/` is **inherited Prompter documentation**, kept as historical engineering
 reference. It describes Prompter's product and roadmap — **not Co-Interview's**.
+
+## Trying the copilot prototype (development builds only)
+
+Build and run the `Co-Interview` scheme, then on the home screen (*Scripts*) tap **Interview
+Copilot**:
+
+- **Start demo** — a scripted interview through the real pipeline. No microphone, no network, and the
+  answers are clearly-marked development text.
+- **Start live** — the real microphone and the configured backend. Enabled only when both are ready,
+  and it says why when they are not.
+
+Both answer from a **sample project**; document import does not exist yet. Details, including the
+local backend setup for a physical iPhone, are in
+[`CO_INTERVIEW_AI_PIPELINE.md`](CO_INTERVIEW_AI_PIPELINE.md) §10.
 
 ## Recommended next action
 

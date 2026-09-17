@@ -1,0 +1,93 @@
+# Co-Interview copilot backend (development)
+
+The boundary that keeps provider credentials **out of the iOS app**. Two gateways — direct OpenAI
+(Responses API) and OpenRouter (Chat Completions) — behind one streaming contract. Nothing here is
+deployed, and no credential is stored in this repository.
+
+**Runtime.** No third-party dependencies, which narrows the supply chain but does not mean there is
+nothing to audit: this code, the runtime, the credentials it holds and the network it listens on all
+still need review. It runs on Node 18+, but Node 18 and 20 are past end-of-life (2025-04-30 and
+2026-04-30), so `package.json` declares `>=22` — use Node 22 (Jod) or 24 (Krypton). **The suites here
+were last run on Node v18.16.0**, the version installed on the development machine; re-run them on a
+supported LTS before relying on the results.
+
+| File | Purpose |
+|---|---|
+| `server.mjs` | Routes, auth, limits, timeouts, cancellation, fallback, SSE, development fake |
+| `config.mjs` | Profiles, configuration precedence, validation, reasoning and routing translation |
+| `capabilities.mjs` | Verified model/route registry (slugs, structured outputs, reasoning, limits) |
+| `providers/openai.mjs`, `providers/openrouter.mjs` | The two upstream adapters |
+| `tools/verify-routes.mjs` | Re-checks the registry against OpenRouter's live catalogue (no credential) |
+| `test/*.mjs` | Configuration, OpenAI contract, OpenRouter contract (all against local stubs) |
+| `eval/run-eval.mjs`, `eval/scenarios.json` | Benchmark harness and synthetic English/French scenarios |
+
+## Run it
+
+```bash
+cd backend
+
+# 1. Development, no credentials: canned answers, clearly labelled everywhere they appear.
+COINTERVIEW_TOKENS=dev-token COINTERVIEW_FAKE=1 node server.mjs
+
+# 2. Direct OpenAI. Your key stays in your shell — never in the repository or the app.
+COINTERVIEW_TOKENS=dev-token OPENAI_API_KEY=sk-... node server.mjs
+
+# 3. OpenRouter, balanced profile (Gemini 2.5 Flash-Lite via Google AI Studio).
+COINTERVIEW_TOKENS=dev-token OPENROUTER_API_KEY=sk-or-... \
+  COPILOT_TEXT_PROVIDER=openrouter COPILOT_PROFILE=balanced node server.mjs
+
+# Checks (no credential needed):
+npm test                  # configuration + both provider contracts, against local stubs
+npm run verify-routes     # registry vs OpenRouter's live catalogue
+```
+
+From a **physical iPhone**, `127.0.0.1` means the phone. Bind to the LAN and use the Mac's address:
+
+```bash
+ipconfig getifaddr en0    # e.g. 192.168.1.42
+COINTERVIEW_TOKENS=$(openssl rand -hex 24) OPENROUTER_API_KEY=sk-or-... \
+  COPILOT_TEXT_PROVIDER=openrouter HOST=0.0.0.0 node server.mjs
+```
+
+iOS will ask for local-network permission, and plain HTTP to a LAN address needs an App Transport
+Security exception that is **deliberately not configured** — see
+`docs/CO_INTERVIEW_AI_PIPELINE.md` §10 for the options. The Simulator needs none.
+
+Then in the app: **Debug → Debug: Copilot**, set the backend URL (`http://127.0.0.1:8787` in the
+Simulator) and the same token.
+
+## Configuration
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `COINTERVIEW_TOKENS` | *(none)* | Comma-separated bearer tokens. **Without it the server refuses every request** — it is never an open proxy |
+| `OPENAI_API_KEY` | *(none)* | Provider credential. Without it (and without `COINTERVIEW_FAKE`) the endpoints answer `503 provider_unconfigured`, which the app shows as an honest unavailable state |
+| `OPENROUTER_API_KEY` | *(none)* | Provider credential for the OpenRouter gateway |
+| `COINTERVIEW_FAKE` | *(unset)* | `1` enables the development fake provider. Its output is marked `is_fake` and prefixed `[FAKE]`/`[FAUX]` |
+| `COINTERVIEW_ALLOW_REQUEST_OVERRIDES` | *(unset)* | `1` lets a request carry configuration overrides — for the local benchmark harness only |
+| `COPILOT_TEXT_PROVIDER` | `openai` | `openai` or `openrouter` |
+| `COPILOT_PROFILE` | `balanced` | `speed`, `balanced`, `smart`, `custom` (OpenRouter only) |
+| `COPILOT_*` | see `config.mjs` | Every configuration key is overridable this way; all are validated |
+| `PORT` / `HOST` | `8787` / `127.0.0.1` | Bind address. Loopback by default |
+| `MAX_BODY_BYTES` | `65536` | Request size limit |
+| `REQUEST_TIMEOUT_MS` | `20000` | Upstream timeout; the client disconnecting also aborts upstream |
+
+## Endpoints
+
+| Route | Purpose |
+|---|---|
+| `GET /health` | Reports provider and auth configuration. The only unauthenticated route |
+| `POST /v1/copilot/classify` | Question detection. Structured output (`text.format` = `json_schema`, `strict: true`) with `kind` ∈ `none` / `incomplete` / `new_question` / `continuation` |
+| `POST /v1/copilot/answer` | Streamed answer as SSE: `{type:"delta",text}`, then `{type:"sources",ids}`, then `{type:"done"}`; `{type:"error",message}` on failure |
+
+The answer endpoint accepts an allowlisted `model` override so the evaluation harness can compare
+candidates on identical prompts; clients cannot point it at arbitrary models.
+
+## What it deliberately does not do
+
+- **No content logging.** Request lines carry method, path, status and duration only.
+- **No storage.** No database, no files, no transcript or document retention.
+- `store: false` on every provider request, so no response is retained as provider application state
+  (abuse-monitoring retention still applies — see `docs/CO_INTERVIEW_AI_PIPELINE.md` §8).
+- No user accounts, rate limiting beyond the provider's own, TLS termination, or deployment
+  configuration. Those belong to a real deployment decision, which has not been made.

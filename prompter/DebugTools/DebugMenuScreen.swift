@@ -17,6 +17,9 @@ struct DebugMenuScreen: View {
             NavigationLink("Debug: Prompt Screen (arbitrary text)") {
                 PromptTextInputScreen()
             }
+            NavigationLink("Debug: Copilot (interview pipeline)") {
+                CopilotDebugScreen()
+            }
         }
         .navigationTitle("Debug")
         .safeAreaInset(edge: .bottom) {

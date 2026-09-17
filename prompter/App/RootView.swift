@@ -23,7 +23,9 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             #if DEBUG
-            if PromptReplayHarness.isEnabled {
+            if CopilotReplayHarness.isEnabled {
+                CopilotReplayHarness.screen
+            } else if PromptReplayHarness.isEnabled {
                 PromptReplayHarness.screen
             } else {
                 ScriptListScreen()

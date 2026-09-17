@@ -50,6 +50,14 @@ struct ScriptListScreen: View {
                 header
                 searchField
 
+                #if DEBUG
+                // The copilot's home entry. **Development builds only** — it opens the interview
+                // prototype, which answers from a sample project and is not a shipping feature yet.
+                // Before this existed the copilot was reachable only through a launch argument or the
+                // debug menu, so a normal launch showed just the teleprompter.
+                copilotEntryCard
+                #endif
+
                 if let mostRecent {
                     openScriptCard(mostRecent)
                 }
@@ -106,6 +114,40 @@ struct ScriptListScreen: View {
         // render, before this runs, safe rather than force-unwrapped).
         .task { _ = settings }
     }
+
+    #if DEBUG
+    private var copilotEntryCard: some View {
+        NavigationLink {
+            CopilotStartScreen()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "waveform.badge.mic")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(Theme.Color.onDark)
+                    .frame(width: 44, height: 44)
+                    .background(Theme.Color.action, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Interview Copilot")
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Theme.Color.ink)
+                    Text("Listens, suggests answers, and follows your voice as you read them")
+                        .font(Typography.body(12))
+                        .foregroundStyle(Theme.Color.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.Color.secondary)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.Color.hairline, lineWidth: 0.5))
+        }
+        .accessibilityLabel("Interview Copilot. Listens, suggests answers, and follows your voice as you read them.")
+    }
+    #endif
 
     private var searchField: some View {
         HStack(spacing: 8) {
