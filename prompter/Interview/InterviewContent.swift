@@ -20,6 +20,48 @@ enum AnswerBlock: Equatable, Sendable, Identifiable {
         case .code(let text): "c:\(text)"
         }
     }
+
+    /// Splits generated text into prose and code **in the order it was written**.
+    ///
+    /// The model marks code with fenced blocks, which is the only structure the answer prompt asks
+    /// for. A fence that never closes is treated as code to the end rather than dropped — text that
+    /// arrived should stay visible — and everything else is prose.
+    static func parsed(from text: String) -> [AnswerBlock] {
+        guard text.contains("```") else {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? [] : paragraphs(of: trimmed)
+        }
+        var blocks: [AnswerBlock] = []
+        var isCode = false
+        var current: [String] = []
+
+        func flush() {
+            let joined = current.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            current = []
+            guard !joined.isEmpty else { return }
+            blocks.append(contentsOf: isCode ? [.code(joined)] : paragraphs(of: joined))
+        }
+
+        for line in text.components(separatedBy: .newlines) {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                flush()
+                isCode.toggle()
+                continue
+            }
+            current.append(line)
+        }
+        flush()
+        return blocks
+    }
+
+    /// Blank lines separate paragraphs, and each paragraph is its own prose block so the reader
+    /// aligns against one paragraph at a time.
+    private static func paragraphs(of text: String) -> [AnswerBlock] {
+        text.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .map { .prose($0.replacingOccurrences(of: "\n", with: " ")) }
+    }
 }
 
 /// One generated answer. A question keeps every version it has had (§4: Regenerate keeps the
@@ -134,19 +176,32 @@ struct InterviewQuestion: Identifiable, Equatable, Sendable {
 }
 
 /// One line of the live transcript strip.
+///
+/// The `id` is the transcriber's own utterance identity, which is what makes a revision an **update
+/// to a line** rather than a second copy of it: speech recognition rewrites what it heard several
+/// times before settling, and the strip must show that happening in place.
 struct TranscriptLine: Identifiable, Equatable, Sendable {
     let id: UUID
-    let text: String
+    var text: String
     /// Detected question lines are underlined in the primary colour and tap to select their page.
-    let isDetectedQuestion: Bool
+    var isDetectedQuestion: Bool
     /// Set once the question it announced has a page.
     var questionID: UUID?
+    /// False while the transcriber may still revise this line. Finalized history is never rewritten.
+    var isFinal: Bool
 
-    init(id: UUID = UUID(), text: String, isDetectedQuestion: Bool = false, questionID: UUID? = nil) {
+    init(
+        id: UUID = UUID(),
+        text: String,
+        isDetectedQuestion: Bool = false,
+        questionID: UUID? = nil,
+        isFinal: Bool = true
+    ) {
         self.id = id
         self.text = text
         self.isDetectedQuestion = isDetectedQuestion
         self.questionID = questionID
+        self.isFinal = isFinal
     }
 }
 

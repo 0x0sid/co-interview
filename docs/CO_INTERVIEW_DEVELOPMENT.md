@@ -31,7 +31,21 @@ xcrun xcresulttool get test-results summary --path /tmp/ci.xcresult
 2. **Incremental builds have silently reported false passes here.** For any load-bearing verification
    run `xcodebuild clean` first and confirm the log actually recompiled.
 
-### Last measured run (2026-09-17, v2.5 interview screen)
+### Last measured run (2026-09-19, live mode)
+
+| Suite | Result |
+|---|---|
+| `prompterTests` | **239 executions passed · 0 failed · 0 skipped** (226 test functions, 32 suites) |
+| `backend` (`npm test`) | configuration, OpenAI contract and OpenRouter contract **all passed** |
+
+The backend suites still run on the machine's Node v18.16.0, which is past end-of-life; `package.json`
+declares `>=22`. Re-run on Node 22/24 before relying on them.
+
+**No live provider request has been made from this build.** No `OPENROUTER_API_KEY` or
+`OPENAI_API_KEY` is set on this machine, so every check above used local stubs or the labelled
+development fake. Live latency and answer quality are unmeasured.
+
+### Previous run (2026-09-17, v2.5 interview screen)
 
 From the result bundle, not the log:
 

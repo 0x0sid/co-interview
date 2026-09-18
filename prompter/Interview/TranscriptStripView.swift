@@ -18,6 +18,9 @@ struct TranscriptStripView: View {
     let onAddImage: (ContextImage) -> Void
     let onRemoveImage: (UUID) -> Void
     let onNoteChanged: (String) -> Void
+    /// Said **before** anything is generated when part of the attached context cannot actually be
+    /// used — so nobody attaches five screenshots and assumes the model read them.
+    var limitationMessage: String? = nil
 
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var note: String = ""
@@ -131,6 +134,13 @@ struct TranscriptStripView: View {
                 .padding(.vertical, 10)
                 .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
                 .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+
+                if let limitationMessage {
+                    Text(limitationMessage)
+                        .font(InterviewTheme.Font.ui(11.5, relativeTo: .caption2))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 if !context.images.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {

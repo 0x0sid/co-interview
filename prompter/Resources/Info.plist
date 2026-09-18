@@ -26,6 +26,18 @@
 	<string>Prompter listens to your voice so the script can follow you as you speak. Audio is processed entirely on your iPhone and is never recorded or sent anywhere.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Prompter turns your speech into on-screen tracking, entirely on your iPhone, so the script keeps pace with you instead of a timer.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Co-Interview contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
+	<!-- Development only, and deliberately the narrowest exception that works.
+	     NSAllowsLocalNetworking permits plain HTTP to local addresses (RFC 1918 and .local) so the
+	     phone can reach a backend running on the developer's Mac. It does NOT allow insecure loads to
+	     internet hosts: NSAllowsArbitraryLoads stays off, so every public connection still requires
+	     HTTPS. See docs/CO_INTERVIEW_AI_PIPELINE.md §10. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SpaceGrotesk-Variable.ttf</string>

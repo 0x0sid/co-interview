@@ -150,6 +150,7 @@ try {
         projectInstructions: "Answer in the first person.",
         passages: [{ id: "brief#2", documentTitle: "Brief", documentVersion: "v1", locator: "p. 4", text: "Known risks…" }],
         recentConversation: ["Shall we start?"],
+        extraContext: "Focus on Java 17",
         language: "en",
         targetWordRange: [60, 120],
         projectID: "p1",
@@ -169,6 +170,11 @@ try {
     check("sets a prompt cache key per project", lastUpstreamRequest.prompt_cache_key === "co-interview:p1");
     check("does not send gpt-5.6-only cache options", lastUpstreamRequest.prompt_cache_options === undefined);
     check("sends only the supplied passages, not whole documents", JSON.stringify(lastUpstreamRequest.input).includes("brief#2"));
+    // The session note travels to the model, framed as reference material rather than as
+    // instructions — uploaded or typed content must not be able to override the answer rules.
+    const answerPrompt = JSON.stringify(lastUpstreamRequest.input);
+    check("includes the session note", answerPrompt.includes("Focus on Java 17"));
+    check("frames the note as reference, not instructions", answerPrompt.includes("SESSION NOTE"));
   }
 
   console.log("cancellation");

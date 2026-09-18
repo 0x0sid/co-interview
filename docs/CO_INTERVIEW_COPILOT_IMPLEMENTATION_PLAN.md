@@ -239,3 +239,31 @@ replacement and removal (arch §6).
 - Additional languages per Q7, each with its own recognition and answer evaluation.
 
 These are listed so they are not smuggled into earlier increments.
+
+---
+
+## Increment 4 — Live mode behind the approved v2.5 interface (2026-09-19)
+
+Bounded checklist. Each item reuses an existing component; none re-implements detection, retrieval,
+provider routing or streaming.
+
+1. **`CopilotSessionCoordinator`: make auto-generation optional.** Add `generationMode`
+   (`.automatic` for the existing diagnostic screen, `.manual` for v2.5) and observation callbacks
+   in the same idiom `InterviewAudioInput` already uses. Detection still runs; only the automatic
+   `startGeneration` call is suppressed.
+2. **`LiveInterviewFeed`** implementing the existing `InterviewFeed` over that coordinator:
+   transcript lines and detected questions out, `requestAnswer` in. No second pipeline.
+3. **Live readiness** — replace the permanently-disabled Live state with real checks that
+   distinguish backend unreachable, client auth failure, provider unconfigured, microphone denied
+   and speech-recognition unavailable.
+4. **Screen wiring** — real capture state drives the waveform; no simulated reading in Live; real
+   transcript deltas drive `ReadingAlignment` for the visible answer.
+5. **Extra context** — the typed note travels in the answer request and into the backend prompt.
+   Image attachments are **not** sent in this increment; the UI says so before generation rather
+   than implying they were understood.
+6. **Tests** — live feed routing, manual generation, stale events, readiness states, backend
+   contract for the note.
+7. **Docs** — pipeline doc, backend README, this plan, and the exact owner configuration.
+
+Explicitly **out of scope** for this increment, and stated as such in the UI rather than faked:
+document import beyond the existing sample project, image understanding, and speaker identification.

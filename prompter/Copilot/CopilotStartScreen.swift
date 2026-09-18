@@ -28,6 +28,8 @@ struct CopilotStartScreen: View {
     @State private var microphonePermission = AVAudioApplication.shared.recordPermission
     @State private var backendConfiguration: CopilotBackendConfiguration?
     @State private var isCheckingBackend = false
+    /// What Live can actually do right now — checked, not assumed.
+    @State private var readiness = LiveReadiness(isChecking: true)
 
     private var providerConfiguration: ProviderConfiguration { ProviderConfiguration.resolve() }
     private var project: SyntheticProject {
@@ -60,7 +62,16 @@ struct CopilotStartScreen: View {
                 case .demo:
                     InterviewScreen(mode: .demo, title: "Technical interview")
                 case .live:
-                    InterviewLiveUnavailableView()
+                    if readiness.canListen {
+                        InterviewScreen(
+                            mode: .live,
+                            title: "Live interview",
+                            feed: makeLiveFeed(),
+                            readiness: readiness
+                        )
+                    } else {
+                        InterviewLiveUnavailableView(readiness: readiness)
+                    }
                 }
             }
         }
@@ -77,6 +88,7 @@ struct CopilotStartScreen: View {
         .task {
             microphonePermission = AVAudioApplication.shared.recordPermission
             await refreshBackend()
+            await refreshReadiness()
         }
     }
 
@@ -125,10 +137,10 @@ struct CopilotStartScreen: View {
             badge: Mode.live.badge,
             badgeColor: Theme.Color.warm,
             title: Mode.live.title,
-            body: "The microphone listens to the conversation in the room and the configured backend writes the answers.",
-            footnote: "Connection to AI service required — the v2.5 screen has no provider or microphone wired to it yet.",
-            actionTitle: "Start live",
-            isEnabled: false,
+            body: "The microphone listens to the conversation in the room and the configured backend writes the answers. Questions are detected as they are asked; answers are written only when you tap Generate.",
+            footnote: readiness.summary,
+            actionTitle: readiness.isListenOnly ? "Start live (listening only)" : "Start live",
+            isEnabled: readiness.canListen && !readiness.isChecking,
             action: { startedMode = .live }
         )
     }
@@ -202,6 +214,25 @@ struct CopilotStartScreen: View {
         case .live:
             return TranscriptionService(audioCapture: AudioCaptureService())
         }
+    }
+
+    /// Builds the live session from the components that already exist: one audio input, the
+    /// configured provider, the sample project, and the coordinator in **manual** generation mode.
+    private func makeLiveFeed() -> LiveInterviewFeed {
+        let coordinator = CopilotSessionCoordinator(
+            project: project,
+            provider: providerConfiguration.makeProvider(),
+            audio: InterviewAudioInput(makeService: { TranscriptionService(audioCapture: AudioCaptureService()) }),
+            generationMode: .manual
+        )
+        return LiveInterviewFeed(coordinator: coordinator)
+    }
+
+    private func refreshReadiness() async {
+        readiness.isChecking = true
+        _ = await LiveReadiness.requestPermissions()
+        readiness = await LiveReadiness.check(configuration: providerConfiguration, language: language)
+        microphonePermission = AVAudioApplication.shared.recordPermission
     }
 
     private func refreshBackend() async {

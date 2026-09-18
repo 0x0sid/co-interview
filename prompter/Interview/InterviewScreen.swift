@@ -13,9 +13,17 @@ struct InterviewScreen: View {
     @State private var model: InterviewScreenModel
     @Environment(\.dismiss) private var dismiss
     let title: String
+    /// What Live can do this session. Empty in Demo, which needs neither microphone nor backend.
+    let readiness: LiveReadiness
 
-    init(mode: InterviewMode, title: String = "Technical interview", feed: (any InterviewFeed)? = nil) {
+    init(
+        mode: InterviewMode,
+        title: String = "Technical interview",
+        feed: (any InterviewFeed)? = nil,
+        readiness: LiveReadiness = LiveReadiness()
+    ) {
         self.title = title
+        self.readiness = readiness
         _model = State(wrappedValue: InterviewScreenModel(mode: mode, feed: feed ?? DemoInterviewFeed()))
     }
 
@@ -28,6 +36,7 @@ struct InterviewScreen: View {
                     title: title,
                     recording: model.recording,
                     isSimulatedSource: model.mode == .demo,
+                    listeningLabel: model.mode == .live ? model.listeningState?.label : nil,
                     canGoToPrevious: model.canGoToPrevious,
                     canGoToNext: model.canGoToNext,
                     onBack: { model.stop(); dismiss() },
@@ -45,7 +54,8 @@ struct InterviewScreen: View {
                         onSelectQuestion: { model.select(questionID: $0) },
                         onAddImage: { _ = model.addContextImage($0) },
                         onRemoveImage: { model.removeContextImage(id: $0) },
-                        onNoteChanged: { model.context.note = $0 }
+                        onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
+                        limitationMessage: model.contextLimitationMessage
                     )
                     pager
                 }
@@ -138,11 +148,13 @@ struct InterviewScreen: View {
             }
             if model.mode == .demo {
                 demoBadge
+            } else if !readiness.canGenerate {
+                listenOnlyBadge
             }
             ActionPillView(
                 recording: model.recording,
                 isGenerating: model.isGeneratingForTarget,
-                canGenerate: model.canGenerate,
+                canGenerate: model.canGenerate && (model.mode == .demo || readiness.canGenerate),
                 onToggleRecording: { model.toggleRecordingPause() },
                 onGenerate: { model.generate() },
                 menu: { moreMenu }
@@ -169,6 +181,20 @@ struct InterviewScreen: View {
         if model.isSimulatedReadingRunning { return "Demo · simulated reading" }
         if model.recording == .live { return "Demo · scripted playback, microphone off" }
         return "Demo · paused"
+    }
+
+    /// The honest half-working state: speech is being transcribed and questions detected, but no
+    /// answer can be generated. Saying which half works is more useful than refusing to start.
+    private var listenOnlyBadge: some View {
+        Text(readiness.blockers.first?.message ?? "Answers unavailable")
+            .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption2))
+            .foregroundStyle(InterviewTheme.Color.demoBadge)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(InterviewTheme.Color.surface, in: Capsule())
+            .overlay(Capsule().stroke(InterviewTheme.Color.demoBadge.opacity(0.35), lineWidth: 1))
+            .padding(.horizontal, 24)
     }
 
     @ViewBuilder
@@ -200,6 +226,7 @@ struct InterviewScreen: View {
 /// What Live shows in this build. It is a state, not a placeholder screen: the copilot is not
 /// connected to any service here, and saying so is the honest thing to put on screen.
 struct InterviewLiveUnavailableView: View {
+    var readiness = LiveReadiness()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -207,13 +234,24 @@ struct InterviewLiveUnavailableView: View {
             WaveformShape(levels: [0.25, 0.4, 0.55, 0.4, 0.25])
                 .fill(InterviewTheme.Color.muted)
                 .frame(width: 40, height: 28)
-            Text("Connection to AI service required")
+            Text("Live can't start")
                 .font(InterviewTheme.Font.ui(18, weight: .semibold, relativeTo: .title3))
                 .foregroundStyle(InterviewTheme.Color.ink)
-            Text("Live interviews need a running backend and microphone access. This build has neither wired to the new screen — the demo shows the same interface with a scripted interview.")
-                .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                .foregroundStyle(InterviewTheme.Color.muted)
-                .multilineTextAlignment(.center)
+            // Every blocker, in the words that say what to fix. Listening blockers come first
+            // because they are the ones that stop the session existing at all.
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(readiness.blockers.enumerated()), id: \.offset) { _, blocker in
+                    Text("• \(blocker.message)")
+                        .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if readiness.blockers.isEmpty {
+                    Text("Live needs microphone and speech-recognition access.")
+                        .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                }
+            }
             Button("Close") { dismiss() }
                 .font(InterviewTheme.Font.ui(15, weight: .semibold, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.primary)

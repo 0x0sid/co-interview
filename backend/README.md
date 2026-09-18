@@ -56,6 +56,30 @@ Security exception that is **deliberately not configured** — see
 Then in the app: **Debug → Debug: Copilot**, set the backend URL (`http://127.0.0.1:8787` in the
 Simulator) and the same token.
 
+## Live mode from the v2.5 interview screen (2026-09-19)
+
+The interview screen now runs against this backend. What it sends is unchanged except for one field:
+`extraContext`, the note the user typed in the Context panel, framed in the prompt as **reference
+material, not instructions**. Attached images are **not** sent — the route is text-only, and the app
+says so in the Context panel rather than implying the model read them.
+
+```bash
+cd backend
+# One token for the app, one credential for the provider. Different secrets, different parties.
+COINTERVIEW_TOKENS=$(openssl rand -hex 24) \
+  OPENROUTER_API_KEY=sk-or-... \
+  COPILOT_TEXT_PROVIDER=openrouter COPILOT_PROFILE=balanced \
+  HOST=0.0.0.0 node server.mjs
+```
+
+Then in the app: **Debug → Debug: Copilot**, set the backend URL to the Mac's LAN address
+(`ipconfig getifaddr en0`, e.g. `http://192.168.1.42:8787`) and paste the same `COINTERVIEW_TOKENS`
+value as the access token. **Never** the provider key: the app never holds one.
+
+`Interview Copilot → Start live` then reports what is actually ready. Listening and generation are
+independent — with no provider credential the session still transcribes and detects questions, and
+says "answers unavailable" instead of refusing to start.
+
 ## Configuration
 
 | Variable | Default | Meaning |
@@ -66,6 +90,7 @@ Simulator) and the same token.
 | `COINTERVIEW_FAKE` | *(unset)* | `1` enables the development fake provider. Its output is marked `is_fake` and prefixed `[FAKE]`/`[FAUX]` |
 | `COINTERVIEW_ALLOW_REQUEST_OVERRIDES` | *(unset)* | `1` lets a request carry configuration overrides — for the local benchmark harness only |
 | `COPILOT_TEXT_PROVIDER` | `openai` | `openai` or `openrouter` |
+| `extraContext` *(request field)* | `""` | The session note from the Context panel. Clipped to 1000 characters and framed as reference material |
 | `COPILOT_PROFILE` | `balanced` | `speed`, `balanced`, `smart`, `custom` (OpenRouter only) |
 | `COPILOT_*` | see `config.mjs` | Every configuration key is overridable this way; all are validated |
 | `PORT` / `HOST` | `8787` / `127.0.0.1` | Bind address. Loopback by default |

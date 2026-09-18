@@ -378,3 +378,69 @@ end-of-life. Re-run `npm test` in `backend/` on a supported LTS before trusting 
 
 Inherited defects and removed coverage are unchanged and still apply: see
 `CO_INTERVIEW_SNAPSHOT_NOTICE.md` and architecture §10.
+
+---
+
+## 12. Live mode behind the v2.5 interface (2026-09-19)
+
+The approved interview screen now runs against real microphone transcription and the real provider
+path. **No component was duplicated**: `LiveInterviewFeed` is an adapter that translates the existing
+`CopilotSessionCoordinator` into the `InterviewFeed` the screen already consumed.
+
+| Concern | Who does it | Changed? |
+|---|---|---|
+| Capture, permissions, interruptions | `InterviewAudioInput` | no |
+| Transcript reconciliation | `ConversationLog` | no |
+| Question detection | `DetectionPolicy` + backend `/v1/copilot/classify` | no |
+| Retrieval | `ProjectContext` | no |
+| Provider routing, streaming, fallback | backend `/v1/copilot/answer` | one field added |
+| Reading | `ReadingAlignment`, `ScriptStyling` | no |
+| Interface | `InterviewScreen` (v2.5) | wired, not redesigned |
+
+### Detection and generation are separate, in code
+
+`CopilotSessionCoordinator.generationMode` is `.manual` for the interview screen. Detection still
+runs on finalized, reconciled turns exactly as before; the automatic `startGeneration` call that the
+diagnostic screen still uses is suppressed. An answer exists only after `requestAnswer`, which only
+`generate()` calls, which only a tap calls.
+
+### One microphone
+
+`LiveInterviewFeed` chains onto the coordinator's existing `audio.onDelta` rather than starting a
+second transcription: the pipeline sees every delta first (detection unaffected), then the screen
+sees the same delta for answer-following. There is exactly one `AVAudioEngine` session.
+
+### Live never simulates
+
+`isSimulatedReadingEnabled` is false in `.live` and `stepSimulatedReading()` refuses to run there.
+Fading is driven only by `ingestLiveDelta`, i.e. by words the transcriber actually heard. The header
+waveform reflects `InterviewAudioInput.state`, so "listening" on screen means the microphone is open.
+
+### Readiness is checked, not assumed
+
+`LiveReadiness` distinguishes microphone denied, speech-recognition denied, no on-device model for
+the locale, backend not configured, backend unreachable, **client** token rejected, provider not
+configured, and development fake enabled. Listening and generation are independent: with no provider
+credential the session still transcribes and detects, and says so, rather than refusing to start.
+
+### Honest limits, stated in the UI rather than worked around
+
+- **Attached images are not sent.** The route is text-only, so the Context panel says the images are
+  not sent *before* anything is generated. The typed note **is** sent, as `extraContext`, framed in
+  the prompt as reference material and not as instructions.
+- **Document import does not exist.** Grounding still comes from the sample project fixture, which
+  the start screen names as a sample.
+- **No speaker identification.** Nothing distinguishes the interviewer's voice from the candidate's.
+  The existing `overlapsReading` signal is *text* evidence — whether recognised words matched the
+  answer on screen — and it is used only to suppress false questions, never presented as knowing who
+  spoke. Ordinary interviewer speech can still advance reading if it happens to match the answer
+  text; this is a real remaining limitation and has not been measured on device.
+- **Same-device call audio remains impossible.** Unchanged from §1: no iOS API gives a third-party
+  app another app's call audio.
+
+### Not yet measured
+
+No live provider run has been made from this build: no `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is
+configured on this machine, so every verification here used stubs and the labelled development fake.
+Time-to-first-token, time-to-first-sentence and completion time for the live path are therefore
+**unmeasured**, and the harness in `eval/` remains the way to measure them once a key is set.

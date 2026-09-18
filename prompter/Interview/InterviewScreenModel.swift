@@ -82,6 +82,14 @@ final class InterviewScreenModel {
     private var simulationTask: Task<Void, Never>?
     private var feedTask: Task<Void, Never>?
 
+    /// In Live this is the real capture session, so the waveform reflects what the microphone is
+    /// actually doing and reading is driven by real transcription. Nil in Demo, which has neither.
+    private var liveFeed: LiveInterviewFeed? { feed as? LiveInterviewFeed }
+
+    /// What the header mark shows. In Live it is the audio session's own state — never a decorative
+    /// animation — so "listening" on screen means the microphone is genuinely open.
+    var listeningState: ListeningState? { liveFeed?.coordinator.audio.state }
+
     init(mode: InterviewMode, feed: any InterviewFeed) {
         self.mode = mode
         self.feed = feed
@@ -105,6 +113,13 @@ final class InterviewScreenModel {
 
     func start() {
         guard feedTask == nil else { return }
+        // Live: real transcription drives reading, and the capture session drives the header mark.
+        // Both come from the one session the coordinator already owns.
+        liveFeed?.onDelta = { [weak self] delta in
+            guard let self else { return }
+            ingestLiveDelta(delta)
+            refreshRecordingFromCapture()
+        }
         feed.start()
         feedTask = Task { [weak self] in
             guard let events = self?.feed.events else { return }
@@ -131,7 +146,7 @@ final class InterviewScreenModel {
     func handle(_ event: InterviewFeedEvent) {
         switch event {
         case .transcriptLine(let line):
-            transcript.append(line)
+            upsert(line)
 
         case .questionDetected(let question):
             appendQuestion(question)
@@ -247,6 +262,7 @@ final class InterviewScreenModel {
 
     private func requestAnswer(for question: InterviewQuestion, isRegeneration: Bool) {
         guard requestByQuestion[question.id] == nil else { return }   // no duplicate requests
+        syncSessionNote()
         let requestID = UUID()
         generations[requestID] = Generation(questionID: question.id, answerID: nil, isRegeneration: isRegeneration)
         requestByQuestion[question.id] = requestID
@@ -264,6 +280,18 @@ final class InterviewScreenModel {
     }
 
     // MARK: - Recording
+
+    /// In Live, the truth about listening lives in the audio session; this mirrors it so the mark
+    /// cannot claim the microphone is open when it is not.
+    func refreshRecordingFromCapture() {
+        guard mode == .live, let state = listeningState else { return }
+        switch state {
+        case .listening: recording = .live
+        case .starting: recording = .live
+        case .pausedByUser, .interrupted: recording = .paused
+        case .idle, .permissionDenied, .failed: recording = .off
+        }
+    }
 
     func setRecording(_ state: RecordingState) {
         recording = state
@@ -297,6 +325,24 @@ final class InterviewScreenModel {
     /// Collapsing the strip is a view state change only — the note and the images stay.
     func collapseTranscript() {
         isTranscriptExpanded = false
+    }
+
+    /// Hands the typed note to the pipeline, where it is snapshotted into the next request.
+    func syncSessionNote() {
+        liveFeed?.coordinator.sessionNote = context.note
+    }
+
+    /// **Attached images are not sent to the model in this increment.**
+    ///
+    /// The answer route is text-only: `AnswerRequest` carries text, and the backend's two adapters
+    /// send text. Sending an image to a text-only model would mean it was silently ignored while the
+    /// screen implied it had been read, so the images stay local and the panel says so before
+    /// anything is generated. The note *is* sent.
+    var contextLimitationMessage: String? {
+        guard mode == .live, !context.images.isEmpty else { return nil }
+        return context.images.count == 1
+            ? "The attached image is not sent — the configured model is text-only. Your note is sent."
+            : "The \(context.images.count) attached images are not sent — the configured model is text-only. Your note is sent."
     }
 
     // MARK: - Reading
@@ -429,7 +475,42 @@ final class InterviewScreenModel {
     /// Slow and steady — a comfortable reading pace, not a race.
     static let simulatedWordInterval: TimeInterval = 0.42
 
+    // MARK: - Live reading
+
+    /// One real transcript delta, routed to the page on screen.
+    ///
+    /// This is the same `ingest` the simulated reader uses, so Live and Demo share one reading path
+    /// and one matcher. **Live never fabricates progress**: if the microphone hears nothing, nothing
+    /// fades.
+    func ingestLiveDelta(_ delta: TranscriptDelta) {
+        guard mode == .live, let question = currentQuestion else { return }
+        ingest(delta, for: question)
+    }
+
     // MARK: - Event application
+
+    /// Adds a line, or replaces the one with the same identity.
+    ///
+    /// Speech recognition revises what it heard several times before settling. A revision must
+    /// update the line it belongs to — appending would show the same sentence three times, each
+    /// slightly different, which is what a naive transcript view looks like. Finalized lines are
+    /// never rewritten by a later partial.
+    private func upsert(_ line: TranscriptLine) {
+        if let index = transcript.firstIndex(where: { $0.id == line.id }) {
+            guard !transcript[index].isFinal || line.isFinal else { return }
+            transcript[index] = line
+        } else {
+            transcript.append(line)
+        }
+        // A line that announced a question gains its link when the question arrives, so tapping it
+        // opens the right page.
+        if let questionID = line.questionID {
+            for index in transcript.indices where transcript[index].questionID == nil
+                && transcript[index].id == line.id {
+                transcript[index].questionID = questionID
+            }
+        }
+    }
 
     private func appendQuestion(_ question: InterviewQuestion) {
         // A question keeps one identity: if the feed re-announces it, nothing is duplicated.

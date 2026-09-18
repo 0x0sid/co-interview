@@ -34,6 +34,10 @@ struct AnswerRequest: Sendable, Encodable {
 
     let question: String
     let projectInstructions: String
+    /// A note the speaker typed for this session, sent as reference material. Empty when there is
+    /// none. **Never** an instruction channel: the backend frames it as reference, so uploaded or
+    /// typed content cannot override the answer rules.
+    var extraContext: String = ""
     let recentConversation: [String]
     let passages: [Passage]
     let language: String

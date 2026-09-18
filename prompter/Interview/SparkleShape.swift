@@ -92,6 +92,9 @@ struct RecordingMark: View {
     /// Scripted playback rather than a microphone. The mark still moves — something is arriving —
     /// but it is never red, because nothing is being listened to.
     var isSimulatedSource = false
+    /// The capture session's own description, when there is a real one. Preferred over the generic
+    /// label so "Interrupted" or "no on-device model" reaches VoiceOver verbatim.
+    var liveLabel: String? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var phase = 0
 
@@ -124,8 +127,9 @@ struct RecordingMark: View {
 
     /// Never claims the microphone is open when it is not.
     private var accessibilityLabel: String? {
-        guard let base = state.accessibilityLabel else { return nil }
-        return isSimulatedSource ? (state == .live ? "Demo playback" : "Demo playback paused") : base
+        if isSimulatedSource { return state == .live ? "Demo playback" : "Demo playback paused" }
+        if let liveLabel { return liveLabel }
+        return state.accessibilityLabel
     }
 
     /// Reduce Motion, or a UI test that needs the app to reach idle.

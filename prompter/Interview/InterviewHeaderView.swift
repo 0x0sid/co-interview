@@ -12,6 +12,10 @@ struct InterviewHeaderView: View {
     /// reads "Demo playback" to VoiceOver and is drawn in the muted tone, never the recording red:
     /// scripted playback must never look like the device is listening.
     let isSimulatedSource: Bool
+    /// In Live, the capture session's own words ("Listening", "Interrupted", "Paused"). VoiceOver
+    /// reads this instead of a generic label, so the mark can never overstate what the microphone is
+    /// doing. Nil in Demo.
+    var listeningLabel: String? = nil
     let canGoToPrevious: Bool
     let canGoToNext: Bool
     let onBack: () -> Void
@@ -30,7 +34,11 @@ struct InterviewHeaderView: View {
                         .font(InterviewTheme.Font.ui(14.5, weight: .semibold, relativeTo: .subheadline))
                         .foregroundStyle(InterviewTheme.Color.ink)
                         .lineLimit(1)
-                    RecordingMark(state: recording, isSimulatedSource: isSimulatedSource)
+                    RecordingMark(
+                        state: recording,
+                        isSimulatedSource: isSimulatedSource,
+                        liveLabel: listeningLabel
+                    )
                 }
                 .frame(maxWidth: .infinity)
                 navButton(systemImage: "chevron.right", label: "Next question", isEnabled: canGoToNext, action: onNext)

@@ -39,6 +39,26 @@ final class CopilotSessionCoordinator {
     private let policy: DetectionPolicy
     private let clock: @Sendable () -> Date
 
+    /// Whether detecting a question also starts answering it.
+    ///
+    /// The diagnostic screen has always answered automatically, and still does. The v2.5 interview
+    /// screen must not: there, **detection and generation are separate actions** and an answer is
+    /// written only when someone taps Generate. This is a policy switch, not a second pipeline —
+    /// detection, retrieval, routing and streaming are identical either way.
+    enum GenerationMode: Sendable {
+        case automatic
+        case manual
+    }
+    let generationMode: GenerationMode
+
+    /// Observation hooks, in the same idiom `InterviewAudioInput` already uses for `onDelta`.
+    /// They exist so `LiveInterviewFeed` can translate this coordinator into `InterviewFeedEvent`s
+    /// without polling and without owning any pipeline state of its own.
+    var onCardAppended: ((QuestionCard) -> Void)?
+    var onTranscriptChanged: (() -> Void)?
+    /// Fired whenever a version's text, status or route changed.
+    var onVersionChanged: ((AnswerVersionID, QuestionCardID) -> Void)?
+
     var providerIsDevelopmentFake: Bool { provider.isDevelopmentFake }
     var answerModelLabel: String { provider.answerModelLabel }
 
@@ -84,6 +104,7 @@ final class CopilotSessionCoordinator {
         provider: any CopilotProviding,
         audio: InterviewAudioInput,
         policy: DetectionPolicy = DetectionPolicy(),
+        generationMode: GenerationMode = .automatic,
         sessionID: InterviewSessionID = UUID(),
         conversation: ConversationLog = ConversationLog(),
         clock: @escaping @Sendable () -> Date = { Date() }
@@ -92,6 +113,7 @@ final class CopilotSessionCoordinator {
         self.provider = provider
         self.audio = audio
         self.policy = policy
+        self.generationMode = generationMode
         self.sessionID = sessionID
         self.conversation = conversation
         self.clock = clock
@@ -149,6 +171,7 @@ final class CopilotSessionCoordinator {
 
         // 2. Conversation log: stable identities, dedupe, bounded window.
         guard let (_, didFinalize) = conversation.ingest(delta, overlapsReading: overlapsReading) else { return }
+        onTranscriptChanged?()
 
         // 3. Detection policy.
         let pendingText = conversation.pendingText(after: detectionCutoff)
@@ -368,7 +391,10 @@ final class CopilotSessionCoordinator {
                 origin: trigger == .manual ? .manual : .detected,
                 utteranceIDs: consumed
             )
-            startGeneration(for: card.id, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+            // Manual mode stops here: the question exists, and answering it is the user's move.
+            if generationMode == .automatic {
+                startGeneration(for: card.id, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+            }
 
         case .continuation:
             detectionCutoff = max(detectionCutoff, pendingCutoffCandidate)
@@ -379,16 +405,23 @@ final class CopilotSessionCoordinator {
                 // dropping a distinct question on the floor (§8).
                 let card = appendCard(questionText: result.questionText.isEmpty ? text : result.questionText,
                                       origin: .detected, utteranceIDs: consumed)
-                startGeneration(for: card.id, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+                if generationMode == .automatic {
+                    startGeneration(for: card.id, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+                }
                 return
             }
             if !result.questionText.isEmpty {
                 cards[index].questionText = result.questionText
             }
             // A correction supersedes the in-flight version for that card instead of queueing a second
-            // answer to the same question.
-            supersedeInFlightVersion(cardID: cardID)
-            startGeneration(for: cardID, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+            // answer to the same question. In manual mode there is nothing in flight to supersede
+            // unless the user asked for one, and a corrected question is never silently re-answered.
+            if generationMode == .automatic {
+                supersedeInFlightVersion(cardID: cardID)
+                startGeneration(for: cardID, detectionLatency: detectionLatency, questionEndTranscriptTime: transcriptNow)
+            } else {
+                onVersionChanged?(UUID(), cardID)     // the question text changed; the page should redraw
+            }
         }
     }
 
@@ -407,6 +440,7 @@ final class CopilotSessionCoordinator {
         cards.append(card)
         // Focus is deliberately untouched: a new question must never pull the reader off the answer
         // they are in the middle of (§7).
+        onCardAppended?(card)
         return card
     }
 
@@ -426,7 +460,9 @@ final class CopilotSessionCoordinator {
         let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let card = appendCard(questionText: trimmed, origin: .typed, utteranceIDs: [])
-        startGeneration(for: card.id, detectionLatency: 0, questionEndTranscriptTime: conversation.lastActivityTime)
+        if generationMode == .automatic {
+            startGeneration(for: card.id, detectionLatency: 0, questionEndTranscriptTime: conversation.lastActivityTime)
+        }
     }
 
     func select(cardIndex: Int) {
@@ -491,6 +527,10 @@ final class CopilotSessionCoordinator {
         let request = AnswerRequest(
             question: question,
             projectInstructions: project.instructions,
+            // Snapshotted here, with the question and the retrieved passages: what the request
+            // carries is what the note said **at the moment Generate was pressed**. Editing the
+            // note afterwards cannot change an answer already being written.
+            extraContext: sessionNote,
             recentConversation: conversation.recentContext(maximumUtterances: 6).map(\.text),
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
@@ -504,6 +544,10 @@ final class CopilotSessionCoordinator {
         generationQueue.append(version.id)
         pumpQueue(request: request, versionID: version.id, passages: passages)
     }
+
+    /// A note the user typed for this session, included as reference material in every answer
+    /// request. Set by the screen; empty by default.
+    var sessionNote: String = ""
 
     /// Default answer length. A tunable prototype setting (§6), not a product rule.
     static let targetMinimumWords = 60
@@ -596,6 +640,7 @@ final class CopilotSessionCoordinator {
             recordMeasurement(versionID: versionID) { $0.firstSentenceAt = self.clock() }
         }
         cards[location.card].versions[location.version] = version
+        onVersionChanged?(versionID, cards[location.card].id)
     }
 
     private func complete(versionID: AnswerVersionID, citedIDs: [String], passages: [ProjectPassage]) {
@@ -624,6 +669,7 @@ final class CopilotSessionCoordinator {
         version.readableSegments = Self.segments(for: version)
         cards[location.card].versions[location.version] = version
         recordMeasurement(versionID: versionID) { $0.completedAt = self.clock() }
+        onVersionChanged?(versionID, cards[location.card].id)
     }
 
     private func recordRoute(_ route: AnswerRoute, versionID: AnswerVersionID) {
@@ -650,6 +696,7 @@ final class CopilotSessionCoordinator {
         }
         cards[location.card].versions[location.version] = version
         lastProviderError = reason
+        onVersionChanged?(versionID, cards[location.card].id)
     }
 
     private func fail(versionID: AnswerVersionID, error: Error) {
@@ -668,6 +715,7 @@ final class CopilotSessionCoordinator {
         version.readableSegments = Self.segments(for: version)
         cards[location.card].versions[location.version] = version
         recordMeasurement(versionID: versionID) { $0.failure = message }
+        onVersionChanged?(versionID, cards[location.card].id)
     }
 
     private func finishTask(versionID: AnswerVersionID) {
