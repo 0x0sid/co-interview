@@ -23,6 +23,8 @@ struct CopilotStartScreen: View {
 
     @State private var language: InterviewLanguage = .english
     @State private var startedMode: Mode?
+    /// The previous pipeline screen, kept reachable so the provider work it exercises is not stranded.
+    @State private var startedPipelineMode: Mode?
     @State private var microphonePermission = AVAudioApplication.shared.recordPermission
     @State private var backendConfiguration: CopilotBackendConfiguration?
     @State private var isCheckingBackend = false
@@ -39,6 +41,7 @@ struct CopilotStartScreen: View {
                 languagePicker
                 demoCard
                 liveCard
+                pipelinePrototypeNote
                 sampleProjectNote
                 Text(BuildInfo.footer)
                     .font(Typography.mono(11))
@@ -49,7 +52,19 @@ struct CopilotStartScreen: View {
         .background(Theme.Color.paper)
         .navigationTitle("Interview Copilot")
         .navigationBarTitleDisplayMode(.inline)
+        // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
+        // state that says what it would need, rather than quietly showing the script.
         .fullScreenCover(item: $startedMode) { mode in
+            NavigationStack {
+                switch mode {
+                case .demo:
+                    InterviewScreen(mode: .demo, title: "Technical interview")
+                case .live:
+                    InterviewLiveUnavailableView()
+                }
+            }
+        }
+        .fullScreenCover(item: $startedPipelineMode) { mode in
             NavigationStack {
                 CopilotScreen(
                     project: project,
@@ -95,7 +110,7 @@ struct CopilotStartScreen: View {
             badge: Mode.demo.badge,
             badgeColor: Theme.Color.action,
             title: Mode.demo.title,
-            body: "A scripted interview plays through the real pipeline — no microphone, no network. Answers are canned development text, clearly marked.",
+            body: "A scripted interview plays through the v2.5 interview screen — no microphone, no network. Questions appear as they are detected; answers are written only when you tap Generate. The content is invented development text, clearly marked.",
             footnote: "Works with no setup.",
             actionTitle: "Start demo",
             isEnabled: true,
@@ -111,11 +126,39 @@ struct CopilotStartScreen: View {
             badgeColor: Theme.Color.warm,
             title: Mode.live.title,
             body: "The microphone listens to the conversation in the room and the configured backend writes the answers.",
-            footnote: liveFootnote,
+            footnote: "Connection to AI service required — the v2.5 screen has no provider or microphone wired to it yet.",
             actionTitle: "Start live",
-            isEnabled: liveBlockers.isEmpty,
+            isEnabled: false,
             action: { startedMode = .live }
         )
+    }
+
+    /// The previous copilot screen — the one the OpenRouter/OpenAI pipeline work runs through. It is
+    /// superseded by `InterviewScreen` for the interface, but it is still the only path that talks to
+    /// a provider, so it stays reachable and honest about what it needs.
+    private var pipelinePrototypeNote: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Pipeline prototype — previous screen")
+                .font(Typography.body(13, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+            Text("The earlier copilot screen, kept for measuring the detection and answer pipeline. It looks nothing like the v2.5 design.")
+                .font(Typography.body(12))
+                .foregroundStyle(Theme.Color.secondary)
+            Text(liveFootnote)
+                .font(Typography.body(12))
+                .foregroundStyle(liveBlockers.isEmpty ? Theme.Color.secondary : Theme.Color.error)
+            HStack(spacing: 10) {
+                Button("Open with the script") { startedPipelineMode = .demo }
+                    .font(Typography.body(12, weight: .medium))
+                Button("Open live") { startedPipelineMode = .live }
+                    .font(Typography.body(12, weight: .medium))
+                    .disabled(!liveBlockers.isEmpty)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
     }
 
     /// Everything that would stop Live from working, said plainly. Live is never quietly downgraded

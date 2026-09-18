@@ -8,6 +8,12 @@ import SwiftUI
 /// measurements in `docs/CO_INTERVIEW_AI_PIPELINE.md` come from. The full reader geometry
 /// (`readingOffset`, `ScrollOwnership`, pinch-to-scale, outdoor mode) is **not** wired in yet; that is
 /// plan Increment 3.
+///
+/// **Superseded as the interface by `InterviewScreen` (v2.5).** It is deliberately kept, not deleted:
+/// it is still the only screen wired to a real provider, and the pipeline measurements come from it.
+/// New interface work belongs in `Interview/`; when the live pipeline is connected to
+/// `InterviewScreen` through an `InterviewFeed`, this screen becomes a diagnostics surface and can be
+/// reduced to one.
 struct CopilotScreen: View {
     @State private var coordinator: CopilotSessionCoordinator
     /// DEMO or LIVE, shown unmistakably in the status bar. Nil outside the development entry points.

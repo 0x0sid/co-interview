@@ -31,6 +31,24 @@ xcrun xcresulttool get test-results summary --path /tmp/ci.xcresult
 2. **Incremental builds have silently reported false passes here.** For any load-bearing verification
    run `xcodebuild clean` first and confirm the log actually recompiled.
 
+### Last measured run (2026-09-17, v2.5 interview screen)
+
+From the result bundle, not the log:
+
+| Suite | Result |
+|---|---|
+| `prompterTests` | **223 passed · 0 failed · 0 skipped** (210 `@Test` declarations; parameterised cases expand) |
+| `prompterUITests/CopilotEntryUITests` | **6 passed · 0 failed** |
+| `prompterUITests/InterviewScreenCaptureTests` | **2 passed · 0 failed**, in light and again in dark |
+
+No inherited failure appeared in this run — including
+`SpokenTokenMarkingTests/restartClearsTheSpokenSet()`, which is documented below as intermittent and
+passed here. Nothing was skipped, disabled or weakened to reach this.
+
+**UI tests must launch with `-UITestsQuietMotion`.** XCUITest waits for the app to be idle before
+every query, and the listening waveform animates for as long as it is listening, so without the flag
+queries hang indefinitely rather than failing. `InterviewTestingFlags` holds the switch.
+
 ### Known inherited test failures
 
 **Public snapshot (`32a583c`, corrected 2026-09-16):** the suite reportedly passes **113 tests**
@@ -58,6 +76,37 @@ xcrun simctl erase "iPhone 17"     # if still broken
 
 Also watch disk space: a full disk produces `mkstemp: No space left on device` reported as a test
 failure.
+
+#### `xcodebuild` hangs before it compiles anything (2026-09-17)
+
+Symptom: `xcodebuild` prints its invocation line and then sits at **0% CPU indefinitely**, with no
+`XCBBuildService` child process and an empty log. `xcodebuild -showsdks` still answers instantly, but
+`xcodebuild -list` on *this project* hangs too. It looks like a slow build; it is not building at all.
+
+Diagnose it with a stack sample rather than guessing:
+
+```bash
+(xcodebuild -project co-interview.xcodeproj -list &) ; sleep 10
+sample $(pgrep -f "xcodebuild -project" | head -1) 3 -file /tmp/sample.txt
+```
+
+A stack ending in `IDEWorkspace initWithFilePath:` → `DVTFilePath performCoordinatedReadRecursively:`
+→ `NSFileCoordinator … _blockOnAccessClaim:withAccessArbiter:` means the process is blocked on a
+**stale file-coordination claim on the project directory**, not on the compiler, the simulator or the
+network. It followed a disk-full episode here.
+
+What worked, in order of least disruption:
+
+```bash
+# 1. Confirm it is path-specific: build a copy of the tree somewhere else.
+rsync -a --exclude .git ~/Desktop/co-interview-public/ /tmp/buildcopy/
+cd /tmp/buildcopy && xcodebuild -project co-interview.xcodeproj -list   # answers immediately
+```
+
+Building the copy is a complete workaround and touches nothing. `killall -9
+com.apple.CoreSimulator.CoreSimulatorService` fixed a *separate* wedge that made `simctl list` hang,
+but did **not** clear the coordination claim. The claim is held per path; a logout or reboot clears
+it. Do not delete the working tree to escape this.
 
 ## Remote
 

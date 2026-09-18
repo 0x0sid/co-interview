@@ -158,3 +158,75 @@ particular, these are **unapproved recommendations**:
 
 No code, model, store, dependency, speech behaviour, billing or service was changed. Prompter is
 untouched.
+
+## 2026-09-17 — v2.5 interview screen: manual generation, waveform listening mark
+
+The design concept v2.5 is now a working screen in `prompter/Interview/`. **This increment is
+interface and demo data only.** It adds no provider call, no backend request, no microphone use and
+no new network code of any kind.
+
+### Detection and generation are separate actions
+
+The single most important rule on this screen: **listening detects questions; only a tap writes an
+answer.** `DemoInterviewFeed` plays a script that produces transcript lines and detected questions
+and stops there. An answer exists only after `InterviewScreenModel.generate()`, which asks the feed
+through `requestAnswer(requestID:question:isRegeneration:)`.
+
+- Generate targets the question the user explicitly selected; with nothing selected it takes the
+  most recent detected question that has no answer. The button *on a page* bypasses that rule and
+  answers its own question, because a button on a page cannot mean anything else.
+- One question keeps one identity. Generating its first answer does not duplicate it, and a feed
+  that re-announces a question adds nothing.
+- A second tap while a generation is running is ignored: one question never has two requests.
+- Every exchange carries a `requestID`. A chunk, completion or failure whose request the model no
+  longer knows — cancelled, superseded, or arriving after the session ended — is dropped. That is
+  what stops a late event writing into the page being read.
+- An answer that finishes on a page the user is not looking at raises a "Qn ready →" chip. It never
+  changes the page.
+
+### Owner corrections applied in this pass
+
+- **The listening mark is a waveform, in red** (`WaveformShape`), not a dot and not a sparkle. The
+  sparkle now means Generate and nothing else. There is no REC label and no timer anywhere.
+- **The demo never implies the microphone is open**: during scripted playback the waveform is drawn
+  in the muted tone, its VoiceOver label is "Demo playback", and the badge reads
+  "Demo · scripted playback, microphone off" — or "Demo · simulated reading" while words are fading.
+- The transcript shows **exactly two lines collapsed**; expanding reveals more of it plus the
+  Context controls. Note and up to five thumbnails survive collapsing.
+- `n/N` lives **inside the question bar**. There is no separate "Question 2/3" row. The denominator
+  counts questions actually detected — never a planned demo count, which would be a promise about a
+  live interview that nothing can keep.
+- No Quick Take, no chips, no Speak-mode button.
+- The floating toolbar stays compact: pause/resume, centred Generate sparkle, more menu. Page
+  content reserves the toolbar's full height, so the last line of an answer and the Follow-ups link
+  can always be scrolled clear of it.
+
+### Structure that was kept rather than replaced
+
+- **Tokens live in `InterviewTheme`, not in `Theme`.** v2.5 asks for `#F8F5EF` / `#2F6B5E`; `Theme`
+  carries Prompter's inherited `#F7F4EF` / `#216A60` and paints the library, editor and
+  teleprompter. Editing `Theme` would have repainted every inherited screen.
+- **Reading is the inherited engine.** `Matching/` is untouched. Each completed answer gets its own
+  `ReadingAlignment`, each page its own `ScrollOwnership`, and the text is rendered by
+  `ScriptStyling.sentenceBlocks` through a palette bridge.
+- **Prose and code keep their original order.** A code card that belongs between two paragraphs is
+  rendered there, not collected at the end: `AnswerPageView` walks the blocks in order and pairs
+  prose block *i* with paragraph *i* of the aligned text.
+- **Code is excluded from alignment by construction.** `InterviewAnswer.proseText` never contains a
+  `.code` block, so a code sample cannot be greyed out as if it had been spoken.
+- **Simulated reading is demo-only**, starts only after an answer has finished arriving, is labelled
+  while it runs, and is switchable off from `•••`. It is bound to the answer it started on, so a
+  step left over from another page is dropped rather than applied.
+- **Regenerate appends.** `answers` is append-only, the newest is shown with a muted
+  "v2 · Generated just now", and the previous version is kept.
+- `CopilotScreen` is superseded as the interface but **not deleted**: it is still the only screen
+  wired to a provider, it carries a deprecation comment, and the start screen keeps it reachable
+  under "Pipeline prototype — previous screen" with its existing honest readiness list. The
+  OpenRouter/OpenAI backend work is untouched.
+
+### Content
+
+Every question, answer, code sample and follow-up in `DemoInterviewFeed` is invented development
+text about an invented service. The Context screenshot uses placeholder thumbnails the app draws
+itself, behind a debug-only launch argument — never anyone's photos. No real interview, candidate,
+employer or document is represented.

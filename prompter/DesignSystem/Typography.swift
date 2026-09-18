@@ -106,13 +106,64 @@ enum Typography {
         }
     }
 
+    // MARK: - Dynamic Type (v2.5 interview screen)
+    //
+    // The functions above return a fixed-size `Font`, which is right for the teleprompter: its size
+    // is the reader's own pinch-to-scale setting, and letting the system scale it too would fight
+    // that. The interview screen has no such control, so its type follows Dynamic Type — these
+    // overloads scale the same bundled faces through `UIFontMetrics`, which is how a custom
+    // `UIFont` participates in Dynamic Type (the `relativeTo:` of `Font.custom`). Additive by
+    // design: nothing above changes, so script reading is untouched.
+
+    static func scaledHankenGrotesk(_ size: CGFloat, weight: Weight = .regular, relativeTo textStyle: UIFont.TextStyle = .body) -> Font {
+        scaledVariableFont(
+            postScriptName: "HankenGrotesk-Regular", size: size,
+            variations: [weightAxisIdentifier: hankenGroteskWeight(weight)], relativeTo: textStyle
+        )
+    }
+
+    static func scaledSourceSerif4(_ size: CGFloat, weight: Weight = .regular, relativeTo textStyle: UIFont.TextStyle = .body) -> Font {
+        scaledVariableFont(
+            postScriptName: "SourceSerif4Roman-Regular", size: size,
+            variations: [
+                weightAxisIdentifier: sourceSerif4Weight(weight),
+                opticalSizeAxisIdentifier: min(max(size, 8), 60),
+            ],
+            relativeTo: textStyle
+        )
+    }
+
+    /// `Font.custom(_:size:relativeTo:)` already scales, so the mono face needs no metrics dance.
+    static func scaledMono(_ size: CGFloat, weight: Weight = .regular, relativeTo textStyle: Font.TextStyle = .footnote) -> Font {
+        switch weight {
+        case .light, .regular:
+            return .custom("IBMPlexMono-Regular", size: size, relativeTo: textStyle)
+        case .medium, .semibold, .bold:
+            return .custom("IBMPlexMono-Medium", size: size, relativeTo: textStyle)
+        }
+    }
+
+    private static func scaledVariableFont(
+        postScriptName: String,
+        size: CGFloat,
+        variations: [Int: CGFloat],
+        relativeTo textStyle: UIFont.TextStyle
+    ) -> Font {
+        let base = variableUIFont(postScriptName: postScriptName, size: size, variations: variations)
+        return Font(UIFontMetrics(forTextStyle: textStyle).scaledFont(for: base))
+    }
+
     private static func variableFont(postScriptName: String, size: CGFloat, variations: [Int: CGFloat]) -> Font {
+        Font(variableUIFont(postScriptName: postScriptName, size: size, variations: variations))
+    }
+
+    private static func variableUIFont(postScriptName: String, size: CGFloat, variations: [Int: CGFloat]) -> UIFont {
         let variationAttributeName = UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String)
         let attributes: [UIFontDescriptor.AttributeName: Any] = [
             .name: postScriptName,
             variationAttributeName: variations,
         ]
         let descriptor = UIFontDescriptor(fontAttributes: attributes)
-        return Font(UIFont(descriptor: descriptor, size: size))
+        return UIFont(descriptor: descriptor, size: size)
     }
 }
