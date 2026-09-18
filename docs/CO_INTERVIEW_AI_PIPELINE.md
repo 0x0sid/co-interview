@@ -438,9 +438,69 @@ credential the session still transcribes and detects, and says so, rather than r
 - **Same-device call audio remains impossible.** Unchanged from §1: no iOS API gives a third-party
   app another app's call audio.
 
+### Device check actually performed (2026-09-19)
+
+Installed to the owner's iPhone 15 (iOS 26.6.2) as `talk.cointerview` — that app only, nothing
+uninstalled or erased — and launched pointed at a backend on the Mac's LAN address, running with
+`COINTERVIEW_FAKE=1` because no provider credential exists on this machine.
+
+What the backend's own request log shows from that session:
+
+```
+   2 GET  /health              -> 200
+   6 POST /v1/copilot/classify -> 200
+   0      /v1/copilot/answer
+```
+
+Read plainly, that is:
+
+- the readiness probe reached the backend from the phone over plain HTTP on the LAN, so
+  `NSAllowsLocalNetworking` and the bearer token both work on a real device;
+- the microphone opened, on-device transcription produced turns, and **detection ran six times** on
+  real speech;
+- **no answer was ever requested**, because nobody tapped Generate. Manual generation is not just a
+  unit-test claim — it held on device.
+
+The log contains no transcript text (the only line matching interview vocabulary is the server's own
+startup banner), confirming the no-content-logging rule under real use.
+
+**Not checked on device:** a real provider answer, answer latency, reading-follow accuracy while
+someone reads aloud, and whether ordinary interviewer speech causes false reading progress. Those
+need a provider credential and a person speaking, and are listed in the owner protocol below.
+
 ### Not yet measured
 
 No live provider run has been made from this build: no `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is
 configured on this machine, so every verification here used stubs and the labelled development fake.
 Time-to-first-token, time-to-first-sentence and completion time for the live path are therefore
 **unmeasured**, and the harness in `eval/` remains the way to measure them once a key is set.
+
+### Owner protocol for a real live test
+
+Everything below needs a provider credential, which this machine does not have.
+
+1. **Set the credential and start the backend** (the key never leaves your shell and never enters the app):
+   ```bash
+   cd ~/Desktop/co-interview-public/backend
+   COINTERVIEW_TOKENS=$(openssl rand -hex 24) \
+     OPENROUTER_API_KEY=sk-or-...   \
+     COPILOT_TEXT_PROVIDER=openrouter COPILOT_PROFILE=balanced \
+     HOST=0.0.0.0 node server.mjs
+   ```
+   Note the printed token; `ipconfig getifaddr en0` gives the Mac's address.
+2. **Point the phone at it**: Co-Interview → Debug → Debug: Copilot → backend URL
+   `http://<mac-address>:8787`, access token = the `COINTERVIEW_TOKENS` value. Not the provider key.
+3. **Open Live**: Interview Copilot → Start live. The footnote should read `Ready · openrouter · …`.
+   Allow microphone and speech recognition when asked; allow local network.
+4. **Speak a question** as the interviewer would. It should appear in the transcript, underlined, and
+   become a page — with **no answer**.
+5. **Select it and tap Generate.** Time from tap to first visible text, and to a complete first
+   sentence.
+6. **Read the answer aloud.** Words you have said should fade; words you have not should not.
+7. **Ask another question while reading.** The page must not change; a "Qn ready →" chip should offer
+   the new one only after you generate it.
+8. **Add a note in Context** and generate again — the answer should reflect it. Attach an image and
+   confirm the panel says it is not sent.
+9. **Pause and resume listening**, then close the interview. The microphone indicator must go out.
+
+Report what actually happened, including anything that did not work.
