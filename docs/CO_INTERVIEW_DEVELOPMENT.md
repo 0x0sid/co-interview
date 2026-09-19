@@ -31,7 +31,16 @@ xcrun xcresulttool get test-results summary --path /tmp/ci.xcresult
 2. **Incremental builds have silently reported false passes here.** For any load-bearing verification
    run `xcodebuild clean` first and confirm the log actually recompiled.
 
-### Last measured run (2026-09-19, live mode)
+### Last measured run (2026-09-19, document/image context)
+
+| Suite | Result |
+|---|---|
+| `prompterTests` | **241 executions passed · 0 failed · 0 skipped** (228 test functions, 32 suites) |
+| `backend` (`npm test`) | configuration, OpenAI contract and OpenRouter contract **all passed**, including six new image-attachment checks |
+
+Still no live provider request: no key is configured on this machine.
+
+### Previous run (2026-09-19, live mode)
 
 | Suite | Result |
 |---|---|

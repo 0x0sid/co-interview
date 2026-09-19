@@ -24,6 +24,12 @@ struct ClassificationRequest: Sendable, Encodable {
 /// What the generator is given (§5). Whole documents are never sent — only the passages retrieval
 /// selected, with their identifiers and versions.
 struct AnswerRequest: Sendable, Encodable {
+    struct ImageAttachment: Sendable, Encodable, Equatable {
+        let mime: String
+        /// Base64, without a data: prefix — the backend builds the data URL.
+        let data: String
+    }
+
     struct Passage: Sendable, Encodable {
         let id: String
         let documentTitle: String
@@ -38,6 +44,12 @@ struct AnswerRequest: Sendable, Encodable {
     /// none. **Never** an instruction channel: the backend frames it as reference, so uploaded or
     /// typed content cannot override the answer rules.
     var extraContext: String = ""
+    /// Image attachments, already downscaled and JPEG-encoded by the app.
+    ///
+    /// Sent **only** when the backend reports the answer model accepts image input; otherwise the
+    /// backend replies with a `notice` saying they were not sent, which the screen shows. An
+    /// attachment is never dropped in silence.
+    var images: [ImageAttachment] = []
     let recentConversation: [String]
     let passages: [Passage]
     let language: String
@@ -75,6 +87,9 @@ enum AnswerStreamEvent: Sendable, Equatable {
     case route(AnswerRoute)
     /// An attempt failed before any visible text and the backend is trying the fallback route.
     case attemptFailed(detail: String, fallingBackTo: String)
+    /// Something the backend wants the user told — for example that attachments were not sent
+    /// because the configured model reads text only. Never a failure; the answer still arrives.
+    case notice(String)
     /// Source ids the model cited, validated by the backend against the passages it was sent.
     case sources([String])
     /// The generation finished normally.
@@ -121,6 +136,9 @@ struct CopilotBackendConfiguration: Sendable, Equatable, Decodable {
     var reasoning_enabled: Bool = false
     var provider_configured: Bool = false
     var is_fake: Bool = false
+    /// Whether the configured answer model accepts images, from the backend's verified registry.
+    /// Asked, never assumed: the speed profile's model is text-only while balanced and smart are not.
+    var answer_accepts_images: Bool = false
 
     var summary: String {
         let route = answer_provider_order.isEmpty ? "" : " via \(answer_provider_order.joined(separator: " → "))"
@@ -266,6 +284,10 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
                                 detail: event["detail"] as? String ?? "attempt failed",
                                 fallingBackTo: event["falling_back_to"] as? String ?? ""
                             ))
+                        case "notice":
+                            if let message = event["message"] as? String, !message.isEmpty {
+                                continuation.yield(.notice(message))
+                            }
                         case "sources":
                             continuation.yield(.sources(event["ids"] as? [String] ?? []))
                         case "done":

@@ -12,7 +12,7 @@
 //      and then still validated exactly like operator configuration. They exist for the benchmark
 //      harness, which must pin one route per run.
 
-import { OPENAI_MODELS, knownRoutes, openRouterModel, routeCapability } from "./capabilities.mjs";
+import { OPENAI_MODELS, acceptsImages, knownRoutes, openRouterModel, routeCapability } from "./capabilities.mjs";
 
 export class ConfigurationError extends Error {
   constructor(message) {
@@ -343,5 +343,8 @@ export function publicConfig(config) {
     temperature: config.temperature,
     combined_detect_and_answer: config.combined_detect_and_answer,
     pin_provider_during_benchmark: config.pin_provider_during_benchmark,
+    // So the app can ask rather than assume. The answer model decides: attachments travel with the
+    // answer request, not the detector's.
+    answer_accepts_images: acceptsImages(config.answer_model_id),
   };
 }

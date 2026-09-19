@@ -21,6 +21,9 @@ struct TranscriptStripView: View {
     /// Said **before** anything is generated when part of the attached context cannot actually be
     /// used — so nobody attaches five screenshots and assumes the model read them.
     var limitationMessage: String? = nil
+    /// Per-attachment state text, so each thumbnail says what happened to it rather than leaving the
+    /// user to guess whether it was used.
+    var attachmentStates: [UUID: String] = [:]
 
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var note: String = ""
@@ -146,7 +149,17 @@ struct TranscriptStripView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(context.images) { image in
-                                thumbnail(image)
+                                VStack(spacing: 3) {
+                                    thumbnail(image)
+                                    if let state = attachmentStates[image.id] {
+                                        Text(state)
+                                            .font(InterviewTheme.Font.ui(9.5, relativeTo: .caption2))
+                                            .foregroundStyle(InterviewTheme.Color.muted)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.center)
+                                            .frame(width: 66)
+                                    }
+                                }
                             }
                         }
                         .padding(.top, 5)

@@ -28,6 +28,8 @@ final class CopilotSessionCoordinator {
     private(set) var selectedCardIndex: Int = 0
     private(set) var conversation: ConversationLog
     private(set) var lastProviderError: String?
+    /// The backend's most recent informational notice, such as attachments not being sent.
+    private(set) var lastProviderNotice: String?
     private(set) var isClassifying = false
     /// Diagnostics for the pipeline report: events that arrived too late to matter.
     private(set) var droppedStaleEventCount = 0
@@ -531,6 +533,7 @@ final class CopilotSessionCoordinator {
             // carries is what the note said **at the moment Generate was pressed**. Editing the
             // note afterwards cannot change an answer already being written.
             extraContext: sessionNote,
+            images: sessionImages,
             recentConversation: conversation.recentContext(maximumUtterances: 6).map(\.text),
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
@@ -548,6 +551,10 @@ final class CopilotSessionCoordinator {
     /// A note the user typed for this session, included as reference material in every answer
     /// request. Set by the screen; empty by default.
     var sessionNote: String = ""
+
+    /// Prepared image attachments for this session, snapshotted into each request alongside the
+    /// note. Empty unless the backend reports the answer model accepts images.
+    var sessionImages: [AnswerRequest.ImageAttachment] = []
 
     /// Default answer length. A tunable prototype setting (§6), not a product rule.
     static let targetMinimumWords = 60
@@ -590,6 +597,9 @@ final class CopilotSessionCoordinator {
                         // The backend is retrying on the fallback route; nothing visible has been
                         // shown yet, so there is nothing for the reader to lose.
                         self.lastProviderError = "\(detail) — trying \(fallingBackTo)"
+                    case .notice(let message):
+                        // Shown to the user; it is information, not a failure. The answer continues.
+                        lastProviderNotice = message
                     case .sources(let ids):
                         citedIDs = ids
                     case .incomplete(let reason):

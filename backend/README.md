@@ -63,6 +63,27 @@ The interview screen now runs against this backend. What it sends is unchanged e
 material, not instructions**. Attached images are **not** sent — the route is text-only, and the app
 says so in the Context panel rather than implying the model read them.
 
+### The one file to edit
+
+Put the provider key in **`backend/.env`** — created by you, git-ignored, read automatically at
+startup (the server has a small built-in loader, since Node's own `--env-file` needs 20.6+):
+
+```bash
+cd backend
+cp config.example.env .env      # then edit .env and set OPENROUTER_API_KEY=
+```
+
+Only two lines are needed for OpenRouter:
+
+```
+OPENROUTER_API_KEY=sk-or-...
+COPILOT_TEXT_PROVIDER=openrouter
+```
+
+An exported shell variable always wins over the file, so `OPENROUTER_API_KEY=... node server.mjs`
+still behaves as documented. The startup banner reports the file path and how many values it loaded —
+**never a value**.
+
 ```bash
 cd backend
 # One token for the app, one credential for the provider. Different secrets, different parties.

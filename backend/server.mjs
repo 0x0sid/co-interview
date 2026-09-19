@@ -23,9 +23,52 @@
 
 import { createServer } from "node:http";
 import { randomUUID, createHash } from "node:crypto";
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ConfigurationError, operatorOverridesFromEnv, resolveConfig, publicConfig, providerRouting } from "./config.mjs";
+import { acceptsImages } from "./capabilities.mjs";
 import * as openai from "./providers/openai.mjs";
 import * as openrouter from "./providers/openrouter.mjs";
+
+/**
+ * Loads `backend/.env` into `process.env` if it exists.
+ *
+ * Node's own `--env-file` needs 20.6+, and this has to work on whatever the developer has installed,
+ * so this is a deliberately small reader rather than a dependency. It is the *only* place the
+ * backend reads a credential from disk.
+ *
+ * Three rules it enforces:
+ * - **The real environment always wins.** An exported variable is never overwritten by the file, so
+ *   `OPENROUTER_API_KEY=... node server.mjs` still behaves as documented.
+ * - **Nothing is echoed.** Values are never logged; the startup banner reports only whether a
+ *   provider is configured.
+ * - **The file is git-ignored** (see the repository .gitignore). `config.example.env` is the
+ *   committed template and holds no value.
+ */
+function loadLocalEnvFile() {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const path = join(here, ".env");
+  if (!existsSync(path)) return null;
+  let loaded = 0;
+  for (const rawLine of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const equals = line.indexOf("=");
+    if (equals < 1) continue;
+    const key = line.slice(0, equals).trim();
+    if (process.env[key] !== undefined) continue;          // the shell wins
+    let value = line.slice(equals + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+    loaded += 1;
+  }
+  return { path, loaded };
+}
+
+const localEnv = loadLocalEnvFile();
 
 const PORT = Number(process.env.PORT ?? 8787);
 const HOST = process.env.HOST ?? "127.0.0.1";
@@ -43,6 +86,16 @@ const FAKE = process.env.COINTERVIEW_FAKE === "1";
 // Per-request configuration overrides, for the local benchmark harness only.
 const ALLOW_REQUEST_OVERRIDES = process.env.COINTERVIEW_ALLOW_REQUEST_OVERRIDES === "1";
 const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES ?? 64 * 1024);
+/**
+ * The answer route alone may carry image attachments, so it gets its own, larger ceiling.
+ *
+ * Detection keeps the tight 64 KB limit — it never has attachments, and a big classify body is a
+ * sign something is wrong. The app downscales images before sending (bounded pixels and JPEG
+ * quality), so this is a backstop against a malformed client, not the primary bound.
+ */
+const MAX_ANSWER_BODY_BYTES = Number(process.env.MAX_ANSWER_BODY_BYTES ?? 3 * 1024 * 1024);
+/** Never more attachments than the panel allows. */
+const MAX_IMAGES = 5;
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS ?? 20000);
 const MAX_PASSAGES = 8;
 const MAX_CONVERSATION_LINES = 12;
@@ -126,13 +179,13 @@ const DETECTION_SCHEMA = {
 
 const clip = (value, max) => (typeof value === "string" ? value.slice(0, max) : "");
 
-function readBody(request) {
+function readBody(request, limit = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     request.on("data", (chunk) => {
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
+      if (size > limit) {
         // Stop reading, but do **not** destroy the socket yet: the client deserves a real 413 rather
         // than a dropped connection it has to guess about. The handler answers, then closes.
         request.pause();
@@ -201,11 +254,45 @@ function buildAnswerMessages(body, words) {
     `QUESTION:\n${clip(body.question, 2000)}`,
   ].join("\n\n");
 
+  // Attachments become extra content parts on the same user message, after the text, so the model
+  // reads the question first and the pictures as supporting material.
+  const images = acceptedImages(body);
+  if (!images.length) {
+    return [
+      { role: "system", content: ANSWER_RULES },
+      { role: "user", content: user },
+    ];
+  }
   return [
     { role: "system", content: ANSWER_RULES },
-    { role: "user", content: user },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: user },
+        ...images.map((image) => ({
+          type: "image_url",
+          image_url: { url: `data:${image.mime};base64,${image.data}` },
+        })),
+      ],
+    },
   ];
 }
+
+/**
+ * The attachments this request may actually send, bounded and validated.
+ *
+ * Anything rejected here is reported to the client as a `notice` event — an attachment is never
+ * dropped in silence, because the user can see they attached it and would otherwise assume it was
+ * read.
+ */
+function acceptedImages(body) {
+  if (!Array.isArray(body.images)) return [];
+  return body.images
+    .filter((image) => image && typeof image.data === "string" && ALLOWED_IMAGE_MIMES.has(image.mime))
+    .slice(0, MAX_IMAGES);
+}
+
+const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function buildDetectionMessages(body) {
   const user = [
@@ -223,7 +310,19 @@ function buildDetectionMessages(body) {
 
 /** OpenAI's Responses API takes the same two messages, with `system` expressed as `developer`. */
 const toResponsesInput = (messages) =>
-  messages.map((message) => ({ role: message.role === "system" ? "developer" : message.role, content: message.content }));
+  messages.map((message) => {
+    const role = message.role === "system" ? "developer" : message.role;
+    if (typeof message.content === "string") return { role, content: message.content };
+    // Responses names the parts differently from Chat Completions; same bytes, different envelope.
+    return {
+      role,
+      content: message.content.map((part) =>
+        part.type === "image_url"
+          ? { type: "input_image", image_url: part.image_url.url }
+          : { type: "input_text", text: part.text }
+      ),
+    };
+  });
 
 // ---------------------------------------------------------------------------------------------
 // Fake provider (development only)
@@ -408,7 +507,7 @@ async function handleClassify(request, response) {
 }
 
 async function handleAnswer(request, response) {
-  const body = await readBody(request);
+  const body = await readBody(request, MAX_ANSWER_BODY_BYTES);
   if (!body.question || typeof body.question !== "string") {
     return send(response, 400, { error: "question is required" });
   }
@@ -430,7 +529,18 @@ async function handleAnswer(request, response) {
 
   const benchmark = Boolean(body.benchmark);
   const words = Array.isArray(body.targetWordRange) && body.targetWordRange.length === 2 ? body.targetWordRange : [40, 80];
-  const messages = buildAnswerMessages(body, words);
+
+  // Attachments are sent only to a model the registry says can read them. When the configured model
+  // cannot, they are left out **and the client is told** — the one thing that must never happen is
+  // an image being quietly discarded while the screen implies it was understood.
+  const attached = Array.isArray(body.images) ? body.images.length : 0;
+  const modelAcceptsImages = acceptsImages(config.answer_model_id);
+  const attachmentNotice = attached && !modelAcceptsImages
+    ? `${attached} image${attached === 1 ? "" : "s"} not sent: ${config.answer_model_id} does not accept image input`
+    : attached > MAX_IMAGES
+      ? `only the first ${MAX_IMAGES} images were sent`
+      : null;
+  const messages = buildAnswerMessages(modelAcceptsImages ? body : { ...body, images: [] }, words);
 
   // Resolve the routing *before* streaming starts. Building it lazily inside the adapter meant a
   // configuration fault — such as asking benchmark mode to pin two routes at once — surfaced as a
@@ -488,6 +598,7 @@ async function handleAnswer(request, response) {
         if (!started) {
           started = true;
           startSSE(response);
+          if (attachmentNotice) writeEvent(response, { type: "notice", message: attachmentNotice });
         }
         if (event.type === "delta") {
           const emit = stripper.push(event.text);
@@ -608,6 +719,9 @@ const server = createServer(async (request, response) => {
         profile: baseConfig.profile,
         detectionModel: FAKE ? "fake" : baseConfig.detection_model_id,
         answerModel: FAKE ? "fake" : baseConfig.answer_model_id,
+        // Capability, not a credential: the app asks this before offering to send attachments.
+        provider_configured: providerMode !== "none",
+        answer_accepts_images: FAKE ? false : acceptsImages(baseConfig.answer_model_id),
         request_overrides: ALLOW_REQUEST_OVERRIDES,
       });
     }
@@ -643,6 +757,8 @@ const server = createServer(async (request, response) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Co-Interview copilot backend on http://${HOST}:${PORT}`);
+  // Names and counts only — a value is never printed, so a key cannot reach a log or a screenshot.
+  if (localEnv) console.log(`  env file: ${localEnv.path} (${localEnv.loaded} value(s) loaded)`);
   console.log(`  gateway:  ${baseConfig.text_provider}  profile: ${baseConfig.profile}${FAKE ? "  (DEVELOPMENT FAKE — answers are canned text)" : ""}`);
   console.log(`  provider: ${providerMode}`);
   console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} token(s) configured` : "NOT CONFIGURED — every request will be refused"}`);

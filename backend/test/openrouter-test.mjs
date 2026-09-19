@@ -308,6 +308,45 @@ try {
     check("detection uses its own temperature", sent.temperature === 0, String(sent.temperature));
   }
 
+  console.log("image attachments");
+  {
+    // A 1x1 JPEG. Tiny on purpose: this checks routing and shape, not encoding.
+    const pixel = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+    const base = {
+      question: "What is in this screenshot?",
+      projectInstructions: "",
+      recentConversation: [],
+      passages: [],
+      language: "en",
+      targetWordRange: [40, 80],
+      projectID: "p1",
+      images: [{ mime: "image/jpeg", data: pixel }],
+    };
+
+    // The configured answer model accepts images (verified against the live catalogue), so they ride
+    // along as content parts on the same user message as the question.
+    requests = [];
+    // This suite's default route is the speed profile, whose model is text-only — so the capable
+    // case names a model the registry records as accepting images.
+    const sentResult = await answer({ ...base, config: { answer_model_id: "google/gemini-2.5-flash-lite", answer_provider_order: ["google-ai-studio"] } });
+    const sent = JSON.stringify(requests.at(-1)?.messages ?? []);
+    check("sends the image to a model that accepts images", sent.includes("image_url"));
+    check("sends it as a data URL", sent.includes("data:image/jpeg;base64,"));
+    check("keeps the question text alongside the image", sent.includes("What is in this screenshot?"));
+    check("does not warn when the image was actually sent",
+      !sentResult.events.some((event) => event.type === "notice"));
+
+    // A text-only model must never be sent an image — and the client must be told, not left to
+    // assume the picture was read.
+    requests = [];
+    const refusedResult = await answer({ ...base, config: { answer_model_id: "nvidia/nemotron-3.5-lightning", answer_provider_order: ["coreweave/bf16"] } });
+    const refusedSent = JSON.stringify(requests.at(-1)?.messages ?? []);
+    const notice = refusedResult.events.find((event) => event.type === "notice");
+    check("never sends an image to a text-only model", !refusedSent.includes("image_url"));
+    check("says plainly that the image was not sent", Boolean(notice && /not sent/i.test(notice.message)),
+      JSON.stringify(notice ?? null));
+  }
+
   console.log("configuration errors");
   {
     const response = await fetch(`${BASE}/v1/copilot/answer`, {

@@ -60,6 +60,9 @@ struct LiveReadiness: Equatable, Sendable {
     var blockers: [Blocker] = []
     /// What the backend says it is configured with, when it answered. Never contains a credential.
     var backendSummary: String?
+    /// Whether the configured answer model accepts image input, as reported by the backend's
+    /// verified registry. False until the backend actually says otherwise.
+    var answerAcceptsImages = false
     var isChecking = false
 
     /// Speech can be captured and transcribed.
@@ -118,8 +121,9 @@ struct LiveReadiness: Equatable, Sendable {
             readiness.blockers.append(.developmentFakeEnabled)
         case .backend:
             switch await probe(configuration) {
-            case .ok(let summary, let providerConfigured):
+            case .ok(let summary, let providerConfigured, let acceptsImages):
                 readiness.backendSummary = summary
+                readiness.answerAcceptsImages = acceptsImages
                 if !providerConfigured { readiness.blockers.append(.providerNotConfigured) }
             case .unauthorized:
                 readiness.blockers.append(.clientAuthenticationFailed)
@@ -131,7 +135,7 @@ struct LiveReadiness: Equatable, Sendable {
     }
 
     enum BackendProbe: Equatable, Sendable {
-        case ok(summary: String, providerConfigured: Bool)
+        case ok(summary: String, providerConfigured: Bool, acceptsImages: Bool)
         case unauthorized
         case unreachable(detail: String)
     }
@@ -158,7 +162,11 @@ struct LiveReadiness: Equatable, Sendable {
                 return .unreachable(detail: "HTTP \(http.statusCode)")
             }
             let configured = try JSONDecoder().decode(CopilotBackendConfiguration.self, from: data)
-            return .ok(summary: configured.summary, providerConfigured: configured.provider_configured)
+            return .ok(
+                summary: configured.summary,
+                providerConfigured: configured.provider_configured,
+                acceptsImages: configured.answer_accepts_images
+            )
         } catch {
             return .unreachable(detail: (error as NSError).localizedDescription)
         }

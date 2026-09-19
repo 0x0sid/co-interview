@@ -19,6 +19,10 @@
 
 export const OPENROUTER_MODELS = {
   "nvidia/nemotron-3.5-lightning": {
+    // Input modalities verified against OpenRouter's live catalogue on 2026-09-19
+    // (GET /api/v1/models -> architecture.input_modalities). Never assumed: sending an image to a
+    // text-only model would be silently ignored upstream while the app implied it had been read.
+    inputModalities: ["text"],
     displayName: "NVIDIA: Nemotron 3.5 Lightning",
     contextLength: 262144,
     // No `supported_efforts` in the model's reasoning block → the model exposes no effort selection.
@@ -32,6 +36,8 @@ export const OPENROUTER_MODELS = {
     },
   },
   "google/gemini-2.5-flash-lite": {
+    // Verified 2026-09-19: text, image, file, audio and video in; text out.
+    inputModalities: ["text", "image", "file", "audio", "video"],
     displayName: "Google: Gemini 2.5 Flash Lite",
     contextLength: 1048576,
     supportedEfforts: [],
@@ -47,6 +53,8 @@ export const OPENROUTER_MODELS = {
     },
   },
   "deepseek/deepseek-v4.1-flash": {
+    // Verified 2026-09-19.
+    inputModalities: ["text", "image"],
     displayName: "DeepSeek: DeepSeek V4.1 Flash",
     contextLength: 1048576,
     supportedEfforts: ["max", "high", "low"],
@@ -69,8 +77,8 @@ export const OPENROUTER_MODELS = {
 
 /** Direct OpenAI models, verified 2026-09-16 (see docs/CO_INTERVIEW_AI_PIPELINE.md §2). */
 export const OPENAI_MODELS = {
-  "gpt-5.4-nano": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"] },
-  "gpt-5.4-mini": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"] },
+  "gpt-5.4-nano": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"], inputModalities: ["text", "image"] },
+  "gpt-5.4-mini": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"], inputModalities: ["text", "image"] },
 };
 
 export function openRouterModel(modelID) {
@@ -99,6 +107,18 @@ export function routeCapability(modelID, routeSlug) {
 }
 
 /** Human-readable list for error messages, so an operator can fix a typo without reading the source. */
+/**
+ * Whether a model accepts image input, from the verified registry above.
+ *
+ * Unknown models answer `false`. That is the safe direction: refusing to send an image the model
+ * might have understood is a missing feature, while sending one it cannot read would be silently
+ * dropped upstream and reported to the user as understood.
+ */
+export function acceptsImages(modelID) {
+  const entry = OPENROUTER_MODELS[modelID] ?? OPENAI_MODELS[modelID];
+  return Boolean(entry?.inputModalities?.includes("image"));
+}
+
 export function knownRoutes(modelID) {
   const model = openRouterModel(modelID);
   return model ? Object.keys(model.routes) : [];

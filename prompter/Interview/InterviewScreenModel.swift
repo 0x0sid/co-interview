@@ -40,6 +40,13 @@ final class InterviewScreenModel {
     private(set) var readyQuestionNumber: Int?
     /// Said plainly under the answer when a generation produced nothing.
     private(set) var generationFailure: String?
+    /// What the backend said about this request — for example that attachments were not sent.
+    private(set) var generationNotice: String?
+    /// Attachments and their real states.
+    private(set) var attachments: [ContextAttachment] = []
+    private var preparationTasks: [Task<Void, Never>] = []
+    /// Whether the configured answer model accepts images, as reported by the backend.
+    private(set) var modelAcceptsImages = false
     var isFollowUpsSheetPresented = false
 
     // MARK: Generation
@@ -283,6 +290,18 @@ final class InterviewScreenModel {
 
     /// In Live, the truth about listening lives in the audio session; this mirrors it so the mark
     /// cannot claim the microphone is open when it is not.
+    /// Records what the backend says it can do, so the panel tells the truth about attachments.
+    func applyBackendCapability(acceptsImages: Bool) {
+        modelAcceptsImages = acceptsImages
+        for index in attachments.indices {
+            if !acceptsImages {
+                attachments[index].state = .notSupported
+            } else if attachments[index].state == .notSupported {
+                attachments[index].state = attachments[index].preparedJPEG.map { .ready(bytes: $0.count) } ?? .preparing
+            }
+        }
+    }
+
     func refreshRecordingFromCapture() {
         guard mode == .live, let state = listeningState else { return }
         switch state {
@@ -327,22 +346,83 @@ final class InterviewScreenModel {
         isTranscriptExpanded = false
     }
 
-    /// Hands the typed note to the pipeline, where it is snapshotted into the next request.
+    /// Hands the typed note and the prepared attachments to the pipeline, where they are
+    /// snapshotted into the next request.
     func syncSessionNote() {
         liveFeed?.coordinator.sessionNote = context.note
+        liveFeed?.coordinator.sessionImages = sendableAttachments
     }
 
-    /// **Attached images are not sent to the model in this increment.**
+    /// Attachments that are genuinely ready to travel. Anything still preparing, failed, or
+    /// unsupported is left out **and says so on screen**.
+    var sendableAttachments: [AnswerRequest.ImageAttachment] {
+        guard modelAcceptsImages else { return [] }
+        return attachments.compactMap { attachment in
+            guard attachment.state.isSendable, let jpeg = attachment.preparedJPEG else { return nil }
+            return AnswerRequest.ImageAttachment(mime: "image/jpeg", data: jpeg.base64EncodedString())
+        }
+    }
+
+    /// Adds an image and prepares it in the background, showing each state as it happens.
+    @discardableResult
+    func attachImage(_ data: Data) -> Bool {
+        guard attachments.count < ContextState.imageLimit else { return false }
+        let attachment = ContextAttachment(originalData: data)
+        attachments.append(attachment)
+        _ = context.addImage(ContextImage(id: attachment.id, data: data))
+        let task = Task { [weak self] in
+            let (state, jpeg) = await ContextAttachment.prepare(data)
+            guard let self, let index = attachments.firstIndex(where: { $0.id == attachment.id }) else { return }
+            attachments[index].state = modelAcceptsImages ? state : .notSupported
+            attachments[index].preparedJPEG = jpeg
+            syncSessionNote()
+        }
+        preparationTasks.append(task)
+        return true
+    }
+
+    /// Waits for every in-flight preparation to settle.
     ///
-    /// The answer route is text-only: `AnswerRequest` carries text, and the backend's two adapters
-    /// send text. Sending an image to a text-only model would mean it was silently ignored while the
-    /// screen implied it had been read, so the images stay local and the panel says so before
-    /// anything is generated. The note *is* sent.
+    /// The view never needs this — it watches the states change — but a test does, and waiting on
+    /// the actual work is honest where sleeping for an arbitrary interval is a race that passes on a
+    /// quiet machine and fails on a busy one.
+    func awaitAttachmentPreparation() async {
+        let pending = preparationTasks
+        preparationTasks = []
+        for task in pending { _ = await task.value }
+    }
+
+    /// One short label per attachment, in order, for the panel to show under the thumbnails.
+    var attachmentLabels: [UUID: String] {
+        Dictionary(uniqueKeysWithValues: attachments.map { ($0.id, $0.state.label) })
+    }
+
+    func removeAttachment(id: UUID) {
+        attachments.removeAll { $0.id == id }
+        context.removeImage(id: id)
+        syncSessionNote()
+    }
+
+    /// Said before anything is generated, when part of the attached context cannot be used.
+    ///
+    /// The capability is **asked of the backend**, never assumed: the speed profile's model is
+    /// text-only while the balanced and smart ones read images, so a hardcoded answer would be wrong
+    /// half the time.
     var contextLimitationMessage: String? {
-        guard mode == .live, !context.images.isEmpty else { return nil }
-        return context.images.count == 1
-            ? "The attached image is not sent — the configured model is text-only. Your note is sent."
-            : "The \(context.images.count) attached images are not sent — the configured model is text-only. Your note is sent."
+        guard mode == .live, !attachments.isEmpty else { return nil }
+        if !modelAcceptsImages {
+            let count = attachments.count
+            return count == 1
+                ? "The attached image is not sent — the configured model reads text only. Your note is sent."
+                : "The \(count) attached images are not sent — the configured model reads text only. Your note is sent."
+        }
+        let failed = attachments.filter { if case .failed = $0.state { true } else { false } }.count
+        if failed > 0 {
+            return failed == 1 ? "1 image could not be prepared and will not be sent."
+                               : "\(failed) images could not be prepared and will not be sent."
+        }
+        let preparing = attachments.filter { $0.state == .preparing }.count
+        return preparing > 0 ? "Preparing \(preparing) image\(preparing == 1 ? "" : "s")…" : nil
     }
 
     // MARK: - Reading

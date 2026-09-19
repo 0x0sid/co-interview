@@ -18,3 +18,13 @@ xcuserdata/
 *.ipa
 *.dSYM
 *.dSYM.zip
+
+# Local provider credentials — never committed.
+# `backend/config.example.env` is the committed template; the real values go in an ignored file
+# next to it. Without these rules a `git add -A` would sweep a live key into history.
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+backend/*.local.env

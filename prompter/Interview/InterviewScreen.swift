@@ -52,10 +52,11 @@ struct InterviewScreen: View {
                         isContextOpen: $model.isContextPanelOpen,
                         context: model.context,
                         onSelectQuestion: { model.select(questionID: $0) },
-                        onAddImage: { _ = model.addContextImage($0) },
-                        onRemoveImage: { model.removeContextImage(id: $0) },
+                        onAddImage: { _ = model.attachImage($0.data) },
+                        onRemoveImage: { model.removeAttachment(id: $0) },
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
-                        limitationMessage: model.contextLimitationMessage
+                        limitationMessage: model.contextLimitationMessage,
+                        attachmentStates: model.attachmentLabels
                     )
                     pager
                 }
@@ -67,7 +68,12 @@ struct InterviewScreen: View {
         }
         .background(InterviewTheme.Color.background)
         .toolbar(.hidden, for: .navigationBar)
-        .task { model.start() }
+        .task {
+            model.start()
+            // Ask the backend what the configured answer model can actually read, so the Context
+            // panel tells the truth about attachments instead of guessing.
+            model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
+        }
         .onDisappear { model.stop() }
         .sheet(isPresented: $model.isFollowUpsSheetPresented) {
             if let question = model.currentQuestion {

@@ -229,15 +229,54 @@ struct LiveInterviewFeedTests {
         #expect(request.extraContext == "Focus on Java 17")
     }
 
-    /// Attached images are not sent to a text-only route, and the screen says so rather than
-    /// implying the model read them.
+    /// A text-only model must never be sent an image, and the screen says so rather than implying
+    /// the model read it. The capability is asked of the backend, never assumed.
     @Test
-    func attachedImagesAreDeclaredUnsentInLive() {
+    func attachmentsAreDeclaredUnsentWhenTheModelReadsTextOnly() async throws {
         let model = InterviewScreenModel(mode: .live, feed: Self.makeFeed().0)
+        model.applyBackendCapability(acceptsImages: false)
         #expect(model.contextLimitationMessage == nil)
-        model.addContextImage(ContextImage(data: Data([1, 2, 3])))
-        let message = try? #require(model.contextLimitationMessage)
-        #expect(message?.contains("not sent") == true)
+
+        model.attachImage(Self.onePixelJPEG())
+        await model.awaitAttachmentPreparation()
+
+        let message = try #require(model.contextLimitationMessage)
+        #expect(message.contains("not sent"))
+        #expect(model.sendableAttachments.isEmpty, "an image was queued for a model that cannot read it")
+    }
+
+    /// When the model does accept images, a prepared attachment is actually sent.
+    @Test
+    func attachmentsAreSentWhenTheModelAcceptsImages() async throws {
+        let model = InterviewScreenModel(mode: .live, feed: Self.makeFeed().0)
+        model.applyBackendCapability(acceptsImages: true)
+
+        model.attachImage(Self.onePixelJPEG())
+        await model.awaitAttachmentPreparation()
+
+        #expect(model.sendableAttachments.count == 1, "a readable image was not queued to send")
+        #expect(model.sendableAttachments.first?.mime == "image/jpeg")
+        #expect(model.contextLimitationMessage == nil, "a usable attachment should raise no warning")
+    }
+
+    /// An image that cannot be decoded fails visibly instead of disappearing.
+    @Test
+    func anUnreadableAttachmentFailsVisibly() async throws {
+        let model = InterviewScreenModel(mode: .live, feed: Self.makeFeed().0)
+        model.applyBackendCapability(acceptsImages: true)
+
+        model.attachImage(Data([0x00, 0x01, 0x02, 0x03]))     // not an image
+        await model.awaitAttachmentPreparation()
+
+        #expect(model.sendableAttachments.isEmpty)
+        let message = try #require(model.contextLimitationMessage)
+        #expect(message.contains("could not be prepared"))
+    }
+
+    /// The smallest valid JPEG, so preparation has something real to decode.
+    static func onePixelJPEG() -> Data {
+        let base64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+        return Data(base64Encoded: base64) ?? Data()
     }
 
     // MARK: Readiness
