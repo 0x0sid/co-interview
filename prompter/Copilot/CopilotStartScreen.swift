@@ -67,7 +67,10 @@ struct CopilotStartScreen: View {
                             mode: .live,
                             title: "Live interview",
                             feed: makeLiveFeed(),
-                            readiness: readiness
+                            readiness: readiness,
+                            recheckReadiness: {
+                                await LiveReadiness.check(configuration: ProviderConfiguration.resolve(), language: language)
+                            }
                         )
                     } else {
                         InterviewLiveUnavailableView(readiness: readiness)

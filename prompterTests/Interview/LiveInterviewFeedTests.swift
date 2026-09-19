@@ -1,5 +1,7 @@
 import Testing
 import Foundation
+import AVFAudio
+import Speech
 @testable import prompter
 
 /// The live path, end to end through the real pipeline with a stub provider.
@@ -308,6 +310,73 @@ struct LiveInterviewFeedTests {
         #expect(readiness.canListen)
         #expect(readiness.summary.contains("access token"))
         #expect(readiness.summary.contains("provider") == false)
+    }
+
+    // MARK: Readiness probe mapping
+
+    /// Builds a readiness result from a canned probe outcome, with permissions already granted, so
+    /// these tests isolate the backend half.
+    static func readiness(from probe: LiveReadiness.BackendProbe) async -> LiveReadiness {
+        await LiveReadiness.check(
+            configuration: ProviderConfiguration(availability: .backend(url: URL(string: "https://example.test")!), token: "t"),
+            language: .english,
+            microphonePermission: .granted,
+            speechAuthorization: .authorized,
+            probe: { _ in probe }
+        )
+    }
+
+    /// A slow backend must be retryable, not a dead end. This is the failure that made a healthy
+    /// backend look unreachable for a whole session.
+    @Test
+    func aTimedOutProbeIsReportedAsATimeoutAndIsRetryable() async {
+        let readiness = await Self.readiness(from: .timedOut)
+        #expect(readiness.blockers.contains(.backendTimedOut))
+        #expect(readiness.isRetryable, "a timeout must offer Retry")
+        #expect(readiness.canListen, "a slow backend must never stop transcription")
+    }
+
+    /// A rejected token is an authentication problem, not an unreachable backend — different cause,
+    /// different fix, different message.
+    @Test
+    func arejectedTokenIsReportedAsAuthenticationNotUnreachable() async {
+        let readiness = await Self.readiness(from: .unauthorized)
+        #expect(readiness.blockers.contains(.clientAuthenticationFailed))
+        #expect(readiness.blockers.contains { if case .backendUnreachable = $0 { true } else { false } } == false)
+        #expect(readiness.summary.contains("access token"))
+        #expect(readiness.isRetryable == false, "retrying will not fix a wrong token")
+    }
+
+    @Test
+    func aMissingProviderCredentialIsItsOwnState() async {
+        let readiness = await Self.readiness(from: .providerUnconfigured)
+        #expect(readiness.blockers.contains(.providerNotConfigured))
+        #expect(readiness.canListen, "listening continues without a provider")
+        #expect(readiness.canGenerate == false)
+    }
+
+    @Test
+    func transportAndDnsFailuresAreDistinguished() async {
+        let tls = await Self.readiness(from: .transportSecurityFailed)
+        #expect(tls.blockers.contains(.transportSecurityFailed))
+        #expect(tls.isRetryable == false)
+
+        let dns = await Self.readiness(from: .hostNotFound)
+        #expect(dns.blockers.contains(.backendHostNotFound))
+        #expect(dns.summary.contains("could not be found"))
+        #expect(dns.isRetryable, "a changed tunnel URL is worth one retry")
+
+        let offline = await Self.readiness(from: .offline)
+        #expect(offline.blockers.contains(.deviceOffline))
+    }
+
+    /// A healthy backend reports no blockers and carries its capability through.
+    @Test
+    func aHealthyProbeLeavesNoBlockers() async {
+        let readiness = await Self.readiness(from: .ok(summary: "openrouter · balanced", providerConfigured: true, acceptsImages: true))
+        #expect(readiness.blockers.isEmpty)
+        #expect(readiness.canGenerate)
+        #expect(readiness.answerAcceptsImages)
     }
 
     @Test

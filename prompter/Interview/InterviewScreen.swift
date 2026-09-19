@@ -13,18 +13,38 @@ struct InterviewScreen: View {
     @State private var model: InterviewScreenModel
     @Environment(\.dismiss) private var dismiss
     let title: String
-    /// What Live can do this session. Empty in Demo, which needs neither microphone nor backend.
-    let readiness: LiveReadiness
+    /// What Live can do this session.
+    ///
+    /// **Held in state, not fixed at presentation.** It used to be a snapshot taken once on the
+    /// start screen, so a single slow probe disabled Generate for the whole session while listening
+    /// and detection carried on working — which read as "the backend is unreachable" even though the
+    /// phone was talking to it successfully.
+    @State private var readiness: LiveReadiness
+    /// Re-runs the readiness check. Nil in Demo, which has nothing to check.
+    private let recheckReadiness: (() async -> LiveReadiness)?
+    @State private var isRechecking = false
 
     init(
         mode: InterviewMode,
         title: String = "Technical interview",
         feed: (any InterviewFeed)? = nil,
-        readiness: LiveReadiness = LiveReadiness()
+        readiness: LiveReadiness = LiveReadiness(),
+        recheckReadiness: (() async -> LiveReadiness)? = nil
     ) {
         self.title = title
-        self.readiness = readiness
+        _readiness = State(wrappedValue: readiness)
+        self.recheckReadiness = recheckReadiness
         _model = State(wrappedValue: InterviewScreenModel(mode: mode, feed: feed ?? DemoInterviewFeed()))
+    }
+
+    /// Checks again, on demand. Used by Retry and after a generation fails, because the most common
+    /// cause of a stale blocker is a backend that was simply slow to wake up.
+    private func recheck() async {
+        guard let recheckReadiness, !isRechecking else { return }
+        isRechecking = true
+        readiness = await recheckReadiness()
+        model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
+        isRechecking = false
     }
 
     var body: some View {
@@ -75,6 +95,12 @@ struct InterviewScreen: View {
             model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
         }
         .onDisappear { model.stop() }
+        // A failed generation is the strongest signal that readiness is stale — re-check once so the
+        // next attempt reports the real cause instead of repeating a snapshot taken minutes ago.
+        .onChange(of: model.generationFailure) { _, failure in
+            guard failure != nil else { return }
+            Task { await recheck() }
+        }
         .sheet(isPresented: $model.isFollowUpsSheetPresented) {
             if let question = model.currentQuestion {
                 FollowUpsSheet(question: question)
@@ -192,15 +218,32 @@ struct InterviewScreen: View {
     /// The honest half-working state: speech is being transcribed and questions detected, but no
     /// answer can be generated. Saying which half works is more useful than refusing to start.
     private var listenOnlyBadge: some View {
-        Text(readiness.blockers.first?.message ?? "Answers unavailable")
-            .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption2))
+        Button {
+            Task { await recheck() }
+        } label: {
+            HStack(spacing: 6) {
+                Text(isRechecking ? "Checking…" : (readiness.blockers.first?.message ?? "Answers unavailable"))
+                    .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption2))
+                    .multilineTextAlignment(.center)
+                // Retry lives on the badge that states the problem, which is where someone looks
+                // for it — no new control and no change to the layout.
+                if readiness.isRetryable, !isRechecking {
+                    Text("Retry")
+                        .font(InterviewTheme.Font.ui(11, weight: .bold, relativeTo: .caption2))
+                        .underline()
+                }
+            }
             .foregroundStyle(InterviewTheme.Color.demoBadge)
-            .multilineTextAlignment(.center)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(InterviewTheme.Color.surface, in: Capsule())
             .overlay(Capsule().stroke(InterviewTheme.Color.demoBadge.opacity(0.35), lineWidth: 1))
             .padding(.horizontal, 24)
+        }
+        .buttonStyle(.plain)
+        .disabled(recheckReadiness == nil)
+        .accessibilityLabel(readiness.blockers.first?.message ?? "Answers unavailable")
+        .accessibilityHint(readiness.isRetryable ? "Double tap to check the connection again" : "")
     }
 
     @ViewBuilder
@@ -218,6 +261,14 @@ struct InterviewScreen: View {
                 set: { model.isSimulatedReadingEnabled = $0 }
             )) {
                 Label("Simulated reading", systemImage: "text.book.closed")
+            }
+        }
+
+        if model.mode == .live, recheckReadiness != nil {
+            Button {
+                Task { await recheck() }
+            } label: {
+                Label("Check connection", systemImage: "arrow.clockwise.circle")
             }
         }
 

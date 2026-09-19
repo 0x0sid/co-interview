@@ -20,6 +20,10 @@ struct LiveReadiness: Equatable, Sendable {
         case speechModelUnavailable(locale: String)
         case backendNotConfigured(reason: String)
         case backendUnreachable(detail: String)
+        case backendTimedOut
+        case backendHostNotFound
+        case transportSecurityFailed
+        case deviceOffline
         case clientAuthenticationFailed
         case providerNotConfigured
         case developmentFakeEnabled
@@ -37,6 +41,14 @@ struct LiveReadiness: Equatable, Sendable {
                 reason
             case .backendUnreachable(let detail):
                 "The backend did not answer (\(detail)) — check it is running and reachable from this device"
+            case .backendTimedOut:
+                "The backend did not answer in time. It may be starting up — tap Retry"
+            case .backendHostNotFound:
+                "That backend address could not be found. If the tunnel restarted, its URL has changed"
+            case .transportSecurityFailed:
+                "The secure connection to the backend failed"
+            case .deviceOffline:
+                "This iPhone has no network connection"
             case .clientAuthenticationFailed:
                 "The backend rejected this app's access token — set a token that matches COINTERVIEW_TOKENS"
             case .providerNotConfigured:
@@ -50,6 +62,17 @@ struct LiveReadiness: Equatable, Sendable {
         var stopsListening: Bool {
             switch self {
             case .microphoneDenied, .speechRecognitionDenied, .speechModelUnavailable:
+                true
+            default:
+                false
+            }
+        }
+
+        /// Whether trying again could plausibly succeed without the user changing anything.
+        /// A timeout or a cold tunnel is worth retrying; a denied microphone is not.
+        var isWorthRetrying: Bool {
+            switch self {
+            case .backendTimedOut, .backendUnreachable, .deviceOffline, .backendHostNotFound:
                 true
             default:
                 false
@@ -71,6 +94,9 @@ struct LiveReadiness: Equatable, Sendable {
     var canGenerate: Bool { blockers.isEmpty }
     /// The honest middle state: a useful session with one half unavailable.
     var isListenOnly: Bool { canListen && !canGenerate }
+
+    /// True when the failure is transient enough that Retry is the right offer.
+    var isRetryable: Bool { blockers.contains { $0.isWorthRetrying } }
 
     /// One line for the start screen.
     var summary: String {
@@ -127,6 +153,16 @@ struct LiveReadiness: Equatable, Sendable {
                 if !providerConfigured { readiness.blockers.append(.providerNotConfigured) }
             case .unauthorized:
                 readiness.blockers.append(.clientAuthenticationFailed)
+            case .providerUnconfigured:
+                readiness.blockers.append(.providerNotConfigured)
+            case .timedOut:
+                readiness.blockers.append(.backendTimedOut)
+            case .hostNotFound:
+                readiness.blockers.append(.backendHostNotFound)
+            case .transportSecurityFailed:
+                readiness.blockers.append(.transportSecurityFailed)
+            case .offline:
+                readiness.blockers.append(.deviceOffline)
             case .unreachable(let detail):
                 readiness.blockers.append(.backendUnreachable(detail: detail))
             }
@@ -137,38 +173,68 @@ struct LiveReadiness: Equatable, Sendable {
     enum BackendProbe: Equatable, Sendable {
         case ok(summary: String, providerConfigured: Bool, acceptsImages: Bool)
         case unauthorized
+        case providerUnconfigured
+        case timedOut
+        case hostNotFound
+        case transportSecurityFailed
+        case offline
         case unreachable(detail: String)
     }
 
-    /// Asks the backend what it is configured with. `/health` is the one unauthenticated route and
-    /// deliberately reports no credential, so this can distinguish "not running" from "running
-    /// without a provider" without ever seeing a secret.
+    /// Asks the backend what it is configured with, **as the app**.
+    ///
+    /// It probes `/v1/copilot/config`, not `/health`, for one reason: `/health` is deliberately
+    /// unauthenticated, so it answers 200 even when the app's token is wrong. Probing it therefore
+    /// could not tell a working setup from a rejected one, and a bad token surfaced later as a
+    /// failed generation instead of an honest "the backend rejected this app's token".
+    ///
+    /// The timeout is deliberately generous. The original five seconds was shorter than a cold
+    /// tunnel's first TLS handshake over mobile, so one slow start marked an entirely healthy
+    /// backend unreachable for the rest of the session.
     static func probeBackend(_ configuration: ProviderConfiguration) async -> BackendProbe {
         guard case .backend(let url) = configuration.availability else {
             return .unreachable(detail: "no backend configured")
         }
-        var request = URLRequest(url: url.appending(path: "health"))
-        request.timeoutInterval = 5
-        if !configuration.token.isEmpty {
-            request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
-        }
+        var request = URLRequest(url: url.appending(path: "v1/copilot/config"))
+        request.timeoutInterval = probeTimeout
+        request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else {
                 return .unreachable(detail: "unexpected response")
             }
-            if http.statusCode == 401 || http.statusCode == 403 { return .unauthorized }
-            guard http.statusCode == 200 else {
+            switch http.statusCode {
+            case 200:
+                let configured = try JSONDecoder().decode(CopilotBackendConfiguration.self, from: data)
+                return .ok(
+                    summary: configured.summary,
+                    providerConfigured: configured.provider_configured,
+                    acceptsImages: configured.answer_accepts_images
+                )
+            case 401, 403:
+                return .unauthorized
+            case 503:
+                return .providerUnconfigured
+            default:
                 return .unreachable(detail: "HTTP \(http.statusCode)")
             }
-            let configured = try JSONDecoder().decode(CopilotBackendConfiguration.self, from: data)
-            return .ok(
-                summary: configured.summary,
-                providerConfigured: configured.provider_configured,
-                acceptsImages: configured.answer_accepts_images
-            )
+        } catch let error as URLError {
+            // Each of these has a different fix, so each gets its own answer rather than one
+            // catch-all "not reachable".
+            switch error.code {
+            case .timedOut: return .timedOut
+            case .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed: return .hostNotFound
+            case .secureConnectionFailed, .serverCertificateUntrusted,
+                 .serverCertificateHasBadDate, .serverCertificateNotYetValid,
+                 .serverCertificateHasUnknownRoot: return .transportSecurityFailed
+            case .notConnectedToInternet, .networkConnectionLost: return .offline
+            default: return .unreachable(detail: error.localizedDescription)
+            }
         } catch {
             return .unreachable(detail: (error as NSError).localizedDescription)
         }
     }
+
+    /// Long enough for a cold tunnel's first handshake on a mobile connection.
+    static let probeTimeout: TimeInterval = 12
 }
