@@ -26,6 +26,13 @@
 	<string>Prompter listens to your voice so the script can follow you as you speak. Audio is processed entirely on your iPhone and is never recorded or sent anywhere.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Prompter turns your speech into on-screen tracking, entirely on your iPhone, so the script keeps pace with you instead of a timer.</string>
+	<!-- Development defaults, injected from the git-ignored prompter/Config/Local-Debug.xcconfig.
+	     Empty when that file is absent, which simply means the app asks you to configure it.
+	     These keys exist only in this Debug plist; Info.plist (Release) has neither. -->
+	<key>CopilotDevBackendHost</key>
+	<string>$(COPILOT_DEV_BACKEND_HOST)</string>
+	<key>CopilotDevBackendToken</key>
+	<string>$(COPILOT_DEV_BACKEND_TOKEN)</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Co-Interview contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
 	<!-- Development only, and deliberately the narrowest exception that works.

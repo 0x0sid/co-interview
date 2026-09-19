@@ -28,3 +28,7 @@ xcuserdata/
 backend/.env
 backend/.env.*
 backend/*.local.env
+
+# Local development defaults for Debug builds (backend host + client token).
+# The committed template is prompter/Config/Local-Debug.example.xcconfig.
+prompter/Config/Local-Debug.xcconfig

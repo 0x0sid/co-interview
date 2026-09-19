@@ -1,0 +1,13 @@
+// Template for prompter/Config/Local-Debug.xcconfig, which is git-ignored.
+//
+// Copy this file to Local-Debug.xcconfig and fill both values in to make Debug builds reach your
+// development backend without typing anything into the app. Release builds never see these: the
+// values are injected into Info-Debug.plist, which only the Debug configuration uses.
+//
+// The host has NO scheme. xcconfig treats "//" as the start of a comment, so writing
+// https://example.ngrok-free.app here would silently become "https:". The app prepends https://.
+COPILOT_DEV_BACKEND_HOST = your-subdomain.ngrok-free.app
+
+// A value from the backend's COINTERVIEW_TOKENS. This is the CLIENT access token, which is not the
+// provider credential: OPENROUTER_API_KEY belongs only in backend/.env and never in the app.
+COPILOT_DEV_BACKEND_TOKEN = replace-with-a-client-token

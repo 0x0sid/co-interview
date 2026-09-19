@@ -31,6 +31,7 @@
 		15004F7D3027AAF800C22261 /* prompter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = prompter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15004F8C3027AAFA00C22261 /* prompterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = prompterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15004F963027AAFA00C22261 /* prompterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = prompterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C01N7E12A0000000000001 /* Local-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Local-Debug.xcconfig"; path = "prompter/Config/Local-Debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,6 +98,7 @@
 				15004F8F3027AAFA00C22261 /* prompterTests */,
 				15004F993027AAFA00C22261 /* prompterUITests */,
 				15004F7E3027AAF800C22261 /* Products */,
+				150FB505305E8ED000BFDA04 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -108,6 +110,14 @@
 				15004F963027AAFA00C22261 /* prompterUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		150FB505305E8ED000BFDA04 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				C01N7E12A0000000000001 /* Local-Debug.xcconfig */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -437,6 +447,7 @@
 		};
 		15004FA13027AAFA00C22261 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C01N7E12A0000000000001 /* Local-Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

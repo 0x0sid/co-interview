@@ -17,6 +17,9 @@ struct InfoPlistConfigurationTests {
     static let developmentOnlyKeys: Set<String> = [
         "NSAppTransportSecurity",
         "NSLocalNetworkUsageDescription",
+        // Backend host and client token injected from the git-ignored Local-Debug.xcconfig.
+        "CopilotDevBackendHost",
+        "CopilotDevBackendToken",
     ]
 
     static func plist(named name: String) throws -> [String: Any] {
@@ -38,6 +41,24 @@ struct InfoPlistConfigurationTests {
         #expect(release["NSAppTransportSecurity"] == nil,
                 "a Release build would ship an ATS exception for a development backend")
         #expect(release["NSLocalNetworkUsageDescription"] == nil)
+    }
+
+    /// A Release build must carry no development backend and no access token of any kind.
+    @Test
+    func theReleasePlistCarriesNoDevelopmentBackend() throws {
+        let release = try Self.plist(named: "Info.plist")
+        #expect(release["CopilotDevBackendHost"] == nil)
+        #expect(release["CopilotDevBackendToken"] == nil,
+                "a Release build would ship a client access token")
+    }
+
+    /// The committed Debug plist must reference build settings, never literal values — the real
+    /// host and token live in the git-ignored xcconfig and must never be committed here.
+    @Test
+    func theDebugPlistHoldsSubstitutionsRatherThanRealValues() throws {
+        let debug = try Self.plist(named: "Info-Debug.plist")
+        #expect(debug["CopilotDevBackendHost"] as? String == "$(COPILOT_DEV_BACKEND_HOST)")
+        #expect(debug["CopilotDevBackendToken"] as? String == "$(COPILOT_DEV_BACKEND_TOKEN)")
     }
 
     @Test
