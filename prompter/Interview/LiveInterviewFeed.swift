@@ -31,6 +31,8 @@ final class LiveInterviewFeed: InterviewFeed {
     /// Transcript utterances already announced, so a revision does not re-announce a line.
     private var emittedUtteranceRevisions: [UtteranceID: Int] = [:]
     private var emittedUtteranceOrder: [UtteranceID] = []
+    /// Entries created by Generate rather than by detection.
+    private var discussionQuestionIDByRequest: [UUID: UUID] = [:]
 
     /// Real transcript deltas, for the screen's own reading alignment.
     ///
@@ -119,6 +121,43 @@ final class LiveInterviewFeed: InterviewFeed {
             return
         }
         versionByRequest[requestID] = version.id
+    }
+
+    /// Answers the discussion, with no detected question required.
+    ///
+    /// **One request, not two.** It does not classify first and generate second: a failed or slow
+    /// classification was the single most common reason Generate did nothing useful in a real room.
+    /// The question the backend was given is reported back as the entry's label, so the entry says
+    /// truthfully what it answered.
+    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
+        requestByCard[requestID] = requestID       // keyed by request: this entry has no card
+        emittedLengthByRequest[requestID] = 0
+        continuation.yield(.answerStarted(requestID: requestID, questionID: questionID))
+
+        let question = Self.questionFromDiscussion(transcript)
+        continuation.yield(.answerTopicResolved(requestID: requestID, topic: question))
+        discussionQuestionIDByRequest[requestID] = questionID
+
+        let card = coordinator.beginDiscussionAnswer(question: question, conversation: transcript)
+        requestByCard[card.id] = requestID
+        questionIDByCard[card.id] = questionID
+        cardIDByQuestion[questionID] = card.id
+        if let version = coordinator.cards.first(where: { $0.id == card.id })?.versions.last {
+            versionByRequest[requestID] = version.id
+        }
+    }
+
+    /// The last thing that looks like a question, or the latest discussion if none does.
+    ///
+    /// Deliberately simple and local: it decides what to *ask about*, and the model decides what to
+    /// say. When nothing is interrogative it hands over the recent discussion and lets the answer
+    /// respond to that, rather than inventing a question that was never asked.
+    static func questionFromDiscussion(_ transcript: [String]) -> String {
+        let lines = transcript.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        if let interrogative = lines.reversed().first(where: { DetectionPolicy.looksInterrogative($0) }) {
+            return interrogative
+        }
+        return lines.suffix(2).joined(separator: " ")
     }
 
     func cancelAnswer(requestID: UUID) {

@@ -186,7 +186,7 @@ struct InterviewScreen: View {
             ActionPillView(
                 recording: model.recording,
                 isGenerating: model.isGeneratingForTarget,
-                canGenerate: model.canGenerate && (model.mode == .demo || readiness.canGenerate),
+                canGenerate: model.mode == .demo || readiness.canGenerate,
                 onToggleRecording: { model.toggleRecordingPause() },
                 onGenerate: { model.generate() },
                 menu: { moreMenu }

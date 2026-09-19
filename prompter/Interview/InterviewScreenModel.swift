@@ -60,6 +60,10 @@ final class InterviewScreenModel {
 
     /// Keyed by request id — the identity that makes a late event recognisable and discardable.
     private var generations: [UUID: Generation] = [:]
+    /// The immutable transcript each accepted request is answering.
+    private var pendingSnapshots: [UUID: [String]] = [:]
+    /// The one request currently running. Queued requests wait behind it.
+    private(set) var activeRequestID: UUID?
     /// questionID → the request currently running for it, so a second tap cannot start a second one.
     private var requestByQuestion: [UUID: UUID] = [:]
     /// Set when the user deliberately navigates. Generate targets this, not wherever the script got to.
@@ -143,6 +147,9 @@ final class InterviewScreenModel {
         for requestID in generations.keys { feed.cancelAnswer(requestID: requestID) }
         generations = [:]
         requestByQuestion = [:]
+        queuedRequestIDs = []
+        pendingSnapshots = [:]
+        activeRequestID = nil
         stopSimulatedReading()
         feedTask?.cancel()
         feedTask = nil
@@ -166,6 +173,9 @@ final class InterviewScreenModel {
 
         case .answerCompleted(let requestID, let blocks, let highlight):
             completeAnswer(requestID: requestID, blocks: blocks, highlight: highlight)
+
+        case .answerTopicResolved(let requestID, let topic):
+            labelEntry(requestID: requestID, topic: topic)
 
         case .answerFailed(let requestID, let message):
             failAnswer(requestID: requestID, message: message)
@@ -245,13 +255,100 @@ final class InterviewScreenModel {
         return isGenerating(questionID: target.id)
     }
 
-    var canGenerate: Bool { generationTarget != nil && !isGeneratingForTarget }
+    /// **Generate is always available.** It no longer depends on a detected question, on a selection,
+    /// or on nothing else being in flight: detection is unreliable in a real room, and a button that
+    /// disables itself when detection fails is a button that fails exactly when it is needed.
+    ///
+    /// The only thing it needs is something to answer — speech, a note, or attachments.
+    var canGenerate: Bool { true }
+
+    /// Nothing to send yet. The button stays tappable and says this rather than going grey, because
+    /// a disabled control explains nothing.
+    var hasAnythingToAnswer: Bool {
+        !transcript.isEmpty
+            || !context.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !attachments.isEmpty
+    }
+
+    /// Said when Generate is tapped with nothing to work from.
+    private(set) var emptyInputNotice: String?
+
+    /// Requests accepted but not yet started, oldest first. One runs at a time.
+    private(set) var queuedRequestIDs: [UUID] = []
+    /// Small on purpose: a queue that grows without limit is a queue nobody can reason about.
+    static let maximumQueuedRequests = 3
+    /// Ignores a second tap within this window, so one press cannot become two entries. Long enough
+    /// to absorb a double-tap, short enough that a deliberate second request is never refused.
+    static let generateDebounce: TimeInterval = 0.4
+    private var lastGenerateTapAt: Date?
 
     /// Asks for an answer to the target question. **A second tap while one is running does nothing** —
     /// the question already has a request, and one question never has two in flight.
-    func generate() {
-        guard let target = generationTarget else { return }
-        requestAnswer(for: target, isRegeneration: !target.answers.isEmpty)
+    /// The ordinary Generate tap.
+    ///
+    /// It answers **the latest discussion**, not whatever page is on screen, so browsing history
+    /// does not change what the next tap asks about. Every accepted tap creates its own entry with
+    /// its own immutable snapshot, including repeated taps about the same discussion.
+    func generate(now: Date = Date()) {
+        // Debounce: one press must not become two entries.
+        if let last = lastGenerateTapAt, now.timeIntervalSince(last) < Self.generateDebounce { return }
+
+        guard hasAnythingToAnswer else {
+            emptyInputNotice = "Speak or add context first"
+            return
+        }
+        guard queuedRequestIDs.count < Self.maximumQueuedRequests else {
+            emptyInputNotice = "Waiting on \(queuedRequestIDs.count) requests — wait or cancel one"
+            return
+        }
+        lastGenerateTapAt = now
+        emptyInputNotice = nil
+        syncSessionNote()
+
+        // The snapshot is taken here, at the tap, and never re-read. Later speech belongs to the
+        // next request, not this one.
+        let snapshot = transcriptSnapshot()
+        let requestID = UUID()
+        let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
+        questions.append(entry)
+        let index = questions.count - 1
+
+        generations[requestID] = Generation(questionID: entry.id, answerID: nil, isRegeneration: false)
+        requestByQuestion[entry.id] = requestID
+        pendingSnapshots[requestID] = snapshot
+        generationFailure = nil
+
+        // The first answer opens where the user is already looking; a later one must not move them.
+        if questions.count == 1 { currentIndex = 0 } else if index != currentIndex {
+            readyQuestionNumber = index + 1
+        }
+
+        queuedRequestIDs.append(requestID)
+        startNextQueuedRequestIfIdle()
+    }
+
+    /// The transcript as it stands, oldest first. Enough preceding discussion for a follow-up like
+    /// "and why?" to make sense, bounded so a long session does not send everything ever said.
+    private func transcriptSnapshot() -> [String] {
+        let lines = transcript.filter { $0.isFinal || $0.id == transcript.last?.id }.map(\.text)
+        return Array(lines.suffix(Self.snapshotLineLimit))
+    }
+
+    /// How much preceding discussion travels with a request.
+    static let snapshotLineLimit = 12
+    /// Shown while the feed works out what it is answering.
+    static let pendingQuestionLabel = "Answering the discussion…"
+
+    /// Starts the oldest queued request, if nothing is running.
+    private func startNextQueuedRequestIfIdle() {
+        guard activeRequestID == nil, let next = queuedRequestIDs.first else { return }
+        guard let generation = generations[next], let snapshot = pendingSnapshots[next] else {
+            queuedRequestIDs.removeFirst()
+            return
+        }
+        activeRequestID = next
+        queuedRequestIDs.removeFirst()
+        feed.requestAnswerForDiscussion(requestID: next, transcript: snapshot, questionID: generation.questionID)
     }
 
     /// Generate for one named question — what the button *on a page* does. The page is unambiguous
@@ -592,6 +689,23 @@ final class InterviewScreenModel {
         }
     }
 
+    /// Names the entry with what the feed actually decided it was answering.
+    private func labelEntry(requestID: UUID, topic: String) {
+        guard let generation = generations[requestID],
+              let index = questions.firstIndex(where: { $0.id == generation.questionID }) else { return }
+        let trimmed = topic.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        questions[index].text = trimmed
+    }
+
+    /// Frees the slot and starts whatever is waiting. Called on every terminal outcome, so a failure
+    /// can never strand the queue.
+    private func finishRequest(_ requestID: UUID) {
+        pendingSnapshots[requestID] = nil
+        if activeRequestID == requestID { activeRequestID = nil }
+        startNextQueuedRequestIfIdle()
+    }
+
     private func appendQuestion(_ question: InterviewQuestion) {
         // A question keeps one identity: if the feed re-announces it, nothing is duplicated.
         guard !questions.contains(where: { $0.id == question.id }) else { return }
@@ -644,6 +758,7 @@ final class InterviewScreenModel {
 
         generations[requestID] = nil
         requestByQuestion[generation.questionID] = nil
+        finishRequest(requestID)
 
         if index == currentIndex {
             restartSimulatedReadingForCurrentPage()
@@ -653,10 +768,32 @@ final class InterviewScreenModel {
         }
     }
 
+    /// A failure keeps everything that arrived. Whatever text was streamed stays readable and the
+    /// entry is marked incomplete, so Retry adds to history rather than replacing it.
     private func failAnswer(requestID: UUID, message: String) {
         guard let generation = generations[requestID] else { return }
+        if let answerID = generation.answerID,
+           let index = questions.firstIndex(where: { $0.id == generation.questionID }),
+           let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) {
+            questions[index].answers[answerIndex].isComplete = true
+            questions[index].answers[answerIndex].isIncomplete = true
+        }
         generations[requestID] = nil
         requestByQuestion[generation.questionID] = nil
         generationFailure = message
+        finishRequest(requestID)
+    }
+
+    /// Abandons a queued request the user no longer wants. The entry stays, marked cancelled, rather
+    /// than vanishing — an accepted request is never silently discarded.
+    func cancelQueuedRequest(_ requestID: UUID) {
+        guard queuedRequestIDs.contains(requestID) else { return }
+        queuedRequestIDs.removeAll { $0 == requestID }
+        feed.cancelAnswer(requestID: requestID)
+        if let generation = generations[requestID] {
+            requestByQuestion[generation.questionID] = nil
+        }
+        generations[requestID] = nil
+        pendingSnapshots[requestID] = nil
     }
 }

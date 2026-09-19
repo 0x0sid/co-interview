@@ -74,6 +74,10 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
     /// The word the design highlights in the primary colour.
     var highlight: String?
     var isComplete: Bool
+    /// Finished, but not finished *well*: generation stopped early or failed after some text had
+    /// already arrived. The text stays readable and the page says so, because silently presenting a
+    /// truncated answer as complete is worse than showing less.
+    var isIncomplete: Bool = false
     let createdAt: Date
 
     init(
@@ -82,6 +86,7 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
         blocks: [AnswerBlock] = [],
         highlight: String? = nil,
         isComplete: Bool = false,
+        isIncomplete: Bool = false,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -89,6 +94,7 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
         self.blocks = blocks
         self.highlight = highlight
         self.isComplete = isComplete
+        self.isIncomplete = isIncomplete
         self.createdAt = createdAt
     }
 

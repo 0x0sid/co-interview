@@ -70,6 +70,23 @@ final class DemoInterviewFeed: InterviewFeed {
         }
     }
 
+    /// The demo answers the discussion by picking the scripted exchange whose question appears in
+    /// the transcript, so Generate behaves the same way it does live: no detection required.
+    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
+        let joined = transcript.joined(separator: " ")
+        let exchange = script.first { joined.contains($0.question) } ?? Exchange.generatedExtras.first
+        let question = exchange?.question ?? "The discussion so far"
+        continuation.yield(.answerTopicResolved(requestID: requestID, topic: question))
+        generations[requestID] = Task { [weak self] in
+            await self?.generate(
+                requestID: requestID,
+                question: InterviewQuestion(id: questionID, text: question),
+                exchange: exchange,
+                isRegeneration: false
+            )
+        }
+    }
+
     func cancelAnswer(requestID: UUID) {
         generations[requestID]?.cancel()
         generations[requestID] = nil

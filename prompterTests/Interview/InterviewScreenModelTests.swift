@@ -34,6 +34,13 @@ struct InterviewScreenModelTests {
             requests.append((requestID, question.id, isRegeneration))
         }
 
+        /// Discussion-based requests, which is how ordinary Generate works now.
+        private(set) var discussionRequests: [(requestID: UUID, transcript: [String], questionID: UUID)] = []
+
+        func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
+            discussionRequests.append((requestID, transcript, questionID))
+        }
+
         func cancelAnswer(requestID: UUID) {
             cancellations.append(requestID)
         }
@@ -76,7 +83,8 @@ struct InterviewScreenModelTests {
     ) -> InterviewQuestion {
         let question = detect(text, in: model)
         model.select(questionID: question.id)
-        model.generate()
+        // The explicit "answer this question" action, which still targets one question by name.
+        model.generate(for: question)
         guard let request = feed.requests.last else { return question }
         completeGeneration(requestID: request.requestID, questionID: question.id, blocks: [.prose(answer)], in: model)
         return question
@@ -114,7 +122,7 @@ struct InterviewScreenModelTests {
         Self.detect("Second?", in: model)
         model.select(questionID: first.id)
 
-        model.generate()
+        model.generate(for: first)
         let request = try #require(feed.requests.last)
         #expect(request.questionID == first.id)
         #expect(request.isRegeneration == false)
@@ -127,17 +135,22 @@ struct InterviewScreenModelTests {
         #expect(model.questions[0].selectedAnswer?.version == 1)
     }
 
-    /// With nothing explicitly selected, Generate answers the most recent question that has none.
+    /// **Superseded rule, kept as a regression guard.** Ordinary Generate used to target the latest
+    /// detected question. It no longer does: detection is unreliable in a real room, so Generate
+    /// answers the discussion and creates its own entry. Targeting a specific question is now only
+    /// the explicit per-page action.
     @Test
-    func generateFallsBackToTheLatestUnansweredQuestion() throws {
+    func ordinaryGenerateAnswersTheDiscussionRatherThanADetectedQuestion() throws {
         let (model, feed) = Self.makeModel()
         Self.detect("First?", in: model)
-        let second = Self.detect("Second?", in: model)
+        Self.detect("Second?", in: model)
+        model.handle(.transcriptLine(TranscriptLine(text: "Some discussion worth answering.")))
 
         model.generate()
 
-        let request = try #require(feed.requests.last)
-        #expect(request.questionID == second.id)
+        #expect(feed.requests.isEmpty, "ordinary Generate targeted a detected question")
+        #expect(feed.discussionRequests.count == 1, "ordinary Generate did not ask about the discussion")
+        #expect(model.questions.count == 3, "Generate did not create its own entry")
     }
 
     /// The button on a page is unambiguous: it answers *that* question, not whatever the target rule
@@ -154,19 +167,19 @@ struct InterviewScreenModelTests {
         #expect(request.questionID == first.id)
     }
 
+    /// **Inverted rule.** A second request for the *same question* is still refused — one question
+    /// never has two generations in flight — but the per-page action is what expresses that now.
     @Test
-    func repeatedTapsWhileGeneratingDoNotCreateASecondRequest() {
+    func asecondRequestForTheSameQuestionIsRefused() {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("First?", in: model)
-        model.select(questionID: question.id)
 
-        model.generate()
-        model.generate()
-        model.generate()
+        model.generate(for: question)
+        model.generate(for: question)
+        model.generate(for: question)
 
-        #expect(feed.requests.count == 1, "a second request was sent while one was already running")
+        #expect(feed.requests.count == 1, "one question had two generations in flight")
         #expect(model.isGenerating(questionID: question.id))
-        #expect(model.canGenerate == false)
     }
 
     @Test
@@ -178,7 +191,7 @@ struct InterviewScreenModelTests {
 
         // The reader goes back to page 1 and asks for page 2's answer from there.
         model.select(questionID: first.id)
-        model.generate()          // targets the selected question — page 1
+        model.generate(for: first)          // the explicit per-page action
         let firstRequest = try #require(feed.requests.last)
         Self.completeGeneration(requestID: firstRequest.requestID, questionID: first.id, blocks: [.prose("First answer.")], in: model)
         #expect(model.currentIndex == 0)
@@ -186,7 +199,7 @@ struct InterviewScreenModelTests {
 
         // Now a real generation for another page finishes while page 1 is on screen.
         model.select(questionID: second.id)
-        model.generate()
+        model.generate(for: second)
         let secondRequest = try #require(feed.requests.last)
         model.select(questionID: first.id)                    // back to what they were reading
         Self.completeGeneration(requestID: secondRequest.requestID, questionID: second.id, blocks: [.prose("Second answer.")], in: model)
@@ -202,7 +215,7 @@ struct InterviewScreenModelTests {
         let first = Self.detect("First?", in: model)
         let second = Self.detect("Second?", in: model)
         model.select(questionID: second.id)
-        model.generate()
+        model.generate(for: second)
         let request = try #require(feed.requests.last)
 
         // The reader moves back to page 1 while it is being written.
@@ -258,7 +271,7 @@ struct InterviewScreenModelTests {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("First?", in: model)
         model.select(questionID: question.id)
-        model.generate()
+        model.generate(for: question)
         let request = try #require(feed.requests.last)
         model.handle(.answerStarted(requestID: request.requestID, questionID: question.id))
 
@@ -279,7 +292,7 @@ struct InterviewScreenModelTests {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("First?", in: model)
         model.select(questionID: question.id)
-        model.generate()
+        model.generate(for: question)
         let request = try #require(feed.requests.last)
         model.handle(.answerStarted(requestID: request.requestID, questionID: question.id))
 
@@ -295,7 +308,7 @@ struct InterviewScreenModelTests {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("First?", in: model)
         model.select(questionID: question.id)
-        model.generate()
+        model.generate(for: question)
         let request = try #require(feed.requests.last)
 
         model.handle(.answerFailed(requestID: request.requestID, message: "The demo script has no answer for this question."))
@@ -447,7 +460,7 @@ struct InterviewScreenModelTests {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("First?", in: model)
         model.select(questionID: question.id)
-        model.generate()
+        model.generate(for: question)
         let request = try #require(feed.requests.last)
         model.handle(.answerStarted(requestID: request.requestID, questionID: question.id))
         model.handle(.answerChunk(requestID: request.requestID, text: "Half an answer"))
@@ -467,7 +480,7 @@ struct InterviewScreenModelTests {
         let (model, feed) = Self.makeModel()
         let question = Self.detect("How?", in: model)
         model.select(questionID: question.id)
-        model.generate()
+        model.generate(for: question)
         let request = try #require(feed.requests.last)
         Self.completeGeneration(
             requestID: request.requestID,

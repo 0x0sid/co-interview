@@ -504,3 +504,65 @@ Everything below needs a provider credential, which this machine does not have.
 9. **Pause and resume listening**, then close the interview. The microphone indicator must go out.
 
 Report what actually happened, including anything that did not work.
+
+---
+
+## 13. Generate is independent of detection (2026-09-20)
+
+Device feedback was blunt: transcription worked, questions were not reliably detected, and Generate
+was therefore useless. Two separate faults, fixed separately.
+
+### The detection bug: verdicts discarded, then the queue blocked
+
+The backend was never at fault. Its log showed 22 successful `POST /v1/copilot/classify -> 200` from
+the phone, and the classifier answers `new_question` with high confidence for unpunctuated speech
+("how do you handle backpressure"), short questions ("Why?") and imperatives ("Tell me about your
+last project"). The losses were both app-side:
+
+1. **A verdict about still-volatile speech was thrown away.** On-device transcription publishes
+   volatile text long before it finalizes, so the policy's `stablePause` trigger classifies the
+   in-flight tail — that is what the trigger is for. But that path had no finalized utterances, so
+   `apply` received an empty consumed-utterance group and its `guard !consumed.isEmpty` dropped the
+   `new_question`. `lastClassifiedText` was recorded anyway, so when the same words finalized the
+   policy refused to look again ("nothing new since the last call"). The question was not delayed —
+   it was lost. The open utterance is now the classification group, so the verdict lands and the
+   utterance's stable identity still prevents a duplicate when it finalizes.
+
+2. **The finalized copy then blocked everything behind it.** Detection is a queue, and
+   `skipUnclassifiableHeadTurns` only skipped turns that were too short or entirely the user reading.
+   An already-classified turn sat at the head forever, so no later question was examined. Turns whose
+   utterances have all been consumed are now skipped too: they have had their decision, and `apply`
+   would reject a second card for them regardless.
+
+Detection still matters — it underlines questions in the transcript and powers explicit selection —
+but **it no longer gates anything the user can ask for.**
+
+### The Generate contract
+
+`canGenerate` is now unconditionally true. Tapping Generate:
+
+- takes an **immutable snapshot** of the transcript (bounded to the last 12 lines, enough for a
+  follow-up like "and why?" to make sense), the note and the prepared attachments;
+- creates a history entry immediately, with a visible generating state;
+- asks the feed through `requestAnswerForDiscussion` — **one request**, which derives the question or
+  topic and streams the answer. There is no separate classification call to fail first;
+- labels the entry with what was actually answered, reported back as `answerTopicResolved`.
+
+With nothing to answer the button stays tappable and says "Speak or add context first" rather than
+going grey; no empty request is sent. The explicit per-page "answer this question" action is
+unchanged, and ordinary Generate always uses the **latest discussion**, so browsing history does not
+change what the next tap asks about.
+
+### Repeated taps
+
+Every accepted tap is its own entry, including repeated taps about the same discussion. A 0.4 s
+debounce absorbs an accidental double-tap without refusing a deliberate second request. One request
+runs at a time and the rest wait in a FIFO queue bounded at three; a full queue says so rather than
+discarding an accepted request. Each queued request keeps the snapshot it was created with, so later
+speech belongs to the next request, not to one already accepted.
+
+### What a failure leaves behind
+
+Streamed text stays on screen and the version is marked incomplete. The transcript, every previous
+answer and its reading position are untouched, and the queue slot is released so the next request
+still runs. Ending the session clears the queue and late events are rejected by request id.

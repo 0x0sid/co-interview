@@ -23,6 +23,9 @@ enum InterviewFeedEvent: Sendable {
     /// The answer is finished: its final blocks **in their original order**, code cards included
     /// where they belong between paragraphs.
     case answerCompleted(requestID: UUID, blocks: [AnswerBlock], highlight: String?)
+    /// What the feed decided it was answering, when the screen did not supply a question. Carries
+    /// the inferred question or topic so the entry can be labelled with something truthful.
+    case answerTopicResolved(requestID: UUID, topic: String)
     /// The generation did not produce an answer. Said plainly rather than left spinning.
     case answerFailed(requestID: UUID, message: String)
 }
@@ -43,6 +46,17 @@ protocol InterviewFeed: AnyObject {
     /// Asks for an answer to one question. The feed replies with `answerStarted`, `answerChunk`…,
     /// then `answerCompleted` or `answerFailed`, all carrying this `requestID`.
     func requestAnswer(requestID: UUID, question: InterviewQuestion, isRegeneration: Bool)
+
+    /// Asks for an answer to **the discussion so far**, with no detected question required.
+    ///
+    /// This is the contract that makes Generate independent of detection. The feed derives what
+    /// needs answering from the transcript snapshot it is given and streams the answer in one
+    /// request — it does not wait for, or require, a successful classification first. The derived
+    /// question or topic comes back with `answerStarted` so the entry can be labelled.
+    ///
+    /// `transcript` is an immutable snapshot taken when the user tapped. Later speech cannot change
+    /// what this request is answering.
+    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID)
     /// Abandons a request. Any event already in flight for it is still tagged with its id, so the
     /// screen can recognise and discard it.
     func cancelAnswer(requestID: UUID)

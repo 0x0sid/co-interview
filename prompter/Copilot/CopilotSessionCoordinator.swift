@@ -207,10 +207,17 @@ final class CopilotSessionCoordinator {
         if group.isEmpty {
             // Nothing finalized yet: the in-flight tail is all there is (the stable-pause trigger).
             pending = conversation.pendingText(after: detectionCutoff)
+            // **The open utterance is the group.** Classifying with an empty group meant `apply`
+            // discarded a `new_question` verdict for want of anything to mark consumed — while
+            // `lastClassifiedText` was recorded anyway, so the same words could never be classified
+            // again once they finalized. A question detected from still-volatile speech was lost for
+            // good. The open utterance already has the stable identity this needs, and keeping that
+            // identity is what stops finalization producing a second card for the same speech.
+            pendingClassificationGroup = conversation.openUtterance.map { [$0] } ?? []
         } else {
             pending = group.map(\.text).joined(separator: " ")
+            pendingClassificationGroup = group
         }
-        pendingClassificationGroup = group
         let allOverlap = !group.isEmpty && group.allSatisfy(\.overlapsReading)
 
         // A turn counts as closed — the same stable signal a freshly finalized utterance gives — when
@@ -291,7 +298,13 @@ final class CopilotSessionCoordinator {
             // does not.
             let isTooShort = wordCount < policy.minimumNewWords && !DetectionPolicy.looksInterrogative(headText)
             let isEntirelyReading = head.allSatisfy(\.overlapsReading)
-            guard isTooShort || isEntirelyReading else { return }
+            // *Already classified.* A turn whose utterances have all been consumed has had its
+            // decision; `apply` would reject a second card for them anyway. Left at the head it can
+            // only block everything behind it — which is what happened once a question detected from
+            // still-volatile speech finalized: the finalized copy sat at the head of the queue and no
+            // later question was ever examined again.
+            let isAlreadyClassified = head.allSatisfy { consumedUtteranceIDs.contains($0.id) }
+            guard isTooShort || isEntirelyReading || isAlreadyClassified else { return }
 
             detectionCutoff = max(detectionCutoff, last.endTime)
             head.forEach { consumedUtteranceIDs.insert($0.id) }
@@ -456,6 +469,18 @@ final class CopilotSessionCoordinator {
         evaluateDetection(now: conversation.lastActivityTime, didFinalize: true, manual: true)
     }
 
+    /// Creates an entry for a question derived from the discussion and starts answering it.
+    ///
+    /// This is the manual path: it exists so Generate never depends on detection having succeeded.
+    /// The conversation snapshot is supplied by the caller and used as-is, so the request answers
+    /// what was on screen when the user tapped, not whatever has been said since.
+    @discardableResult
+    func beginDiscussionAnswer(question: String, conversation snapshot: [String]) -> QuestionCard {
+        let card = appendCard(questionText: question, origin: .manual, utteranceIDs: [])
+        startGeneration(for: card.id, conversationOverride: snapshot)
+        return card
+    }
+
     /// A typed question — works with no audio at all.
     func askTyped(_ question: String) {
         guard state == .active else { return }
@@ -489,7 +514,12 @@ final class CopilotSessionCoordinator {
     // MARK: - Generation
 
     /// Creates a new version for a card and starts or queues it.
-    func startGeneration(for cardID: QuestionCardID, detectionLatency: TimeInterval = 0, questionEndTranscriptTime: TimeInterval = 0) {
+    func startGeneration(
+        for cardID: QuestionCardID,
+        detectionLatency: TimeInterval = 0,
+        questionEndTranscriptTime: TimeInterval = 0,
+        conversationOverride: [String]? = nil
+    ) {
         guard state == .active, let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
 
         let retrievalStart = clock()
@@ -534,7 +564,9 @@ final class CopilotSessionCoordinator {
             // note afterwards cannot change an answer already being written.
             extraContext: sessionNote,
             images: sessionImages,
-            recentConversation: conversation.recentContext(maximumUtterances: 6).map(\.text),
+            // The caller's snapshot when there is one, so a queued request still answers the
+            // discussion it was created for rather than the newest speech.
+            recentConversation: conversationOverride ?? conversation.recentContext(maximumUtterances: 6).map(\.text),
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
                       locator: $0.locator, text: $0.text)
