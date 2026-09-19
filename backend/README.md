@@ -107,6 +107,42 @@ a Release plist ever gains the exception, or if the two plists drift apart in an
 independent — with no provider credential the session still transcribes and detects questions, and
 says "answers unavailable" instead of refusing to start.
 
+## HTTPS for device testing (ngrok)
+
+The phone needs HTTPS or a LAN exception. ngrok gives the first, which is why it does **not** depend
+on the Debug-only LAN plist — that stays as an optional fallback.
+
+```bash
+# 1. Backend on loopback (HOST=127.0.0.1 in .env is correct for this).
+cd backend && node server.mjs
+
+# 2. Tunnel, with traffic inspection OFF so request bodies — transcripts and image
+#    attachments — are not retained by the agent.
+ngrok http 8787 --inspect=false
+
+# Shut down, in either order:
+#   Ctrl-C in each window, or:
+pkill -f "ngrok http"; pkill -f "node server.mjs"
+```
+
+`ngrok http 8787` prints the HTTPS forwarding URL. Enter **that** URL in the app under
+**Debug → Debug: Copilot**, with the same client token from `COINTERVIEW_TOKENS`. The URL changes
+every time the agent restarts on the free plan, so re-enter it after a restart.
+
+**Authentication still applies through the tunnel.** The URL is public; `COINTERVIEW_TOKENS` is what
+keeps it from being an open proxy. Verified: unauthenticated and wrong-token requests to
+`/v1/copilot/answer` and `/v1/copilot/classify` return 401 through the public URL.
+
+ngrok changes **reachability, not speed** — it adds a network hop, so it can only make a request
+slower than the same request on the LAN. It has nothing to do with capturing call audio, which no
+iOS API permits from a third-party app.
+
+### Tests never read your `.env`
+
+`backend/.env` is loaded only when `COINTERVIEW_NO_ENV_FILE` is unset. Every test harness sets it to
+`1`, because a developer's real key leaking into a suite broke the OpenAI contract test — and could
+have let a test make a real, billed provider call.
+
 ## Configuration
 
 | Variable | Default | Meaning |

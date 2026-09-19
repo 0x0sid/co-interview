@@ -47,6 +47,10 @@ import * as openrouter from "./providers/openrouter.mjs";
  *   committed template and holds no value.
  */
 function loadLocalEnvFile() {
+  // Tests spawn this server with a deliberately minimal environment. Without this escape hatch a
+  // developer's .env leaks into them — which broke the OpenAI contract test the moment a real
+  // OPENROUTER_API_KEY existed, and could have let a test make a real, billed provider call.
+  if (process.env.COINTERVIEW_NO_ENV_FILE === "1") return null;
   const here = dirname(fileURLToPath(import.meta.url));
   const path = join(here, ".env");
   if (!existsSync(path)) return null;

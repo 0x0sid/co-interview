@@ -86,6 +86,8 @@ const server = spawn(process.execPath, ["server.mjs"], {
   cwd: new URL("..", import.meta.url).pathname,
   env: {
     ...process.env,
+    // Never read the developer's backend/.env: these suites define their own world.
+    COINTERVIEW_NO_ENV_FILE: "1",
     PORT: "9912",
     COINTERVIEW_TOKENS: "test-token",
     OPENAI_API_KEY: "test-key-not-real",
