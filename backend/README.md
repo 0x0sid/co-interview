@@ -97,6 +97,12 @@ Then in the app: **Debug → Debug: Copilot**, set the backend URL to the Mac's 
 (`ipconfig getifaddr en0`, e.g. `http://192.168.1.42:8787`) and paste the same `COINTERVIEW_TOKENS`
 value as the access token. **Never** the provider key: the app never holds one.
 
+**The HTTP exception is Debug-only.** `NSAllowsLocalNetworking` lives in
+`prompter/Resources/Info-Debug.plist`, which only the Debug configuration uses; the Release
+configuration uses `Info.plist`, which does not carry it. `NSAllowsArbitraryLoads` is never set in
+either, so public connections always require HTTPS. `InfoPlistConfigurationTests` fails the build if
+a Release plist ever gains the exception, or if the two plists drift apart in any other key.
+
 `Interview Copilot → Start live` then reports what is actually ready. Listening and generation are
 independent — with no provider credential the session still transcribes and detects questions, and
 says "answers unavailable" instead of refusing to start.
