@@ -29,6 +29,40 @@ struct ProviderConfiguration: Equatable, Sendable {
 
     var availability: Availability
     var token: String
+    /// Where the base URL came from. Shown in the debug screen so there is never a question about
+    /// which of the three possible sources is actually in effect.
+    var source: Source = .none
+
+    /// The one place a base URL can come from, in precedence order.
+    enum Source: String, Equatable, Sendable {
+        /// Typed and saved in the debug screen. Highest precedence — an explicit human choice.
+        case savedSetting = "saved setting"
+        /// `CopilotBackendURL` in the build's Info.plist. How a real build is pointed at a service.
+        case buildConfiguration = "build configuration"
+        /// The git-ignored `Local-Debug.xcconfig` baked into a Debug build.
+        case developmentDefault = "development default"
+        case none = "none"
+    }
+
+    /// A saved development URL that has certainly stopped working.
+    ///
+    /// ngrok's free tunnels get a new hostname every restart, so a URL saved from a previous session
+    /// is dead the moment the agent restarts — and because a saved setting outranks the build's own
+    /// configuration, that dead URL silently wins over the endpoint the build was made to talk to.
+    /// That is how the app ends up "unreachable" while the backend is healthy.
+    ///
+    /// Only *superseded* ephemeral hosts are ignored: a saved ngrok URL is honoured when the build
+    /// carries no development default, or when it is the same host the build already points at. A
+    /// saved URL for any other host — a real service, a LAN address — is always honoured, because
+    /// that is a deliberate choice this must not second-guess.
+    static func isSupersededDevelopmentURL(_ saved: String, developmentURL: String?) -> Bool {
+        guard let developmentURL, !developmentURL.isEmpty,
+              let savedHost = URL(string: saved)?.host,
+              let developmentHost = URL(string: developmentURL)?.host,
+              savedHost != developmentHost else { return false }
+        let ephemeral = ["ngrok-free.app", "ngrok.io", "ngrok.app", "trycloudflare.com"]
+        return ephemeral.contains { savedHost.hasSuffix($0) }
+    }
 
     static func resolve(
         bundle: Bundle = .main,
@@ -37,18 +71,40 @@ struct ProviderConfiguration: Equatable, Sendable {
     ) -> ProviderConfiguration {
         // Precedence, highest first: what the developer explicitly saved in the debug screen, then
         // the build's own configuration, then the local development defaults. Saving a value in the
-        // app therefore always wins over the checked-out configuration, which is what makes a stale
-        // default harmless — you can always override it from the screen.
+        // app therefore wins over the checked-out configuration, which is what makes a stale
+        // *default* harmless — you can always override it from the screen.
+        //
+        // The one exception is a stale *saved* value: see `isSupersededDevelopmentURL`. A dead
+        // ngrok hostname saved in a previous session is not a choice anyone is still making, and
+        // letting it outrank the build made the app unreachable while the backend was healthy.
         let development = developmentDefaults(bundle: bundle, isDebugBuild: isDebugBuild)
         let token = firstNonEmpty(
             defaults.string(forKey: backendTokenDefaultsKey),
             development?.token
         )
+        // A saved setting still wins — it is an explicit choice — *unless* it is a development
+        // tunnel the build has since moved on from, which is a stale value rather than a choice.
+        let savedURL = (defaults.string(forKey: backendURLDefaultsKey) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedIsSuperseded = isSupersededDevelopmentURL(savedURL, developmentURL: development?.url)
+        let effectiveSaved = savedIsSuperseded ? "" : savedURL
+
         let urlString = firstNonEmpty(
-            defaults.string(forKey: backendURLDefaultsKey),
+            effectiveSaved,
             bundle.object(forInfoDictionaryKey: backendURLPlistKey) as? String,
             development?.url
         )
+        let source: Source
+        if !effectiveSaved.isEmpty {
+            source = .savedSetting
+        } else if let plist = bundle.object(forInfoDictionaryKey: backendURLPlistKey) as? String,
+                  !plist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            source = .buildConfiguration
+        } else if development?.url.isEmpty == false {
+            source = .developmentDefault
+        } else {
+            source = .none
+        }
 
         if !urlString.isEmpty, let url = URL(string: urlString), url.scheme != nil {
             guard !token.isEmpty else {
@@ -57,7 +113,7 @@ struct ProviderConfiguration: Equatable, Sendable {
                     token: ""
                 )
             }
-            return ProviderConfiguration(availability: .backend(url: url), token: token)
+            return ProviderConfiguration(availability: .backend(url: url), token: token, source: source)
         }
 
         // The fake is available only in a debug build **and** only when explicitly switched on. A

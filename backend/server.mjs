@@ -1072,8 +1072,8 @@ const server = createServer(async (request, response) => {
 
   try {
     if (url.pathname === "/health") {
-      return send(response, 200, {
-        status: "ok",
+      return send(response, shuttingDown ? 503 : 200, {
+        status: shuttingDown ? "shutting_down" : "ok",
         provider: providerMode,
         auth: TOKENS.length ? "configured" : "unconfigured",
         text_provider: baseConfig.text_provider,
@@ -1135,6 +1135,41 @@ const server = createServer(async (request, response) => {
     }
   }
 });
+
+/**
+ * How long in-flight work may finish after a shutdown signal, in milliseconds.
+ *
+ * A managed host (Railway, Fly, Render) sends SIGTERM and then SIGKILLs after its own grace period,
+ * so this stays comfortably under a typical 30s. An answer in progress is a person mid-interview
+ * reading from the screen; it is worth finishing.
+ */
+const SHUTDOWN_GRACE_MS = Number(process.env.SHUTDOWN_GRACE_MS ?? 15000);
+
+let shuttingDown = false;
+
+/**
+ * Stops accepting new connections and lets in-flight requests finish.
+ *
+ * `server.close()` does **not** cut existing responses, which is exactly what a streaming answer
+ * needs: the SSE stream already open keeps writing until it completes or the client cancels. Only
+ * after the grace period does the process exit regardless, so a stuck upstream cannot hold a deploy
+ * open forever.
+ */
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`  shutdown: ${signal} received — no new connections, finishing in-flight requests`);
+  server.close(() => {
+    console.log("  shutdown: all connections closed");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.log(`  shutdown: grace period of ${SHUTDOWN_GRACE_MS}ms elapsed, exiting`);
+    process.exit(0);
+  }, SHUTDOWN_GRACE_MS).unref();
+}
+
+for (const signal of ["SIGTERM", "SIGINT"]) process.on(signal, () => shutdown(signal));
 
 server.listen(PORT, HOST, () => {
   console.log(`Co-Interview copilot backend on http://${HOST}:${PORT}`);

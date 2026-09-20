@@ -90,7 +90,10 @@ struct CopilotDebugScreen: View {
     private var statusRow: some View {
         switch configuration.availability {
         case .backend(let url):
-            Label("Backend configured: \(url.absoluteString)", systemImage: "checkmark.circle")
+            // Which of the three sources won, spelled out: a wrong endpoint is otherwise impossible
+            // to explain from this screen, because all three look identical once resolved.
+            Label("Backend configured: \(url.absoluteString)\nfrom: \(configuration.source.rawValue)",
+                  systemImage: "checkmark.circle")
                 .font(.footnote).foregroundStyle(.green)
         case .developmentFake:
             Label("Development fake — answers are canned text, clearly marked", systemImage: "exclamationmark.triangle")

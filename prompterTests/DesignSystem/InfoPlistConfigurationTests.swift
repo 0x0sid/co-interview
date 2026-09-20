@@ -52,6 +52,29 @@ struct InfoPlistConfigurationTests {
                 "a Release build would ship a client access token")
     }
 
+    /// **No provider credential may exist in either plist, under any name.**
+    ///
+    /// The phone is only ever entitled to a *client* token for the backend. The provider key is what
+    /// costs money and what an attacker wants, and it belongs in the backend's environment. This
+    /// asserts the absence by shape rather than by listing the keys we happen to use today, so a new
+    /// key added carelessly in future fails here.
+    @Test
+    func neitherPlistCarriesAProviderCredential() throws {
+        for name in ["Info.plist", "Info-Debug.plist"] {
+            let plist = try Self.plist(named: name)
+            for (key, value) in plist {
+                let lowered = key.lowercased()
+                #expect(!lowered.contains("openrouter"), "\(name) has a key named \(key)")
+                #expect(!lowered.contains("openai"), "\(name) has a key named \(key)")
+                #expect(!lowered.contains("apikey") && !lowered.contains("api_key"),
+                        "\(name) has a key named \(key)")
+                if let text = value as? String {
+                    #expect(!text.hasPrefix("sk-"), "\(name) carries a provider-key-shaped value at \(key)")
+                }
+            }
+        }
+    }
+
     /// The committed Debug plist must reference build settings, never literal values — the real
     /// host and token live in the git-ignored xcconfig and must never be committed here.
     @Test
