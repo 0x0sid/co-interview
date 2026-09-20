@@ -16,6 +16,11 @@ struct AnswerPageView: View {
     let alignment: ReadingAlignment?
     let isAutoScrolling: Bool
     let isGenerating: Bool
+    /// Accepted but waiting behind another request.
+    var isQueued: Bool = false
+    /// This entry failed and still has the snapshot needed to try again.
+    var canRetry: Bool = false
+    var onRetry: () -> Void = {}
     let failureMessage: String?
     let onGenerate: () -> Void
     let onFollowUps: () -> Void
@@ -44,9 +49,21 @@ struct AnswerPageView: View {
                 }
 
                 if let failureMessage {
-                    Text(failureMessage)
-                        .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
-                        .foregroundStyle(InterviewTheme.Color.muted)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(failureMessage)
+                            .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
+                            .foregroundStyle(InterviewTheme.Color.muted)
+                        // Retry re-sends this entry's own snapshot; nothing retries on its own.
+                        if canRetry {
+                            Button(action: onRetry) {
+                                Text("Retry")
+                                    .font(InterviewTheme.Font.ui(13, weight: .semibold, relativeTo: .footnote))
+                                    .foregroundStyle(InterviewTheme.Color.primary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 if !question.followUps.isEmpty, answer?.isComplete == true {
@@ -225,10 +242,10 @@ struct AnswerPageView: View {
 
     private var generatingState: some View {
         HStack(spacing: 9) {
-            if !InterviewTestingFlags.quietMotion {
+            if !InterviewTestingFlags.quietMotion, !isQueued {
                 ProgressView().controlSize(.small)
             }
-            Text("Writing an answer…")
+            Text(isQueued ? "Queued" : "Writing an answer…")
                 .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.muted)
         }

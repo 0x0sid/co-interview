@@ -62,6 +62,19 @@ final class InterviewScreenModel {
     private var generations: [UUID: Generation] = [:]
     /// The immutable transcript each accepted request is answering.
     private var pendingSnapshots: [UUID: [String]] = [:]
+    /// Transcript lines already covered by an accepted request, by identity and revision.
+    ///
+    /// **Identity, not text.** Deduplicating by wording alone would permanently silence a question
+    /// genuinely asked twice later in the interview, and would treat a partial and its punctuated
+    /// final as different questions. A line counts as covered when the same utterance id has been
+    /// sent with the same meaningful wording; a material correction changes that wording and makes
+    /// it eligible again.
+    private var coveredLines: [UUID: String] = [:]
+    /// The note and attachment state the last request carried, so editing either makes a new
+    /// request eligible even when nothing new was said.
+    private var lastRequestedContextFingerprint: String?
+    /// Kept after a request finishes so Retry can re-send exactly what failed.
+    private var retainedSnapshots: [UUID: [String]] = [:]
     /// The one request currently running. Queued requests wait behind it.
     private(set) var activeRequestID: UUID?
     /// questionID → the request currently running for it, so a second tap cannot start a second one.
@@ -249,6 +262,13 @@ final class InterviewScreenModel {
     /// True while a generation for that question is running.
     func isGenerating(questionID: UUID) -> Bool { requestByQuestion[questionID] != nil }
 
+    /// Waiting behind another request, rather than being written right now. Shown as "Queued" so a
+    /// tab that is doing nothing yet does not look stalled.
+    func isQueued(questionID: UUID) -> Bool {
+        guard let requestID = requestByQuestion[questionID] else { return false }
+        return queuedRequestIDs.contains(requestID)
+    }
+
     /// True while the button should show it is busy — the target is generating.
     var isGeneratingForTarget: Bool {
         guard let target = generationTarget else { return false }
@@ -268,6 +288,34 @@ final class InterviewScreenModel {
         !transcript.isEmpty
             || !context.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || !attachments.isEmpty
+    }
+
+    /// Transcript lines not yet covered by an accepted request.
+    ///
+    /// This is what makes a second tap during silence do nothing: the words are the same lines,
+    /// already sent, so there is nothing new to ask about.
+    var uncoveredLines: [TranscriptLine] {
+        transcript.filter { coveredLines[$0.id] != Self.meaningfulWording($0.text) }
+    }
+
+    /// Whether a tap would produce a genuinely new request.
+    var hasNewInputToAnswer: Bool {
+        !uncoveredLines.isEmpty || contextFingerprint != lastRequestedContextFingerprint
+    }
+
+    /// Wording with the differences that are not meaning removed.
+    ///
+    /// Punctuation and case are exactly what changes between a partial and its final, so comparing
+    /// raw text would treat one utterance as two questions. A real correction — different words —
+    /// still differs here and is still actionable.
+    static func meaningfulWording(_ text: String) -> String {
+        Tokenizer.normalize(text).joined(separator: " ")
+    }
+
+    private var contextFingerprint: String {
+        let note = context.note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let images = attachments.map(\.id.uuidString).sorted().joined(separator: ",")
+        return "\(note)|\(images)"
     }
 
     /// Said when Generate is tapped with nothing to work from.
@@ -297,6 +345,12 @@ final class InterviewScreenModel {
             emptyInputNotice = "Speak or add context first"
             return
         }
+        // Nothing new since the last request. Rather than answering the same words twice, offer the
+        // action the user actually wants — another version of the answer they already have.
+        guard hasNewInputToAnswer else {
+            emptyInputNotice = "No new question. Regenerate this answer?"
+            return
+        }
         guard queuedRequestIDs.count < Self.maximumQueuedRequests else {
             emptyInputNotice = "Waiting on \(queuedRequestIDs.count) requests — wait or cancel one"
             return
@@ -316,12 +370,20 @@ final class InterviewScreenModel {
         generations[requestID] = Generation(questionID: entry.id, answerID: nil, isRegeneration: false)
         requestByQuestion[entry.id] = requestID
         pendingSnapshots[requestID] = snapshot
+        retainedSnapshots[entry.id] = snapshot
         generationFailure = nil
 
-        // The first answer opens where the user is already looking; a later one must not move them.
-        if questions.count == 1 { currentIndex = 0 } else if index != currentIndex {
-            readyQuestionNumber = index + 1
-        }
+        // **Generate navigates.** The user asked for this answer, so the tab it lands in opens
+        // immediately — including when it is not the first. Anything that arrives *later* (streaming,
+        // completion, another request finishing) must never move them again: that is the difference
+        // between following a tap and being yanked around.
+        currentIndex = index
+        explicitlySelectedQuestionID = entry.id
+        readyQuestionNumber = nil
+
+        // Reserve the input this request covers, so a second tap cannot enqueue the same snapshot.
+        for line in uncoveredLines { coveredLines[line.id] = Self.meaningfulWording(line.text) }
+        lastRequestedContextFingerprint = contextFingerprint
 
         queuedRequestIDs.append(requestID)
         startNextQueuedRequestIfIdle()
@@ -760,10 +822,11 @@ final class InterviewScreenModel {
         requestByQuestion[generation.questionID] = nil
         finishRequest(requestID)
 
+        // Completion never navigates. Generate already opened this tab; if the user has moved on
+        // since, finishing must not pull them back — it offers itself with a chip instead.
         if index == currentIndex {
             restartSimulatedReadingForCurrentPage()
         } else {
-            // Ready, but not shown: the page being read is never taken away.
             readyQuestionNumber = index + 1
         }
     }
@@ -782,6 +845,31 @@ final class InterviewScreenModel {
         requestByQuestion[generation.questionID] = nil
         generationFailure = message
         finishRequest(requestID)
+    }
+
+    /// Re-sends a failed request's own snapshot.
+    ///
+    /// **Explicit only, and never automatic.** A failed request keeps its snapshot precisely so the
+    /// user can try again without re-speaking; nothing re-sends it when connectivity returns, because
+    /// an answer arriving minutes later, unasked, to a question that has moved on is worse than none.
+    func retry(questionID: UUID) {
+        guard let index = questions.firstIndex(where: { $0.id == questionID }),
+              requestByQuestion[questionID] == nil,
+              let snapshot = retainedSnapshots[questionID] else { return }
+        let requestID = UUID()
+        generations[requestID] = Generation(questionID: questionID, answerID: nil, isRegeneration: false)
+        requestByQuestion[questionID] = requestID
+        pendingSnapshots[requestID] = snapshot
+        generationFailure = nil
+        currentIndex = index
+        queuedRequestIDs.append(requestID)
+        startNextQueuedRequestIfIdle()
+    }
+
+    /// True when this entry failed and still has the snapshot needed to try again.
+    func canRetry(questionID: UUID) -> Bool {
+        requestByQuestion[questionID] == nil && retainedSnapshots[questionID] != nil
+            && (questions.first { $0.id == questionID }?.selectedAnswer?.isIncomplete ?? false)
     }
 
     /// Abandons a queued request the user no longer wants. The entry stays, marked cancelled, rather

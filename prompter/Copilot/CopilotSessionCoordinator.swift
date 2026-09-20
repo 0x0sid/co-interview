@@ -443,7 +443,12 @@ final class CopilotSessionCoordinator {
     // MARK: - Cards
 
     @discardableResult
-    private func appendCard(questionText: String, origin: QuestionCard.Origin, utteranceIDs: [UtteranceID]) -> QuestionCard {
+    private func appendCard(
+        questionText: String,
+        origin: QuestionCard.Origin,
+        utteranceIDs: [UtteranceID],
+        announce: Bool = true
+    ) -> QuestionCard {
         let card = QuestionCard(
             id: UUID(),
             sequence: cards.count + 1,
@@ -455,7 +460,9 @@ final class CopilotSessionCoordinator {
         cards.append(card)
         // Focus is deliberately untouched: a new question must never pull the reader off the answer
         // they are in the middle of (§7).
-        onCardAppended?(card)
+        // A manually created card is **not** announced: the screen created its tab when the user
+        // tapped Generate, and announcing it would produce a second tab for one tap.
+        if announce { onCardAppended?(card) }
         return card
     }
 
@@ -476,7 +483,23 @@ final class CopilotSessionCoordinator {
     /// what was on screen when the user tapped, not whatever has been said since.
     @discardableResult
     func beginDiscussionAnswer(question: String, conversation snapshot: [String]) -> QuestionCard {
-        let card = appendCard(questionText: question, origin: .manual, utteranceIDs: [])
+        // Everything said up to now is what this request answers, so it is marked consumed and the
+        // detection cut-off moves past it. Without this the same speech stayed pending, and the next
+        // silence tick classified it and produced a second question for an answer already on screen.
+        let covered = conversation.utterances
+        let card = appendCard(
+            questionText: question,
+            origin: .manual,
+            utteranceIDs: covered.map(\.id),
+            announce: false
+        )
+        covered.forEach { consumedUtteranceIDs.insert($0.id) }
+        if let openUtterance = conversation.openUtterance {
+            consumedUtteranceIDs.insert(openUtterance.id)
+            detectionCutoff = max(detectionCutoff, openUtterance.endTime)
+        }
+        detectionCutoff = max(detectionCutoff, covered.last?.endTime ?? detectionCutoff)
+        lastClassifiedText = nil
         startGeneration(for: card.id, conversationOverride: snapshot)
         return card
     }

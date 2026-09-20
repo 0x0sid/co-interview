@@ -566,3 +566,73 @@ speech belongs to the next request, not to one already accepted.
 Streamed text stays on screen and the version is marked incomplete. The transcript, every previous
 answer and its reading position are untouched, and the queue slot is released so the next request
 still runs. Ending the session clears the queue and late events are rejected by request id.
+
+
+---
+
+## 14. Navigation, grouping and duplicate suppression (2026-09-20)
+
+**These rules supersede §13 where they conflict.**
+
+### Generate navigates; nothing else does
+
+§13 said a later entry must not move the reader. That was wrong for the tab the user just asked for.
+Generate now opens the entry it creates, immediately — the navigation is the consequence of the tap.
+Everything that happens *afterwards* still must not move them: streaming, completion and other
+requests finishing offer themselves with the "ready" chip instead. Moving away from a tab and having
+it yank you back when it finishes is the failure this distinction exists to prevent.
+
+### The duplicate-generation bug: two causes
+
+Reported as "after one question is answered, silence produces the same question again". Both causes
+created an entry nobody asked for.
+
+1. **Every card was announced as a detected question, including the one Generate had just made.**
+   `beginDiscussionAnswer` appends a card, which fires `onCardAppended`, which the live feed turned
+   into `.questionDetected`. The screen already had its own entry for that tap, so **one tap produced
+   two tabs**. Manual cards are no longer announced.
+2. **A manual card claimed no transcript.** It was appended with no utterance ids, so detection never
+   marked the speech it covered as consumed, the cut-off never moved, and the next silence tick
+   classified the very same words into another card. A manual request now claims every utterance it
+   covered and advances the cut-off. A classification already in flight when the tap happened may
+   still return; its verdict is rejected because those utterances are consumed.
+
+### Eligibility: identity and coverage, never text alone
+
+A tap needs **new input**. Coverage is tracked per transcript line by `(utterance id, meaningful
+wording)`, where meaningful wording is the normalised token sequence:
+
+- A partial and its punctuated final share an id *and* normalise identically → not new input.
+- A **material correction** changes the wording → new input, actionable.
+- The same question genuinely asked again later is a **different utterance id** → eligible.
+- Editing the note or attachments changes the context fingerprint → eligible.
+
+With nothing new, Generate creates no tab and sends no request; it offers
+**"No new question. Regenerate this answer?"** and Regenerate remains the explicit way to get another
+version. Coverage is reserved when the request is *accepted*, so a second tap cannot enqueue the same
+snapshot while the first is queued.
+
+### One tap answers every open question
+
+The snapshot's unanswered questions are answered **together, in one request, in one tab** — "How do I
+remove duplicates in Java? And how do I preserve insertion order?" is one request with two
+requirements. A bare follow-up ("And performance?") carries the line before it, because alone it
+means nothing. Questions arriving after the snapshot stay uncovered and belong to the next tap.
+
+### Interpreting transcription mistakes
+
+Apple's raw transcript is never edited. The interpretation happens **in the answer prompt**, which
+now tells the model that the question is a speech-recognition transcript, that it did not hear audio
+and must never imply it did, and that "linked ash set" in a Java discussion is almost certainly
+`LinkedHashSet`. Clear corrections are answered directly; an ambiguity that changes the answer is
+stated as a one-clause assumption; genuinely unclear wording gets a clarifying question instead of a
+guess. Correcting a mis-transcription never licenses inventing facts.
+
+**This is a prompt-level behaviour, not a guarantee.** It has not been measured, and it will
+sometimes correct wrongly. The raw wording always remains visible in the transcript.
+
+### Failure
+
+A failed request keeps its snapshot and offers **Retry**, which re-sends that snapshot explicitly.
+Nothing retries automatically and nothing is re-sent when connectivity returns: an answer arriving
+minutes later, unasked, to a question the room has moved past is worse than no answer.

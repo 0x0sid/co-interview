@@ -115,17 +115,22 @@ struct ManualGenerationTests {
 
     // MARK: History
 
-    /// Every deliberate tap is its own entry, even about the same discussion.
+    /// **Rule changed.** A tap used to create an entry unconditionally. It now requires new input:
+    /// repeated taps during silence must not answer the same words again. Each tap that *does* have
+    /// something new still gets its own entry.
     @Test
-    func repeatedTapsCreateSeparateEntries() {
+    func tapsWithNewSpeechEachCreateTheirOwnEntry() {
         let (model, feed) = Self.make()
         Self.speak("Tell me about the ingestion project", in: model)
-
         Self.tap(model, at: 0)
+
+        Self.speak("And what was hardest about it", in: model)
         Self.tap(model, at: 5)
+
+        Self.speak("And how long did it take", in: model)
         Self.tap(model, at: 10)
 
-        #expect(model.questions.count == 3, "repeated taps collapsed into one entry")
+        #expect(model.questions.count == 3, "taps with new speech collapsed into one entry")
         // One request runs at a time, so only the first has been sent; the others are queued and
         // each already has its own entry and its own id.
         #expect(feed.discussionRequests.count == 1)
@@ -161,18 +166,25 @@ struct ManualGenerationTests {
                 "later speech leaked into an earlier request's snapshot")
     }
 
-    /// The first answer opens where the user is; a later one must not move them.
+    /// **Rule changed.** A later entry used to leave the reader where they were and offer a chip.
+    /// Generate now navigates to the tab it creates, because the user asked for it. What must still
+    /// never move them is anything arriving *afterwards* — streaming or completion.
     @Test
-    func alaterEntryDoesNotStealThePageBeingRead() {
-        let (model, _) = Self.make()
+    func generateOpensTheTabItCreates() {
+        let (model, feed) = Self.make()
         Self.speak("Something worth answering", in: model)
-
         Self.tap(model, at: 0)
         #expect(model.currentIndex == 0, "the first entry should open directly")
 
+        Self.speak("A second thing worth answering", in: model)
         Self.tap(model, at: 5)
-        #expect(model.currentIndex == 0, "a second entry moved the reader")
-        #expect(model.readyQuestionNumber == 2, "no chip offered the new entry")
+        #expect(model.currentIndex == 1, "Generate did not open the tab it created")
+        #expect(model.readyQuestionNumber == nil, "the tab it opened should not also raise a chip")
+
+        // The user moves away; a completion for the tab they left must not pull them back.
+        model.select(index: 0)
+        Self.completeActiveRequest(model, feed)
+        #expect(model.currentIndex == 0, "completion navigated after the user moved elsewhere")
     }
 
     /// Browsing history must not change what the next ordinary tap asks about.
@@ -203,7 +215,9 @@ struct ManualGenerationTests {
         Self.speak("Something to answer", in: model)
 
         Self.tap(model, at: 0)
+        Self.speak("A second thing to answer", in: model)
         Self.tap(model, at: 5)
+        Self.speak("A third thing to answer", in: model)
         Self.tap(model, at: 10)
 
         #expect(feed.discussionRequests.count == 1, "more than one request was started at once")
@@ -216,6 +230,7 @@ struct ManualGenerationTests {
         let (model, feed) = Self.make()
         Self.speak("Something to answer", in: model)
         Self.tap(model, at: 0)
+        Self.speak("Another thing to answer", in: model)
         Self.tap(model, at: 5)
 
         let first = try #require(feed.discussionRequests.first)
@@ -233,6 +248,9 @@ struct ManualGenerationTests {
         Self.speak("Something to answer", in: model)
 
         for index in 0...(InterviewScreenModel.maximumQueuedRequests + 2) {
+            // New speech each time, so every tap is genuinely eligible and the limit is what stops
+            // it — not the no-new-input rule.
+            Self.speak("Another thing to answer number \(index)", in: model)
             Self.tap(model, at: Double(index) * 5)
         }
 
@@ -287,6 +305,7 @@ struct ManualGenerationTests {
         let (model, feed) = Self.make()
         Self.speak("Something to answer", in: model)
         Self.tap(model, at: 0)
+        Self.speak("Another thing to answer", in: model)
         Self.tap(model, at: 5)
         let first = try #require(feed.discussionRequests.first)
 

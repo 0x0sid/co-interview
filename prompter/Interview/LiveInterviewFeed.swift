@@ -147,17 +147,28 @@ final class LiveInterviewFeed: InterviewFeed {
         }
     }
 
-    /// The last thing that looks like a question, or the latest discussion if none does.
+    /// **Every** unanswered question in the snapshot, in the order asked — not just the last one.
     ///
-    /// Deliberately simple and local: it decides what to *ask about*, and the model decides what to
-    /// say. When nothing is interrogative it hands over the recent discussion and lets the answer
-    /// respond to that, rather than inventing a question that was never asked.
+    /// "How do I remove duplicates in Java? And how do I preserve insertion order?" is one request
+    /// with two requirements, and answering only the second would be worse than useless. A short
+    /// follow-up like "And performance?" is kept with the question before it, because on its own it
+    /// means nothing.
+    ///
+    /// Deliberately simple and local: it decides what to *ask about*; the model decides what to say
+    /// and the prompt tells it to answer all of them. When nothing is interrogative it hands over the
+    /// recent discussion rather than inventing a question that was never asked.
     static func questionFromDiscussion(_ transcript: [String]) -> String {
         let lines = transcript.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-        if let interrogative = lines.reversed().first(where: { DetectionPolicy.looksInterrogative($0) }) {
-            return interrogative
+        let questions = lines.filter { DetectionPolicy.looksInterrogative($0) }
+        guard !questions.isEmpty else { return lines.suffix(2).joined(separator: " ") }
+
+        // A lone follow-up needs the question it depends on, so the line before it comes too.
+        if questions.count == 1, let only = questions.first,
+           Tokenizer.normalize(only).count <= 3,
+           let index = lines.firstIndex(of: only), index > 0 {
+            return lines[(index - 1)...index].joined(separator: " ")
         }
-        return lines.suffix(2).joined(separator: " ")
+        return questions.joined(separator: " ")
     }
 
     func cancelAnswer(requestID: UUID) {
