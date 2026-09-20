@@ -22,6 +22,15 @@ final class InterviewScreenCaptureTests: XCTestCase {
         add(attachment)
     }
 
+    /// The page currently holds a *finished* answer.
+    ///
+    /// Not the Follow-ups link, which only a detected question carries, and not a phrase from a demo
+    /// answer, which would tie the test to fixture wording. `AnswerPageView` publishes this the
+    /// moment the answer it is showing completes.
+    private func answerComplete(_ app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: "answer-complete").firstMatch
+    }
+
     private func openDemo(_ app: XCUIApplication) {
         let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
         XCTAssertTrue(entry.waitForExistence(timeout: 20))
@@ -47,7 +56,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
         let generate = app.buttons["Generate an answer"]
         XCTAssertTrue(generate.waitForExistence(timeout: 10))
         generate.tap()
-        XCTAssertTrue(app.staticTexts["Follow-ups"].waitForExistence(timeout: 30), "no answer arrived after Generate")
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 30), "no answer arrived after Generate")
         save(app, "02-answer")
 
         // 3 · Simulated reading midway — the fade starts after the reveal finishes.
@@ -60,7 +69,10 @@ final class InterviewScreenCaptureTests: XCTestCase {
         if app.buttons["Generate an answer"].waitForExistence(timeout: 10) {
             app.buttons["Generate an answer"].tap()
             app.buttons["Previous question"].tap()                      // walk away while it writes
-            let chip = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Question 2 is ready'")).firstMatch
+            // Any entry, not a fixed number: Generate appends its own tab, so which index finishes
+            // behind the reader depends on how many entries exist by then. What is being captured is
+            // that *some* answer became ready on a page they are not looking at.
+            let chip = app.buttons.matching(NSPredicate(format: "label CONTAINS 'is ready'")).firstMatch
             if chip.waitForExistence(timeout: 30) {
                 save(app, "04-ready-chip")
             } else {
@@ -81,5 +93,82 @@ final class InterviewScreenCaptureTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["5/5 images"].waitForExistence(timeout: 30),
                       "the context panel did not show five images")
         save(app, "05-expanded-context")
+    }
+
+    /// The transcript expanded on its own — **without** Context opening with it.
+    ///
+    /// This is the state the answer used to lose: expanding two lines of transcript also opened the
+    /// note and the attachments, and between them they took most of the screen. Expanded transcript
+    /// is now bounded and scrolls inside itself, and Context stays shut until it is asked for.
+    @MainActor
+    func testCaptureExpandedTranscriptKeepsTheAnswer() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion"]
+        app.launch()
+        openDemo(app)
+
+        let question = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question 1'")).firstMatch
+        XCTAssertTrue(question.waitForExistence(timeout: 60), "no question page appeared")
+
+        let generate = app.buttons["Generate an answer"]
+        XCTAssertTrue(generate.waitForExistence(timeout: 10))
+        generate.tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 30), "no answer arrived")
+        save(app, "06-collapsed-with-answer")
+
+        let expand = app.buttons["Expand live transcript"]
+        XCTAssertTrue(expand.waitForExistence(timeout: 10))
+        expand.tap()
+
+        // Context must still be shut: expanding the transcript is not a request to open it.
+        XCTAssertTrue(app.buttons["Collapse live transcript"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["5/5 images"].exists, "Context opened itself with the transcript")
+        save(app, "07-expanded-transcript")
+    }
+
+    /// The end of a long answer can be scrolled out from under the floating toolbar.
+    ///
+    /// The pill floats over the page, so the bottom of the content is only reachable because the
+    /// scroll view carries `pillClearance` of extra bottom padding. Without it the last line of an
+    /// answer — and a code card at the end of one — sit under the pill permanently, and no amount of
+    /// scrolling brings them out. That is invisible to a screenshot taken at the top of the page,
+    /// which is why it is asserted on geometry here rather than eyeballed.
+    @MainActor
+    func testAnswerEndClearsTheFloatingToolbar() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion"]
+        app.launch()
+        openDemo(app)
+
+        let question = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question 1'")).firstMatch
+        XCTAssertTrue(question.waitForExistence(timeout: 60), "no question page appeared")
+
+        let generate = app.buttons["Generate an answer"]
+        XCTAssertTrue(generate.waitForExistence(timeout: 10))
+        generate.tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 30), "no answer arrived")
+
+        // The demo answer that Generate resolves carries code, so this also proves a code card can
+        // be brought clear, not just prose.
+        let code = app.buttons["Copy code"].firstMatch
+        XCTAssertTrue(code.waitForExistence(timeout: 10), "the generated answer showed no code card")
+
+        // Scroll to the very bottom of the answer.
+        let page = app.scrollViews.firstMatch
+        for _ in 0..<8 { page.swipeUp() }
+
+        let toolbar = app.buttons["Generate an answer for this question"].firstMatch
+        let pill = toolbar.exists ? toolbar : app.buttons.matching(
+            NSPredicate(format: "label CONTAINS 'Generate'")).firstMatch
+        guard pill.exists else { return XCTFail("the floating toolbar was not found") }
+
+        let answer = answerComplete(app)
+        XCTAssertTrue(answer.exists, "the answer disappeared while scrolling")
+        // The answer's own bottom edge must be able to come to rest above the pill's top edge.
+        XCTAssertLessThanOrEqual(
+            answer.frame.maxY, pill.frame.minY + 1,
+            "the end of the answer stays trapped under the floating toolbar"
+        )
+        save(app, "08-answer-end-clears-toolbar")
     }
 }

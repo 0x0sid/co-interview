@@ -37,6 +37,13 @@ struct AnswerPageView: View {
 
                 if let answer, !answer.blocks.isEmpty {
                     answerBlocks(answer)
+                        // A stable hook for "this page now holds a finished answer". The UI tests
+                        // used to wait on the Follow-ups link for this, which stopped being true
+                        // when Generate began opening its own tab: that entry is the discussion,
+                        // not a detected question, so it has no scripted follow-ups to link to.
+                        // Waiting on a piece of answer content instead would only hold while the
+                        // demo keeps that content.
+                        .accessibilityIdentifier(answer.isComplete ? "answer-complete" : "answer-streaming")
                     if answer.version > 1, answer.isComplete {
                         Text("v\(answer.version) · Generated just now")
                             .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
