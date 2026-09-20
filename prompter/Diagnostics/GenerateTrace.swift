@@ -128,7 +128,12 @@ struct GenerateTrace: Identifiable, Sendable {
 
     private func milliseconds(_ from: Date?, _ to: Date?) -> Int? {
         guard let from, let to else { return nil }
-        return Int(to.timeIntervalSince(from) * 1000)
+        let interval = to.timeIntervalSince(from)
+        // A negative duration means the two ends were stamped from different clocks — which happens
+        // when a test injects one. A report that prints it as a number invites someone to believe
+        // it, so it is reported as absent instead.
+        guard interval >= 0 else { return nil }
+        return Int(interval * 1000)
     }
 
     var queuedMs: Int? { milliseconds(tappedAt, queuedAt ?? sentAt) }

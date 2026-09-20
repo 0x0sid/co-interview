@@ -170,6 +170,94 @@ final class CopilotEntryUITests: XCTestCase {
         attach(app, "06-after-closing")
     }
 
+    /// Switches a Form `Toggle` on, and confirms it.
+    ///
+    /// In a Form the switch's accessibility frame spans the whole row, so a centre tap can land on
+    /// the label and toggle nothing. That is a hit-testing quirk, not a broken binding — a direct
+    /// write to the same property updates this control immediately — so this aims at the control and
+    /// checks the result rather than assuming either tap point works.
+    @MainActor
+    private func turnOn(_ toggle: XCUIElement) -> Bool {
+        for attempt in 0..<4 {
+            if toggle.value as? String == "1" { return true }
+            if attempt.isMultiple(of: 2) {
+                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+            } else {
+                toggle.tap()
+            }
+            for _ in 0..<8 {
+                if toggle.value as? String == "1" { return true }
+                Thread.sleep(forTimeInterval: 0.25)
+            }
+        }
+        return toggle.value as? String == "1"
+    }
+
+    /// Opens ••• → Diagnostics, verifying arrival rather than assuming the taps landed.
+    @MainActor
+    @discardableResult
+    private func openDiagnostics(_ app: XCUIApplication) -> Bool {
+        let capture = app.switches["Capture test content"]
+        for _ in 0..<3 {
+            let moreActions = app.buttons["More actions"]
+            guard moreActions.waitForExistence(timeout: 10) else { return false }
+            moreActions.tap()
+            let entry = app.buttons["Diagnostics"]
+            if entry.waitForExistence(timeout: 5) {
+                entry.tap()
+                if capture.waitForExistence(timeout: 6) { return true }
+            }
+        }
+        return false
+    }
+
+    /// Diagnostics are reachable **from inside a running interview**.
+    ///
+    /// Content capture is per-session and resets when a session starts, so the only moment it can be
+    /// switched on for the session being recorded is from within that session. Without this entry
+    /// there was no such moment — the instructions told you to enable it somewhere you could only
+    /// reach by ending the interview first.
+    @MainActor
+    func testDiagnosticsAreReachableWithoutLeavingTheInterview() throws {
+        let app = launch()
+        openCopilot(app)
+
+        let startDemo = app.buttons["Start demo, DEMO mode"]
+        let onInterview = app.buttons["Expand live transcript"]
+        for _ in 0..<3 where !onInterview.exists {
+            if !startDemo.isHittable { app.swipeDown() }
+            if startDemo.isHittable { startDemo.tap() }
+            _ = onInterview.waitForExistence(timeout: 6)
+        }
+        XCTAssertTrue(onInterview.waitForExistence(timeout: 15), "the demo interview screen never opened")
+
+        XCTAssertTrue(openDiagnostics(app), "the menu offers no way into diagnostics")
+
+        let capture = app.switches["Capture test content"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 10), "the capture toggle is not reachable from the interview")
+        XCTAssertEqual(capture.value as? String, "0", "content capture was already on for a new session")
+        XCTAssertTrue(turnOn(capture), "the capture toggle did not switch on")
+
+        // The session this capture belongs to, as the sheet reports it.
+        let sessionRow = app.staticTexts.matching(
+            NSPredicate(format: "label BEGINSWITH 'Session'")).firstMatch
+        let sessionBefore = app.cells.containing(.staticText, identifier: "Session").firstMatch.label
+
+        // Leaving the sheet returns to the same interview — nothing was restarted.
+        app.buttons["Done"].tap()
+        XCTAssertTrue(onInterview.waitForExistence(timeout: 10), "closing diagnostics left the interview")
+
+        // Reopening finds the *same* session, still capturing: closing the sheet must not end the
+        // interview it was recording, and must not quietly switch capture back off.
+        XCTAssertTrue(openDiagnostics(app), "diagnostics could not be reopened")
+        XCTAssertTrue(capture.waitForExistence(timeout: 10))
+        XCTAssertEqual(capture.value as? String, "1", "capture switched itself off when the sheet closed")
+        _ = sessionRow
+        let sessionAfter = app.cells.containing(.staticText, identifier: "Session").firstMatch.label
+        XCTAssertEqual(sessionBefore, sessionAfter, "the interview session changed while it was running")
+        app.buttons["Done"].tap()
+    }
+
     /// The floating toolbar must never trap the end of an answer underneath it.
     ///
     /// It floats over the page deliberately, so content passes behind it — what matters is that the

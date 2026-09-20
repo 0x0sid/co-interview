@@ -26,6 +26,7 @@ struct InterviewScreen: View {
     #if DEBUG
     @State private var isMarkingProblem = false
     @State private var problemNote = ""
+    @State private var isShowingDiagnostics = false
     #endif
 
     init(
@@ -111,6 +112,7 @@ struct InterviewScreen: View {
             }
         }
         #if DEBUG
+        .sheet(isPresented: $isShowingDiagnostics) { DiagnosticsSheet() }
         .alert("Mark a problem", isPresented: $isMarkingProblem) {
             TextField("What looked wrong? (optional)", text: $problemNote)
             Button("Mark") {
@@ -310,6 +312,20 @@ struct InterviewScreen: View {
             Label("Mark a problem", systemImage: "flag")
         }
         .disabled(model.diagnostics.lastTrace == nil)
+
+        // Reachable **from inside the session**. Content capture is per-session and starts off, so
+        // without a way in from here there was no moment at which it could be switched on for the
+        // interview actually running — leaving the diagnostics screen meant ending the session it
+        // was meant to record.
+        Button {
+            isShowingDiagnostics = true
+        } label: {
+            // **A fixed label on purpose.** Reading `isContentCaptureEnabled` here made the menu
+            // depend on an @Observable that changes while the menu is presenting, and the menu then
+            // never settled — "Regenerate answer" stopped appearing in it at all. Whether capture is
+            // on is shown inside the sheet, and on every exported report.
+            Label("Diagnostics", systemImage: "stethoscope")
+        }
         #endif
     }
 }

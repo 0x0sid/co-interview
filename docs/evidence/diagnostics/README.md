@@ -3,8 +3,12 @@
 What each Generate tap did, from the tap to the answer, so a problem seen on a phone can be reported
 without having to describe it from memory.
 
-`sample-report.md` and `sample-report.json` in this directory are **real output from the export
-code**, produced from a synthetic two-tap session. Nothing in them came from a real interview.
+`live-report.md` and `live-report.json` are the export from **one synthetic session driven through
+the whole real path** — `InterviewScreenModel` → `LiveInterviewFeed` → `CopilotSessionCoordinator` →
+`BackendCopilotProvider` → the local backend → the configured provider — by
+`DiagnosticsIntegrationTests`. They are not a hand-populated fixture: a fixture shows the formatter
+works and nothing else, whereas every field in these files travelled the whole way. Nothing in them
+came from a real interview.
 
 ## What to tap
 
@@ -24,20 +28,26 @@ The report will say, at the top: *"This report contains no conversation text."*
 
 ### To capture the conversation as well, for one test session
 
-1. **Scripts → Interview Copilot → Provider diagnostics → Generate diagnostics**.
-2. Turn **Capture test content** ON. It explains what that includes.
-3. Go back and start the interview. **Capture switches itself off at the start of every session**, so
-   turn it on *after* opening the diagnostics screen and before the session, or switch it on from
-   this screen mid-session — either works, but it never persists into a later session on its own.
-4. Reproduce the problem. **•••** → **Mark a problem**.
-5. Back on the diagnostics screen: **Export test session**, or **Export last request** for just the
-   most recent one.
+Capture is per-session and **resets to off when a session starts**, so it is switched on from inside
+the session it is meant to record. That is what the ••• entry is for.
+
+1. Start the interview as usual.
+2. **•••** → **Diagnostics** → turn **Capture test content** ON → **Done**.
+   Tap the switch itself, not the row's label.
+3. Carry on in the same session — nothing was restarted and listening did not stop. Capture applies
+   to taps made **from now on**, so tap Generate after switching it on.
+4. Reproduce the problem. **•••** → **Mark a problem**, optional note, **Mark**.
+5. **•••** → **Diagnostics** → **Export test session** (or **Export last request**) → share sheet.
 
 That report is headed with a warning that it contains what was said and what was written.
 
+An earlier draft of these instructions said to enable capture *before* starting the interview. That
+could not work: starting the session turns it off again, and there was no way into the diagnostics
+screen from inside an interview. The ••• entry is the fix.
+
 ### To clear everything
 
-**Generate diagnostics → Clear diagnostics.** The store is also bounded at 40 traces and 200 000
+**••• → Diagnostics → Clear diagnostics** (or the same section in the Debug surface). The store is also bounded at 40 traces and 200 000
 captured characters, and is memory-only — closing the app discards it.
 
 ## What is always recorded
@@ -92,6 +102,25 @@ versus sent transcript counts, capture-off excluding conversation and answers, c
 the tap snapshot against later revisions, redaction and image-byte exclusion, bounded storage,
 clearing, orphan-event handling, failed requests remaining exportable, and capture not changing the
 request.
+
+`prompterUITests/CopilotEntryUITests.testDiagnosticsAreReachableWithoutLeavingTheInterview` —
+••• → Diagnostics opens from inside a running interview, capture starts off, switches on, and after
+closing and reopening the sheet the session id is unchanged and capture is still on.
+
+`prompterTests/Diagnostics/DiagnosticsIntegrationTests.swift` — one synthetic Generate driven
+through the real app and backend, asserting that the export carries the full transcript snapshot, new
+input against historical context, the serialized request with no token and no image bytes, the actual
+provider messages fetched back from the backend, the answer and the model's interpreted title, and
+the correlated request id, route metadata and timings. Opt-in, because it needs a live backend and
+makes one real provider call:
+
+```bash
+TEST_RUNNER_COINTERVIEW_LIVE_DIAGNOSTICS=1 \
+TEST_RUNNER_COINTERVIEW_LIVE_TOKEN=<client token> \
+xcodebuild test -project co-interview.xcodeproj -scheme Co-Interview \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:prompterTests/DiagnosticsIntegrationTests
+```
 
 `backend/test/diagnostics-test.mjs` — retrieval, session correlation, backend version, the assembled
 messages, authentication (401 without or with the wrong token), nothing stored for a request that did

@@ -431,7 +431,7 @@ final class InterviewScreenModel {
 
         // Recorded *after* the request is fully formed and *before* it is queued, so a diagnostic
         // can never be the reason a request looks different from the one that was sent.
-        recordTapForDiagnostics(requestID: requestID, snapshot: snapshot)
+        recordTapForDiagnostics(requestID: requestID, snapshot: snapshot, at: now)
 
         queuedRequestIDs.append(requestID)
         diagnostics.recordQueued(requestID: requestID, at: now)
@@ -439,7 +439,7 @@ final class InterviewScreenModel {
     }
 
     /// Hands the recorder what this tap decided. Observation only — nothing here is read back.
-    private func recordTapForDiagnostics(requestID: UUID, snapshot: DiscussionSnapshot) {
+    private func recordTapForDiagnostics(requestID: UUID, snapshot: DiscussionSnapshot, at now: Date) {
         let covered = Set(coveredLines.keys)
         let captureText = diagnostics.isContentCaptureEnabled
         let utterances = transcript.map { line in
@@ -452,7 +452,7 @@ final class InterviewScreenModel {
                 text: captureText ? line.text : ""
             )
         }
-        diagnostics.recordTap(requestID: requestID, outcome: .accepted, reason: nil)
+        diagnostics.recordTap(requestID: requestID, outcome: .accepted, reason: nil, at: now)
         diagnostics.recordSnapshot(
             requestID: requestID,
             transcriptLineCount: transcript.count,

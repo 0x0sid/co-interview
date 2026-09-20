@@ -84,10 +84,17 @@ final class GenerateDiagnostics {
     ///
     /// A rejected or debounced tap is exactly what a report needs to explain "I pressed it and
     /// nothing happened", so those are kept with their reason rather than dropped.
-    func recordTap(requestID: UUID?, outcome: GenerateTrace.TapOutcome, reason: String?) {
+    func recordTap(
+        requestID: UUID?,
+        outcome: GenerateTrace.TapOutcome,
+        reason: String?,
+        at date: Date = Date()
+    ) {
         #if DEBUG
         var trace = GenerateTrace(sessionID: sessionID, requestID: requestID ?? UUID())
-        trace.tappedAt = Date()
+        // The tap's own moment, not the recorder's: everything else on this trace is measured from
+        // it, and stamping it here instead produced a "queued" duration that ran backwards.
+        trace.tappedAt = date
         trace.outcome = outcome
         trace.outcomeReason = reason
         append(trace)
