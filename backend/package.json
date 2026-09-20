@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test/config-test.mjs && node test/contract-test.mjs && node test/openrouter-test.mjs",
+    "test": "node test/config-test.mjs && node test/contract-test.mjs && node test/openrouter-test.mjs && node test/diagnostics-test.mjs",
     "verify-routes": "node tools/verify-routes.mjs",
     "eval": "node eval/run-eval.mjs"
   }

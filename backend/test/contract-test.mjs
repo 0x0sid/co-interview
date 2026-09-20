@@ -193,7 +193,9 @@ try {
   // introduction with `<add a specific example>` left in it for the speaker to read aloud.
   console.log("answer policy");
   {
-    const send = (extra) =>
+    let lastAnswerEvents = [];
+    const send = async (extra) => (lastAnswerEvents = await sendRaw(extra));
+    const sendRaw = (extra) =>
       fetch(`${BASE}/v1/copilot/answer`, {
         method: "POST",
         headers: auth,
@@ -324,6 +326,27 @@ try {
     const titledText = titled.filter((e) => e.type === "delta").map((e) => e.text).join("");
     check("the title line is never shown to the reader", !/TITLE:/.test(titledText));
     check("the answer text survives the title line", /bound the queue/i.test(titledText));
+
+    // --- Development diagnostics -----------------------------------------------------------------
+    //
+    // This server was started without COPILOT_DIAGNOSTICS, so the capture must be entirely inert:
+    // the flag on a request changes nothing and the endpoint does not exist.
+
+    await send({
+      question: "What is a HashMap?",
+      diagnosticsSessionID: "session-1",
+      diagnosticsRequestID: "request-1",
+      captureProviderMessages: true,
+    });
+    const offProbe = await fetch(`${BASE}/v1/copilot/diagnostics/request-1`, { headers: auth });
+    check("diagnostics are off unless the operator enables them", offProbe.status === 404);
+    const offBody = await offProbe.json();
+    check("and say so rather than pretending the request is unknown",
+          offBody.error === "diagnostics_disabled");
+    check("the attempt event still reports the backend version",
+          lastAnswerEvents.some((event) => event.type === "attempt" && typeof event.backend_version === "string"));
+    check("the attempt event echoes the correlation id",
+          lastAnswerEvents.some((event) => event.diagnostics_request_id === "request-1"));
 
     // Document-only answering still exists — it is just no longer the default.
     await send({ answerMode: "documents" });

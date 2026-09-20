@@ -23,6 +23,10 @@ struct InterviewScreen: View {
     /// Re-runs the readiness check. Nil in Demo, which has nothing to check.
     private let recheckReadiness: (() async -> LiveReadiness)?
     @State private var isRechecking = false
+    #if DEBUG
+    @State private var isMarkingProblem = false
+    @State private var problemNote = ""
+    #endif
 
     init(
         mode: InterviewMode,
@@ -106,6 +110,21 @@ struct InterviewScreen: View {
                 FollowUpsSheet(question: question)
             }
         }
+        #if DEBUG
+        .alert("Mark a problem", isPresented: $isMarkingProblem) {
+            TextField("What looked wrong? (optional)", text: $problemNote)
+            Button("Mark") {
+                model.diagnostics.markProblem(
+                    requestID: model.diagnostics.lastTrace?.requestID,
+                    note: problemNote
+                )
+                problemNote = ""
+            }
+            Button("Cancel", role: .cancel) { problemNote = "" }
+        } message: {
+            Text("Flags the answer on screen in the diagnostics report. Nothing is sent anywhere.")
+        }
+        #endif
     }
 
     // MARK: Pages
@@ -280,6 +299,18 @@ struct InterviewScreen: View {
         } label: {
             Label(model.isTranscriptExpanded ? "Collapse transcript" : "Expand transcript", systemImage: "text.alignleft")
         }
+
+        #if DEBUG
+        // Debug-only, and deliberately last: the approved interview actions come first, and nothing
+        // about this changes what a Generate tap does.
+        Divider()
+        Button {
+            isMarkingProblem = true
+        } label: {
+            Label("Mark a problem", systemImage: "flag")
+        }
+        .disabled(model.diagnostics.lastTrace == nil)
+        #endif
     }
 }
 

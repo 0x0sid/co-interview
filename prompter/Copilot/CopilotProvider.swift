@@ -71,6 +71,17 @@ struct AnswerRequest: Sendable, Encodable {
     let targetWordRange: [Int]
     /// Used only for prompt-cache affinity on the backend; never a credential.
     let projectID: String
+
+    /// Debug-only correlation ids, so one Generate tap can be followed from the phone into the
+    /// backend's own log and back. **Not credentials and not content** — two UUIDs the backend
+    /// echoes; it stores nothing extra unless `captureProviderMessages` is also set and the operator
+    /// has switched diagnostics on server-side.
+    var diagnosticsSessionID: String?
+    var diagnosticsRequestID: String?
+    /// Asks the backend to keep this request's assembled provider messages briefly, so the app can
+    /// fetch exactly what the model was sent. Only ever true in a Debug build with content capture
+    /// switched on for the session.
+    var captureProviderMessages: Bool = false
 }
 
 // MARK: - Streaming events
@@ -86,6 +97,8 @@ struct AnswerRoute: Sendable, Equatable {
     var resolvedModel: String?
     var servingProvider: String = "unknown"
     var generationID: String?
+    /// The backend build that served this, as it reported itself. "unknown" when it did not.
+    var backendVersion: String = "unknown"
 
     var summary: String {
         let model = resolvedModel ?? requestedModel
@@ -116,6 +129,11 @@ enum AnswerStreamEvent: Sendable, Equatable {
     case completed(usageOutputTokens: Int?)
     /// Generation stopped after text had already been shown. What arrived stays readable.
     case incomplete(reason: String)
+}
+
+extension CopilotProviding {
+    /// Most providers keep nothing: there is no backend to ask.
+    func diagnosticsProviderMessages(requestID: String) async -> String? { nil }
 }
 
 enum CopilotProviderError: Error, Sendable, Equatable {
@@ -167,6 +185,12 @@ struct CopilotBackendConfiguration: Sendable, Equatable, Decodable {
 }
 
 protocol CopilotProviding: Sendable {
+    /// Debug-only: the provider messages the backend kept for this request, when it kept any.
+    ///
+    /// Returns nil whenever diagnostics are not enabled server-side, the request did not ask, or the
+    /// trace has expired — all ordinary, none of them an error worth surfacing to a reader.
+    func diagnosticsProviderMessages(requestID: String) async -> String?
+
     /// Human-readable label for what actually served the request, shown in the UI ("gpt-5.4-nano",
     /// "development fake").
     var detectionModelLabel: String { get }
@@ -230,6 +254,21 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         self.session = session ?? URLSession(configuration: configuration)
     }
 
+    /// Fetches the provider messages the backend kept for this request, if it kept any.
+    ///
+    /// Every failure is silent on purpose: diagnostics being unavailable is the normal case, and an
+    /// error here must never reach a reader who is in the middle of an interview.
+    func diagnosticsProviderMessages(requestID: String) async -> String? {
+        guard let encoded = requestID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
+        var request = URLRequest(url: baseURL.appending(path: "/v1/copilot/diagnostics/\(encoded)"))
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await session.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return payload["provider_messages"] as? String
+    }
+
     private func makeRequest(path: String, body: Data) -> URLRequest {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
@@ -275,6 +314,17 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
             let task = Task {
                 do {
                     let body = try JSONEncoder().encode(request)
+                    #if DEBUG
+                    // The bytes actually sent, recorded before the request leaves. Redacted inside
+                    // the recorder; image payloads are replaced rather than stored.
+                    if request.captureProviderMessages,
+                       let id = request.diagnosticsRequestID, let uuid = UUID(uuidString: id),
+                       let json = String(data: body, encoding: .utf8) {
+                        await MainActor.run {
+                            GenerateDiagnostics.shared.recordRequestBody(requestID: uuid, json: json)
+                        }
+                    }
+                    #endif
                     let (bytes, response) = try await session.bytes(for: makeRequest(path: "v1/copilot/answer", body: body))
                     try Self.check(response: response, data: nil)
                     // Server-sent events: `data:` lines carrying one JSON object each.
@@ -297,7 +347,8 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
                                 requestedModel: event["requested_model"] as? String ?? "",
                                 resolvedModel: event["resolved_model"] as? String,
                                 servingProvider: event["serving_provider"] as? String ?? "unknown",
-                                generationID: event["generation_id"] as? String
+                                generationID: event["generation_id"] as? String,
+                                backendVersion: event["backend_version"] as? String ?? "unknown"
                             )))
                         case "attempt_failed":
                             continuation.yield(.attemptFailed(

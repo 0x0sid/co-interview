@@ -1,0 +1,190 @@
+{
+  "containsConversationText" : true,
+  "contentCaptureEnabled" : true,
+  "schema" : "co-interview.generate-diagnostics\/1",
+  "sessionID" : "A5B0C8F9-FFB8-48BF-9B9D-8518556F60E1",
+  "sessionNotes" : [
+    "[00:12:23.008] Session started · build 1 · commit 3c6395f",
+    "[00:12:23.008] Content capture switched ON — conversation and answers are being kept"
+  ],
+  "startedAt" : "2026-09-20T16:12:23Z",
+  "traces" : [
+    {
+      "answer" : {
+        "characters" : 56,
+        "version" : null
+      },
+      "app" : {
+        "build" : "1",
+        "commit" : "unknown",
+        "version" : "1.0"
+      },
+      "attachments" : {
+        "count" : 0,
+        "prepared" : 0
+      },
+      "attemptFailures" : [
+
+      ],
+      "attempts" : [
+
+      ],
+      "backendVersion" : "unknown",
+      "captured" : {
+        "answerText" : "Java 8 introduced lambda expressions and the Stream API.",
+        "note" : "",
+        "priorSuggestions" : [
+
+        ],
+        "providerMessages" : null,
+        "requestJSON" : null,
+        "snapshotBackground" : [
+
+        ],
+        "snapshotNewInput" : [
+          "Could you explain the difference between Java and Java 8?"
+        ],
+        "snapshotProvisional" : null,
+        "transcriptAtTap" : [
+          "Could you explain the difference between Java and Java 8?"
+        ]
+      },
+      "interpretedTitle" : "Compare Java and Java 8",
+      "requestID" : "FAB4F81B-6432-4970-967F-0ACB1ED812D2",
+      "sessionID" : "A5B0C8F9-FFB8-48BF-9B9D-8518556F60E1",
+      "stream" : "completed",
+      "tap" : {
+        "at" : "2026-09-20T16:12:23Z",
+        "outcome" : "accepted",
+        "reason" : null
+      },
+      "timingsMs" : {
+        "preparing" : 1789919743014,
+        "queued" : -1789919743014,
+        "toComplete" : 1,
+        "toFirstText" : 0,
+        "total" : 1
+      },
+      "transcript" : {
+        "backgroundLines" : 0,
+        "includesProvisional" : false,
+        "newInputLines" : 1,
+        "noteCharacters" : 0,
+        "omitted" : null,
+        "priorSuggestions" : 0,
+        "sentCharacters" : 57,
+        "sentLines" : 1,
+        "totalCharacters" : 57,
+        "totalLines" : 1
+      },
+      "utterances" : [
+        {
+          "characters" : 57,
+          "id" : "564CF0EA-283B-461E-8D8A-472B381EC06D",
+          "isCovered" : true,
+          "isFinal" : true,
+          "revision" : 0
+        }
+      ]
+    },
+    {
+      "answer" : {
+        "characters" : 64,
+        "version" : null
+      },
+      "app" : {
+        "build" : "1",
+        "commit" : "unknown",
+        "version" : "1.0"
+      },
+      "attachments" : {
+        "count" : 0,
+        "prepared" : 0
+      },
+      "attemptFailures" : [
+
+      ],
+      "attempts" : [
+
+      ],
+      "backendVersion" : "unknown",
+      "captured" : {
+        "answerText" : "Java 7 added try-with-resources; Java 9 added the module system.",
+        "note" : "",
+        "priorSuggestions" : [
+          "Java 8 introduced lambda expressions and the Stream API."
+        ],
+        "providerMessages" : null,
+        "requestJSON" : null,
+        "snapshotBackground" : [
+          "Could you explain the difference between Java and Java 8?"
+        ],
+        "snapshotNewInput" : [
+          "And Java 9.",
+          "And Java 7."
+        ],
+        "snapshotProvisional" : null,
+        "transcriptAtTap" : [
+          "Could you explain the difference between Java and Java 8?",
+          "And Java 9.",
+          "And Java 7."
+        ]
+      },
+      "interpretedTitle" : "Compare Java 7, 8, and 9",
+      "problem" : {
+        "at" : "2026-09-20T16:12:23Z",
+        "note" : "check the Java 9 claim"
+      },
+      "requestID" : "E026C095-D2D9-41C0-A830-9C3690901875",
+      "sessionID" : "A5B0C8F9-FFB8-48BF-9B9D-8518556F60E1",
+      "stream" : "completed",
+      "tap" : {
+        "at" : "2026-09-20T16:12:23Z",
+        "outcome" : "accepted",
+        "reason" : null
+      },
+      "timingsMs" : {
+        "preparing" : 1789919713015,
+        "queued" : -1789919713015,
+        "toComplete" : 0,
+        "toFirstText" : 0,
+        "total" : 0
+      },
+      "transcript" : {
+        "backgroundLines" : 1,
+        "includesProvisional" : false,
+        "newInputLines" : 2,
+        "noteCharacters" : 0,
+        "omitted" : null,
+        "priorSuggestions" : 1,
+        "sentCharacters" : 79,
+        "sentLines" : 3,
+        "totalCharacters" : 79,
+        "totalLines" : 3
+      },
+      "utterances" : [
+        {
+          "characters" : 57,
+          "id" : "564CF0EA-283B-461E-8D8A-472B381EC06D",
+          "isCovered" : true,
+          "isFinal" : true,
+          "revision" : 0
+        },
+        {
+          "characters" : 11,
+          "id" : "75779DF3-A64C-4948-BFC9-59985D5B5F0B",
+          "isCovered" : true,
+          "isFinal" : true,
+          "revision" : 0
+        },
+        {
+          "characters" : 11,
+          "id" : "7ECAB368-861A-44AB-BEF3-9B703D8B7D4F",
+          "isCovered" : true,
+          "isFinal" : true,
+          "revision" : 0
+        }
+      ]
+    }
+  ]
+}

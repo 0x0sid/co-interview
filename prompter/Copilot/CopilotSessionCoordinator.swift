@@ -53,6 +53,10 @@ final class CopilotSessionCoordinator {
     }
     let generationMode: GenerationMode
 
+    /// Debug-only correlation for the request about to be built, set by the feed just before it asks
+    /// for a generation. Nil in Release and whenever diagnostics are off.
+    var diagnosticsCorrelation: (sessionID: String, requestID: String, captureProviderMessages: Bool)?
+
     /// Observation hooks, in the same idiom `InterviewAudioInput` already uses for `onDelta`.
     /// They exist so `LiveInterviewFeed` can translate this coordinator into `InterviewFeedEvent`s
     /// without polling and without owning any pipeline state of its own.
@@ -608,7 +612,10 @@ final class CopilotSessionCoordinator {
             },
             language: project.language.bcp47,
             targetWordRange: [Self.targetMinimumWords, Self.targetMaximumWords],
-            projectID: project.projectID
+            projectID: project.projectID,
+            diagnosticsSessionID: diagnosticsCorrelation?.sessionID,
+            diagnosticsRequestID: diagnosticsCorrelation?.requestID,
+            captureProviderMessages: diagnosticsCorrelation?.captureProviderMessages ?? false
         )
 
         generationQueue.append(version.id)
@@ -652,6 +659,10 @@ final class CopilotSessionCoordinator {
         // Captured now: the card this version belongs to, so a `title` event can rename it without
         // re-deriving the location from inside the stream.
         let cardID = cards[location.card].id
+        #if DEBUG
+        let diagnosticsRequestID = request.diagnosticsRequestID
+        let wantsProviderMessages = request.captureProviderMessages
+        #endif
 
         let stream = provider.generate(request)
         generationTasks[versionID] = Task { [weak self] in
@@ -668,10 +679,33 @@ final class CopilotSessionCoordinator {
                         // What actually served this version. Recorded on the version so a card can
                         // show it and a benchmark can attribute a measurement to a real route.
                         self.recordRoute(route, versionID: versionID)
+                        #if DEBUG
+                        if let id = diagnosticsRequestID, let uuid = UUID(uuidString: id) {
+                            // Reported, never inferred: `resolvedModel` and `servingProvider` are
+                            // whatever the gateway said, and "unknown" when it said nothing.
+                            GenerateDiagnostics.shared.recordRoute(
+                                requestID: uuid,
+                                attempt: route.attempt,
+                                gateway: route.gateway,
+                                requestedModel: route.requestedModel,
+                                resolvedModel: route.resolvedModel,
+                                servingProvider: route.servingProvider,
+                                generationID: route.generationID,
+                                backendVersion: route.backendVersion
+                            )
+                        }
+                        #endif
                     case .attemptFailed(let detail, let fallingBackTo):
                         // The backend is retrying on the fallback route; nothing visible has been
                         // shown yet, so there is nothing for the reader to lose.
                         self.lastProviderError = "\(detail) — trying \(fallingBackTo)"
+                        #if DEBUG
+                        if let id = diagnosticsRequestID, let uuid = UUID(uuidString: id) {
+                            GenerateDiagnostics.shared.recordAttemptFailed(
+                                requestID: uuid, detail: detail, fallingBackTo: fallingBackTo
+                            )
+                        }
+                        #endif
                     case .notice(let message):
                         // Shown to the user; it is information, not a failure. The answer continues.
                         lastProviderNotice = message
@@ -691,6 +725,17 @@ final class CopilotSessionCoordinator {
                         assembler.finish()
                         self.applyStreamUpdate(versionID: versionID, assembler: assembler, didCommit: true)
                         self.complete(versionID: versionID, citedIDs: citedIDs, passages: passages)
+                        #if DEBUG
+                        // Fetched after the answer is on screen, so nothing about this is in the way
+                        // of the reader. Failure is silent: an unavailable trace is the normal case.
+                        if wantsProviderMessages, let id = diagnosticsRequestID, let uuid = UUID(uuidString: id) {
+                            Task { [weak self] in
+                                guard let messages = await self?.provider.diagnosticsProviderMessages(requestID: id)
+                                else { return }
+                                GenerateDiagnostics.shared.recordProviderMessages(requestID: uuid, messages: messages)
+                            }
+                        }
+                        #endif
                     }
                 }
                 if let self, self.state == .active, !assembler.committedText.isEmpty,

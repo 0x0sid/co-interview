@@ -49,6 +49,8 @@ struct CopilotDebugScreen: View {
                 activeRouteRow
             }
 
+            DiagnosticsDebugSection()
+
             Section {
                 NavigationLink("Start interview session") {
                     CopilotScreen(

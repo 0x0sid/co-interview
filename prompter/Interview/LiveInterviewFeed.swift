@@ -145,6 +145,19 @@ final class LiveInterviewFeed: InterviewFeed {
         // has read the whole conversation; until it arrives the entry says it is preparing one.
         discussionQuestionIDByRequest[requestID] = questionID
 
+        #if DEBUG
+        // Correlation only: two ids the backend echoes into its own log line, so one tap can be
+        // followed across the two processes. Set immediately before the request is built and cleared
+        // straight after, so it can never attach itself to an unrelated generation.
+        let diagnostics = GenerateDiagnostics.shared
+        coordinator.diagnosticsCorrelation = (
+            sessionID: diagnostics.sessionID.uuidString,
+            requestID: requestID.uuidString,
+            captureProviderMessages: diagnostics.isContentCaptureEnabled
+        )
+        defer { coordinator.diagnosticsCorrelation = nil }
+        #endif
+
         // The whole discussion travels, in labelled parts. The client no longer decides which line
         // is "the question" — it says what is new, what is behind it, and what it has already
         // suggested, and the model resolves the request against all three.
@@ -205,7 +218,8 @@ final class LiveInterviewFeed: InterviewFeed {
                 text: utterance.text,
                 isDetectedQuestion: isDetectedQuestion(utterance.id),
                 questionID: questionID(forUtterance: utterance.id),
-                isFinal: true
+                isFinal: true,
+                revision: utterance.revision
             )))
         }
 

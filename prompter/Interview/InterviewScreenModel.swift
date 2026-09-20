@@ -29,6 +29,9 @@ final class InterviewScreenModel {
     let mode: InterviewMode
     private let feed: any InterviewFeed
 
+    /// Debug-only observation of what each Generate tap did. Never read back into a request.
+    let diagnostics = GenerateDiagnostics.shared
+
     // MARK: Chrome
 
     var isTranscriptExpanded = false
@@ -144,6 +147,14 @@ final class InterviewScreenModel {
 
     func start() {
         guard feedTask == nil else { return }
+        #if DEBUG
+        // A fresh diagnostics session per interview, so two sittings never share a report — and so
+        // content capture starts off, whatever it was left as.
+        diagnostics.startSession(
+            appBuild: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
+            commit: Bundle.main.infoDictionary?["CoInterviewCommit"] as? String ?? "unknown"
+        )
+        #endif
         // Live: real transcription drives reading, and the capture session drives the header mark.
         // Both come from the one session the coordinator already owns.
         liveFeed?.onDelta = { [weak self] delta in
@@ -189,15 +200,34 @@ final class InterviewScreenModel {
             startAnswer(requestID: requestID, questionID: questionID)
 
         case .answerChunk(let requestID, let text):
+            diagnostics.recordFirstText(requestID: requestID)
             appendChunk(text, requestID: requestID)
 
         case .answerCompleted(let requestID, let blocks, let highlight):
             completeAnswer(requestID: requestID, blocks: blocks, highlight: highlight)
+            diagnostics.recordAnswer(
+                requestID: requestID,
+                answerVersion: generations[requestID]
+                    .flatMap { generation in questions.first { $0.id == generation.questionID } }?
+                    .selectedAnswer?.version,
+                text: blocks.compactMap { block in
+                    if case .prose(let prose) = block { return prose }
+                    if case .code(let code) = block { return code }
+                    return nil
+                }.joined(separator: "\n\n")
+            )
 
         case .answerTopicResolved(let requestID, let topic):
             labelEntry(requestID: requestID, topic: topic)
+            diagnostics.recordTitle(requestID: requestID, title: topic)
 
         case .answerFailed(let requestID, let message):
+            diagnostics.recordFailure(
+                requestID: requestID,
+                outcome: message.localizedCaseInsensitiveContains("timed out") ? .timedOut : .failed,
+                detail: message,
+                httpStatus: nil
+            )
             failAnswer(requestID: requestID, message: message)
         }
     }
@@ -346,20 +376,27 @@ final class InterviewScreenModel {
     /// its own immutable snapshot, including repeated taps about the same discussion.
     func generate(now: Date = Date()) {
         // Debounce: one press must not become two entries.
-        if let last = lastGenerateTapAt, now.timeIntervalSince(last) < Self.generateDebounce { return }
+        if let last = lastGenerateTapAt, now.timeIntervalSince(last) < Self.generateDebounce {
+            diagnostics.recordTap(requestID: nil, outcome: .debounced,
+                                  reason: "within \(Self.generateDebounce)s of the previous tap")
+            return
+        }
 
         guard hasAnythingToAnswer else {
             emptyInputNotice = "Speak or add context first"
+            diagnostics.recordTap(requestID: nil, outcome: .rejectedNothingToAnswer, reason: emptyInputNotice)
             return
         }
         // Nothing new since the last request. Rather than answering the same words twice, offer the
         // action the user actually wants — another version of the answer they already have.
         guard hasNewInputToAnswer else {
             emptyInputNotice = "No new question. Regenerate this answer?"
+            diagnostics.recordTap(requestID: nil, outcome: .rejectedNothingNew, reason: emptyInputNotice)
             return
         }
         guard queuedRequestIDs.count < Self.maximumQueuedRequests else {
             emptyInputNotice = "Waiting on \(queuedRequestIDs.count) requests — wait or cancel one"
+            diagnostics.recordTap(requestID: nil, outcome: .rejectedQueueFull, reason: emptyInputNotice)
             return
         }
         lastGenerateTapAt = now
@@ -392,8 +429,39 @@ final class InterviewScreenModel {
         for line in uncoveredLines { coveredLines[line.id] = Self.meaningfulWording(line.text) }
         lastRequestedContextFingerprint = contextFingerprint
 
+        // Recorded *after* the request is fully formed and *before* it is queued, so a diagnostic
+        // can never be the reason a request looks different from the one that was sent.
+        recordTapForDiagnostics(requestID: requestID, snapshot: snapshot)
+
         queuedRequestIDs.append(requestID)
+        diagnostics.recordQueued(requestID: requestID, at: now)
         startNextQueuedRequestIfIdle()
+    }
+
+    /// Hands the recorder what this tap decided. Observation only — nothing here is read back.
+    private func recordTapForDiagnostics(requestID: UUID, snapshot: DiscussionSnapshot) {
+        let covered = Set(coveredLines.keys)
+        let captureText = diagnostics.isContentCaptureEnabled
+        let utterances = transcript.map { line in
+            GenerateTrace.Utterance(
+                id: line.id,
+                revision: line.revision,
+                isFinal: line.isFinal,
+                isCovered: covered.contains(line.id),
+                characterCount: line.text.count,
+                text: captureText ? line.text : ""
+            )
+        }
+        diagnostics.recordTap(requestID: requestID, outcome: .accepted, reason: nil)
+        diagnostics.recordSnapshot(
+            requestID: requestID,
+            transcriptLineCount: transcript.count,
+            transcriptCharacters: transcript.reduce(0) { $0 + $1.text.count },
+            snapshot: snapshot,
+            utterances: utterances,
+            attachmentCount: attachments.count,
+            preparedAttachmentCount: attachments.filter(\.state.isSendable).count
+        )
     }
 
     /// The transcript as it stands, oldest first, split at the answered/new boundary.
@@ -467,6 +535,7 @@ final class InterviewScreenModel {
         }
         activeRequestID = next
         queuedRequestIDs.removeFirst()
+        diagnostics.recordSent(requestID: next)
         feed.requestAnswerForDiscussion(requestID: next, discussion: snapshot, questionID: generation.questionID)
     }
 

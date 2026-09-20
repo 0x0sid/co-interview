@@ -195,19 +195,27 @@ struct TranscriptLine: Identifiable, Equatable, Sendable {
     var questionID: UUID?
     /// False while the transcriber may still revise this line. Finalized history is never rewritten.
     var isFinal: Bool
+    /// How many times the recogniser has revised this utterance, from `ConversationLog`.
+    ///
+    /// Carried so a diagnostic can show that a partial and its finalized form are the *same* line at
+    /// two revisions rather than two pieces of speech — the distinction that decides whether a
+    /// sentence was sent once or twice.
+    var revision: Int
 
     init(
         id: UUID = UUID(),
         text: String,
         isDetectedQuestion: Bool = false,
         questionID: UUID? = nil,
-        isFinal: Bool = true
+        isFinal: Bool = true,
+        revision: Int = 0
     ) {
         self.id = id
         self.text = text
         self.isDetectedQuestion = isDetectedQuestion
         self.questionID = questionID
         self.isFinal = isFinal
+        self.revision = revision
     }
 }
 

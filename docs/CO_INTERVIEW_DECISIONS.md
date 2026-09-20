@@ -371,3 +371,41 @@ again hide the finding rather than address it.
 This is also why the two ledgers are kept apart: **software correctness** (does the whole discussion
 reach the provider, labelled, with the right title) is deterministic and model-independent; **answer
 quality** is not. The first is fixed and tested here. The second is measured and recorded.
+
+## Generate diagnostics (2026-09-21)
+
+Device testing needs a report, not a recollection. Debug-only tracing of every Generate tap, with an
+explicit opt-in for capturing the conversation itself. See `docs/evidence/diagnostics/`.
+
+### Observation is not participation
+
+Diagnostics never change what is sent, shown or timed. No diagnostic value is read back into a
+request; the correlation ids the backend echoes are two UUIDs and nothing else. A test asserts that
+identical speech produces an identical payload with capture on and off, because a tracing feature
+that alters the thing it traces is worse than no tracing. Recording failures are swallowed and
+reported in the export rather than interrupting an interview, which cannot be repeated on request.
+
+### The actual provider is never inferred from the requested one
+
+When the gateway does not say what served a request, the report says `unknown`. A plausible guess in
+a diagnostic is indistinguishable from a fact, and that is exactly what a report must not contain.
+
+### Content capture is opt-in, per session, and never persists
+
+Off by default, explained where it is switched on, and **reset to off at the start of every
+session** — a capture enabled to chase one problem must not still be running during an interview that
+matters. Credentials and image bytes are excluded on both sides: redaction runs at every entry point
+that takes free text and again on export, and the backend redacts before it stores.
+
+### The backend keeps as little as possible, for as short as possible
+
+Nothing is kept unless the operator sets `COPILOT_DIAGNOSTICS=1` **and** the individual request asks.
+Then it is the assembled provider messages only, in memory, bounded, expiring, and readable only
+behind the same bearer token as every other route. No global transcript logging, nothing on disk,
+and ngrok inspection stays off.
+
+### The interview interface is unchanged
+
+One item at the bottom of the existing ••• menu — "Mark a problem" — because that is the only thing
+needed mid-interview. Switching capture on, exporting and clearing live in the existing Debug
+surface. Reports are shared through the iOS share sheet and are never uploaded.

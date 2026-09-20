@@ -135,6 +135,49 @@ const IMAGE_RESERVE_TOKENS_EACH = 1_500;
  */
 const CHARS_PER_TOKEN = 4;
 
+/**
+ * Development diagnostics: off unless the operator turns it on.
+ *
+ * With it on, a request that explicitly asks (`captureProviderMessages`) has its assembled provider
+ * messages kept **briefly and in memory only**, so the app can fetch exactly what the model was sent
+ * and show where a sentence was lost. Reads are authenticated with the same client token as every
+ * other route, the store is bounded, and entries expire.
+ *
+ * This is deliberately not "log every transcript": nothing is written to disk, nothing is kept for a
+ * request that did not ask, and nothing is kept at all unless COPILOT_DIAGNOSTICS=1.
+ */
+const DIAGNOSTICS_ENABLED = process.env.COPILOT_DIAGNOSTICS === "1";
+const DIAGNOSTICS_TTL_MS = Number(process.env.COPILOT_DIAGNOSTICS_TTL_MS ?? 10 * 60 * 1000);
+const DIAGNOSTICS_MAX_ENTRIES = 40;
+/** The backend build this is, reported to the app so a report names both halves. */
+const BACKEND_VERSION = process.env.COPILOT_BACKEND_VERSION ?? "dev";
+
+const diagnosticsStore = new Map();
+
+function pruneDiagnostics(now = Date.now()) {
+  for (const [key, entry] of diagnosticsStore) {
+    if (entry.expiresAt <= now) diagnosticsStore.delete(key);
+  }
+  while (diagnosticsStore.size > DIAGNOSTICS_MAX_ENTRIES) {
+    diagnosticsStore.delete(diagnosticsStore.keys().next().value);
+  }
+}
+
+/** Strips anything credential-shaped before a trace is stored, not when it is read. */
+function redactForDiagnostics(text) {
+  return String(text)
+    .replace(/(authorization\s*:\s*)(bearer\s+)?[A-Za-z0-9._-]+/gi, "$1***REDACTED***")
+    .replace(/bearer\s+[A-Za-z0-9._-]{8,}/gi, "Bearer ***REDACTED***")
+    .replace(/sk-[A-Za-z0-9-]{8,}/gi, "***REDACTED***")
+    .replace(/data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+/g, "data:image/...;base64,***IMAGE BYTES EXCLUDED***");
+}
+
+function storeDiagnostics(requestID, payload) {
+  if (!DIAGNOSTICS_ENABLED || !requestID) return;
+  pruneDiagnostics();
+  diagnosticsStore.set(String(requestID), { ...payload, expiresAt: Date.now() + DIAGNOSTICS_TTL_MS });
+}
+
 const operatorConfig = operatorOverridesFromEnv();
 const baseConfig = resolveConfig({ operator: operatorConfig });
 const keyFor = (provider) => (provider === "openrouter" ? OPENROUTER_API_KEY : OPENAI_API_KEY);
@@ -836,6 +879,26 @@ async function handleAnswer(request, response) {
   const overflow = answerContextOverflow(messages, config, modelAcceptsImages ? attached : 0);
   if (overflow) return send(response, 413, overflow);
 
+  // Development diagnostics: kept only when the operator enabled them *and* this request asked.
+  // Redacted on the way in, bounded, in memory, and expiring — see `storeDiagnostics`.
+  if (DIAGNOSTICS_ENABLED && body.captureProviderMessages && body.diagnosticsRequestID) {
+    storeDiagnostics(body.diagnosticsRequestID, {
+      sessionID: String(body.diagnosticsSessionID ?? ""),
+      backendVersion: BACKEND_VERSION,
+      answerModel: config.answer_model_id,
+      providerMessages: redactForDiagnostics(
+        messages
+          .map((message) => {
+            const text = typeof message.content === "string"
+              ? message.content
+              : (message.content ?? []).map((part) => part.text ?? `[${part.type}]`).join("");
+            return `--- role=${message.role} ---\n${text}`;
+          })
+          .join("\n\n")
+      ),
+    });
+  }
+
   // Resolve the routing *before* streaming starts. Building it lazily inside the adapter meant a
   // configuration fault — such as asking benchmark mode to pin two routes at once — surfaced as a
   // generic 502 from inside the stream instead of an actionable 400.
@@ -914,6 +977,8 @@ async function handleAnswer(request, response) {
             resolved_model: event.meta?.resolvedModel ?? null,
             serving_provider: event.meta?.servingProvider ?? "unknown",
             generation_id: event.meta?.generationID ?? null,
+            backend_version: BACKEND_VERSION,
+            diagnostics_request_id: body.diagnosticsRequestID ?? null,
             usage: event.meta?.usage ?? null,
             finish_reason: event.meta?.finishReason ?? null,
           });
@@ -1033,6 +1098,26 @@ const server = createServer(async (request, response) => {
         ...publicConfig(baseConfig),
         provider_configured: providerMode === "configured" || FAKE,
         is_fake: FAKE,
+      });
+    }
+
+    // Development diagnostics for one request, by its correlation id.
+    //
+    // Behind the same bearer token as everything else, served only when the operator enabled
+    // diagnostics, and only for a request that asked for its messages to be kept. Entries expire.
+    if (url.pathname.startsWith("/v1/copilot/diagnostics/") && request.method === "GET") {
+      if (!DIAGNOSTICS_ENABLED) return send(response, 404, { error: "diagnostics_disabled" });
+      pruneDiagnostics();
+      const id = decodeURIComponent(url.pathname.slice("/v1/copilot/diagnostics/".length));
+      const entry = diagnosticsStore.get(id);
+      if (!entry) return send(response, 404, { error: "not_found" });
+      return send(response, 200, {
+        request_id: id,
+        session_id: entry.sessionID,
+        backend_version: entry.backendVersion,
+        answer_model: entry.answerModel,
+        provider_messages: entry.providerMessages,
+        expires_in_ms: Math.max(0, entry.expiresAt - Date.now()),
       });
     }
 
