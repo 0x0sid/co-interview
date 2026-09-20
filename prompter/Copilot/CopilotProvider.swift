@@ -50,7 +50,22 @@ struct AnswerRequest: Sendable, Encodable {
     /// backend replies with a `notice` saying they were not sent, which the screen shows. An
     /// attachment is never dropped in silence.
     var images: [ImageAttachment] = []
+    /// The whole conversation this request was snapshotted with, oldest first.
+    ///
+    /// Not a window. A twelve-line cut here meant a fact stated earlier in the same session was
+    /// silently absent from the request that asked about it.
     let recentConversation: [String]
+    /// What this request is being asked to resolve: speech not covered by an earlier request,
+    /// oldest first, with the still-in-progress utterance last when there is one.
+    ///
+    /// Sent apart from `recentConversation` because "what is new" and "what was said" are different
+    /// questions. Everything in here also appears, in order, in `recentConversation`.
+    var newInput: [String] = []
+    /// Whether the last element of `newInput` was still being spoken when the request was made.
+    var lastNewInputIsProvisional: Bool = false
+    /// Answers already suggested this session, oldest first, labelled to the model as its own
+    /// suggestions — never as something the speaker said about themselves.
+    var priorSuggestions: [String] = []
     let passages: [Passage]
     let language: String
     let targetWordRange: [Int]
@@ -92,6 +107,11 @@ enum AnswerStreamEvent: Sendable, Equatable {
     case notice(String)
     /// Source ids the model cited, validated by the backend against the passages it was sent.
     case sources([String])
+    /// What the model understood the request to be, as a short phrase for the entry's label.
+    ///
+    /// It arrives before any answer text. The client used to name the entry itself, by joining
+    /// transcript fragments, which is how a three-way comparison ended up titled "And Java 7."
+    case title(String)
     /// The generation finished normally.
     case completed(usageOutputTokens: Int?)
     /// Generation stopped after text had already been shown. What arrived stays readable.
@@ -290,6 +310,10 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
                             }
                         case "sources":
                             continuation.yield(.sources(event["ids"] as? [String] ?? []))
+                        case "title":
+                            if let text = event["text"] as? String, !text.isEmpty {
+                                continuation.yield(.title(text))
+                            }
                         case "done":
                             continuation.yield(.completed(usageOutputTokens: event["output_tokens"] as? Int))
                             continuation.finish()

@@ -84,6 +84,11 @@ struct ProviderConfiguration: Equatable, Sendable {
     ///   silently truncate `https://…`. The scheme is added here, and it is always `https`.
     static func developmentDefaults(bundle: Bundle, isDebugBuild: Bool) -> (url: String, token: String)? {
         guard isDebugBuild else { return nil }
+        // A UI test asserting the *unconfigured* state cannot do so on a machine whose Debug build
+        // has a local backend baked in — and whether one is baked in depends on a git-ignored file,
+        // so the same test passed or failed depending on whose machine it ran on. This makes the
+        // empty state reachable deliberately. Debug-only, like the keys it suppresses.
+        if ProcessInfo.processInfo.arguments.contains("-CopilotIgnoreDevelopmentDefaults") { return nil }
         let host = (bundle.object(forInfoDictionaryKey: "CopilotDevBackendHost") as? String ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let token = (bundle.object(forInfoDictionaryKey: "CopilotDevBackendToken") as? String ?? "")

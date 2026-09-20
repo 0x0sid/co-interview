@@ -91,6 +91,9 @@ for (const result of results) {
     lines.push(`**First visible text:** ${result.firstTextMs} ms · **Complete:** ${result.totalMs} ms · **Length:** ${words(result.text)} words`);
     const sources = result.events.find((e) => e.type === "sources");
     if (sources) lines.push(`**Sources claimed:** ${sources.ids?.join(", ") || "none"}`);
+    // The tab label the model reported, which the app shows instead of a transcript fragment.
+    const title = result.events?.find((event) => event.type === "title");
+    lines.push(`**Title reported:** ${title?.text ?? "(none — the model sent no TITLE line)"}`);
     lines.push("");
     lines.push("```");
     lines.push(result.text.trim());

@@ -1,0 +1,281 @@
+[
+ {
+  "id": "J1",
+  "title": "Java 7/8/9 — all three fragments, none answered yet",
+  "body": {
+   "question": "Could you explain the difference between Java and Java 8? And Java 9. And Java 7.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Could you explain the difference between Java and Java 8?",
+    "And Java 9.",
+    "And Java 7."
+   ],
+   "newInput": [
+    "Could you explain the difference between Java and Java 8?",
+    "And Java 9.",
+    "And Java 7."
+   ],
+   "priorSuggestions": [],
+   "passages": [],
+   "language": "en",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "J2",
+  "title": "Java 7/8/9 — opening question already answered",
+  "body": {
+   "question": "And Java 9. And Java 7.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Could you explain the difference between Java and Java 8?",
+    "And Java 9.",
+    "And Java 7."
+   ],
+   "newInput": [
+    "And Java 9.",
+    "And Java 7."
+   ],
+   "priorSuggestions": [
+    "Java 8 was a large release: lambdas, the Stream API and the new date/time API."
+   ],
+   "passages": [],
+   "language": "en",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "J3",
+  "title": "Explicit later narrowing overrides the wider request",
+  "body": {
+   "question": "Actually, just compare 7 and 8.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Compare Java versions.",
+    "Java 8.",
+    "And Java 9.",
+    "And Java 7.",
+    "Actually, just compare 7 and 8."
+   ],
+   "newInput": [
+    "Actually, just compare 7 and 8."
+   ],
+   "priorSuggestions": [
+    "Java 7, 8 and 9 differ mainly in language features and the module system."
+   ],
+   "passages": [],
+   "language": "en",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "L1",
+  "title": "A follow-up asking for an example keeps its subject",
+  "body": {
+   "question": "Give me an example.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "What is a lambda in Java?",
+    "Give me an example."
+   ],
+   "newInput": [
+    "Give me an example."
+   ],
+   "priorSuggestions": [
+    "A lambda is an anonymous function you can pass around as a value."
+   ],
+   "passages": [],
+   "language": "en",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "F1",
+  "title": "A fact stated 30+ lines earlier",
+  "body": {
+   "question": "Which project did I just mention?",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "My most recent project was the Mill Street rollout.",
+    "Filler line number 1.",
+    "Filler line number 2.",
+    "Filler line number 3.",
+    "Filler line number 4.",
+    "Filler line number 5.",
+    "Filler line number 6.",
+    "Filler line number 7.",
+    "Filler line number 8.",
+    "Filler line number 9.",
+    "Filler line number 10.",
+    "Filler line number 11.",
+    "Filler line number 12.",
+    "Filler line number 13.",
+    "Filler line number 14.",
+    "Filler line number 15.",
+    "Filler line number 16.",
+    "Filler line number 17.",
+    "Filler line number 18.",
+    "Filler line number 19.",
+    "Filler line number 20.",
+    "Filler line number 21.",
+    "Filler line number 22.",
+    "Filler line number 23.",
+    "Filler line number 24.",
+    "Filler line number 25.",
+    "Filler line number 26.",
+    "Filler line number 27.",
+    "Filler line number 28.",
+    "Filler line number 29.",
+    "Filler line number 30.",
+    "Which project did I just mention?"
+   ],
+   "newInput": [
+    "Which project did I just mention?"
+   ],
+   "priorSuggestions": [],
+   "passages": [],
+   "language": "en",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "FR1",
+  "title": "French — Java 7/8/9 fragments",
+  "body": {
+   "question": "Peux-tu expliquer la différence entre Java et Java 8 ? Et Java 9. Et Java 7.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Peux-tu expliquer la différence entre Java et Java 8 ?",
+    "Et Java 9.",
+    "Et Java 7."
+   ],
+   "newInput": [
+    "Peux-tu expliquer la différence entre Java et Java 8 ?",
+    "Et Java 9.",
+    "Et Java 7."
+   ],
+   "priorSuggestions": [],
+   "passages": [],
+   "language": "fr",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "FR2",
+  "title": "French — example follow-up keeps its subject",
+  "body": {
+   "question": "Donne-moi un exemple.",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Qu'est-ce qu'une lambda en Java ?",
+    "Donne-moi un exemple."
+   ],
+   "newInput": [
+    "Donne-moi un exemple."
+   ],
+   "priorSuggestions": [
+    "Une lambda est une fonction anonyme que l'on peut passer comme valeur."
+   ],
+   "passages": [],
+   "language": "fr",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ },
+ {
+  "id": "FR3",
+  "title": "French — a fact stated much earlier",
+  "body": {
+   "question": "Quel projet viens-je de mentionner ?",
+   "projectInstructions": "",
+   "extraContext": "",
+   "images": [],
+   "recentConversation": [
+    "Mon projet le plus récent était le déploiement de Mill Street.",
+    "Ligne de remplissage numéro 1.",
+    "Ligne de remplissage numéro 2.",
+    "Ligne de remplissage numéro 3.",
+    "Ligne de remplissage numéro 4.",
+    "Ligne de remplissage numéro 5.",
+    "Ligne de remplissage numéro 6.",
+    "Ligne de remplissage numéro 7.",
+    "Ligne de remplissage numéro 8.",
+    "Ligne de remplissage numéro 9.",
+    "Ligne de remplissage numéro 10.",
+    "Ligne de remplissage numéro 11.",
+    "Ligne de remplissage numéro 12.",
+    "Ligne de remplissage numéro 13.",
+    "Ligne de remplissage numéro 14.",
+    "Ligne de remplissage numéro 15.",
+    "Ligne de remplissage numéro 16.",
+    "Ligne de remplissage numéro 17.",
+    "Ligne de remplissage numéro 18.",
+    "Ligne de remplissage numéro 19.",
+    "Ligne de remplissage numéro 20.",
+    "Ligne de remplissage numéro 21.",
+    "Ligne de remplissage numéro 22.",
+    "Ligne de remplissage numéro 23.",
+    "Ligne de remplissage numéro 24.",
+    "Ligne de remplissage numéro 25.",
+    "Ligne de remplissage numéro 26.",
+    "Ligne de remplissage numéro 27.",
+    "Ligne de remplissage numéro 28.",
+    "Ligne de remplissage numéro 29.",
+    "Ligne de remplissage numéro 30.",
+    "Quel projet viens-je de mentionner ?"
+   ],
+   "newInput": [
+    "Quel projet viens-je de mentionner ?"
+   ],
+   "priorSuggestions": [],
+   "passages": [],
+   "language": "fr",
+   "targetWordRange": [
+    40,
+    120
+   ],
+   "projectID": "live-session"
+  }
+ }
+]

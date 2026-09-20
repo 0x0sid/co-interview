@@ -33,89 +33,80 @@ struct AnswerQualityTests {
         #expect(SyntheticProjectFixture.transportProgramme.allPassages.count == 5)
     }
 
-    // MARK: - Reconstructing the question from the discussion
+    // MARK: - What the request carries
 
-    /// "In Java", spoken after a question that had already been answered, reached the model as a
-    /// complete question on its own.
+    // These replace a set of tests that asserted a *local* heuristic which turned the discussion
+    // into one question string. That heuristic is gone: it dropped "and Java 9" / "and Java 7" from
+    // a comparison because neither is interrogative, and once the opening question had been answered
+    // it sent "And Java 9. And Java 7." with no subject at all. Deciding what is being asked needs
+    // the whole conversation, so the client now sends the parts and the model resolves the request.
+    // What can be asserted here — and what actually protects the fix — is that nothing is lost on
+    // the way out.
+
+    /// A fragment travels **with** the thing it continues, across the answered/new boundary.
     @Test
-    func aFragmentIsAttachedToTheQuestionItContinues() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            background: ["Could you tell me more about what's an Ash map and how to make it?"],
-            newInput: ["In Java"]
-        ))
-        #expect(question.contains("Ash map"), "the fragment lost the question it belonged to")
-        #expect(question.contains("In Java"))
+    func aFragmentKeepsTheQuestionItContinues() {
+        let (model, feed) = ManualGenerationTests.make()
+        ManualGenerationTests.speak("Could you tell me more about what's an Ash map and how to make it?", in: model)
+        ManualGenerationTests.tap(model, at: 0)
+        ManualGenerationTests.completeActiveRequest(model, feed)
+        ManualGenerationTests.speak("In Java", in: model)
+        ManualGenerationTests.tap(model, at: 30)
+
+        let discussion = try! #require(feed.discussionRequests.last).discussion
+        #expect(discussion.newLines == ["In Java"], "the fragment must be what is asked about")
+        #expect(discussion.background.contains { $0.contains("Ash map") },
+                "the fragment lost the question it belonged to")
+        #expect(discussion.allLines.count == 2)
     }
 
-    /// The same, when the question it continues has *not* been answered yet and is still new input.
+    /// Background is context, never a question to request again — but it is still *sent*.
     @Test
-    func aFragmentIsAttachedWithinNewInputToo() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            newInput: ["Could you tell me more about what's an Ash map and how to make it", "In Java"]
-        ))
-        #expect(question.contains("Ash map"))
-        #expect(question.contains("In Java"))
+    func answeredQuestionsStayAsContextWithoutBeingAskedAgain() {
+        let (model, feed) = ManualGenerationTests.make()
+        ManualGenerationTests.speak("How do I remove duplicates in Java?", in: model)
+        ManualGenerationTests.tap(model, at: 0)
+        ManualGenerationTests.completeActiveRequest(model, feed)
+        ManualGenerationTests.speak("What is a lambda in Java?", in: model)
+        ManualGenerationTests.tap(model, at: 30)
+
+        let discussion = try! #require(feed.discussionRequests.last).discussion
+        #expect(discussion.newLines == ["What is a lambda in Java?"])
+        #expect(!discussion.newLines.contains { $0.contains("duplicates") },
+                "an already-answered question was asked again")
+        #expect(discussion.allLines.contains { $0.contains("duplicates") },
+                "an already-answered question was deleted from the conversation")
     }
 
-    /// "Of France", in a comparison already under way, narrows the question rather than starting one.
-    @Test
-    func aCorrectionKeepsTheComparisonItNarrows() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            background: ["So is it better to invest in France or in Indonesia right now?"],
-            newInput: ["Of France"]
-        ))
-        #expect(question.contains("Indonesia"), "the correction was cut off from the comparison")
-        #expect(question.contains("Of France"))
-    }
-
-    /// Background is context, never a question to answer again. Otherwise every tap re-answers the
-    /// whole session, and page three repeats pages one and two.
-    @Test
-    func answeredQuestionsAreNotAskedAgain() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            background: [
-                "How do I remove duplicates in Java?",
-                "And what about performance?",
-            ],
-            newInput: ["What is a lambda in Java?"]
-        ))
-        #expect(question.contains("lambda"))
-        #expect(!question.contains("duplicates"), "an already-answered question was asked again")
-        #expect(!question.contains("performance"), "an already-answered question was asked again")
-    }
-
-    /// Several questions asked in one breath are still answered together.
+    /// Several questions asked in one breath travel together as one request.
     @Test
     func severalNewQuestionsTravelTogether() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            newInput: [
-                "How do I remove duplicates in Java?",
-                "And how do I preserve insertion order?",
-            ]
-        ))
-        #expect(question.contains("duplicates"))
-        #expect(question.contains("insertion order"))
+        let (model, feed) = ManualGenerationTests.make()
+        ManualGenerationTests.speak("How do I remove duplicates in Java?", in: model)
+        ManualGenerationTests.speak("And how do I preserve insertion order?", in: model)
+        ManualGenerationTests.tap(model, at: 0)
+
+        let discussion = try! #require(feed.discussionRequests.last).discussion
+        #expect(discussion.newLines.count == 2)
+        #expect(discussion.newLines.contains { $0.contains("duplicates") })
+        #expect(discussion.newLines.contains { $0.contains("insertion order") })
     }
 
-    /// A substantial imperative request is a question in its own right — it has no question mark and
-    /// no interrogative opener, and must not be glued onto the line before it.
+    /// With nothing new said, the tap is still about the discussion — not about nothing.
     @Test
-    func aSubstantialRequestStandsOnItsOwn() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            background: ["Thanks, that's clear."],
-            newInput: ["Walk me through how you would design a rate limiter for this service."]
-        ))
-        #expect(question.contains("rate limiter"))
-        #expect(!question.contains("Thanks"), "a complete request was treated as a fragment")
-    }
+    func noNewInputStillSendsTheDiscussion() {
+        let (model, feed) = ManualGenerationTests.make()
+        ManualGenerationTests.speak("We were discussing indexing strategies.", in: model)
+        ManualGenerationTests.speak("Specifically partial indexes.", in: model)
+        ManualGenerationTests.tap(model, at: 0)
+        ManualGenerationTests.completeActiveRequest(model, feed)
+        // Nothing new; only the note changed, which is what makes a second tap eligible at all.
+        model.context.note = "focus on Postgres"
+        model.syncSessionNote()
+        ManualGenerationTests.tap(model, at: 30)
 
-    /// With nothing new said, the tap is about the discussion itself — not about nothing.
-    @Test
-    func noNewInputFallsBackToTheDiscussion() {
-        let question = LiveInterviewFeed.questionFromDiscussion(DiscussionSnapshot(
-            background: ["We were discussing indexing strategies.", "Specifically partial indexes."]
-        ))
-        #expect(question.contains("partial indexes"))
+        let discussion = try! #require(feed.discussionRequests.last).discussion
+        #expect(discussion.allLines.contains { $0.contains("partial indexes") })
     }
 
     // MARK: - The snapshot the screen takes

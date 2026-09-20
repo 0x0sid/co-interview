@@ -57,6 +57,8 @@ final class CopilotSessionCoordinator {
     /// They exist so `LiveInterviewFeed` can translate this coordinator into `InterviewFeedEvent`s
     /// without polling and without owning any pipeline state of its own.
     var onCardAppended: ((QuestionCard) -> Void)?
+    /// A card's label changed because the model reported what it understood the request to be.
+    var onCardRenamed: ((QuestionCardID, String) -> Void)?
     var onTranscriptChanged: (() -> Void)?
     /// Fired whenever a version's text, status or route changed.
     var onVersionChanged: ((AnswerVersionID, QuestionCardID) -> Void)?
@@ -482,7 +484,11 @@ final class CopilotSessionCoordinator {
     /// The conversation snapshot is supplied by the caller and used as-is, so the request answers
     /// what was on screen when the user tapped, not whatever has been said since.
     @discardableResult
-    func beginDiscussionAnswer(question: String, conversation snapshot: [String]) -> QuestionCard {
+    func beginDiscussionAnswer(discussion: DiscussionSnapshot) -> QuestionCard {
+        // The card's own text is a placeholder until the model reports what it understood the
+        // request to be. Naming it locally is what produced titles like "And Java 7." for a request
+        // that was really a three-way comparison.
+        let question = discussion.newLines.joined(separator: " ")
         // Everything said up to now is what this request answers, so it is marked consumed and the
         // detection cut-off moves past it. Without this the same speech stayed pending, and the next
         // silence tick classified it and produced a second question for an answer already on screen.
@@ -500,7 +506,7 @@ final class CopilotSessionCoordinator {
         }
         detectionCutoff = max(detectionCutoff, covered.last?.endTime ?? detectionCutoff)
         lastClassifiedText = nil
-        startGeneration(for: card.id, conversationOverride: snapshot)
+        startGeneration(for: card.id, discussion: discussion)
         return card
     }
 
@@ -541,7 +547,8 @@ final class CopilotSessionCoordinator {
         for cardID: QuestionCardID,
         detectionLatency: TimeInterval = 0,
         questionEndTranscriptTime: TimeInterval = 0,
-        conversationOverride: [String]? = nil
+        conversationOverride: [String]? = nil,
+        discussion: DiscussionSnapshot? = nil
     ) {
         guard state == .active, let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
 
@@ -589,7 +596,12 @@ final class CopilotSessionCoordinator {
             images: sessionImages,
             // The caller's snapshot when there is one, so a queued request still answers the
             // discussion it was created for rather than the newest speech.
-            recentConversation: conversationOverride ?? conversation.recentContext(maximumUtterances: 6).map(\.text),
+            recentConversation: discussion?.allLines
+                ?? conversationOverride
+                ?? conversation.recentContext(maximumUtterances: 6).map(\.text),
+            newInput: discussion?.newLines ?? [],
+            lastNewInputIsProvisional: discussion?.provisional != nil,
+            priorSuggestions: discussion?.priorSuggestions ?? [],
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
                       locator: $0.locator, text: $0.text)
@@ -637,6 +649,9 @@ final class CopilotSessionCoordinator {
     private func run(versionID: AnswerVersionID, request: AnswerRequest, passages: [ProjectPassage]) {
         guard let location = locate(versionID: versionID) else { return }
         cards[location.card].versions[location.version].status = .streaming
+        // Captured now: the card this version belongs to, so a `title` event can rename it without
+        // re-deriving the location from inside the stream.
+        let cardID = cards[location.card].id
 
         let stream = provider.generate(request)
         generationTasks[versionID] = Task { [weak self] in
@@ -662,6 +677,10 @@ final class CopilotSessionCoordinator {
                         lastProviderNotice = message
                     case .sources(let ids):
                         citedIDs = ids
+                    case .title(let title):
+                        // What the model understood the request to be. It renames the card the
+                        // request belongs to — the transcript keeps the speaker's own wording.
+                        self.renameCard(cardID, to: title)
                     case .incomplete(let reason):
                         // Text already shown stays readable; the version is marked incomplete and the
                         // card offers Retry, which creates a **new** version rather than replacing it.
@@ -740,6 +759,17 @@ final class CopilotSessionCoordinator {
         cards[location.card].versions[location.version] = version
         recordMeasurement(versionID: versionID) { $0.completedAt = self.clock() }
         onVersionChanged?(versionID, cards[location.card].id)
+    }
+
+    /// Renames a card to what the model understood the request to be.
+    ///
+    /// Only the card's label changes. The transcript keeps every word as it was said — the speaker's
+    /// own phrasing is the record of the interview, and an interpretation must never overwrite it.
+    private func renameCard(_ cardID: QuestionCardID, to title: String) {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
+        cards[index].questionText = trimmed
+        onCardRenamed?(cardID, trimmed)
     }
 
     private func recordRoute(_ route: AnswerRoute, versionID: AnswerVersionID) {

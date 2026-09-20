@@ -292,3 +292,82 @@ once in twelve recorded runs. The same prompt passed 6 out of 6 on the `smart` p
 (`google/gemini-2.5-flash-lite`). Swapping models to make a failing case pass would have hidden the
 finding; the evidence for both profiles is in `docs/evidence/answer-quality/` so the choice can be
 made deliberately.
+
+## Conversation context (2026-09-20)
+
+Generation was answering transcript fragments rather than the discussion they belonged to: "Could
+you explain the difference between Java and Java 8?" / "And Java 9." / "And Java 7." produced an
+answer about one version, under a tab titled "And Java 7.". Traced end to end — snapshot, request
+body, upstream payload — and recorded in `docs/evidence/context-handling/`.
+
+### The client does not decide what is being asked
+
+**Superseded:** `questionFromDiscussion`, which built one question string on the device by joining
+the lines that looked interrogative.
+
+Ordinary continuations are not interrogative. "And Java 9." has no question mark and no interrogative
+opener, so it was discarded, and a three-way comparison left the phone as a question about Java 8.
+Once the opening question had been answered it was worse: the subject sat in the background half,
+which the heuristic consulted for at most one preceding line, so the request became "And Java 9. And
+Java 7." — naming nothing.
+
+Working out what is being asked needs the whole conversation, which the model has and a local string
+heuristic never did. The client now reports what is new, what is behind it, what it has already
+suggested, and what the speaker added; the prompt keeps those apart; the model resolves the request.
+
+### Conversation memory is not generation eligibility
+
+**Superseded:** treating "already answered" as a reason to leave speech out of the request.
+
+They are different questions. *Eligibility* stops a second tap re-requesting the same speech and is
+what prevents duplicates. *Memory* is what makes a fragment interpretable. Background is now sent in
+full and is simply never re-requested. Duplicate prevention is unchanged and still keyed on utterance
+identity and revision, not wording.
+
+The snapshot is also independent of the transcript strip: collapsing or expanding it cannot change a
+request, and a test asserts the two paths produce identical payloads.
+
+### Length is a budget, not a line count
+
+**Superseded:** the last-12-lines cut on the device, and a second one in the backend.
+
+Both were silent, and twelve lines is a couple of minutes of conversation. A fact stated before that
+was absent from the request that asked about it, with nothing on screen to say so.
+
+The whole transcript is now sent, and length is checked once against the configured input window,
+with room reserved for the answer and attachments. Over budget is an explicit 413 `context_limit`
+carrying the estimate, the budget and the reserve — never a quietly shortened conversation. Token
+counts are estimated from text length and the refusal says so. No compaction exists yet; this
+increment makes the limit visible rather than pretending it is not there.
+
+### The tab title is the model's interpretation, not the transcript's last line
+
+**Superseded:** naming the entry with the string the client guessed.
+
+The model now opens its reply with a `TITLE:` line, stripped before the reader sees it and reported
+as its own event, so the tab reads "Compare Java 7, 8, and 9". Until it arrives the entry says
+"Preparing answer…". **The transcript is never rewritten** — the speaker's own wording is the record
+of what was said; only the tab label is interpreted.
+
+### A factual error left visible, and why it is not fixed in the prompt
+
+The context evaluation scores five dimensions separately — context coverage, answering the current
+request, factual accuracy, displayed title, latency — because a case can pass four and fail one, and
+a single verdict hides exactly that. Context coverage, request handling and titles are 8/8. **Factual
+accuracy is 6/8.**
+
+J1 and J2 both credit Java 9 with local-variable type inference. `var` is Java 10: JEP 286 records
+`Release: 10`, and Oracle's *What's New in Java SE 9* lists only the small JEP 213 items. The error
+repeats across both recorded runs, so it is systematic for this model on this question; the French
+equivalent of the same case never makes the claim.
+
+**Not fixed, deliberately.** Writing "`var` is Java 10" into `ANSWER_RULES` would hardcode one fact,
+in one language, for one measured case, and would do nothing about the next wrong date — while making
+the evaluation self-confirming. It is a property of the configured model, so it belongs in the
+answer-quality ledger, not in the context fix. The default profile is unchanged (`balanced` /
+`google/gemini-2.5-flash-lite`) for this increment; changing it to make a failing case pass would
+again hide the finding rather than address it.
+
+This is also why the two ledgers are kept apart: **software correctness** (does the whole discussion
+reach the provider, labelled, with the right title) is deterministic and model-independent; **answer
+quality** is not. The first is fixed and tested here. The second is measured and recorded.

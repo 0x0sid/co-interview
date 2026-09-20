@@ -579,12 +579,63 @@ but **it no longer gates anything the user can ask for.**
 
 `canGenerate` is now unconditionally true. Tapping Generate:
 
-- takes an **immutable snapshot** of the transcript (bounded to the last 12 lines, enough for a
-  follow-up like "and why?" to make sense), the note and the prepared attachments;
-- creates a history entry immediately, with a visible generating state;
-- asks the feed through `requestAnswerForDiscussion` — **one request**, which derives the question or
-  topic and streams the answer. There is no separate classification call to fail first;
-- labels the entry with what was actually answered, reported back as `answerTopicResolved`.
+- takes an **immutable snapshot** of the **whole session transcript**, in order, plus the note and
+  the prepared attachments;
+- creates a history entry immediately, with a visible generating state, labelled "Preparing answer…";
+- asks the feed through `requestAnswerForDiscussion` — **one request**, which streams the answer.
+  There is no separate classification call to fail first;
+- labels the entry with the title the **model** reports, once it arrives (`answerTopicResolved`).
+
+#### What the snapshot contains
+
+The snapshot is the conversation memory, and it is deliberately not the transcript strip: what the
+strip shows, and whether it is expanded, has no effect on any request.
+
+| Part | What it is |
+| --- | --- |
+| `background` | Speech already covered by an earlier accepted request. Context — never re-requested. |
+| `newInput` | Speech not yet covered. What this request is asked to resolve. |
+| `provisional` | The utterance still being spoken, carried apart and **once**, so finalizing it updates one line rather than adding a second copy. |
+| `priorSuggestions` | Answers already suggested this session, labelled to the model as its own suggestions. |
+| `note`, `attachmentIDs` | What the speaker typed and attached. |
+
+**"Already answered" prevents a duplicate request; it does not delete conversation.** Background is
+sent in full. That distinction is the fix: it is what makes "and Java 7" the third item of a
+comparison rather than a topic of its own.
+
+Utterances carry stable ids and revisions (`ConversationLog`), so a partial and its finalized copy
+are one line, not two.
+
+#### Deciding what is being asked
+
+The client does **not** decide. It sends the parts; the backend prompt separates them —
+`CONVERSATION so far`, `YOUR EARLIER SUGGESTIONS`, `TO ANSWER NOW` — and the model resolves the
+request against the whole session.
+
+There used to be a local heuristic (`questionFromDiscussion`) that joined interrogative-looking lines
+into a single question string. It dropped ordinary continuations: "And Java 9." is not interrogative,
+so a three-way comparison reached the provider as a question about Java 8 alone — or, once the
+opening question had been answered, as "And Java 9. And Java 7." with no subject at all. It is gone.
+See `docs/evidence/context-handling/`.
+
+#### Length
+
+There is **no line cap on the generation path**. There were two, both twelve lines and both silent:
+one on the device and one in the backend. A session passes twelve lines within a couple of minutes,
+and a fact stated before that simply was not in the request that asked about it.
+
+Length is now a budget, checked once where the prompt is assembled and the configured model is known.
+`COPILOT_INPUT_CONTEXT_TOKENS` (default 120 000) is the assumed input window; `max_output_tokens` and
+an allowance per attachment are reserved out of it. **These are different numbers and must not be
+confused** — one is how much the model may read, the other how much it may write.
+
+Over budget, the request is refused with HTTP 413 and `error: "context_limit"`, reporting the
+estimate, the budget and the reserve. Nothing is shortened and nothing is dropped; the transcript
+stays complete on the device. The estimate is characters ÷ 4, not a tokenizer count, and the message
+says so. There is no compaction in this increment — the limit is made explicit instead.
+
+The **detector** keeps its own twelve-line window (`MAX_DETECTION_CONVERSATION_LINES`). It asks a
+narrow question about the newest speech; that is a different job from answering.
 
 With nothing to answer the button stays tappable and says "Speak or add context first" rather than
 going grey; no empty request is sent. The explicit per-page "answer this question" action is

@@ -61,7 +61,14 @@ const upstream = createServer(async (request, response) => {
   response.on("close", () => {
     if (!response.writableFinished) upstreamAborted = true;
   });
-  const pieces = [
+  // A model that opens with the interpreted title, as the rules ask it to. Split across deltas on
+  // purpose: the stripper has to hold the line until its newline arrives, not just match one chunk.
+  const pieces = upstreamMode === "titled" ? [
+    "TITLE: Compare Ja",
+    "va 7, 8 and 9\n",
+    "We bound the queue rather than the producer. ",
+    "\nSOURCES: none",
+  ] : [
     "The main risks are utility diversions under Mill Street. ",
     "The depot power upgrade is not yet scheduled. ",
     "\nSOU",
@@ -220,8 +227,103 @@ try {
     check("excludes code from the spoken target length", /not counting any code block/i.test(body));
     check("describes an empty document set as ordinary, not as a deficiency",
           /no imported documents/i.test(body));
-    check("says the question may be a fragment or a correction",
-          /fragment of, or a correction to/i.test(body));
+    check("says the request may be a fragment or a correction",
+          /fragment of a longer question, or a correction to/i.test(rules));
+    check("tells the model to group related fragments into one request",
+          /extends the comparison or list already under way/i.test(rules));
+    check("tells the model a later explicit narrowing wins",
+          /later explicit narrowing wins/i.test(rules));
+    check("tells the model a follow-up keeps its subject",
+          /follow-up keeps its subject/i.test(rules));
+    // The three parts are labelled separately, so "what was said", "what is being asked now" and
+    // "what I suggested earlier" cannot be confused for one another.
+    check("separates the conversation from the request", /CONVERSATION so far/i.test(body));
+    check("labels what is to be answered now", /TO ANSWER NOW/i.test(body));
+    check("labels earlier answers as the assistant's own suggestions",
+          /YOUR EARLIER SUGGESTIONS/i.test(body));
+    check("says earlier suggestions are not things the speaker said",
+          /NOT things the speaker said/i.test(body));
+
+    // --- What actually reaches the provider ------------------------------------------------------
+    //
+    // The device can send a complete conversation and still have it cut here: there used to be a
+    // second twelve-line slice on this side, so these assert on the outgoing upstream body.
+
+    const longConversation = [
+      "My most recent project was the Mill Street rollout.",
+      ...Array.from({ length: 40 }, (_, i) => `Filler line number ${i + 1}.`),
+      "Which project did I just mention?",
+    ];
+    await send({ question: "Which project did I just mention?", recentConversation: longConversation });
+    const longBody = JSON.stringify(lastUpstreamRequest.input);
+    check("a fact 40 lines back still reaches the provider", /Mill Street rollout/.test(longBody));
+    check("no line of a long conversation is dropped",
+          longConversation.every((line) => longBody.includes(line.replace(/"/g, '\\"'))));
+
+    await send({
+      question: "And Java 9. And Java 7.",
+      recentConversation: [
+        "Could you explain the difference between Java and Java 8?",
+        "And Java 9.",
+        "And Java 7.",
+      ],
+      newInput: ["And Java 9.", "And Java 7."],
+      priorSuggestions: ["Java 8 added lambdas and the stream API."],
+    });
+    const javaBody = JSON.stringify(lastUpstreamRequest.input);
+    check("every fragment of the comparison reaches the provider",
+          /Java 8/.test(javaBody) && /Java 9/.test(javaBody) && /Java 7/.test(javaBody));
+    check("the new input is sent as the request", /TO ANSWER NOW[\s\S]*And Java 9/.test(javaBody));
+    check("an earlier suggestion is sent, labelled as a suggestion",
+          /YOUR EARLIER SUGGESTIONS[\s\S]*stream API/.test(javaBody));
+
+    await send({
+      question: "What would you use for caching",
+      recentConversation: ["So, about persistence.", "What would you use for caching"],
+      newInput: ["What would you use for caching"],
+      lastNewInputIsProvisional: true,
+    });
+    const partialBody = JSON.stringify(lastUpstreamRequest.input);
+    check("the in-progress utterance is marked as still being spoken",
+          /still being spoken/.test(partialBody));
+    check("the in-progress utterance is not duplicated in the request block",
+          (partialBody.match(/What would you use for caching/g) ?? []).length === 2);
+
+    // --- Too long is refused, never silently shortened -------------------------------------------
+
+    const hugeConversation = Array.from({ length: 4000 }, (_, i) =>
+      `Line ${i}: ${"a somewhat long sentence about the ingestion pipeline. ".repeat(6)}`);
+    const overflow = await fetch(`${BASE}/v1/copilot/answer`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        question: "What did I say at the start?",
+        recentConversation: hugeConversation,
+        language: "en",
+        targetWordRange: [40, 100],
+        projectID: "p2",
+      }),
+    });
+    check("an over-budget conversation is refused explicitly", overflow.status === 413);
+    const overflowBody = await overflow.json();
+    check("the refusal names the context limit", overflowBody.error === "context_limit");
+    check("the refusal reports the estimate and the budget",
+          typeof overflowBody.estimated_input_tokens === "number" &&
+          typeof overflowBody.input_budget_tokens === "number" &&
+          overflowBody.estimated_input_tokens > overflowBody.input_budget_tokens);
+    check("the refusal says nothing was dropped", /Nothing has been shortened or dropped/i.test(overflowBody.detail));
+    check("the refusal does not claim the count was measured", /estimated/i.test(overflowBody.detail));
+
+    // --- The interpreted title ---------------------------------------------------------------------
+
+    upstreamMode = "titled";
+    const titled = await send({ question: "And Java 7.", newInput: ["And Java 7."] });
+    upstreamMode = "ok";
+    const titleEvent = titled.find((event) => event.type === "title");
+    check("the model's interpreted title is reported", titleEvent?.text === "Compare Java 7, 8 and 9");
+    const titledText = titled.filter((e) => e.type === "delta").map((e) => e.text).join("");
+    check("the title line is never shown to the reader", !/TITLE:/.test(titledText));
+    check("the answer text survives the title line", /bound the queue/i.test(titledText));
 
     // Document-only answering still exists — it is just no longer the default.
     await send({ answerMode: "documents" });

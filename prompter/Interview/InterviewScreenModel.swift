@@ -403,16 +403,22 @@ final class InterviewScreenModel {
     /// correction like "of France" refers to — discarding them was what turned those into standalone
     /// questions — but they are context, not questions to answer a second time.
     ///
-    /// Bounded so a long session does not send everything ever said: the new input is kept whole and
-    /// the background is trimmed to fill the rest of the window.
+    /// **The whole session travels, not a window of it.** There was a twelve-line cut here, and a
+    /// six-line cut inside that for the answered half. A fact stated sixteen lines ago — the project
+    /// the speaker actually worked on — was silently gone by the time it was asked about, and
+    /// nothing on screen said so. Length is a budget question, and the budget is checked where the
+    /// prompt is assembled and the model's context window is known; it is not something to
+    /// approximate here by counting lines.
     private func transcriptSnapshot() -> DiscussionSnapshot {
-        let visible = transcript.filter { $0.isFinal || $0.id == transcript.last?.id }
         let uncovered = Set(uncoveredLines.map(\.id))
-        let window = visible.suffix(Self.snapshotLineLimit)
+        // The line still being spoken is provisional: it travels, but apart, so that finalizing it
+        // updates one line rather than adding a second copy of the same speech.
+        let openLine = transcript.last.flatMap { $0.isFinal ? nil : $0 }
+        let settled = transcript.filter { $0.isFinal }
 
         var background: [String] = []
         var newInput: [String] = []
-        for line in window {
+        for line in settled {
             if uncovered.contains(line.id) {
                 newInput.append(line.text)
             } else if newInput.isEmpty {
@@ -425,17 +431,32 @@ final class InterviewScreenModel {
             }
         }
         return DiscussionSnapshot(
-            background: Array(background.suffix(Self.backgroundLineLimit)),
-            newInput: newInput
+            background: background,
+            newInput: newInput,
+            provisional: openLine.map(\.text),
+            priorSuggestions: priorSuggestionTexts(),
+            note: context.note.trimmingCharacters(in: .whitespacesAndNewlines),
+            attachmentIDs: attachments.map(\.id.uuidString)
         )
     }
 
-    /// How much discussion travels with a request, in transcript lines.
-    static let snapshotLineLimit = 12
-    /// How much of that window may be already-answered context. The rest is new speech.
-    static let backgroundLineLimit = 6
+    /// Answers already suggested this session, oldest first.
+    ///
+    /// They are sent so a follow-up that refers to one ("give me an example of that") has the thing
+    /// it refers to, and they are labelled as suggestions so nothing in them is ever mistaken for
+    /// something the speaker said about themselves.
+    private func priorSuggestionTexts() -> [String] {
+        questions.compactMap { question in
+            guard let answer = question.selectedAnswer, answer.isComplete else { return nil }
+            let text = answer.blocks.compactMap { block -> String? in
+                if case .prose(let prose) = block { return prose }
+                return nil
+            }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            return text.isEmpty ? nil : text
+        }
+    }
     /// Shown while the feed works out what it is answering.
-    static let pendingQuestionLabel = "Answering the discussion…"
+    static let pendingQuestionLabel = "Preparing answer…"
 
     /// Starts the oldest queued request, if nothing is running.
     private func startNextQueuedRequestIfIdle() {
