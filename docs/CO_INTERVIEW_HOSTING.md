@@ -22,16 +22,21 @@ To synchronize after a backend change:
 
 ```bash
 cd ~/Desktop/co-interview-public
-rsync -a --delete \
+rsync -a \
   --exclude='.env' --exclude='.env.*' --exclude='node_modules' --exclude='*.log' \
+  --exclude='README.md' --exclude='DEPLOYMENT.md' --exclude='.gitignore' \
   backend/ ~/Desktop/prompter-backend/
 cp docs/CO_INTERVIEW_AI_PIPELINE.md ~/Desktop/prompter-backend/docs/
 cd ~/Desktop/prompter-backend && npm test && git add -A && git commit && git push
 ```
 
-`README.md` and `DEPLOYMENT.md` in the mirror are its own files — `--delete` would remove them, so
-either keep the two excludes above or restore them after syncing. This is a copy, not a subtree
-split; if that becomes painful, promote the mirror to source of truth and record it here.
+**`README.md`, `DEPLOYMENT.md` and `.gitignore` belong to the mirror** — they carry the standalone
+provenance header and the hosting instructions, and the app repo's `backend/README.md` would
+overwrite them. Hence the three excludes; the first sync attempt clobbered the README without them.
+`--delete` is also deliberately absent for the same reason.
+
+This is a copy, not a subtree split. If it becomes painful, promote the mirror to source of truth and
+record that here.
 
 ## Railway setup
 
