@@ -233,13 +233,51 @@ audio at all.
 
 ## 7. Answers
 
-Streamed immediately. The first sentence must be direct and useful; filler openings are graded as a
-defect in the harness. Default target is **40–80 words** (a tunable prototype setting). Facts about the
-speaker must come from retrieved passages, cited by id; the backend validates every cited id against
-the passages it actually sent and drops unknown ones. Where the passages lack a detail, the model
-writes a visible placeholder rather than inventing experience. Citations and control metadata are
-stripped from the spoken text: the `SOURCES:` line never reaches the reader, and reasoning traces are
-never appended.
+Streamed immediately. The first sentence must be direct and useful; filler openings — and
+restatements of the question — are graded as a defect in the harness. Default target is **40–100
+words, excluding any code block** (a tunable prototype setting). Citations and control metadata are
+stripped from the spoken text: the `SOURCES:` line never reaches the reader, fence markers are parsed
+into code cards as the answer streams rather than shown to the reader, and reasoning traces are never
+appended.
+
+### 7.1 The knowledge policy
+
+**The policy is set by what the answer claims, not by what happens to be in the passages.** This
+supersedes the earlier rule that every answer had to come only from uploaded documents.
+
+- **General questions are answered from the model's own knowledge** — a concept, a technology, a
+  method, a comparison, a piece of code. Having no documents is never a reason to refuse one, to
+  hedge, or to mention documents at all. The earlier document-only rule made the product refuse to
+  explain a HashMap, a Java lambda and a `main` method, none of which had anything to do with a
+  document (`docs/evidence/answer-quality/before.md`).
+- **Claims about the speaker require supplied evidence** — experience, employers, projects, dates,
+  figures, outcomes — from the retrieved passages, the speaker's instructions, or the session note.
+  The backend validates every cited id against the passages it actually sent and drops unknown ones.
+- **Nothing is ever stubbed.** Placeholders are banned outright: no `<add a specific example>`, no
+  bracketed blanks. The answer is read aloud exactly as written, so a stub becomes something a person
+  says in an interview. Where a personal detail is genuinely missing, the answer asks for that detail
+  in one sentence and gives the general substance around it.
+- **Mixed questions** are answered in two parts: the general half from knowledge, the personal half
+  only as far as the evidence supports, with the remainder requested rather than invented.
+- **Genuine ambiguity is asked about, not resolved by guessing.** A mis-transcription that leaves two
+  readings needing different answers gets one clarifying question as the entire reply.
+- **Time-sensitive questions** get what is stable, plus a plain statement that current figures cannot
+  be checked. The pipeline has no browsing and never implies otherwise.
+
+A document-only mode still exists for callers that genuinely want it — `answerMode: "documents"` —
+kept explicitly separate and off by default. The app never sets it.
+
+### 7.2 What a live session sends
+
+A live session with no imported documents sends **no project instructions and no passages**
+(`LiveSessionContext`). The synthetic fixture is Demo-only. It previously reached live requests, so
+every live answer was personalised to a fictional transport-programme candidate; that is fixed and
+covered by a test. Text the speaker types and images they attach travel separately, as the session
+note and attachments, and remain valid context.
+
+The absence of documents is described to the model as the ordinary case rather than as a deficiency —
+wording that matters, because "(none)" read as something to report and produced answers that led with
+it.
 
 **Reader stability.** Text becomes readable only in whole sentences, and committed text is
 append-only, because `SlidingWindowMatcher` captures its token sequence at initialisation — text that

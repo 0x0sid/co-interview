@@ -33,7 +33,11 @@ final class InterviewScreenModel {
 
     var isTranscriptExpanded = false
     /// The context panel lives inside the expanded transcript; its contents survive collapsing.
-    var isContextPanelOpen = true
+    ///
+    /// **Closed until the user opens it.** It opened itself with the transcript, which cost the
+    /// answer most of the screen the moment anyone wanted to read two more lines of what was said.
+    /// Expanding the transcript is not a request to see the note and the attachments.
+    var isContextPanelOpen = false
     var context = ContextState()
     private(set) var recording: RecordingState = .live
     /// Set when an answer becomes ready on a page the user is not looking at: "Q3 ready →".
@@ -61,7 +65,7 @@ final class InterviewScreenModel {
     /// Keyed by request id — the identity that makes a late event recognisable and discardable.
     private var generations: [UUID: Generation] = [:]
     /// The immutable transcript each accepted request is answering.
-    private var pendingSnapshots: [UUID: [String]] = [:]
+    private var pendingSnapshots: [UUID: DiscussionSnapshot] = [:]
     /// Transcript lines already covered by an accepted request, by identity and revision.
     ///
     /// **Identity, not text.** Deduplicating by wording alone would permanently silence a question
@@ -74,7 +78,7 @@ final class InterviewScreenModel {
     /// request eligible even when nothing new was said.
     private var lastRequestedContextFingerprint: String?
     /// Kept after a request finishes so Retry can re-send exactly what failed.
-    private var retainedSnapshots: [UUID: [String]] = [:]
+    private var retainedSnapshots: [UUID: DiscussionSnapshot] = [:]
     /// The one request currently running. Queued requests wait behind it.
     private(set) var activeRequestID: UUID?
     /// questionID → the request currently running for it, so a second tap cannot start a second one.
@@ -125,6 +129,9 @@ final class InterviewScreenModel {
            flag + 1 < arguments.count, let count = Int(arguments[flag + 1]), count > 0 {
             context = .synthetic(imageCount: count, note: "Focus on Java 17")
             isTranscriptExpanded = true
+            // Context is closed by default now, so the screenshot fixture opens it deliberately —
+            // which is also what a person has to do.
+            isContextPanelOpen = true
         }
         #endif
     }
@@ -389,15 +396,44 @@ final class InterviewScreenModel {
         startNextQueuedRequestIfIdle()
     }
 
-    /// The transcript as it stands, oldest first. Enough preceding discussion for a follow-up like
-    /// "and why?" to make sense, bounded so a long session does not send everything ever said.
-    private func transcriptSnapshot() -> [String] {
-        let lines = transcript.filter { $0.isFinal || $0.id == transcript.last?.id }.map(\.text)
-        return Array(lines.suffix(Self.snapshotLineLimit))
+    /// The transcript as it stands, oldest first, split at the answered/new boundary.
+    ///
+    /// Both halves matter and they are not interchangeable. The new lines are what this tap is
+    /// asking about. The answered ones behind them are what a fragment like "in Java" or a
+    /// correction like "of France" refers to — discarding them was what turned those into standalone
+    /// questions — but they are context, not questions to answer a second time.
+    ///
+    /// Bounded so a long session does not send everything ever said: the new input is kept whole and
+    /// the background is trimmed to fill the rest of the window.
+    private func transcriptSnapshot() -> DiscussionSnapshot {
+        let visible = transcript.filter { $0.isFinal || $0.id == transcript.last?.id }
+        let uncovered = Set(uncoveredLines.map(\.id))
+        let window = visible.suffix(Self.snapshotLineLimit)
+
+        var background: [String] = []
+        var newInput: [String] = []
+        for line in window {
+            if uncovered.contains(line.id) {
+                newInput.append(line.text)
+            } else if newInput.isEmpty {
+                background.append(line.text)
+            } else {
+                // An already-answered line *after* new speech — a revision arriving late, say. It is
+                // still part of what this tap is about, so it travels as new input rather than being
+                // dropped out of the middle of the discussion.
+                newInput.append(line.text)
+            }
+        }
+        return DiscussionSnapshot(
+            background: Array(background.suffix(Self.backgroundLineLimit)),
+            newInput: newInput
+        )
     }
 
-    /// How much preceding discussion travels with a request.
+    /// How much discussion travels with a request, in transcript lines.
     static let snapshotLineLimit = 12
+    /// How much of that window may be already-answered context. The rest is new speech.
+    static let backgroundLineLimit = 6
     /// Shown while the feed works out what it is answering.
     static let pendingQuestionLabel = "Answering the discussion…"
 
@@ -410,7 +446,7 @@ final class InterviewScreenModel {
         }
         activeRequestID = next
         queuedRequestIDs.removeFirst()
-        feed.requestAnswerForDiscussion(requestID: next, transcript: snapshot, questionID: generation.questionID)
+        feed.requestAnswerForDiscussion(requestID: next, discussion: snapshot, questionID: generation.questionID)
     }
 
     /// Generate for one named question — what the button *on a page* does. The page is unambiguous
@@ -790,20 +826,39 @@ final class InterviewScreenModel {
         generations[requestID] = generation
     }
 
+    /// Raw streamed text per answer, before it is split into prose and code.
+    ///
+    /// The blocks on screen are **derived** from this, never accumulated directly. Appending each
+    /// chunk to the last prose block put the model's own fence markers in front of the reader —
+    /// "```java" sat in the answer text for as long as the code took to arrive, and only the
+    /// completion event cleaned it up. Re-parsing the buffer on every chunk means a code block
+    /// becomes a code card as it streams and a control marker is never visible at all.
+    private var streamedText: [UUID: String] = [:]
+
     private func appendChunk(_ text: String, requestID: UUID) {
         guard let generation = generations[requestID], let answerID = generation.answerID,
               let index = questions.firstIndex(where: { $0.id == generation.questionID }) else { return }
         var question = questions[index]
         guard let answerIndex = question.answers.firstIndex(where: { $0.id == answerID }),
               !question.answers[answerIndex].isComplete else { return }
+
+        streamedText[answerID] = Self.joinedChunk(streamedText[answerID] ?? "", text)
         var answer = question.answers[answerIndex]
-        if case .prose(let existing)? = answer.blocks.last {
-            answer.blocks[answer.blocks.count - 1] = .prose(existing.isEmpty ? text : existing + " " + text)
-        } else {
-            answer.blocks.append(.prose(text))
-        }
+        answer.blocks = AnswerBlock.parsed(from: streamedText[answerID] ?? "")
         question.answers[answerIndex] = answer
         questions[index] = question
+    }
+
+    /// Appends a streamed chunk to what has arrived so far.
+    ///
+    /// Feeds differ in what a chunk is: live chunks are raw slices that carry their own spacing and
+    /// newlines, while the demo reveals whole words. So a separator is added only when neither side
+    /// already has one — never inside a word, never doubling a space, and never inside a code block
+    /// where an inserted space would corrupt the sample.
+    static func joinedChunk(_ existing: String, _ addition: String) -> String {
+        guard !existing.isEmpty, !addition.isEmpty else { return existing + addition }
+        let needsSpace = !existing.last!.isWhitespace && !addition.first!.isWhitespace
+        return needsSpace ? existing + " " + addition : existing + addition
     }
 
     private func completeAnswer(requestID: UUID, blocks: [AnswerBlock], highlight: String?) {
@@ -817,6 +872,7 @@ final class InterviewScreenModel {
         answer.isComplete = true
         question.answers[answerIndex] = answer
         questions[index] = question
+        streamedText[answerID] = nil
 
         generations[requestID] = nil
         requestByQuestion[generation.questionID] = nil

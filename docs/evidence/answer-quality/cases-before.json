@@ -1,0 +1,164 @@
+[
+  {
+    "id": "A",
+    "title": "HashMap mis-transcribed as \"Ash map\"",
+    "body": {
+      "question": "Could you tell me more about what's an Ash map and how to make it in Java?",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you tell me more about what's an Ash map and how to make it in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "B",
+    "title": "Fragment \"In Java\" sent as a standalone question",
+    "body": {
+      "question": "In Java",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you tell me more about what's an Ash map and how to make it", "In Java"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "C",
+    "title": "Lambda in Java, with a filler word",
+    "body": {
+      "question": "Um What's the lambda in Java?",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Um What's the lambda in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "D",
+    "title": "\"simple maine in Java\" — a request for code",
+    "body": {
+      "question": "Could you make a simple maine in Java?",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you make a simple maine in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "E",
+    "title": "\"Of France\" — a correction inside an ongoing comparison",
+    "body": {
+      "question": "Of France",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": [
+        "So we were discussing whether it is better to invest in France or in Indonesia right now.",
+        "Um Friend or Indonesia?",
+        "Of France"
+      ],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "F",
+    "title": "Genuinely ambiguous: \"difference between an ash map and ash map\"",
+    "body": {
+      "question": "What's the difference between an ash map and ash map?",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["We were talking about Java collections.", "What's the difference between an ash map and ash map?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "G",
+    "title": "A genuine personal question, with supporting passages",
+    "body": {
+      "question": "Tell me about the outcomes you delivered on your last corridor programme.",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tell me about the outcomes you delivered on your last corridor programme."],
+      "passages": [
+        {
+          "id": "cv#2",
+          "documentTitle": "Summary of experience (fixture)",
+          "documentVersion": "2026-08-14",
+          "locator": "§ Outcomes",
+          "text": "On Eastgate, average journey time fell by 18 per cent and on-time departures rose from 71 to 89 per cent over two years. Complaints about crowding fell by a third after the timetable rewrite in the second year."
+        }
+      ],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "H",
+    "title": "A personal question with no evidence at all",
+    "body": {
+      "question": "Tell me about a time you turned around a failing project.",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tell me about a time you turned around a failing project."],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [60, 120],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "FR1",
+    "title": "French equivalent of A — HashMap",
+    "body": {
+      "question": "Est-ce que tu peux m'expliquer ce qu'est une ash map et comment la créer en Java ?",
+      "projectInstructions": "Je passe un entretien devant le comité de revue du service de cardiologie. Réponds à la première personne, dans un registre parlé et sobre, en privilégiant les chiffres de mes documents. Si une question demande un détail absent des documents, dis-le au lieu de l'inventer.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Est-ce que tu peux m'expliquer ce qu'est une ash map et comment la créer en Java ?"],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-hopital-fr"
+    }
+  },
+  {
+    "id": "FR2",
+    "title": "French equivalent of D — a simple main method",
+    "body": {
+      "question": "Tu peux faire un maine simple en Java ?",
+      "projectInstructions": "Je passe un entretien devant le comité de revue du service de cardiologie. Réponds à la première personne, dans un registre parlé et sobre, en privilégiant les chiffres de mes documents. Si une question demande un détail absent des documents, dis-le au lieu de l'inventer.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tu peux faire un maine simple en Java ?"],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [60, 120],
+      "projectID": "fixture-hopital-fr"
+    }
+  }
+]

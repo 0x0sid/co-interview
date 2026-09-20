@@ -54,9 +54,9 @@ protocol InterviewFeed: AnyObject {
     /// request — it does not wait for, or require, a successful classification first. The derived
     /// question or topic comes back with `answerStarted` so the entry can be labelled.
     ///
-    /// `transcript` is an immutable snapshot taken when the user tapped. Later speech cannot change
+    /// `discussion` is an immutable snapshot taken when the user tapped. Later speech cannot change
     /// what this request is answering.
-    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID)
+    func requestAnswerForDiscussion(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID)
     /// Abandons a request. Any event already in flight for it is still tagged with its id, so the
     /// screen can recognise and discard it.
     func cancelAnswer(requestID: UUID)

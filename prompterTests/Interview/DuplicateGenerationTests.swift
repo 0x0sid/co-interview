@@ -62,7 +62,7 @@ struct DuplicateGenerationTests {
 
         feed.requestAnswerForDiscussion(
             requestID: UUID(),
-            transcript: ["How do I remove duplicates in Java"],
+            discussion: DiscussionSnapshot(["How do I remove duplicates in Java"]),
             questionID: UUID()
         )
         try await Task.sleep(for: .milliseconds(120))

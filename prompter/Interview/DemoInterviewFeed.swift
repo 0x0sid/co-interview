@@ -72,8 +72,8 @@ final class DemoInterviewFeed: InterviewFeed {
 
     /// The demo answers the discussion by picking the scripted exchange whose question appears in
     /// the transcript, so Generate behaves the same way it does live: no detection required.
-    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
-        let joined = transcript.joined(separator: " ")
+    func requestAnswerForDiscussion(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID) {
+        let joined = discussion.allLines.joined(separator: " ")
         let exchange = script.first { joined.contains($0.question) } ?? Exchange.generatedExtras.first
         let question = exchange?.question ?? "The discussion so far"
         continuation.yield(.answerTopicResolved(requestID: requestID, topic: question))

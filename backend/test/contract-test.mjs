@@ -179,6 +179,57 @@ try {
     check("frames the note as reference, not instructions", answerPrompt.includes("SESSION NOTE"));
   }
 
+  // The knowledge policy, asserted on the prompt that actually goes upstream.
+  //
+  // These are the rules that produced the device failures when they said the opposite: answers that
+  // refused to explain a HashMap because no document mentioned one, and an invented first-person
+  // introduction with `<add a specific example>` left in it for the speaker to read aloud.
+  console.log("answer policy");
+  {
+    const send = (extra) =>
+      fetch(`${BASE}/v1/copilot/answer`, {
+        method: "POST",
+        headers: auth,
+        body: JSON.stringify({
+          question: "What is a HashMap in Java?",
+          recentConversation: ["What is a HashMap in Java?"],
+          language: "en",
+          targetWordRange: [40, 100],
+          projectID: "p2",
+          ...extra,
+        }),
+      }).then(readStream);
+
+    await send({});
+    const rules = lastUpstreamRequest.input.find((part) => part.role === "developer").content;
+    const body = JSON.stringify(lastUpstreamRequest.input);
+
+    check("never instructs the model to write a placeholder", !/<add a specific example>/.test(rules));
+    check("bans placeholders outright", /Never write a placeholder/i.test(rules));
+    // The phrase still appears — as a prohibition. What must be gone is the *instruction* to say it,
+    // so this asserts on the direction of the sentence, not on the words alone.
+    check("does not tell the model to say things are not covered by the documents",
+          !/say (plainly )?that this is not covered by the documents/i.test(rules));
+    check("forbids mentioning documents for a general question",
+          /Never say something is "not covered by the documents"/i.test(rules));
+    check("allows general questions from the model's own knowledge",
+          /answer from your own knowledge/i.test(rules));
+    check("still requires evidence for claims about the speaker",
+          /comes only from PASSAGES/i.test(rules));
+    check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
+    check("excludes code from the spoken target length", /not counting any code block/i.test(body));
+    check("describes an empty document set as ordinary, not as a deficiency",
+          /no imported documents/i.test(body));
+    check("says the question may be a fragment or a correction",
+          /fragment of, or a correction to/i.test(body));
+
+    // Document-only answering still exists — it is just no longer the default.
+    await send({ answerMode: "documents" });
+    const strictRules = lastUpstreamRequest.input.find((part) => part.role === "developer").content;
+    check("document-only mode is reachable and explicit", /DOCUMENT-ONLY MODE IS ON/i.test(strictRules));
+    check("document-only mode keeps the placeholder ban", /Never write a placeholder/i.test(strictRules));
+  }
+
   console.log("cancellation");
   {
     upstreamAborted = false;

@@ -611,9 +611,14 @@ final class CopilotSessionCoordinator {
     /// note. Empty unless the backend reports the answer model accepts images.
     var sessionImages: [AnswerRequest.ImageAttachment] = []
 
-    /// Default answer length. A tunable prototype setting (§6), not a product rule.
-    static let targetMinimumWords = 60
-    static let targetMaximumWords = 120
+    /// Default answer length, in words, **excluding any code block**.
+    ///
+    /// Sized for reading aloud: 60–120 produced answers that outlasted the point being made, and a
+    /// spoken answer that overstays is worse than one that stops. A request carrying several
+    /// questions is allowed to run longer — the prompt tells the model to answer all of them, and
+    /// that instruction outranks the target. A tunable prototype setting (§6), not a product rule.
+    static let targetMinimumWords = 40
+    static let targetMaximumWords = 100
 
     private var pendingRequests: [AnswerVersionID: (AnswerRequest, [ProjectPassage])] = [:]
 

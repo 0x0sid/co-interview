@@ -129,16 +129,19 @@ final class LiveInterviewFeed: InterviewFeed {
     /// classification was the single most common reason Generate did nothing useful in a real room.
     /// The question the backend was given is reported back as the entry's label, so the entry says
     /// truthfully what it answered.
-    func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
+    func requestAnswerForDiscussion(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID) {
         requestByCard[requestID] = requestID       // keyed by request: this entry has no card
         emittedLengthByRequest[requestID] = 0
         continuation.yield(.answerStarted(requestID: requestID, questionID: questionID))
 
-        let question = Self.questionFromDiscussion(transcript)
+        let question = Self.questionFromDiscussion(discussion)
         continuation.yield(.answerTopicResolved(requestID: requestID, topic: question))
         discussionQuestionIDByRequest[requestID] = questionID
 
-        let card = coordinator.beginDiscussionAnswer(question: question, conversation: transcript)
+        // The conversation window is the **whole** snapshot — answered discussion included — so a
+        // fragment or a correction still reaches the model with what it refers to. Only `question`
+        // says what to answer.
+        let card = coordinator.beginDiscussionAnswer(question: question, conversation: discussion.allLines)
         requestByCard[card.id] = requestID
         questionIDByCard[card.id] = questionID
         cardIDByQuestion[questionID] = card.id
@@ -147,29 +150,75 @@ final class LiveInterviewFeed: InterviewFeed {
         }
     }
 
-    /// **Every** unanswered question in the snapshot, in the order asked — not just the last one.
+    /// Reconstructs the question this tap is asking, from the new speech and the discussion behind it.
     ///
-    /// "How do I remove duplicates in Java? And how do I preserve insertion order?" is one request
-    /// with two requirements, and answering only the second would be worse than useless. A short
-    /// follow-up like "And performance?" is kept with the question before it, because on its own it
-    /// means nothing.
+    /// **A transcript line is not a question.** Speech arrives in whatever pieces the recogniser
+    /// finalizes, and three shapes have to survive that:
     ///
-    /// Deliberately simple and local: it decides what to *ask about*; the model decides what to say
-    /// and the prompt tells it to answer all of them. When nothing is interrogative it hands over the
-    /// recent discussion rather than inventing a question that was never asked.
-    static func questionFromDiscussion(_ transcript: [String]) -> String {
-        let lines = transcript.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-        let questions = lines.filter { DetectionPolicy.looksInterrogative($0) }
-        guard !questions.isEmpty else { return lines.suffix(2).joined(separator: " ") }
-
-        // A lone follow-up needs the question it depends on, so the line before it comes too.
-        if questions.count == 1, let only = questions.first,
-           Tokenizer.normalize(only).count <= 3,
-           let index = lines.firstIndex(of: only), index > 0 {
-            return lines[(index - 1)...index].joined(separator: " ")
+    /// - *Several questions at once.* "How do I remove duplicates in Java? And how do I preserve
+    ///   insertion order?" is one request with two requirements; answering only the second would be
+    ///   worse than useless, so every interrogative line in the new input travels together and the
+    ///   prompt tells the model to answer all of them.
+    /// - *A fragment.* "In Java", spoken after "could you tell me more about what's an Ash map and
+    ///   how to make it", asks nothing on its own — and on its own is exactly how it reached the
+    ///   model before, producing a standalone answer with an invented introduction. A short new
+    ///   input that is not itself a question continues the line before it, across the answered/new
+    ///   boundary if need be.
+    /// - *A correction.* "Of France", after "is it better to invest in France or Indonesia", narrows
+    ///   the question already asked rather than starting a new one. It takes the same path as a
+    ///   fragment: it is carried back to the question it modifies, and the prompt's mis-transcription
+    ///   rules let the model read it as the correction it is.
+    ///
+    /// **Only `newInput` can contribute a question.** Background is discussion an earlier request
+    /// already answered; re-harvesting its interrogatives would make every tap re-answer the session.
+    /// It is drawn on only to complete a fragment.
+    ///
+    /// Deliberately simple, local and free: it decides what to *ask about* inside the one streaming
+    /// request, without a second sequential model call. No hardcoded phrases, no minimum-word gate —
+    /// a short input is attached to its context, never discarded.
+    static func questionFromDiscussion(_ discussion: DiscussionSnapshot) -> String {
+        let clean = { (lines: [String]) in
+            lines.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         }
-        return questions.joined(separator: " ")
+        let background = clean(discussion.background)
+        let newInput = clean(discussion.newInput)
+
+        // Nothing new: the tap is about the discussion itself, so hand over its tail.
+        guard !newInput.isEmpty else { return background.suffix(2).joined(separator: " ") }
+
+        let questions = newInput.filter { DetectionPolicy.looksInterrogative($0) }
+
+        // A lone short question ("And performance?") depends on what came before it.
+        if questions.count == 1, let only = questions.first, Tokenizer.normalize(only).count <= 3 {
+            return joinWithPrecedingLine(only, newInput: newInput, background: background)
+        }
+        if !questions.isEmpty { return questions.joined(separator: " ") }
+
+        // No question mark and no interrogative opener anywhere in the new speech. If it is short it
+        // is a fragment of, or a correction to, what came before; if it is substantial it stands on
+        // its own — an imperative request ("walk me through your approach") looks like this too.
+        let combined = newInput.joined(separator: " ")
+        if Tokenizer.normalize(combined).count <= fragmentWordLimit {
+            return joinWithPrecedingLine(newInput[newInput.count - 1], newInput: newInput, background: background)
+        }
+        return combined
     }
+
+    /// The line before `line`, plus `line` — looking into the background when the new input has no
+    /// earlier line of its own. That lookup is the point: the question a fragment continues has
+    /// usually already been answered, which is precisely why it is no longer in the new input.
+    private static func joinWithPrecedingLine(_ line: String, newInput: [String], background: [String]) -> String {
+        if let index = newInput.firstIndex(of: line), index > 0 {
+            return newInput[(index - 1)...index].joined(separator: " ")
+        }
+        guard let preceding = background.last else { return line }
+        return "\(preceding) \(line)"
+    }
+
+    /// How short new speech has to be, in words, to be read as a fragment of the line before it
+    /// rather than as a question in its own right. Generous enough for "in Java", "of France" or
+    /// "actually, for Postgres"; short enough that a real short question is never swallowed.
+    static let fragmentWordLimit = 5
 
     func cancelAnswer(requestID: UUID) {
         guard let versionID = versionByRequest[requestID] else { return }

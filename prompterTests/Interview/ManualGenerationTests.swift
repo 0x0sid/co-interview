@@ -16,7 +16,7 @@ struct ManualGenerationTests {
         let events: AsyncStream<InterviewFeedEvent>
         private let continuation: AsyncStream<InterviewFeedEvent>.Continuation
         var isPaused = false
-        private(set) var discussionRequests: [(requestID: UUID, transcript: [String], questionID: UUID)] = []
+        private(set) var discussionRequests: [(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID)] = []
         private(set) var questionRequests: [(requestID: UUID, questionID: UUID, isRegeneration: Bool)] = []
         private(set) var cancellations: [UUID] = []
 
@@ -30,8 +30,8 @@ struct ManualGenerationTests {
         func requestAnswer(requestID: UUID, question: InterviewQuestion, isRegeneration: Bool) {
             questionRequests.append((requestID, question.id, isRegeneration))
         }
-        func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
-            discussionRequests.append((requestID, transcript, questionID))
+        func requestAnswerForDiscussion(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID) {
+            discussionRequests.append((requestID, discussion, questionID))
         }
         func cancelAnswer(requestID: UUID) { cancellations.append(requestID) }
     }
@@ -73,7 +73,7 @@ struct ManualGenerationTests {
         #expect(feed.discussionRequests.count == 1, "Generate did not ask for an answer")
         #expect(model.questions.count == 1, "Generate did not create a history entry")
         let request = try #require(feed.discussionRequests.first)
-        #expect(request.transcript.contains { $0.contains("backpressure") })
+        #expect(request.discussion.allLines.contains { $0.contains("backpressure") })
     }
 
     @Test
@@ -161,8 +161,8 @@ struct ManualGenerationTests {
         Self.tap(model, at: 5)
 
         let first = try #require(feed.discussionRequests.first)
-        #expect(first.transcript.contains { $0.contains("backpressure") })
-        #expect(first.transcript.contains { $0.contains("retries") } == false,
+        #expect(first.discussion.allLines.contains { $0.contains("backpressure") })
+        #expect(first.discussion.allLines.contains { $0.contains("retries") } == false,
                 "later speech leaked into an earlier request's snapshot")
     }
 
@@ -203,7 +203,7 @@ struct ManualGenerationTests {
         Self.completeActiveRequest(model, feed)
         Self.completeActiveRequest(model, feed)
         let latest = try #require(feed.discussionRequests.last)
-        #expect(latest.transcript.contains { $0.contains("retries") },
+        #expect(latest.discussion.allLines.contains { $0.contains("retries") },
                 "Generate answered the page being viewed rather than the latest discussion")
     }
 
@@ -333,6 +333,6 @@ struct ManualGenerationTests {
         // Finish the first so the second is sent.
         model.handle(.answerCompleted(requestID: request.requestID, blocks: [.prose("Done.")], highlight: nil))
         let second = try #require(feed.discussionRequests.last)
-        #expect(second.transcript.contains { $0.contains("while the answer was streaming") })
+        #expect(second.discussion.allLines.contains { $0.contains("while the answer was streaming") })
     }
 }

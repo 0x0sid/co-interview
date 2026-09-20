@@ -27,21 +27,35 @@ struct TranscriptStripView: View {
 
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var note: String = ""
+    /// While the note has the keyboard, neither panel collapses under the user. Losing a half-typed
+    /// note to a mistimed tap on a chevron is not a trade worth making for a few points of height.
+    @FocusState private var isEditingNote: Bool
 
     /// **Collapsed is exactly two lines**: the last detected question and the newest thing said. It
     /// never grows, so the answer below it never moves as the conversation continues. Expanding
     /// shows a longer tail of the same transcript.
     private var visibleLines: [TranscriptLine] {
-        guard !isExpanded else { return Array(lines.suffix(6)) }
+        guard !isExpanded else { return Array(lines.suffix(Self.expandedLineLimit)) }
         let newest = lines.last
         let lastQuestion = lines.last(where: { $0.isDetectedQuestion && $0.id != newest?.id })
         return [lastQuestion, newest].compactMap { $0 }
     }
 
+    /// How many lines the expanded transcript holds. More than this and it scrolls inside itself.
+    static let expandedLineLimit = 12
+
+    /// The ceiling on the expanded transcript, so it can never take the whole screen.
+    ///
+    /// Expanding is a request to read a little more of what was said — not to give up the answer.
+    /// Six long lines were already enough to push the answer off-screen on a phone, so the expanded
+    /// strip stops here and scrolls within itself, and the answer keeps the rest.
+    static let expandedMaxHeight: CGFloat = 168
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 5) {
                 Button {
+                    guard !isEditingNote else { return }
                     withAnimation(.easeInOut(duration: 0.22)) { isExpanded.toggle() }
                 } label: {
                     HStack {
@@ -57,8 +71,23 @@ struct TranscriptStripView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(isExpanded ? "Collapse live transcript" : "Expand live transcript")
 
-                ForEach(visibleLines) { line in
-                    lineView(line)
+                if isExpanded {
+                    // Bounded and internally scrolled: a long tail of transcript scrolls here rather
+                    // than growing downwards into the answer.
+                    ScrollView(.vertical) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            ForEach(visibleLines) { line in
+                                lineView(line)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: Self.expandedMaxHeight)
+                    .scrollBounceBehavior(.basedOnSize)
+                } else {
+                    ForEach(visibleLines) { line in
+                        lineView(line)
+                    }
                 }
             }
 
@@ -102,6 +131,7 @@ struct TranscriptStripView: View {
     private var contextPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button {
+                guard !isEditingNote else { return }
                 withAnimation(.easeInOut(duration: 0.2)) { isContextOpen.toggle() }
             } label: {
                 HStack {
@@ -122,6 +152,7 @@ struct TranscriptStripView: View {
             if isContextOpen {
                 HStack(spacing: 10) {
                     TextField("Anything the answers should know", text: $note)
+                        .focused($isEditingNote)
                         .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
                         .foregroundStyle(InterviewTheme.Color.ink)
                         .onChange(of: note) { _, newValue in onNoteChanged(newValue) }

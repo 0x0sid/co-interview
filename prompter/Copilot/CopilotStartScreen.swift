@@ -223,7 +223,9 @@ struct CopilotStartScreen: View {
     /// configured provider, the sample project, and the coordinator in **manual** generation mode.
     private func makeLiveFeed() -> LiveInterviewFeed {
         let coordinator = CopilotSessionCoordinator(
-            project: project,
+            // **Never the sample project.** A live session carries no fabricated instructions and no
+            // fictional passages; the sample stays in Demo and in the pipeline prototype below.
+            project: LiveSessionContext(language: language),
             provider: providerConfiguration.makeProvider(),
             audio: InterviewAudioInput(makeService: { TranscriptionService(audioCapture: AudioCaptureService()) }),
             generationMode: .manual
@@ -252,10 +254,10 @@ struct CopilotStartScreen: View {
 
     private var sampleProjectNote: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Sample project — not your documents")
+            Text("Sample project — Demo only")
                 .font(Typography.body(13, weight: .semibold))
                 .foregroundStyle(Theme.Color.ink)
-            Text("\(project.projectName) · \(project.allPassages.count) fictional passages. Document import is not built yet, so both modes answer from this sample.")
+            Text("\(project.projectName) · \(project.allPassages.count) fictional passages, used by Demo and the pipeline prototype. Live carries none of it: document import is not built yet, so a live session answers general questions from the model's knowledge and asks you for any personal detail it does not have.")
                 .font(Typography.body(12))
                 .foregroundStyle(Theme.Color.secondary)
             NavigationLink("Provider diagnostics") { CopilotDebugScreen() }

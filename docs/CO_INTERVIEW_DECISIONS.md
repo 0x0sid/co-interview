@@ -230,3 +230,65 @@ Every question, answer, code sample and follow-up in `DemoInterviewFeed` is inve
 text about an invented service. The Context screenshot uses placeholder thumbnails the app draws
 itself, behind a debug-only launch argument — never anyone's photos. No real interview, candidate,
 employer or document is represented.
+
+## Answer quality (2026-09-20)
+
+Five failures reported from the device, all traced to two decisions this section supersedes. The
+real-provider before/after runs are in `docs/evidence/answer-quality/`.
+
+### General knowledge is allowed; personal facts need evidence
+
+**Superseded:** "every answer must come only from the uploaded documents."
+
+The old rule was applied to all answers, so the product refused to explain a HashMap, a Java lambda
+and a `main` method because no document mentioned them — and, told to stub a missing detail, wrote
+`<add a specific example>` into an answer meant to be read aloud in a live interview.
+
+The line is now drawn by **what the answer claims**, not by what happens to be in the passages:
+
+- General questions — concepts, technologies, methods, comparisons, code — are answered from the
+  model's own knowledge. No documents is the ordinary case, not a refusal.
+- Claims about the speaker — experience, employers, projects, figures, outcomes — come only from
+  supplied evidence, and are never invented, in any language. "Tell me about a time you…" with
+  nothing supplied gets the general substance plus a one-sentence request for the example to use.
+- Placeholders are banned outright. Nothing goes into a ready-to-read answer that the speaker would
+  have to notice and not say.
+- Genuine ambiguity is asked about, never resolved by picking a plausible reading and answering it.
+
+Document-only answering still exists, as an explicit opt-in (`answerMode: "documents"`), so the
+capability is kept without being the default.
+
+### The sample project is Demo-only
+
+**Superseded:** "both modes answer from this sample."
+
+`makeLiveFeed()` passed `SyntheticProjectFixture` into live sessions, so every live request carried a
+fictional candidate's instructions and five invented passages, and answers were personalised to a
+person who does not exist. Live now uses `LiveSessionContext`: real identity, no instructions, no
+passages. Demo and the pipeline prototype keep the fixture. This is not document import; it is the
+honest empty state that import will later fill.
+
+### A transcript line is not a question
+
+**Superseded:** answering whatever the newest transcript lines happened to say.
+
+Speech arrives in whatever pieces the recogniser finalizes. "In Java" and "Of France" are not
+questions — they continue one. The snapshot a tap takes now keeps the answered/new boundary
+(`DiscussionSnapshot`): already-answered lines travel as **background** so a fragment has something
+to attach to, and only **new input** can contribute a question, so a tap never re-answers the
+session. No hardcoded phrases and no minimum-word filter: a short input is attached to its context,
+never discarded.
+
+### A remaining failure, left visible
+
+"What's the difference between an ash map and ash map?" — both sides mis-transcribed to the same
+words — still fails on the default `balanced` profile: the model asks the right clarifying question
+and then answers an invented comparison anyway. Two six-run blocks on the same code and prompt gave
+6 failures out of 6 and then 5 out of 6, so it is unreliable rather than deterministic — it passed
+once in twelve recorded runs. The same prompt passed 6 out of 6 on the `smart` profile
+(`deepseek/deepseek-v4.1-flash`), also a single block.
+
+**The default was deliberately not changed**, and remains `balanced`
+(`google/gemini-2.5-flash-lite`). Swapping models to make a failing case pass would have hidden the
+finding; the evidence for both profiles is in `docs/evidence/answer-quality/` so the choice can be
+made deliberately.

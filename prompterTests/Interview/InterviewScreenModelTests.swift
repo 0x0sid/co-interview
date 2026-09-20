@@ -35,10 +35,10 @@ struct InterviewScreenModelTests {
         }
 
         /// Discussion-based requests, which is how ordinary Generate works now.
-        private(set) var discussionRequests: [(requestID: UUID, transcript: [String], questionID: UUID)] = []
+        private(set) var discussionRequests: [(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID)] = []
 
-        func requestAnswerForDiscussion(requestID: UUID, transcript: [String], questionID: UUID) {
-            discussionRequests.append((requestID, transcript, questionID))
+        func requestAnswerForDiscussion(requestID: UUID, discussion: DiscussionSnapshot, questionID: UUID) {
+            discussionRequests.append((requestID, discussion, questionID))
         }
 
         func cancelAnswer(requestID: UUID) {

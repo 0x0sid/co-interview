@@ -1,0 +1,244 @@
+[
+  {
+    "id": "A",
+    "title": "HashMap mis-transcribed as \"Ash map\"",
+    "body": {
+      "question": "Could you tell me more about what's an Ash map and how to make it in Java?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you tell me more about what's an Ash map and how to make it in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "B",
+    "title": "Fragment \"In Java\", reconstructed against the question it continues",
+    "body": {
+      "question": "Could you tell me more about what's an Ash map and how to make it In Java",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you tell me more about what's an Ash map and how to make it", "In Java"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "C",
+    "title": "Lambda in Java, with a filler word",
+    "body": {
+      "question": "Um What's the lambda in Java?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Um What's the lambda in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "D",
+    "title": "\"simple maine in Java\" — a request for code",
+    "body": {
+      "question": "Could you make a simple maine in Java?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Could you make a simple maine in Java?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "E",
+    "title": "\"Of France\" — a correction inside an ongoing comparison",
+    "body": {
+      "question": "Um Friend or Indonesia? Of France",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": [
+        "So we were discussing whether it is better to invest in France or in Indonesia right now.",
+        "Um Friend or Indonesia?",
+        "Of France"
+      ],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "F",
+    "title": "Genuinely ambiguous: \"difference between an ash map and ash map\"",
+    "body": {
+      "question": "What's the difference between an ash map and ash map?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["We were talking about Java collections.", "What's the difference between an ash map and ash map?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "G",
+    "title": "A genuine personal question, with supporting passages (Demo)",
+    "body": {
+      "question": "Tell me about the outcomes you delivered on your last corridor programme.",
+      "projectInstructions": "I am interviewing for programme lead of the Northbridge bus corridor. Answer in the first person, in a calm spoken register, and prefer concrete figures from my documents over general claims. If a question needs a detail my documents do not contain, say so instead of inventing it.",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tell me about the outcomes you delivered on your last corridor programme."],
+      "passages": [
+        {
+          "id": "cv#2",
+          "documentTitle": "Summary of experience (fixture)",
+          "documentVersion": "2026-08-14",
+          "locator": "§ Outcomes",
+          "text": "On Eastgate, average journey time fell by 18 per cent and on-time departures rose from 71 to 89 per cent over two years. Complaints about crowding fell by a third after the timetable rewrite in the second year."
+        }
+      ],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "fixture-transport-en"
+    }
+  },
+  {
+    "id": "H",
+    "title": "A personal question with no evidence at all",
+    "body": {
+      "question": "Tell me about a time you turned around a failing project.",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tell me about a time you turned around a failing project."],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "I",
+    "title": "Two questions asked in one breath",
+    "body": {
+      "question": "How do I remove duplicates in Java? And how do I preserve insertion order?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["How do I remove duplicates in Java?", "And how do I preserve insertion order?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "J",
+    "title": "Time-sensitive: must not claim live data",
+    "body": {
+      "question": "What is the euro to rupiah rate today?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["What is the euro to rupiah rate today?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "K",
+    "title": "Mixed: a general concept plus a personal claim with partial evidence",
+    "body": {
+      "question": "How would you handle signal priority, and how did you do it on your last programme?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [
+      ],
+      "recentConversation": ["How would you handle signal priority, and how did you do it on your last programme?"],
+      "passages": [],
+      "language": "en",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "FR1",
+    "title": "French equivalent of A — HashMap",
+    "body": {
+      "question": "Est-ce que tu peux m'expliquer ce qu'est une ash map et comment la créer en Java ?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Est-ce que tu peux m'expliquer ce qu'est une ash map et comment la créer en Java ?"],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "FR2",
+    "title": "French equivalent of D — a simple main method",
+    "body": {
+      "question": "Tu peux faire un maine simple en Java ?",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Tu peux faire un maine simple en Java ?"],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "FR3",
+    "title": "French equivalent of E — a correction in a comparison",
+    "body": {
+      "question": "La France ou l'Indonésie ? De la France",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": [
+        "On se demandait s'il vaut mieux investir en France ou en Indonésie en ce moment.",
+        "La France ou l'Indonésie ?",
+        "De la France"
+      ],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  },
+  {
+    "id": "FR4",
+    "title": "French: a personal question with no evidence",
+    "body": {
+      "question": "Parlez-moi d'une fois où vous avez redressé un projet en difficulté.",
+      "projectInstructions": "",
+      "extraContext": "",
+      "images": [],
+      "recentConversation": ["Parlez-moi d'une fois où vous avez redressé un projet en difficulté."],
+      "passages": [],
+      "language": "fr",
+      "targetWordRange": [40, 100],
+      "projectID": "live-session"
+    }
+  }
+]
