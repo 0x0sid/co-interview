@@ -77,6 +77,33 @@ flyctl deploy -a backend--d7y3w
 A healthy start logs `gateway: openrouter`, `provider: configured`, `auth: 1 token(s) configured`
 and `Listening on 0.0.0.0:8787`.
 
+### One more thing Launch did not do: allocate IPs
+
+After the first corrected deploy the machine started and passed its health check, but
+`backend--d7y3w.fly.dev` did not resolve at all. `flyctl ips list` was **empty** — Fly Launch had
+created the app without allocating any public address, so there was nothing for DNS to answer with:
+
+```bash
+flyctl ips allocate-v4 --shared -a backend--d7y3w
+flyctl ips allocate-v6 -a backend--d7y3w
+```
+
+### Verified on the deployment (2026-09-21)
+
+| Check | Result |
+| --- | --- |
+| `/health` | `200`, `provider: configured`, `auth: configured`, `openrouter` / `balanced` |
+| `/v1/copilot/config`, authenticated | `google/gemini-2.5-flash-lite` for detection and answer, route `google-ai-studio` |
+| No token / wrong token | `401` on both `/v1/copilot/config` and `/v1/copilot/answer` |
+| Streamed generation | first visible text **603 ms**, complete **1207 ms**, **4** delta events, so genuinely incremental |
+| Actual model | requested `google/gemini-2.5-flash-lite`, **actual** the same, serving provider **Google AI Studio** |
+| Interpreted title | "Compare Java 7, 8, and 9" — the context fix works through the hosted path |
+| Cancellation | client disconnect mid-stream; the machine stayed healthy and served later requests |
+
+A local resolver can cache the earlier NXDOMAIN. `--resolve backend--d7y3w.fly.dev:443:<shared v4>`
+reaches the same Fly proxy with the same SNI and Host if that happens; phones use their own DNS and
+are unaffected.
+
 ## Railway setup
 
 Exact steps. Nothing below requires sharing a credential in chat.
