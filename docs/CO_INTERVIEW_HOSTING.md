@@ -1,7 +1,11 @@
 # Hosting the backend, and moving the app's endpoint to it
 
-The backend is published standalone at **`VRAM-AI/prompter-backend`** for deployment. The
+The backend is published standalone at **`0x0sid/backend`** (private) for deployment. The
 authoritative source stays `backend/` in this repository; see "Which copy is authoritative" below.
+
+An earlier copy was pushed to `VRAM-AI/prompter-backend`. That repository sits in an organization the
+owner cannot deploy from, so it is **superseded and no longer synchronized** — it still holds the
+first commit and should be ignored or deleted.
 
 **Nothing here has been deployed.** No Railway service exists yet, no hosted URL is baked into the
 app, and the working ngrok setup is untouched and still in use.
@@ -11,7 +15,7 @@ app, and the working ngrok setup is untouched and still in use.
 | | |
 | --- | --- |
 | **Source of truth** | `backend/` in this repository (`0x0sid/co-interview`) |
-| **Published mirror** | `VRAM-AI/prompter-backend`, repository root |
+| **Published mirror** | `0x0sid/backend` (private), repository root |
 
 Fixes are made **here** first, because the backend's contract tests run alongside the iOS tests that
 depend on it — `prompterTests/Diagnostics/DiagnosticsIntegrationTests` drives the real server, and
@@ -43,8 +47,9 @@ record that here.
 Exact steps. Nothing below requires sharing a credential in chat.
 
 1. **Connect the repository.** Railway → *New Project* → *Deploy from GitHub repo* →
-   **`VRAM-AI/prompter-backend`**, branch `main`. The repository is private; authorize Railway for
-   the `VRAM-AI` organization if it is not already.
+   **`0x0sid/backend`**, branch `main`. The repository is private and owned by your personal
+   account, so Railway needs no organization authorization — grant it access to that repository when
+   it asks.
 2. **Build and start.**
    - Build command: **leave empty**. There are no dependencies and nothing to compile.
    - Start command: **`npm start`** (which is `node server.mjs`). Railway also picks this up from
@@ -70,7 +75,7 @@ Exact steps. Nothing below requires sharing a credential in chat.
    do this**, which is why none is written into the app.
 5. **Verify before switching the app.** The exact curl sequence — health, 401 without a token,
    authenticated classification, streamed generation, and cancellation — is in
-   [`DEPLOYMENT.md`](https://github.com/VRAM-AI/prompter-backend/blob/main/DEPLOYMENT.md) in the
+   [`DEPLOYMENT.md`](https://github.com/0x0sid/backend/blob/main/DEPLOYMENT.md) in the
    backend repository. Streaming is the one to watch: text must arrive in pieces, not as one block
    at the end. A proxy that buffers would break the product without failing any request.
 
