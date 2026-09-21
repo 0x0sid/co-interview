@@ -29,18 +29,53 @@ cd ~/Desktop/co-interview-public
 rsync -a \
   --exclude='.env' --exclude='.env.*' --exclude='node_modules' --exclude='*.log' \
   --exclude='README.md' --exclude='DEPLOYMENT.md' --exclude='.gitignore' \
+  --exclude='fly.toml' --exclude='Dockerfile' --exclude='.dockerignore' \
   backend/ ~/Desktop/prompter-backend/
 cp docs/CO_INTERVIEW_AI_PIPELINE.md ~/Desktop/prompter-backend/docs/
 cd ~/Desktop/prompter-backend && npm test && git add -A && git commit && git push
 ```
 
-**`README.md`, `DEPLOYMENT.md` and `.gitignore` belong to the mirror** — they carry the standalone
+**`README.md`, `DEPLOYMENT.md`, `.gitignore` and the deployment files (`fly.toml`, `Dockerfile`,
+`.dockerignore`) belong to the mirror** — they carry the standalone
 provenance header and the hosting instructions, and the app repo's `backend/README.md` would
 overwrite them. Hence the three excludes; the first sync attempt clobbered the README without them.
 `--delete` is also deliberately absent for the same reason.
 
 This is a copy, not a subtree split. If it becomes painful, promote the mirror to source of truth and
 record that here.
+
+## Fly.io (the deployed target)
+
+App **`backend--d7y3w`**, region **`ams`**, endpoint **https://backend--d7y3w.fly.dev**.
+
+`fly.toml` and `Dockerfile` live in the backend repository. The first Fly Launch deploy could not
+work, and the logs said exactly why:
+
+| Symptom in the deploy log | Cause |
+| --- | --- |
+| `Listening on 127.0.0.1:8787` | `HOST` unset, so the code's local-development default applied. Unreachable from the Fly proxy |
+| `gateway: openai` | `COPILOT_TEXT_PROVIDER` unset, so the built-in default gateway applied — and the `balanced` profile's OpenRouter model ids did not |
+| `provider: unconfigured` / `auth: NOT CONFIGURED` | no `OPENROUTER_API_KEY` and no `COINTERVIEW_TOKENS` |
+| machines stopped | `min_machines_running = 0`, and Fly's generated `internal_port = 8080` never matched the app's 8787 |
+
+`fly.toml` now sets `HOST=0.0.0.0`, `PORT=8787`, `COPILOT_TEXT_PROVIDER=openrouter`,
+`COPILOT_PROFILE=balanced`, `internal_port = 8787`, `force_https`, `auto_start_machines`,
+`auto_stop_machines = "stop"` and `min_machines_running = 1`. Content diagnostics are deliberately
+absent.
+
+Credentials are Fly secrets, loaded from the local `backend/.env` and never committed:
+
+```bash
+cd ~/Desktop/prompter-backend
+flyctl auth login                       # interactive, browser
+flyctl secrets set -a backend--d7y3w \
+  OPENROUTER_API_KEY="$(grep -E '^OPENROUTER_API_KEY=' ~/Desktop/co-interview-public/backend/.env | cut -d= -f2-)" \
+  COINTERVIEW_TOKENS="$(grep -E '^COINTERVIEW_TOKENS=' ~/Desktop/co-interview-public/backend/.env | cut -d= -f2-)"
+flyctl deploy -a backend--d7y3w
+```
+
+A healthy start logs `gateway: openrouter`, `provider: configured`, `auth: 1 token(s) configured`
+and `Listening on 0.0.0.0:8787`.
 
 ## Railway setup
 
