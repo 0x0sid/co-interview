@@ -41,6 +41,15 @@ provenance header and the hosting instructions, and the app repo's `backend/READ
 overwrite them. Hence the three excludes; the first sync attempt clobbered the README without them.
 `--delete` is also deliberately absent for the same reason.
 
+**The Dockerfile copies an explicit file list.** A new top-level module must be added to it in the
+mirror, or the image starts without it and the server crashes on import. `decisions.mjs` was added
+on 2026-09-24 for exactly this reason.
+
+**Verified 2026-09-24:** the app checkout's `origin` is `git@github.com:0x0sid/co-interview.git`; the
+mirror at `~/Desktop/prompter-backend` has `origin` `git@github.com:0x0sid/backend.git`; its
+`fly.toml` names app `backend--d7y3w`; there is no CI, so Fly is deployed with `flyctl deploy` from
+the mirror directory. `VRAM-AI/prompter-backend` appears nowhere in either checkout's remotes.
+
 This is a copy, not a subtree split. If it becomes painful, promote the mirror to source of truth and
 record that here.
 
@@ -212,3 +221,14 @@ Only the **client token** for the backend, plus the base URL. The provider key
 (`OPENROUTER_API_KEY` / `OPENAI_API_KEY`) is never in the app: it lives in `backend/.env` locally and
 in Railway's variables once hosted. `InfoPlistConfigurationTests.neitherPlistCarriesAProviderCredential`
 asserts the absence by shape, so a future key added carelessly fails the build's tests.
+
+## Typed decisions (Jev) on Fly
+
+Jev is reached through OpenRouter's Decisions API with the **existing `OPENROUTER_API_KEY` Fly secret**
+(pipeline §15) — no new secret and no TypeSafe account. `fly.toml` sets `COPILOT_DECISION_MODE = "shadow"`
+explicitly, so the deployed mode is visible in configuration rather than implied by a key.
+
+Check `GET /health`: `decisions.mode` must read `shadow`, `decisions.transport` `openrouter` and
+`decisions.key_configured` `true` — the key itself is never reported. Content diagnostics stay off on
+Fly; decision records there hold identities, labels, probabilities, timings and usage only. To turn
+decisions off, set `COPILOT_DECISION_MODE = "off"` in the mirror's `fly.toml` and deploy.

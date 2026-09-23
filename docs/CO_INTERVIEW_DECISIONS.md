@@ -409,3 +409,34 @@ and ngrok inspection stays off.
 One item at the bottom of the existing ••• menu — "Mark a problem" — because that is the only thing
 needed mid-interview. Switching capture on, exporting and clearing live in the existing Debug
 surface. Reports are shared through the iOS share sheet and are never uploaded.
+
+## Identity, signing and Jev in shadow (2026-09-24)
+
+### The app is called Neverblank; the codebase keeps its names
+
+The user-facing display name is **Neverblank** (website **neverblank.io**), set in both `Info.plist`
+files together with the app name in the three permission prompts. The repository, scheme
+(`Co-Interview`), targets, bundle identifier (`talk.cointerview`), local store, backend endpoint and
+internal identifiers are **deliberately unchanged**: a broad rename is its own increment, not a side
+effect of this one.
+
+### Team `P9Q6984LRS`; `HKRALWACQ8` is retired
+
+Every target signs with team **`P9Q6984LRS`** (Apple Developer Program). The previous team's
+configuration was a mess and was replaced on purpose — **do not restore `HKRALWACQ8`, and do not use
+it as a temporary override** to install over an old build. `talk.cointerview` was checked, not
+assumed: it signs and provisions under the new team through Xcode's managed wildcard profile.
+
+A copy installed under the old team cannot be upgraded in place: iOS refuses a different team's
+application identifier (`MismatchedApplicationIdentifierEntitlement`, MIInstallerErrorDomain 64). The
+only way onto the phone is to remove that copy, which deletes its data. So: the data container is
+copied off first, the app is **never** uninstalled automatically, and removal is the owner's call.
+
+### Jev runs in shadow; the existing detector decides
+
+Jev is reached through **OpenRouter's Decisions API with the existing OpenRouter key** (TypeSafe sign-up
+was unavailable; no TypeSafe account is used), pinned to `typesafe/jev-1.13-20260917`. It is evaluated as a **decision** model only — role of the newest speech, which earlier
+question it belongs to, what an answer needs. It never writes text and never shortens an answer
+request. It runs in shadow by default when a key exists, off when none does, and "active" can hand it
+only named decision types, above a confidence floor, inside a deadline, with the detector as
+fallback. Nothing is active. See `CO_INTERVIEW_AI_PIPELINE.md` §15.

@@ -30,14 +30,22 @@ struct DiagnosticsDebugSection: View {
 
             Button("Export last request") {
                 guard let trace = diagnostics.lastTrace else { return }
-                share = payload(traces: [trace], title: "Co-Interview — last request")
+                Task {
+                    let decisions = await diagnostics.fetchDecisionRecords()
+                    share = payload(traces: [trace], title: "Neverblank — last request", decisions: decisions)
+                }
             }
             .disabled(diagnostics.lastTrace == nil)
 
+            // Enabled without any Generate trace too: the backend's decision comparisons exist for
+            // every classification, whether or not anything was generated.
             Button("Export test session") {
-                share = payload(traces: diagnostics.traces, title: "Co-Interview — test session")
+                Task {
+                    let decisions = await diagnostics.fetchDecisionRecords()
+                    share = payload(traces: diagnostics.traces, title: "Neverblank — test session", decisions: decisions)
+                }
             }
-            .disabled(diagnostics.traces.isEmpty)
+            .disabled(diagnostics.traces.isEmpty && diagnostics.decisionRecordsFetcher == nil)
 
             Button("Clear diagnostics", role: .destructive) { diagnostics.clear() }
                 .disabled(diagnostics.traces.isEmpty)
@@ -52,13 +60,13 @@ struct DiagnosticsDebugSection: View {
     /// Files rather than strings so the share sheet offers Files, Mail and AirDrop with real
     /// attachments. They live in the temporary directory, which the system reclaims; nothing is
     /// uploaded, and nothing leaves the phone unless the person picks a destination.
-    private func payload(traces: [GenerateTrace], title: String) -> SharePayload {
+    private func payload(traces: [GenerateTrace], title: String, decisions: String?) -> SharePayload {
         let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
         let base = FileManager.default.temporaryDirectory
         let markdownURL = base.appendingPathComponent("co-interview-diagnostics-\(stamp).md")
         let jsonURL = base.appendingPathComponent("co-interview-diagnostics-\(stamp).json")
-        let markdown = DiagnosticsExport.markdown(session: diagnostics, traces: traces, title: title)
-        let json = DiagnosticsExport.json(session: diagnostics, traces: traces)
+        let markdown = DiagnosticsExport.markdown(session: diagnostics, traces: traces, title: title, decisions: decisions)
+        let json = DiagnosticsExport.json(session: diagnostics, traces: traces, decisions: decisions)
         // A failed export must not take the app with it: this is a diagnostic, not the interview.
         try? markdown.data(using: .utf8)?.write(to: markdownURL)
         try? json.data(using: .utf8)?.write(to: jsonURL)

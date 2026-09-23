@@ -12,9 +12,10 @@ import Foundation
 enum DiagnosticsExport {
     // MARK: - Markdown
 
-    static func markdown(session: GenerateDiagnostics, traces: [GenerateTrace], title: String) -> String {
+    static func markdown(session: GenerateDiagnostics, traces: [GenerateTrace], title: String, decisions: String? = nil) -> String {
         var out: [String] = []
-        let hasContent = traces.contains { $0.captured != nil }
+        let decisionRecords = decisionRecords(from: decisions)
+        let hasContent = traces.contains { $0.captured != nil } || decisionRecords.contains { $0["content"] != nil }
 
         out.append("# \(title)")
         out.append("")
@@ -34,6 +35,8 @@ enum DiagnosticsExport {
         for trace in traces {
             out.append(contentsOf: markdown(trace: trace))
         }
+
+        out.append(contentsOf: markdownDecisions(decisions, records: decisionRecords))
 
         if !session.sessionNotes.isEmpty {
             out.append("## Session notes")
@@ -169,18 +172,87 @@ enum DiagnosticsExport {
         return out
     }
 
+    // MARK: - Decision comparisons
+
+    /// The records inside the backend's `/v1/copilot/diagnostics/decisions` payload.
+    static func decisionRecords(from json: String?) -> [[String: Any]] {
+        guard let data = json?.data(using: .utf8),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+        return payload["records"] as? [[String: Any]] ?? []
+    }
+
+    /// One row per classification: what the existing detector decided, what Jev decided, and whether
+    /// that comparison still meant anything by the time it finished. Jev's probabilities are in the
+    /// JSON; this table is the readable summary.
+    private static func markdownDecisions(_ json: String?, records: [[String: Any]]) -> [String] {
+        var out = ["## Decision comparisons (shadow)", ""]
+        guard let json, let data = json.data(using: .utf8),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            out.append("Not available — decisions are off on the backend, the backend predates them, or it could not be reached.")
+            out.append("")
+            return out
+        }
+        if let config = payload["decisions"] as? [String: Any] {
+            let mode = config["mode"] as? String ?? "?"
+            let model = config["model"] as? String ?? "?"
+            let version = config["config_version"] as? String ?? "?"
+            out.append("Mode **\(mode)** · model `\(model)` · config `\(version)`. The existing detector controlled every verdict unless a row says otherwise.")
+            out.append("")
+        }
+        guard !records.isEmpty else {
+            out.append("No classifications recorded for this session.")
+            out.append("")
+            return out
+        }
+        out.append("| Snapshot | Utterances (rev) | Detector | Jev role (confidence) | Jev parent | Need | Agrees | Status | Jev ms | Tokens |")
+        out.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        for record in records {
+            let baseline = record["baseline"] as? [String: Any] ?? [:]
+            let jev = record["jev"] as? [String: Any] ?? [:]
+            let comparison = record["comparison"] as? [String: Any]
+            let snapshot = (record["snapshot_id"] as? String).map { String($0.prefix(8)) } ?? "—"
+            let utterances = (record["utterances"] as? [[String: Any]] ?? []).map { u in
+                "\((u["id"] as? String)?.prefix(4) ?? "?")@\(u["revision"] as? Int ?? 0)"
+            }.joined(separator: " ")
+            let role: String = {
+                guard let role = jev["role"] as? String else { return "—" }
+                if let confidence = jev["role_confidence"] as? Double { return "\(role) (\(String(format: "%.2f", confidence)))" }
+                return role
+            }()
+            let parent = (jev["parent_id"] as? String).map { $0.count > 12 ? String($0.prefix(8)) : $0 } ?? "—"
+            let agrees = (comparison?["role_agrees"] as? Bool).map { $0 ? "yes" : "**no**" } ?? "—"
+            var status = jev["status"] as? String ?? "?"
+            if let reason = record["stale_reason"] as? String { status += ": \(reason)" }
+            if let failure = jev["failure"] as? [String: Any], let reason = failure["reason"] as? String { status += " (\(reason))" }
+            if let controlled = record["controlled_by"] as? String, controlled != "baseline" { status += " · controlled by \(controlled)" }
+            let latency = (jev["latency_ms"] as? Int).map(String.init) ?? "—"
+            let tokens = ((jev["usage"] as? [String: Any])?["input_tokens"] as? Int).map(String.init) ?? "—"
+            out.append("| `\(snapshot)` | \(utterances.isEmpty ? "—" : utterances) | \(baseline["kind"] as? String ?? "—") | \(role) | \(parent) | \(jev["answer_need"] as? String ?? "—") | \(agrees) | \(Redaction.redact(status)) | \(latency) | \(tokens) |")
+        }
+        out.append("")
+        return out
+    }
+
     // MARK: - JSON
 
-    static func json(session: GenerateDiagnostics, traces: [GenerateTrace]) -> String {
+    static func json(session: GenerateDiagnostics, traces: [GenerateTrace], decisions: String? = nil) -> String {
+        let decisionRecords = decisionRecords(from: decisions)
         var root: [String: Any] = [
             "schema": "co-interview.generate-diagnostics/1",
             "sessionID": session.sessionID.uuidString,
             "startedAt": ISO8601DateFormatter().string(from: session.startedAt),
             "contentCaptureEnabled": session.isContentCaptureEnabled,
-            "containsConversationText": traces.contains { $0.captured != nil },
+            "containsConversationText": traces.contains { $0.captured != nil } || decisionRecords.contains { $0["content"] != nil },
             "traces": traces.map(dictionary(for:)),
             "sessionNotes": session.sessionNotes.map(Redaction.redact),
         ]
+        // The backend's decision comparisons, as it sent them. Absent — not empty — when they could
+        // not be fetched, so "not available" is never confused with "none recorded".
+        if let decisions,
+           let data = decisions.data(using: .utf8),
+           let object = try? JSONSerialization.jsonObject(with: data) {
+            root["decisionComparisons"] = object
+        }
         if let failure = session.recorderFailure { root["recorderFailure"] = Redaction.redact(failure) }
         guard let data = try? JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys]),
               let text = String(data: data, encoding: .utf8) else {

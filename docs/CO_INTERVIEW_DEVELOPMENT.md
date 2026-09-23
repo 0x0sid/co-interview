@@ -149,7 +149,8 @@ rather than leaving it dormant.
 
 ## Signing and configuration limits
 
-- Bundle identifier **`talk.cointerview`** is **provisional and not registered** with Apple. It cannot
+- **Team `P9Q6984LRS` on every target** (2026-09-24). The old team `HKRALWACQ8` is retired; do not restore it, and do not use it as a temporary override. A copy of the app installed under the old team cannot be upgraded in place by a build from the new one — iOS rejects it (`MismatchedApplicationIdentifierEntitlement`). See the session handoff for the data-preserving path.
+- Bundle identifier **`talk.cointerview`** has no explicit App ID registered; it provisions through the managed wildcard profile. It cannot
   be submitted, and push/associated-domain style entitlements will not work until it is registered.
 - **No signing identity, provisioning profile or private credential was copied** from Prompter.
   Simulator builds need none; device builds require your own team.

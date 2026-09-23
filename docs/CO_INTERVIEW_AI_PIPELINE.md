@@ -725,3 +725,153 @@ sometimes correct wrongly. The raw wording always remains visible in the transcr
 A failed request keeps its snapshot and offers **Retry**, which re-sends that snapshot explicitly.
 Nothing retries automatically and nothing is re-sent when connectivity returns: an answer arriving
 minutes later, unasked, to a question the room has moved past is worse than no answer.
+
+---
+
+## 15. Typed decisions from Jev, in shadow (2026-09-24)
+
+**Status: evaluated against the real model and deployed in shadow.** Live behaviour is still decided
+by the existing detector. Nothing is active.
+
+### What Jev is, and how it is reached
+
+Jev is TypeSafe's "System One" **decision** model: it takes a state and typed questions and returns a
+probability distribution over options we define. It does not generate text.
+
+It is reached through **OpenRouter's Decisions API**, with the backend's existing
+`OPENROUTER_API_KEY` — no TypeSafe account (TypeSafe sign-up was unavailable). Verified on
+2026-09-24 against openrouter.ai/docs (`guides/community/jev`, `jev-tutorial`,
+`api-reference/alphadecisions`) **and with real calls from this account**:
+
+- `POST https://openrouter.ai/api/alpha/decisions`, bearer key, `{ model, state, questions }`.
+- `~typesafe/jev-latest` and `typesafe/jev-1.13` both resolve to the dated snapshot
+  **`typesafe/jev-1.13-20260917`**, which the response reports in `model` and which is itself accepted
+  as a model id. It is the pinned default (`COPILOT_DECISION_MODEL`), so an alias move cannot change
+  results underneath a comparison.
+- Response adds `id`, `provider` ("TypeSafe") and `usage.cost` in USD; input tokens are billed,
+  output tokens are free. Context 32k tokens.
+- Errors 400, 401, 402 (credits), 403, 404, 408, 429, 500, 502, 503, 524 (edge timeout), 529
+  (overloaded). Each maps to an explicit fallback reason (`unauthorized`, `payment_required`,
+  `model_unavailable`, `timeout`, `rate_limited`, `overloaded`, `invalid_request`, `upstream_error`).
+- `confidence` summarises how peaked a Choice's distribution is — **not** a calibrated accuracy.
+
+TypeSafe's own endpoint (`https://api.typesafe.ai/v1/systemone`, verified against docs.typesafe.ai)
+remains available as `COPILOT_DECISION_TRANSPORT=typesafe` with `TYPESAFE_API_KEY`; it is not used.
+Both are plain HTTP in `providers/typesafe.mjs`; no SDK is added, because the backend has no
+dependencies and the contract is three fields.
+
+Jev is used **only** for decisions. Answers, code, question titles, follow-up suggestions and any
+interpretation of misheard words stay with the existing answer model, unchanged.
+
+### The questions (`backend/decisions.mjs`)
+
+Asked together in one call because none reads another's answer:
+
+| Question | Type | Options |
+| --- | --- | --- |
+| `role` — what the newest speech is | Choice | `new_request` (including imperatives: "tell me about…", "show me an example"), `continuation`, `correction`, `answer_or_explanation`, `filler`, `unclear` |
+| `parent` — which earlier question it belongs to | Choice | the actual known question ids (as `q1…qN`, mapped back in code), `none`, `unclear`. Not asked when there are none: "none" is then decided in code |
+| `answer_need` — what an answer needs | Choice | `general`, `personal`, `mixed`, `clarification`, `nothing_asked` |
+| `transcription_ambiguity` | Noul | a misheard term with several readings that would change the answer |
+
+Every answer is **validated** against the question that asked for it — present, the requested type, a
+choice among the offered options, probabilities in [0, 1] over exactly those options, a noul in
+[0, 1]. An invalid answer is discarded and recorded; an invalid `role` makes the whole decision an
+`invalid_response` fallback. Jev never corrects a transcript and never picks a replacement word. The
+criteria's examples are deliberately not the evaluation's, and a test fails if a held-out case's
+wording appears in them.
+
+### Modes
+
+| `COPILOT_DECISION_MODE` | Behaviour |
+| --- | --- |
+| `off` | The existing detector alone. **Forced whenever the transport has no key** |
+| `shadow` (default with a key) | The detector decides and its response is sent; **then** the same snapshot goes to Jev and only the comparison is recorded |
+| `active` | Jev runs in parallel and may replace only the decision types in `COPILOT_DECISION_ACTIVE` (`role`, `parent`), above `COPILOT_DECISION_ACTIVE_MIN_CONFIDENCE`, within `COPILOT_DECISION_ACTIVE_TIMEOUT_MS`. Otherwise the detector's verdict, with the reason recorded. Empty list = nothing active |
+
+### What cannot be affected
+
+- **Generate never waits for a decision.** Shadow calls start after the classify response is written;
+  `/v1/copilot/answer` does not touch the decision queue. Tested with a stub delayed 1.2 s.
+- **Answer context is never truncated by Jev.** Jev sees a 12-line window (the detector's own);
+  answers are built from the app's full snapshot on a separate path. Nine multi-part requests are
+  replayed with decisions off and with a stub that always answers "filler, no parent": every required
+  part reaches the answer model in both.
+- **Pending speech is never consumed and navigation never changes**: in shadow, nothing Jev returns
+  reaches the app. Coverage and duplicate prevention stay deterministic, in the app (§14).
+- **Unavailability changes nothing.** Every call has its own deadline, at most one retry on
+  408/429/5xx/524/529 (honouring a short `retry-after`), and returns a result object, never throws.
+
+### Queueing, staleness, diagnostics
+
+At most 2 Jev calls at once; one waiting snapshot per session (a newer one makes the older
+`obsolete`); past 16 waiting sessions, `dropped`. With each classification the app sends the session
+id, a snapshot id, the utterances' ids and revisions and a generation count (all optional). A result
+about since-revised speech, or from before a later generation, is recorded `stale`.
+
+The backend keeps a bounded, expiring, in-memory record per classification: ids and revisions,
+transport, requested and answering model, OpenRouter generation id, config version, both decisions
+with every probability and confidence, agreement, stale / fallback reasons, validation problems,
+latency, usage and cost, and the context boundary. **No conversation text** unless content diagnostics
+are enabled *and* the request opted in. Log lines are metadata only. Served at
+`GET /v1/copilot/diagnostics/decisions?session=<diagnostics session id>` (client token); the app's
+**Export** adds them as "Decision comparisons (shadow)". Nothing explains *why* Jev decided anything.
+
+### Evaluation (`backend/eval/decisions/`)
+
+66 synthetic, author-labelled cases (36 EN / 30 FR): fragmented and multi-part questions, corrections
+and narrowing, filler and silence, partial-to-final revisions, misheard terms, topic changes, repeated
+wording, follow-ups on older pages, speech during generation, imperatives. 14 tuning / 52 held-out.
+**No question, criterion or threshold was changed after seeing held-out results.**
+
+Held-out, 2026-09-24, identical snapshots, real calls on both sides
+(`docs/evidence/decisions/decision-eval-heldout.md`):
+
+| | Existing detector (`google/gemini-2.5-flash-lite`) | Jev (`typesafe/jev-1.13-20260917`, 8 s deadline) |
+| --- | --- | --- |
+| Answered | 52 / 52 | 52 / 52 |
+| Question precision / recall | 100% / 94.7% | 100% / 100% |
+| Role, collapsed (new / attach / none / unclear) | 88.5% | 100% (six-way roles also 100%) |
+| Parent / grouping | 91.2% (n=34) | 100% (n=34) |
+| Correction and narrowing | 100% (n=4) | 100% (n=4) |
+| Answer need | not produced | 89.6% (n=48) |
+| Transcription ambiguity | not produced | 62.5% (n=8) |
+| Lost / wrongly consumed / duplicate | 2 / 0 / 0 | 0 / 0 / 0 |
+| Latency median / p95 | 663 / 752 ms (client round trip) | 362 / 1577 ms (adapter) |
+| Cost for 52 decisions | not reported | $0.0025 (OpenRouter `usage.cost`) |
+
+**The detector's two lost utterances.** "How do you write a simple maine in Java" and "En Java." were
+both judged "none". Jev classed the first `new_request` (confidence 0.98–0.99) and the second a
+`continuation` of the question it belongs to (0.82–0.85), in both runs, and introduced no new loss.
+
+**Latency is the weakness.** Jev's response time is bimodal and provider-side: mostly 0.3–0.6 s, often
+1–5 s, and once 6.0 s in the held-out run (16 single-attempt probes separately showed the same split,
+and one returned "overloaded"). A first held-out run with a 2.5 s deadline
+(`decision-eval-heldout-run1-deadline2500ms.md`) timed out on 5 of 52 calls (9.6%) — the same
+decisions, cut off — which is why the shadow deadline is 8 s. It also means **active mode with its
+1.2 s deadline would fall back on a large share of calls today**.
+
+**Where Jev is weak.** `answer_need` called four statements (someone answering or reading) something
+other than `nothing_asked`, and "linked ash set" a `clarification`. `transcription_ambiguity` flagged clear-from-context mishearings ("linked
+ash set", "simple maine") as ambiguous; it caught both genuinely ambiguous cases. Neither is used for
+anything.
+
+**What this does and does not show.** On 52 synthetic cases written and labelled by one author, Jev's
+role and grouping decisions matched the labels better than the detector and fixed both of its losses.
+That is evidence for continuing shadow on real sessions, **not** for activation: the cases are small
+and synthetic, the labels accept alternatives where the right answer is debatable, and the latency
+tail has not been addressed. Activation needs shadow records from real interviews showing the same
+advantage, no new losses or duplicates, and a deadline the tail fits inside.
+
+### Answer quality is a separate question
+
+A better detector does not make answers more accurate. The known factual regression — `var` credited
+to Java 9 when it is Java 10 (JEP 286) — is in the answer model, which is unchanged and remains the
+baseline.
+
+### Context budget
+
+Unchanged from §13: the whole session is sent; over the 120 000-token budget the request is refused
+with `413 context_limit` and nothing is dropped. At characters ÷ 4 that is several hours of speech, so
+no compaction is added here. Any future compaction must keep unresolved questions, corrections and
+their antecedents, and record the boundary in diagnostics.

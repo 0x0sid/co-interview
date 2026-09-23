@@ -54,6 +54,22 @@ final class GenerateDiagnostics {
 
     private var capturedCharacters = 0
 
+    /// Reads the backend's decision comparisons for a diagnostics session (pipeline §15). Set by the
+    /// session coordinator, which owns the provider; nil when there is no backend to ask.
+    @ObservationIgnored
+    var decisionRecordsFetcher: (@Sendable (String) async -> String?)?
+
+    /// The decision comparisons for this session, as the backend's JSON, fetched at export time so
+    /// they include every classification up to the moment of export. Nil whenever none are available.
+    func fetchDecisionRecords() async -> String? {
+        #if DEBUG
+        guard let fetcher = decisionRecordsFetcher else { return nil }
+        return await fetcher(sessionID.uuidString)
+        #else
+        return nil
+        #endif
+    }
+
     // MARK: - Session
 
     func startSession(appBuild: String, commit: String) {

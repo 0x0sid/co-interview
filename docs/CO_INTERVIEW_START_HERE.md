@@ -44,8 +44,10 @@ fork-day documents below remain as history where the copilot documents supersede
 | Git remote | `origin` → `git@github.com:0x0sid/co-interview.git` — **published**; `main` at `32a583c` verified with `git ls-remote` on 2026-09-15. Prompter's remote was removed at the fork, so nothing here can reach Prompter's repository |
 | Xcode project | `co-interview.xcodeproj` |
 | Scheme | **`Co-Interview`** (shared, checked in) |
-| Display name | **Co-Interview** |
-| Bundle identifier | **`talk.cointerview`** — provisional, **not registered** with Apple |
+| Display name | **Neverblank** (since 2026-09-24; set in both `Info.plist` files). Repository, scheme, targets and internal identifiers keep the Co-Interview names on purpose |
+| Website | **neverblank.io** |
+| Apple team | **`P9Q6984LRS`** (Apple Developer Program; its first one-year profile is dated 2026-09-23) on every target. **Do not restore `HKRALWACQ8`** — the old team, retired deliberately |
+| Bundle identifier | **`talk.cointerview`** — signs and provisions under `P9Q6984LRS` through Xcode's managed wildcard profile (verified 2026-09-24). No explicit App ID has been registered; one will be needed for capabilities or App Store distribution |
 | Local store | `CoInterview.store` — separate from Prompter's |
 | Deployment target / Swift | iOS 26.0 / Swift 6.0 (inherited, unchanged) |
 

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Co-Interview</string>
+	<string>Neverblank</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,9 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Prompter listens to your voice so the script can follow you as you speak. Audio is processed entirely on your iPhone and is never recorded or sent anywhere.</string>
+	<string>Neverblank listens to your voice so the script can follow you as you speak. Audio is processed entirely on your iPhone and is never recorded or sent anywhere.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Prompter turns your speech into on-screen tracking, entirely on your iPhone, so the script keeps pace with you instead of a timer.</string>
+	<string>Neverblank turns your speech into on-screen tracking, entirely on your iPhone, so the script keeps pace with you instead of a timer.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SpaceGrotesk-Variable.ttf</string>

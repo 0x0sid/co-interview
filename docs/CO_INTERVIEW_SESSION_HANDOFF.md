@@ -1,103 +1,101 @@
-# Handoff — 2026-09-24
+# Handoff — 2026-09-24 (Jev shadow increment)
 
 Written so the next person, on a different machine or a different account, can pick this up without
 the chat history. **The session transcript does not travel**: it is a local file on one Mac, readable
 only by its owner. This document and the two repositories are the handoff.
 
+## Identity — do not restore the old configuration
+
+| | |
+| --- | --- |
+| App name (user-facing) | **Neverblank** — `CFBundleDisplayName` in both `Info.plist` files, and the app name in the permission prompts |
+| Website | **neverblank.io** |
+| Apple team | **`P9Q6984LRS`** on **every** target. `HKRALWACQ8` is the retired old team: never restore it, never use it as a temporary override |
+| Bundle id | `talk.cointerview` — unchanged; provisions under `P9Q6984LRS` via Xcode's managed wildcard profile (checked 2026-09-24) |
+| Internal names | Repository, scheme `Co-Interview`, targets, store `CoInterview.store`, backend endpoint — **deliberately unchanged**. A broad rename is its own increment |
+
 ## Where everything is
 
 | | |
 | --- | --- |
-| App | `github.com/0x0sid/co-interview`, branch `main`, at **`2810956`** |
-| Backend (standalone, deployed from) | `github.com/0x0sid/backend` (private), `main`, at **`a7b700b`** |
-| Backend source of truth | `backend/` **in the app repo** — the standalone repo is a mirror. Sync rules: [`CO_INTERVIEW_HOSTING.md`](CO_INTERVIEW_HOSTING.md) |
-| Hosted service | Fly app `backend--d7y3w`, region `ams`, **https://backend--d7y3w.fly.dev** |
-| Owner-tested build | tag `owner-device-tested-2026-09-21` on `9a0f1d0` |
+| App | `github.com/0x0sid/co-interview`, branch `main` |
+| Canonical checkout | `/Users/sidousan/Desktop/co-interview-public` (macOS user `sidousan`) |
+| Backend source of truth | `backend/` in the app repo |
+| Deployment mirror | `/Users/sidousan/Desktop/prompter-backend` → `github.com/0x0sid/backend` (private). Sync rules: [`CO_INTERVIEW_HOSTING.md`](CO_INTERVIEW_HOSTING.md) |
+| Hosted service | Fly app `backend--d7y3w`, region `ams`, **https://backend--d7y3w.fly.dev**, deployed with `flyctl deploy` from the mirror (no CI) |
+| Old remote | `VRAM-AI/prompter-backend` is historical; neither checkout's remotes point at it |
 
-Both working trees were clean and fully pushed at the time of writing.
+**Two macOS accounts share this Mac.** `sidousan` owns the canonical checkouts; an ACL gives `sid`
+write access. `sid` has its own separate clone at `/Users/sid/Desktop/co-interview-public`, which
+holds an **unpushed local commit `ae0eef0`** (the team change only, message "first push from yanis…").
+The same change is now on `main`; that clone can be reset to `origin/main` by its owner — nothing did
+it automatically. Git on the `sidousan` checkouts, run as `sid`, needs `-c safe.directory=*`, and
+`rsync -a` into the mirror reports harmless "utimensat" errors for files `sid` does not own (verify
+with `rsync -rl --checksum -n -i`). `flyctl` and SSH credentials are per-user; as `sid`, pushes go over
+HTTPS through `gh`.
 
-## State of the deployment
+## What this increment delivered
 
-Healthy and verified from the terminal on 2026-09-21 and again on 2026-09-24:
+**Jev (TypeSafe) typed decisions, in shadow** — pipeline doc §15.
 
-- `/health` → `200`, `provider: configured`, `auth: configured`, `openrouter` / `balanced`
-- authenticated `/v1/copilot/config` → `google/gemini-2.5-flash-lite`, route `google-ai-studio`
-- no token / wrong token → `401` on both answer and config
-- streamed generation: first text **603–802 ms**, complete **1052–1498 ms**, multiple delta events
-- cancellation mid-stream leaves the machine healthy
+- `backend/providers/typesafe.mjs`: HTTP adapter. Default transport is **OpenRouter's Decisions API**
+  (`POST https://openrouter.ai/api/alpha/decisions`) with the existing `OPENROUTER_API_KEY` — no
+  TypeSafe account; model pinned to `typesafe/jev-1.13-20260917`. TypeSafe's own endpoint remains as
+  an option. Deadline, one retry on 408/429/5xx/524/529, every error an explicit fallback, never throws.
+- `backend/decisions.mjs`: three independent questions (role of the newest speech, parent question,
+  answer need) plus a transcription-ambiguity Noul; `off` / `shadow` / `active`; bounded concurrency,
+  latest-wins per session, obsolete/stale/dropped records; metadata-only logs.
+- Classification responses are unchanged; shadow runs after the response is written. Generate and
+  answer streaming never touch it. Answer requests are never filtered by Jev's focused input.
+- The app sends, with each classification, session id, snapshot id, utterance ids and revisions, and a
+  generation count (all optional). The diagnostics export gains "Decision comparisons (shadow)".
+- `backend/eval/decisions/`: 66 synthetic labelled cases (EN 36 / FR 30; 14 tuning / 52 held-out),
+  metrics, and an answer-request completeness check.
+- Display name Neverblank; team `P9Q6984LRS` on every target.
 
-Two faults were fixed to get there, both configuration rather than code: Fly Launch's generated
-`fly.toml` (wrong `internal_port`, no `[env]`, `min_machines_running = 0`) and **no public IP ever
-allocated**, which is why the hostname did not resolve. See `CO_INTERVIEW_HOSTING.md`.
+## Evaluation — what is and is not known
 
-`flyctl` auth is per-user: a new operator runs `flyctl auth login` before anything else.
+Held-out (52 synthetic cases), real calls on both sides, identical snapshots — pipeline §15:
 
-## What the last increment delivered
+| | Existing detector | Jev (8 s deadline) |
+| --- | --- | --- |
+| Question precision / recall | 100% / 94.7% | 100% / 100% |
+| Grouping (parent) | 91.2% | 100% |
+| Lost / duplicate | 2 / 0 | 0 / 0 |
+| Latency median / p95 | 663 / 752 ms | 362 / 1577 ms (max 6.0 s) |
 
-**Answer presentation** — readable cards, keyword emphasis, contextual follow-up actions.
-
-- `AnswerKeywords` marks the phrases an answer turns on: identifiers, acronyms, versions, quantities
-  with units, multi-word proper nouns, defined terms, quoted phrases. Emphasis is **weight only**,
-  never colour — colour already means "you have said this" (the reading fade), and the two compose.
-- `FollowUpActions` offers up to three chips under a finished answer, chosen from what the answer
-  contains: explain the code, give an example, go deeper *or* make it shorter (never both).
-- A tapped chip is **not speech**. It never enters the transcript, and it reserves no spoken line as
-  answered — speech that arrived while the reader was browsing is still waiting for the next
-  ordinary Generate.
-- A chip **belongs to its page**. The request carries that page's question, answer text and version,
-  and the prompt tells the model to apply the action there rather than following the newest topic.
-  Verified against the live service: an action on an older lambda answer, with a more recent
-  "tell me about my last project" in the conversation, correctly returned a lambda example.
+Jev fixed both of the detector's losses ("simple maine in Java", "En Java.") with no new one. Its
+latency is bimodal and provider-side; a first run with a 2.5 s deadline timed out on 9.6% of calls.
+**This supports continuing shadow on real sessions, not activation**: the cases are few, synthetic and
+labelled by one author, and active mode's 1.2 s deadline would fall back often. Evidence:
+`docs/evidence/decisions/`. Re-run: start the backend locally with the real `.env`, then
+`npm run eval:decisions -- --split heldout --base http://127.0.0.1:8787 --token <token> --out ../docs/evidence/decisions`.
 
 ## Outstanding
 
 | Item | State |
 | --- | --- |
-| **iPhone install** | **Blocked.** `devicectl` reports `available (paired)` but every `xcodebuild` device build fails: *"Ensure the device is unlocked and attached with a cable… previously reported preparation errors."* Unlock the phone, connect by cable, then build and install — do **not** uninstall or erase data |
-| Dark-mode screenshots | Not captured. Light ones are verified. Boot the simulator, `xcrun simctl ui <udid> appearance dark`, then run `testCaptureAnswerKeywordsAndFollowUpActions` with `CAPTURE_SUFFIX=dark`. The appearance command fails if the simulator is shut down — boot it first |
-| Full regression suite | Not run since the last three commits. Focused suites all pass (below) |
-
-## Test state
-
-- `prompterTests/AnswerPresentationTests` — **22 passed**
-- `prompterTests` (full unit suite, one commit earlier) — **322 passed**
-- Backend, all four suites — **passed**, including six contract checks for the tapped action
-- `InterviewScreenCaptureTests` — 4/5 in one class run, and the fifth passes in isolation after its
-  scroll fix; not yet re-run as a class
+| **iPhone install** | **Blocked by iOS, not signing.** The installed copy was signed by `HKRALWACQ8`; iOS refuses a cross-team upgrade (`MismatchedApplicationIdentifierEntitlement`). Installing requires removing it, which deletes its data. A read-only copy of its data container's store is at `/Users/sid/Desktop/cointerview-device-backup-2026-09-24/` (`CoInterview.store` + `-wal` + `-shm`). **Restoration is unverified**: the three files are a copy of the SwiftData store, not a tested backup, and nothing has been restored from them. Removal is the owner's decision (not yet authorised); after it, restore would be `xcrun devicectl device copy to --domain-type appDataContainer --domain-identifier talk.cointerview` into `Library/Application Support/` before first launch, then check the data in the app |
+| Dark-mode screenshots | Not captured (deliberately not resumed) |
+| `COINTERVIEW_TOKENS` | Still the documented placeholder in some local configs; rotate on Fly and in `Local-Debug.xcconfig` together |
 
 ### Known failure, inherited and unrelated
 
-`prompterUITests.prompterUITests.testCaptureBarePromptScreen` fails, and failed before any of this
-work (verified at `ee06061`). It looks for `app.images["debugMenuButton"]`, an accessibility
-identifier that no longer exists anywhere in the app. Fixing it means touching Prompter's UI, which
-is out of bounds. **The suite is therefore not entirely green, and that is why.**
+`prompterUITests.prompterUITests.testCaptureBarePromptScreen` fails, and failed before this work: it
+looks for `app.images["debugMenuButton"]`, an identifier that no longer exists.
 
 ## Known product issues, deliberately not fixed
 
-- **Factual accuracy is 6/8** on the context evaluation. J1 and J2 credit Java 9 with local-variable
-  type inference; `var` is Java 10 (JEP 286 `Release: 10`). Systematic across runs on the default
-  profile, absent in the French equivalent. Recorded in `docs/evidence/context-handling/`. Not
-  patched into the prompt: hardcoding one date would make the evaluation self-confirming.
-- **A comparison whose two sides transcribe identically** still fails most of the time on the default
-  profile — `docs/evidence/answer-quality/`.
-- **`COINTERVIEW_TOKENS` is still the documented placeholder** (`replace-with-a-random-token`, public
-  in `config.example.env`). Survivable behind an ad-hoc tunnel; **not** survivable on a public hosted
-  URL. Rotate it in Fly secrets and in `prompter/Config/Local-Debug.xcconfig` together.
+- **Factual accuracy**: `var` credited to Java 9 (it is Java 10, JEP 286) on the default profile.
+  Answer-model behaviour; untouched by the decision layer. `docs/evidence/context-handling/`.
+- **Identical-sounding comparisons** still fail most of the time — `docs/evidence/answer-quality/`.
 
 ## Not started
 
-Neither of the remaining increments has any code:
-
-1. **RevenueCat** — `prompter/Billing/` exists but is *inherited Prompter scaffolding*, wired into
-   Prompter's own surfaces, and explicitly not a Co-Interview requirement (`CO_INTERVIEW_DECISIONS.md`).
-   `BillingConfiguration` returns nil without a key.
-2. **Jev question/context decision layer** — nothing at all; searched and confirmed.
+RevenueCat (explicitly out of scope). Any Jev activation — only after shadow records from real sessions confirm the held-out result and the latency tail fits a deadline.
 
 ## Local things that do not travel
 
-- `backend/.env` and `prompter/Config/Local-Debug.xcconfig` are git-ignored and hold the real
-  credentials. A new machine needs both recreated from `config.example.env` and
-  `Local-Debug.example.xcconfig`.
-- The ngrok tunnel and local backend used before Fly. The app now points at the Fly hostname via
-  `COPILOT_DEV_BACKEND_HOST`; rollback instructions are in `CO_INTERVIEW_HOSTING.md`.
-- The session transcript, and the in-memory Generate diagnostics (`docs/evidence/diagnostics/`).
+- `backend/.env` and `prompter/Config/Local-Debug.xcconfig` (git-ignored, real credentials).
+- The device data backup above.
+- The session transcript.

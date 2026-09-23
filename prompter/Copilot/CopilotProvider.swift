@@ -8,6 +8,16 @@ struct ClassificationRequest: Sendable, Encodable {
     struct KnownQuestion: Sendable, Encodable {
         let id: String
         let text: String
+        /// Whether an answer has been generated for it. Lets a decision tell a pending question from
+        /// an answered one; nil from callers that do not know.
+        var answered: Bool? = nil
+    }
+
+    /// One utterance that makes up `newSpeech`, by identity and revision — never its text.
+    struct UtteranceRef: Sendable, Encodable, Equatable {
+        let id: String
+        let revision: Int
+        let isFinal: Bool
     }
 
     /// New speech since the last classification.
@@ -19,6 +29,24 @@ struct ClassificationRequest: Sendable, Encodable {
     let activeAnswerText: String?
     let knownQuestions: [KnownQuestion]
     let language: String
+
+    // Identity for the backend's decision comparison (docs/CO_INTERVIEW_AI_PIPELINE.md §15). All
+    // optional and omitted when nil, so an older backend receives exactly the body it always did.
+    // None of these change what the detector is asked or what it answers.
+
+    /// The interview session, so a newer snapshot can supersede an older one.
+    var sessionID: String? = nil
+    /// This classification, so its verdict and its comparison can be matched up afterwards.
+    var snapshotID: String? = nil
+    /// The utterances classified, with their revisions, so a verdict about since-corrected speech is
+    /// recognised as stale.
+    var utterances: [UtteranceRef]? = nil
+    /// How many answers had been requested when the snapshot was taken; a verdict from before a later
+    /// generation is stale.
+    var generationEpoch: Int? = nil
+    /// Debug-only diagnostics correlation, and the same content opt-in as the answer path.
+    var diagnosticsSessionID: String? = nil
+    var captureContent: Bool? = nil
 }
 
 /// What the generator is given (§5). Whole documents are never sent — only the passages retrieval
@@ -142,6 +170,7 @@ enum AnswerStreamEvent: Sendable, Equatable {
 extension CopilotProviding {
     /// Most providers keep nothing: there is no backend to ask.
     func diagnosticsProviderMessages(requestID: String) async -> String? { nil }
+    func decisionRecords(diagnosticsSessionID: String) async -> String? { nil }
 }
 
 enum CopilotProviderError: Error, Sendable, Equatable {
@@ -198,6 +227,11 @@ protocol CopilotProviding: Sendable {
     /// Returns nil whenever diagnostics are not enabled server-side, the request did not ask, or the
     /// trace has expired — all ordinary, none of them an error worth surfacing to a reader.
     func diagnosticsProviderMessages(requestID: String) async -> String?
+
+    /// Debug-only: the backend's decision comparisons for one diagnostics session, as JSON — the
+    /// existing detector's verdict beside Jev's for each classification (pipeline §15). Nil when
+    /// decisions are off on the backend or nothing was recorded; never an error worth surfacing.
+    func decisionRecords(diagnosticsSessionID: String) async -> String?
 
     /// Human-readable label for what actually served the request, shown in the UI ("gpt-5.4-nano",
     /// "development fake").
@@ -275,6 +309,22 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
               (response as? HTTPURLResponse)?.statusCode == 200,
               let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return payload["provider_messages"] as? String
+    }
+
+    /// Fetches the decision comparisons the backend recorded for this diagnostics session.
+    ///
+    /// Silent on every failure, like `diagnosticsProviderMessages`: decisions off (404), an older
+    /// backend without the route, or no network are all ordinary.
+    func decisionRecords(diagnosticsSessionID: String) async -> String? {
+        var components = URLComponents(url: baseURL.appending(path: "v1/copilot/diagnostics/decisions"), resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "session", value: diagnosticsSessionID)]
+        guard let url = components?.url else { return nil }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await session.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     private func makeRequest(path: String, body: Data) -> URLRequest {

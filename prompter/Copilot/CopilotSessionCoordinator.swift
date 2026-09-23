@@ -134,6 +134,14 @@ final class CopilotSessionCoordinator {
 
     func startListening() {
         guard state == .active else { return }
+        #if DEBUG
+        // The export asks the backend for this session's decision comparisons through the provider
+        // this session actually uses. Observation only: nothing it returns reaches a request.
+        let provider = self.provider
+        GenerateDiagnostics.shared.decisionRecordsFetcher = { sessionID in
+            await provider.decisionRecords(diagnosticsSessionID: sessionID)
+        }
+        #endif
         audio.start(language: project.language, contextualStrings: projectVocabulary())
     }
 
@@ -331,13 +339,25 @@ final class CopilotSessionCoordinator {
         pendingCutoffCandidate = classifiedGroup.last?.endTime ?? transcriptNow
         let requestedAt = clock()
 
-        let request = ClassificationRequest(
+        var request = ClassificationRequest(
             newSpeech: text,
             recentConversation: conversation.recentContext().map(\.text),
             activeAnswerText: activeAlignment()?.text,
-            knownQuestions: cards.suffix(3).map { .init(id: $0.id.uuidString, text: $0.questionText) },
+            knownQuestions: cards.suffix(3).map {
+                .init(id: $0.id.uuidString, text: $0.questionText, answered: !$0.versions.isEmpty)
+            },
             language: project.language.bcp47
         )
+        // Identity only, for the backend's shadow comparison: which speech, at which revision, at
+        // which point in the session. The detector's input above is unchanged by any of it.
+        request.sessionID = sessionID.uuidString
+        request.snapshotID = UUID().uuidString
+        request.utterances = classifiedGroup.map { .init(id: $0.id.uuidString, revision: $0.revision, isFinal: $0.isFinal) }
+        request.generationEpoch = cards.reduce(0) { $0 + $1.versions.count }
+        #if DEBUG
+        request.diagnosticsSessionID = GenerateDiagnostics.shared.sessionID.uuidString
+        request.captureContent = GenerateDiagnostics.shared.isContentCaptureEnabled
+        #endif
 
         let provider = self.provider
         detectionTask?.cancel()

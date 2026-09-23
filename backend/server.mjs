@@ -30,6 +30,10 @@ import { ConfigurationError, operatorOverridesFromEnv, resolveConfig, publicConf
 import { acceptsImages } from "./capabilities.mjs";
 import * as openai from "./providers/openai.mjs";
 import * as openrouter from "./providers/openrouter.mjs";
+import {
+  decisionConfigFromEnv, decisionApiKey, publicDecisionConfig, snapshotFromClassifyBody, baselineDecision,
+  DecisionRecorder, DecisionShadow, decide, applyActiveDecision,
+} from "./decisions.mjs";
 
 /**
  * Loads `backend/.env` into `process.env` if it exists.
@@ -182,6 +186,24 @@ const operatorConfig = operatorOverridesFromEnv();
 const baseConfig = resolveConfig({ operator: operatorConfig });
 const keyFor = (provider) => (provider === "openrouter" ? OPENROUTER_API_KEY : OPENAI_API_KEY);
 const providerMode = FAKE ? "fake" : keyFor(baseConfig.text_provider) ? "configured" : "unconfigured";
+
+/**
+ * Typed decisions from Jev, beside the existing detector (decisions.mjs). Off without a key; shadow
+ * by default with one. The transport is OpenRouter's Decisions API unless configured otherwise, and
+ * it reuses OPENROUTER_API_KEY — no TypeSafe account. The key is read once, here, and passed only to
+ * the decision adapter.
+ */
+const decisionConfig = FAKE ? { ...decisionConfigFromEnv({}), modeReason: "development fake" } : decisionConfigFromEnv();
+const decisionRecorder = new DecisionRecorder();
+const decisionShadow = new DecisionShadow({
+  config: decisionConfig,
+  apiKey: FAKE ? "" : decisionApiKey(decisionConfig),
+  recorder: decisionRecorder,
+  log: (line) => console.log(line),
+  // Conversation text enters a decision record only under the same two conditions as the answer
+  // path's provider messages: the operator enabled content diagnostics, and the request opted in.
+  contentAllowed: DIAGNOSTICS_ENABLED,
+});
 
 // ---------------------------------------------------------------------------------------------
 // Prompts
@@ -810,6 +832,14 @@ async function handleClassify(request, response) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   request.on("close", () => controller.abort());
 
+  // Active mode asks Jev **at the same time** as the detector, so it can only shorten the wait, never
+  // add a round trip. Its own deadline, not the request's: it must never hold the detector's verdict.
+  const snapshot = decisionConfig.mode === "off" ? null : snapshotFromClassifyBody(body);
+  const activeDecision = snapshot && decisionConfig.mode === "active" && decisionConfig.activeDecisions.length
+    ? decide({ snapshot, config: decisionConfig, apiKey: decisionShadow.apiKey, timeoutMs: decisionConfig.activeTimeoutMs })
+    : null;
+  const detectionStarted = Date.now();
+
   try {
     const messages = buildDetectionMessages(body);
     const benchmark = Boolean(body.benchmark);
@@ -826,8 +856,31 @@ async function handleClassify(request, response) {
     if (!outcome.ok) {
       return send(response, outcome.status === 429 ? 429 : 502, { error: "provider_error", detail: outcome.message });
     }
+    const baselineMeta = {
+      model: outcome.meta?.resolvedModel ?? config.detection_model_id,
+      latencyMs: Date.now() - detectionStarted,
+      questionText: outcome.result?.question_text ?? null,
+    };
+
+    let result = outcome.result;
+    let decision;
+    if (activeDecision) {
+      const jev = await activeDecision;
+      const applied = applyActiveDecision(outcome.result, snapshot, jev, decisionConfig);
+      result = applied.result;
+      decisionShadow.observe(snapshot);
+      const record = decisionShadow.newRecord(snapshot, baselineDecision(outcome.result, snapshot), baselineMeta);
+      record.controlled_by = applied.controlledBy;
+      record.fallback_reason = applied.fallbackReason;
+      decisionShadow.finish(record, jev.ok
+        ? { status: "ok", jev, baseline: baselineDecision(outcome.result, snapshot) }
+        : { status: "failed", reason: jev.reason, jev });
+      decision = { mode: "active", controlled_by: applied.controlledBy, record_id: record.record_id };
+    }
+
     send(response, 200, {
-      ...outcome.result,
+      ...result,
+      ...(decision ? { decision } : {}),
       is_fake: false,
       route: {
         gateway: config.text_provider,
@@ -839,6 +892,11 @@ async function handleClassify(request, response) {
         generation_id: outcome.meta?.generationID ?? null,
       },
     });
+
+    // Shadow: only now, with the detector's verdict already on its way to the app. Nothing awaits it.
+    if (snapshot && decisionConfig.mode === "shadow") {
+      decisionShadow.submit(snapshot, baselineDecision(outcome.result, snapshot), baselineMeta);
+    }
   } catch (error) {
     if (controller.signal.aborted) return send(response, 504, { error: "timeout_or_cancelled" });
     send(response, 502, { error: "provider_error", detail: String(error).slice(0, 300) });
@@ -1100,6 +1158,8 @@ const server = createServer(async (request, response) => {
         provider_configured: providerMode !== "none",
         answer_accepts_images: FAKE ? false : acceptsImages(baseConfig.answer_model_id),
         request_overrides: ALLOW_REQUEST_OVERRIDES,
+        // Mode and model only; whether a key exists, never its value.
+        decisions: publicDecisionConfig(decisionConfig),
       });
     }
 
@@ -1114,6 +1174,23 @@ const server = createServer(async (request, response) => {
         ...publicConfig(baseConfig),
         provider_configured: providerMode === "configured" || FAKE,
         is_fake: FAKE,
+        decisions: publicDecisionConfig(decisionConfig),
+      });
+    }
+
+    // Decision comparisons for one diagnostics session (decisions.mjs).
+    //
+    // Served whenever decisions are not off, because a record holds identities, labels,
+    // probabilities, timings and usage — not conversation. Text appears in a record only when
+    // content diagnostics are enabled and that request opted in, exactly as for provider messages.
+    if (url.pathname === "/v1/copilot/diagnostics/decisions" && request.method === "GET") {
+      if (decisionConfig.mode === "off") return send(response, 404, { error: "decisions_off", decisions: publicDecisionConfig(decisionConfig) });
+      const session = url.searchParams.get("session") ?? "";
+      if (!session) return send(response, 400, { error: "session is required" });
+      return send(response, 200, {
+        session,
+        decisions: publicDecisionConfig(decisionConfig),
+        records: decisionRecorder.list(session),
       });
     }
 
@@ -1194,6 +1271,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  gateway:  ${baseConfig.text_provider}  profile: ${baseConfig.profile}${FAKE ? "  (DEVELOPMENT FAKE — answers are canned text)" : ""}`);
   console.log(`  provider: ${providerMode}`);
   console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} token(s) configured` : "NOT CONFIGURED — every request will be refused"}`);
+  console.log(`  decisions: ${decisionConfig.mode} (${decisionConfig.modeReason})${decisionConfig.mode === "off" ? "" : `  via=${decisionConfig.transport}  model=${decisionConfig.model}${decisionConfig.activeDecisions.length ? `  active=[${decisionConfig.activeDecisions}]` : ""}`}`);
   if (!FAKE && providerMode === "configured") {
     console.log(`  models:   detection=${baseConfig.detection_model_id} answer=${baseConfig.answer_model_id} reasoning_enabled=${baseConfig.reasoning_enabled}`);
     if (baseConfig.text_provider === "openrouter") {
