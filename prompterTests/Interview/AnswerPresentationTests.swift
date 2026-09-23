@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import SwiftUI
 @testable import prompter
 
 /// Keyword emphasis and follow-up actions: what gets picked, and what deliberately does not.
@@ -184,7 +185,7 @@ struct AnswerPresentationTests {
     @Test
     func emphasisDoesNotAlterTheTextItStylesOrItsAlignment() {
         let text = "A BoundedQueue of 512 items keeps memory flat on the Mill Street rollout."
-        let attributed = AnswerKeywords.emphasised(text)
+        let attributed = AnswerKeywords.emphasised(text, font: .body.bold())
         #expect(String(attributed.characters) == text, "emphasis changed the answer's characters")
 
         let plain = ScriptIndex.build(from: text)

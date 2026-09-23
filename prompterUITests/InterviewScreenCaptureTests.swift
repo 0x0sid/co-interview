@@ -31,12 +31,36 @@ final class InterviewScreenCaptureTests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: "answer-complete").firstMatch
     }
 
+    /// Opens the demo interview, verifying each step actually happened.
+    ///
+    /// Both taps used to be fire-and-forget. A tap that does not register is indistinguishable from
+    /// a slow screen until a later assertion fails for the wrong reason — which is exactly how these
+    /// captures failed: "Failed to tap Start demo, DEMO mode: No matches found", because the start
+    /// screen had not opened yet or the button sat below the fold behind the two mode cards.
     private func openDemo(_ app: XCUIApplication) {
         let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 20))
-        entry.tap()
-        XCTAssertTrue(app.buttons["Start demo, DEMO mode"].waitForExistence(timeout: 10))
-        app.buttons["Start demo, DEMO mode"].tap()
+        XCTAssertTrue(entry.waitForExistence(timeout: 20), "the home screen has no Interview Copilot entry")
+
+        let startDemo = app.buttons["Start demo, DEMO mode"]
+        for _ in 0..<3 where !startDemo.exists {
+            entry.tap()
+            _ = startDemo.waitForExistence(timeout: 8)
+        }
+        XCTAssertTrue(startDemo.waitForExistence(timeout: 10), "the Copilot start screen never opened")
+
+        // Arrival on the interview screen, not just a tap that was sent.
+        //
+        // Matched on either transcript label: one fixture launches with the strip already expanded,
+        // where the button reads "Collapse live transcript" and waiting for "Expand" waits forever.
+        let onInterview = app.buttons.matching(
+            NSPredicate(format: "label ENDSWITH 'live transcript'")
+        ).firstMatch
+        for _ in 0..<3 where !onInterview.exists {
+            if !startDemo.isHittable { app.swipeDown() }
+            if startDemo.isHittable { startDemo.tap() }
+            _ = onInterview.waitForExistence(timeout: 8)
+        }
+        XCTAssertTrue(onInterview.waitForExistence(timeout: 15), "the demo interview screen never opened")
     }
 
     /// Collapsed transcript, a generated answer, simulated reading, and the ready chip.
@@ -147,16 +171,20 @@ final class InterviewScreenCaptureTests: XCTestCase {
         save(app, "09-answer-with-keywords")
 
         // Scroll to the follow-up chips under the answer.
-        let actions = app.otherElements["follow-up-actions"]
-        for _ in 0..<6 where !actions.exists { app.swipeUp() }
-        XCTAssertTrue(actions.waitForExistence(timeout: 10),
+        //
+        // Asserted on a chip, not on the row's container: which chips appear depends on what the
+        // answer contains, but every one of them is a button with one of these labels.
+        let titles = ["Explain the code", "Give an example", "Go deeper", "Make it shorter"]
+        let anyChip = app.buttons.matching(
+            NSPredicate(format: "label IN %@", titles)
+        ).firstMatch
+        for _ in 0..<8 where !anyChip.exists { app.swipeUp() }
+        XCTAssertTrue(anyChip.waitForExistence(timeout: 10),
                       "a finished answer offered no follow-up actions")
         save(app, "10-follow-up-actions")
 
-        // The chips are real controls: at least one is tappable and named.
-        let chip = actions.buttons.firstMatch
-        XCTAssertTrue(chip.exists, "the follow-up row has no buttons in it")
-        XCTAssertFalse(chip.label.isEmpty, "a follow-up chip has no label")
+        XCTAssertFalse(anyChip.label.isEmpty, "a follow-up chip has no label")
+        XCTAssertTrue(anyChip.isHittable, "a follow-up chip cannot be tapped")
     }
 
     /// The end of a long answer can be scrolled out from under the floating toolbar.

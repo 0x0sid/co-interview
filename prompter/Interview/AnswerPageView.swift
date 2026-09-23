@@ -178,7 +178,7 @@ struct AnswerPageView: View {
                     } else {
                         // Streaming, or no alignment yet: same emphasis, no reading state to compose
                         // with. The colour is the view's, so nothing here can be mistaken for "read".
-                        Text(AnswerKeywords.emphasised(text))
+                        Text(AnswerKeywords.emphasised(text, font: InterviewTheme.Font.answer(weight: .semibold)))
                             .font(InterviewTheme.Font.answer())
                             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
                             .foregroundStyle(InterviewTheme.Color.ink)
@@ -211,7 +211,8 @@ struct AnswerPageView: View {
         )
         // Emphasis goes on *after* the reading colours and touches only weight, so the two systems
         // stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
-        AnswerKeywords.emphasise(&attributed, source: alignment.text)
+        AnswerKeywords.emphasise(&attributed, source: alignment.text,
+                                 font: InterviewTheme.Font.answer(weight: .semibold))
 
         // The character span of each paragraph, from the sentences that make it up.
         var spans: [(start: Int, end: Int)] = []
@@ -297,8 +298,12 @@ struct AnswerPageView: View {
                 }
             }
             .padding(.vertical, 2)
+            // The identifier goes on the row's *content*, not on the ScrollView: a scroll container
+            // does not reliably surface one to the accessibility tree, so a test querying it found
+            // nothing even with the chips on screen.
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("follow-up-actions")
         }
-        .accessibilityIdentifier("follow-up-actions")
     }
 
     private var followUpsLink: some View {

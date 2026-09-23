@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// The few words in an answer worth finding at a glance.
 ///
@@ -83,20 +84,26 @@ enum AnswerKeywords {
 
     /// Emphasises the keyword spans of `source` inside an attributed string built from it.
     ///
-    /// Uses `inlinePresentationIntent`, not an explicit font: the view owns the typeface and size,
-    /// and a keyword must inherit both. It sets no colour, so `ScriptStyling`'s reading fade stays
-    /// the only thing colour means — a spoken keyword greys out and stays bold.
-    static func emphasise(_ attributed: inout AttributedString, source: String) {
+    /// Sets **only** the font, to the caller's own face at a heavier weight.
+    ///
+    /// `inlinePresentationIntent = .stronglyEmphasized` looked right in a unit test and wrong on
+    /// screen: SwiftUI resolved it against a different family, so emphasised runs rendered visibly
+    /// smaller than the serif around them and broke the line's rhythm. Handing in the exact bold
+    /// font keeps the typeface and optical size identical and changes only the weight.
+    ///
+    /// No colour is set either way, so `ScriptStyling`'s reading fade remains the only thing colour
+    /// means — a spoken keyword greys out and stays bold.
+    static func emphasise(_ attributed: inout AttributedString, source: String, font: Font) {
         for span in spans(in: source) {
             guard let range = attributedRange(span, source: source, attributed: attributed) else { continue }
-            attributed[range].inlinePresentationIntent = .stronglyEmphasized
+            attributed[range].font = font
         }
     }
 
     /// An attributed copy of `text` with its keywords emphasised and nothing else changed.
-    static func emphasised(_ text: String) -> AttributedString {
+    static func emphasised(_ text: String, font: Font) -> AttributedString {
         var attributed = AttributedString(text)
-        emphasise(&attributed, source: text)
+        emphasise(&attributed, source: text, font: font)
         return attributed
     }
 
