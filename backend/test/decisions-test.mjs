@@ -82,10 +82,12 @@ const STUB = "http://127.0.0.1:9921";
 // --- Stub detector provider (OpenAI Responses shape, as in contract-test) ------------------------
 
 let detectorDelayMs = 0;
+const upstreamBodies = [];
 const detector = createServer(async (request, response) => {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  upstreamBodies.push(body);
   if (detectorDelayMs) await delay(detectorDelayMs);
   if (!body.stream) {
     response.writeHead(200, { "content-type": "application/json" });
@@ -448,6 +450,56 @@ try {
       child.kill();
       stub.mode = "ok";
       stub.delayMs = 0;
+    }
+  }
+
+  console.log("shadow changes nothing the app receives or the model is sent");
+  {
+    // Identical inputs through a server with decisions off and one in shadow: the classify responses
+    // and the provider inputs must be byte-identical. Only then can shadow not move a question, a
+    // coverage boundary, a snapshot or a page.
+    const answerBody = {
+      question: "q", passages: [], language: "en", targetWordRange: [40, 80], projectID: "p",
+      recentConversation: ["Could you compare Java 8 and Java 9?", "No, we're not talking about Java anymore.", "What's new in Angular?"],
+      newInput: ["No, we're not talking about Java anymore.", "What's new in Angular?"],
+    };
+    const outcome = {};
+    for (const [mode, port] of [["off", 9928], ["shadow", 9929]]) {
+      const { child } = startServer(port, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: mode });
+      await delay(600);
+      try {
+        upstreamBodies.length = 0;
+        const classify = await (await fetch(`http://127.0.0.1:${port}/v1/copilot/classify`, { method: "POST", headers: auth, body: JSON.stringify(classifyBody()) })).text();
+        const answer = await (await fetch(`http://127.0.0.1:${port}/v1/copilot/answer`, { method: "POST", headers: auth, body: JSON.stringify(answerBody) })).text();
+        outcome[mode] = { classify, answer, upstream: JSON.stringify(upstreamBodies) };
+      } finally {
+        child.kill();
+      }
+    }
+    check("classify responses are byte-identical", outcome.off.classify === outcome.shadow.classify);
+    check("answer streams are byte-identical", outcome.off.answer === outcome.shadow.answer);
+    check("what the detector and answer model were sent is byte-identical", outcome.off.upstream === outcome.shadow.upstream);
+    const sent = outcome.off.upstream;
+    check("new input is numbered with the most recent marked", sent.includes("[1] No, we're not talking about Java anymore.") && sent.includes("[2, most recent] What's new in Angular?"));
+  }
+
+  console.log("a tapped action is the whole request");
+  {
+    const { child } = startServer(9930, {});
+    await delay(600);
+    try {
+      upstreamBodies.length = 0;
+      await (await fetch("http://127.0.0.1:9930/v1/copilot/answer", { method: "POST", headers: auth, body: JSON.stringify({
+        question: "", newInput: [], passages: [], language: "en", targetWordRange: [40, 80], projectID: "p",
+        recentConversation: ["Could you compare Java 8 and Java 9?", "How does routing work in Angular?"],
+        requestedAction: "Give one concrete example of what you just explained.",
+        actionParentQuestion: "Compare Java 8 and 9", actionParentAnswer: "Java 8 brought lambdas.", actionParentAnswerVersion: 1,
+      }) })).text();
+      const sent = JSON.stringify(upstreamBodies);
+      check("TO ANSWER NOW says the action is the request, not the end of the conversation",
+        sent.includes("this request is only the REQUESTED ACTION below") && !sent.includes("answer the end of CONVERSATION"));
+    } finally {
+      child.kill();
     }
   }
 

@@ -122,6 +122,17 @@ worse and was reverted. Not fixed by switching models silently: that is a separa
 Real-provider UI capture (opt-in, billed): `TEST_RUNNER_COINTERVIEW_LIVE_UI=1 xcodebuild test …
 -only-testing:prompterUITests/LiveProviderCaptureTests`. It drives Live with `-LiveScriptedSpeech`.
 
+## Latest-request priority (2026-09-24, morning)
+
+See pipeline §17. **Jev is OFF on Fly** for the owner's comparison test: `COPILOT_DECISION_MODE = "off"`
+in the mirror's `fly.toml`; to restore shadow, set `"shadow"` and deploy. Off and shadow were shown
+byte-identical in what the app receives and what the models are sent (`decisions-test`).
+
+Still limited: "the latest version of Angular" was stated as "Angular 17" in 1 of 8 final runs, and the
+Angular 1-vs-2 answer once called version 1 the rewrite — this answer model's knowledge, not the
+request. `[ClockAudit]` lines now carry a recognizer id and start time, so interleaved timelines can
+be told apart next time; no duplicate recognizer was found in the code, and none is assumed.
+
 ## Evaluation — what is and is not known
 
 Held-out (52 synthetic cases), real calls on both sides, identical snapshots — pipeline §15:

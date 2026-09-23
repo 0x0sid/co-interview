@@ -101,6 +101,14 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
 
         let startTime = Date()
         let transcriptStream = stream
+        #if DEBUG
+        // Which recognizer a `[ClockAudit]` line came from. Its `observed` clock restarts at each
+        // recognizer's own start, so two interleaved timelines are either one recognizer restarted
+        // (a resume, a new session) or two running at once — and only an identity tells them apart.
+        let auditInstance = String(UUID().uuidString.prefix(6))
+        let auditStarted = ISO8601DateFormatter().string(from: startTime)
+        print("[ClockAudit] recognizer=\(auditInstance) started=\(auditStarted)")
+        #endif
 
         workTask = Task {
             async let analyzing: Void = {
@@ -136,8 +144,8 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
                         if let audioRange = result.text.runs[\.audioTimeRange].compactMap(\.0).last {
                             let audioEnd = CMTimeGetSeconds(audioRange.end)
                             print(String(
-                                format: "[ClockAudit] observed=%7.3fs audioEnd=%7.3fs lag=%+.3fs isFinal=%@ chars=%d",
-                                elapsed, audioEnd, elapsed - audioEnd,
+                                format: "[ClockAudit] recognizer=%@ observed=%7.3fs audioEnd=%7.3fs lag=%+.3fs isFinal=%@ chars=%d",
+                                auditInstance, elapsed, audioEnd, elapsed - audioEnd,
                                 result.isFinal ? "Y" : "N", text.count))
                         }
                         #endif

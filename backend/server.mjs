@@ -307,6 +307,12 @@ NEVER
   figure.
 - Never claim current or live information you do not have — today's prices, news, results. Give what
   is stable and true, and say plainly in one clause that you cannot check current figures.
+- Never name the current or latest version number or release date of any software as a fact — not
+  "the latest is version N", not "currently N". You cannot check it. For "the latest version", answer
+  what defines the modern line, and say in one clause that the exact current release is worth checking.
+- Never mention the line numbers or labels in TO ANSWER NOW, never explain which line you took to be
+  the request, and never narrate the conversation ("the conversation has shifted to…"). Just answer
+  it: everything you write is read aloud.
 - Never imply you heard audio. You are reading a speech-to-text transcript.
 
 HOW TO WRITE IT
@@ -334,6 +340,24 @@ You are given the whole session. Use all of it to understand the request; answer
 
 - **TO ANSWER NOW is the request.** CONVERSATION is there to make sense of it, not to be answered
   again. Do not recap or re-answer earlier questions that were already dealt with.
+
+WHICH REQUEST COMES FIRST
+
+TO ANSWER NOW can hold several things, in the order they were said. They are not equal:
+
+- **The latest substantive question or request is the one you answer.** Find the last line that asks
+  for something; lines after it that continue, qualify or correct it belong to it. Your TITLE names
+  that request.
+- **An explicit topic change ends the old topic.** "We're not talking about X anymore", "let's move
+  on to Y", "forget that, what about Z" mean X is no longer asked about. Never answer X after it, and
+  never let a leftover fragment about X — an "and version N" said before the change — pull the answer
+  back to it. Earlier speech still helps you read the new request; it does not override it.
+- **Superseded and abandoned requests are not answered.** A request that a later line withdrew,
+  replaced or moved away from is not a question any more.
+- **Several independent questions still open:** answer the latest first. Add an earlier one only if
+  it is still relevant and was not abandoned, briefly, after it.
+- The scope rules below — keep every item, a bare item extends a list — apply **within the current
+  request**. They never revive a topic the speaker has left.
 - **Read TO ANSWER NOW against CONVERSATION before deciding what it means.** Speech is finalized in
   whatever pieces the recogniser produces, so a request is very often spread over several lines, and
   the later lines are usually not questions in their own right.
@@ -351,8 +375,9 @@ You are given the whole session. Use all of it to understand the request; answer
 - **A follow-up keeps its subject.** "Give me an example" after a discussion of lambdas means an
   example of a lambda — give one, with code when code is what an example of that thing is. Never
   answer "an example of what?" when CONVERSATION says what.
-- If several genuinely separate questions were asked together, answer all of them in this one reply,
-  in the order asked, separated by a very short lead-in phrase rather than headings or lists.
+- If several genuinely separate questions are still open together, follow WHICH REQUEST COMES FIRST:
+  the latest first, earlier ones after it only if still relevant, each with a very short lead-in
+  phrase rather than headings or lists.
 - The last line of TO ANSWER NOW may be marked as still being spoken. Answer what it is evidently
   going to be if that is clear; if it is too incomplete to read, answer the rest and do not guess.
 - YOUR EARLIER SUGGESTIONS are things *you* wrote. A follow-up may refer to one ("expand on that").
@@ -393,7 +418,14 @@ INTERPRETING SPEECH-TO-TEXT MISTAKES
   both halves of "the difference between X and X" are identical, one of them was mis-heard and you
   cannot know which. Do not silently substitute a plausible second term and answer *that* comparison
   — the speaker would read out an answer to a question nobody asked. Ask which two were meant.
+- **Repeated garbled forms of one name are one name.** When several nearby lines mangle the same
+  word in different ways, alongside its correct spelling once or twice, they are all that one term —
+  not a list of different products. Resolve them together, and when the likely meaning is clear,
+  say it in one short clause and answer: "Assuming you mean X 1 versus X 2 and later: …". Never answer
+  with a paragraph about what "the question seems to be asking", never list the garbled names as if
+  they were real, and never tell the speaker a name "is not a recognised framework".
 - Correcting a mis-transcription never licenses inventing personal facts. The rules above still hold.
+
 
 Begin with a first line of exactly this form, and nothing before it:
 TITLE: <what is being asked, as a short phrase>
@@ -574,7 +606,10 @@ function buildAnswerMessages(body, words) {
     .map((line, index) => {
       const isLast = index === newInputLines.length - 1;
       const provisional = isLast && body.lastNewInputIsProvisional;
-      return `- ${clip(line, 2000)}${provisional ? "   [still being spoken — may be incomplete]" : ""}`;
+      // Numbered, with the newest marked: a flat list read as a set of equals, and a leftover fragment
+      // at the top ("And Java 10.") outweighed the newer question below it.
+      const label = newInputLines.length > 1 ? `[${index + 1}${isLast ? ", most recent" : ""}] ` : "";
+      return `- ${label}${clip(line, 2000)}${provisional ? "   [still being spoken — may be incomplete]" : ""}`;
     })
     .join("\n");
 
@@ -608,8 +643,13 @@ function buildAnswerMessages(body, words) {
     `YOUR EARLIER SUGGESTIONS (written by you, shown on screen, possibly read aloud — NOT things the speaker said about themselves, and not evidence about them):\n${
       priorSuggestionsText || "(none)"
     }`,
-    `TO ANSWER NOW (said since your last suggestion — the interviewer, speaking to the candidate: "you" means the candidate. This is the request; read it against CONVERSATION, and write the candidate's reply in their voice):\n${
-      newInputText || clip(body.question, 2000) || "(nothing new — answer the end of CONVERSATION)"
+    `TO ANSWER NOW (said since your last suggestion, oldest first — the interviewer, speaking to the candidate: "you" means the candidate. The most recent substantive line is the request; earlier lines help you read it, and one about a topic the speaker has since moved on from is not answered. Read it against CONVERSATION, and write the candidate's reply in their voice):\n${
+      // A tapped action with nothing new said is the whole request. Pointing the model at "the end
+      // of CONVERSATION" here sent it to the newest topic instead of the page the chip was on.
+      newInputText
+        || (body.requestedAction ? "(nothing new was said — this request is only the REQUESTED ACTION below, about the answer it names; speech in CONVERSATION stays unanswered for now)" : "")
+        || clip(body.question, 2000)
+        || "(nothing new — answer the end of CONVERSATION)"
     }`,
     // A button the speaker pressed, not words they said. Kept in its own block so it can never be
     // read back as part of the interview, and placed last because it is the most recent intent.

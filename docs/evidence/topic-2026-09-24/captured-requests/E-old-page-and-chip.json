@@ -1,0 +1,149 @@
+{
+  "requests" : [
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "CF3271D3-0EF4-47DC-807A-4A3B660D14DB",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you compare Java 8 and Java 9?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you compare Java 8 and Java 9?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "53FFBCEC-22FD-40C6-AD9B-0C71BCBB63D6",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What's the difference between Angular one and Angular two?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What's the difference between Angular one and Angular two?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "163AFB45-79FE-4AEA-8417-D1FE7919021B",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And how does routing work in Angular?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell.",
+          "AngularJS 1.x is a JavaScript MVC framework built on two-way binding and scopes. Angular 2 and later is a rewrite in TypeScript built on components and a new change-detection model."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And how does routing work in Angular?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?",
+          "And how does routing work in Angular?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "actionParentAnswer" : "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell.",
+        "actionParentAnswerVersion" : 1,
+        "actionParentQuestion" : "Preparing answer…",
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "E7EAB06C-4910-487F-84D2-244E574DF119",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell.",
+          "AngularJS 1.x is a JavaScript MVC framework built on two-way binding and scopes. Angular 2 and later is a rewrite in TypeScript built on components and a new change-detection model.",
+          "Angular routing maps URLs to components."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Give one concrete example of what you just explained.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?",
+          "And how does routing work in Angular?"
+        ],
+        "requestedAction" : "Give one concrete example of what you just explained.",
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "chip:example"
+    }
+  ],
+  "scenario" : "E-old-page-and-chip"
+}

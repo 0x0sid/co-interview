@@ -894,3 +894,36 @@ nothing) instead of "Give an example" / "Go deeper". Structural, reported by the
 from wording.
 
 Evidence and the open issue: `docs/evidence/phone-2026-09-24/` and the session handoff.
+
+---
+
+## 17. The latest request comes first (2026-09-24)
+
+**Supersedes §14's "one tap answers every open question" where they conflict.**
+
+Phone screenshots showed Angular speech — including "No, we're not talking about Java anymore" —
+answered with Java pages. The screenshots were from the build and backend of 23:18, before this
+day's changes, so they were reproduced rather than read:
+
+- The app's **real request builder** (`RequestReplayCaptureTests`, real coordinator, live feed and
+  screen model) sends the whole transcript, in order, with the Angular speech as new input and Java
+  as context. It is not the fault. With the phone's own wording, "And Java 10." — said after the Java
+  answer — is still unanswered, and is the *first* new line.
+- Those exact bytes replayed against the 23:18 prompt (`0b912f7`) came back "Compare Java versions and
+  Angular", and against the prompt deployed that morning (`266bef1`) "Compare Java 7, 8, 9, and 10",
+  3/3 each. **Cause:** nothing ranked the newest request above a leftover fragment; "answer every
+  open question, in the order asked" and the scope rules added in §16 ("never drop an item", "a bare
+  item extends the comparison") pulled the old topic forward.
+- A follow-up chip on an old page answered the newest topic: with nothing new said, TO ANSWER NOW
+  told the model to "answer the end of CONVERSATION".
+
+**Now:** the rules rank requests — the latest substantive request is the one answered, an explicit
+topic change ends the old topic, abandoned requests are not answered, earlier open questions come
+after and only if still relevant, and scope rules apply within the current request only. New input
+is numbered with the most recent marked. A tapped action with nothing new said is labelled as the
+whole request. Repeated garbled forms of one name are resolved together, with a one-clause
+assumption; latest version numbers are never stated as fact; the model never narrates the
+conversation or its choice of line.
+
+Replay of the captured requests, same model (`google/gemini-2.5-flash-lite`): before 12/21 met on
+`266bef1`; after 71/72 over two passes of 4×. Evidence: `docs/evidence/topic-2026-09-24/`.

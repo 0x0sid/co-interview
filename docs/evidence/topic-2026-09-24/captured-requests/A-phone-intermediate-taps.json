@@ -1,0 +1,140 @@
+{
+  "requests" : [
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B0BC04AD-F8BE-4961-B1FB-EEF065A87FF6",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you compare Java 8 and Java 9? And Java 7.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "13CEECA8-73BF-4845-963C-8E622212CC08",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7.",
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "BE1691E8-8D9C-436D-B428-D8CD9AECEBD9",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "I'mura 2 and I'm gonna free.",
+          "The 3rd version, not free.",
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angura GS.",
+          "Angula.",
+          "Angular.",
+          "GS.",
+          "What's the difference between angular one, 2 and the latt version?",
+          "Please tell me more."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell.",
+          "Could you please clarify which Java versions you would like me to compare?"
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "I'mura 2 and I'm gonna free. The 3rd version, not free. No, we're not talking about Java anymore. We're talking about Angura GS. Angula. Angular. GS. What's the difference between angular one, 2 and the latt version? Please tell me more.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7.",
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?",
+          "I'mura 2 and I'm gonna free.",
+          "The 3rd version, not free.",
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angura GS.",
+          "Angula.",
+          "Angular.",
+          "GS.",
+          "What's the difference between angular one, 2 and the latt version?",
+          "Please tell me more."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    }
+  ],
+  "scenario" : "A-phone-intermediate-taps"
+}

@@ -1,0 +1,120 @@
+{
+  "requests" : [
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "BCF08A25-1708-48A1-9E5C-6C0221F408B7",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "14046555-158D-4FF1-A7DB-2C6C41792215",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And the latest version?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "AngularJS 1.x is a JavaScript MVC framework built on two-way binding and scopes. Angular 2 and later is a rewrite in TypeScript built on components and a new change-detection model."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And the latest version?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?",
+          "And the latest version?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "2C1AC7C9-9EF5-47B9-9867-51ACB3ACBD26",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Let's switch topics. How does Kubernetes handle rolling updates?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "AngularJS 1.x is a JavaScript MVC framework built on two-way binding and scopes. Angular 2 and later is a rewrite in TypeScript built on components and a new change-detection model.",
+          "Recent Angular releases add standalone components and signals."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Let's switch topics. How does Kubernetes handle rolling updates?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?",
+          "And the latest version?",
+          "Let's switch topics. How does Kubernetes handle rolling updates?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    }
+  ],
+  "scenario" : "BCD-garbled-followup-newtopic"
+}

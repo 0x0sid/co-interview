@@ -1,0 +1,79 @@
+{
+  "requests" : [
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "5A4D1419-794E-4CFD-B6AC-14F0489D8B71",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you compare Java 8 and Java 9? And Java 7.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    },
+    {
+      "body" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "25E6D393-171E-4231-8DC6-2850BAAE3F24",
+        "diagnosticsSessionID" : "8E5A619E-720C-4782-8693-FA5D0637DE51",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angular.",
+          "What's the difference between Angular one, two and the latest version?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "Java 7 added try-with-resources and the diamond operator. Java 8 brought lambdas and streams. Java 9 introduced modules and JShell."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "No, we're not talking about Java anymore. We're talking about Angular. What's the difference between Angular one, two and the latest version?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7.",
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angular.",
+          "What's the difference between Angular one, two and the latest version?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      },
+      "label" : "generate"
+    }
+  ],
+  "scenario" : "A-topic-change"
+}
