@@ -122,6 +122,21 @@ worse and was reverted. Not fixed by switching models silently: that is a separa
 Real-provider UI capture (opt-in, billed): `TEST_RUNNER_COINTERVIEW_LIVE_UI=1 xcodebuild test …
 -only-testing:prompterUITests/LiveProviderCaptureTests`. It drives Live with `-LiveScriptedSpeech`.
 
+## Focused Jev decisions, in shadow (2026-09-24, late morning)
+
+See pipeline §18. **Fly: `COPILOT_DECISION_MODE = "shadow"`, session opt-in unset.** Rollback: set
+`"off"` in the mirror's `fly.toml` and deploy. Limited-active for one session needs
+`COPILOT_DECISION_SESSION_OPT_IN = "1"` *and* the app's Debug toggle "Apply Jev decisions" — not
+enabled, because on the frozen held-out dialogues the decisions were accurate (relation 100%,
+accepted 100% correct) but answers did not improve (A 83/86, C 81/86).
+
+Also fixed: lines finalized after partial results never reached the screen as final, so requests
+dropped them unless they were the newest line (`FinalizedPartialTests`).
+
+Evidence: `docs/evidence/decisions-focused-2026-09-24/` (captured requests, per-tap decisions and
+answers). Dialogues: `backend/eval/dialogues/{dev,heldout,regression}` — held-out frozen in `f528f45`;
+it has now been used once, so new prompt wording needs **new** held-out dialogues.
+
 ## Latest-request priority (2026-09-24, morning)
 
 See pipeline §17. **Jev is OFF on Fly** for the owner's comparison test: `COPILOT_DECISION_MODE = "off"`
