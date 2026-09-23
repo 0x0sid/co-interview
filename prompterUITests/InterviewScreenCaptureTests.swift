@@ -178,13 +178,18 @@ final class InterviewScreenCaptureTests: XCTestCase {
         let anyChip = app.buttons.matching(
             NSPredicate(format: "label IN %@", titles)
         ).firstMatch
-        for _ in 0..<8 where !anyChip.exists { app.swipeUp() }
         XCTAssertTrue(anyChip.waitForExistence(timeout: 10),
                       "a finished answer offered no follow-up actions")
+
+        // Scrolled until the chip is **hittable**, not merely present. An element below the fold is
+        // already in the hierarchy, so stopping at `exists` left it off-screen — which both failed
+        // the tap check and produced a screenshot of the top of the page.
+        for _ in 0..<8 where !anyChip.isHittable { app.swipeUp() }
+        XCTAssertTrue(anyChip.isHittable,
+                      "a follow-up chip could not be scrolled clear of the floating toolbar")
         save(app, "10-follow-up-actions")
 
         XCTAssertFalse(anyChip.label.isEmpty, "a follow-up chip has no label")
-        XCTAssertTrue(anyChip.isHittable, "a follow-up chip cannot be tapped")
     }
 
     /// The end of a long answer can be scrolled out from under the floating toolbar.
