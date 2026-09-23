@@ -347,9 +347,20 @@ final class CopilotEntryUITests: XCTestCase {
 
         openCopilot(app)
 
-        let live = app.buttons["Start live, LIVE mode"]
-        XCTAssertTrue(live.waitForExistence(timeout: 5))
-        XCTAssertFalse(live.isEnabled, "Live was offered on a screen with no provider wired to it")
+        // Without a backend, Live may still *listen* — transcription and detection work on their own,
+        // and `LiveReadiness` deliberately offers that half as "listening only" — but it must never
+        // offer the full, answer-generating Live. Which of the two states appears depends on whether
+        // this machine can listen (microphone and speech permission, on-device model), so both are
+        // asserted, and neither lets an unqualified "Start live" through.
+        let listenOnly = app.buttons["Start live (listening only), LIVE mode"]
+        let full = app.buttons["Start live, LIVE mode"]
+        XCTAssertTrue(listenOnly.waitForExistence(timeout: 5) || full.waitForExistence(timeout: 1),
+                      "no Live action on the start screen")
+        if listenOnly.exists {
+            XCTAssertFalse(full.exists, "full Live was offered alongside listening-only with no provider wired to it")
+        } else {
+            XCTAssertFalse(full.isEnabled, "Live was offered on a screen with no provider wired to it")
+        }
         // `LiveReadiness` replaced the old flat "Connection to AI service required" line with the
         // specific blocker, so this asserts that a reason naming the missing backend is shown rather
         // than one exact sentence.

@@ -72,11 +72,31 @@ HTTPS through `gh`.
   `COINTERVIEW_LIVE_DIAGNOSTICS=1`). An earlier full run with backend suites competing for the CPU
   took 21 minutes and failed 27 tests, every one a 3-second `waitUntil` timeout; run alone the same
   tests pass in 55 s. **Run the iOS suites on an otherwise idle machine.**
-- `prompterUITests`, run alone: **18 passed, 2 failed** — both inherited:
-  `testCaptureBarePromptScreen` (below) and `testLiveStateIsReportedHonestlyWhenUnconfigured`, which
-  waits for "Start live, LIVE mode" while a simulator with microphone and speech permission shows the
-  listen-only title "Start live (listening only)" (`CopilotStartScreen` → `LiveReadiness.isListenOnly`).
-  Code this increment did not touch; not fixed here.
+- `prompterUITests`, run alone: **18 passed, 2 failed**. Both failures **reproduce on the baseline
+  `0b912f7`** at the same lines (checked by running them on an extracted copy of that commit):
+  - `testLiveStateIsReportedHonestlyWhenUnconfigured` — **fixed.** With no backend, a simulator that
+    can listen shows "Start live (listening only)", enabled — the listen-only state `LiveReadiness`
+    documents as intended. The test predated it and waited for "Start live". It now asserts, for
+    whichever state the machine is in, that full answer-generating Live is never offered without a
+    provider and that the reason is shown. Passes.
+  - `testCaptureBarePromptScreen` — still failing, inherited (below).
+
+## Phone (2026-09-24)
+
+The old `talk.cointerview` install (team `HKRALWACQ8`, test data only) was removed with the owner's
+authorisation and **Neverblank** installed: Debug build of `c35e924` (`GitCommitHash` in its
+Info.plist), signed `P9Q6984LRS.talk.cointerview`, backend host `backend--d7y3w.fly.dev`. Prompter
+(`talk.prompter`) was not touched.
+
+**Restore: succeeded at the database level.** The backed-up `CoInterview.store` (+ WAL, SHM) was copied
+into the new container before first launch. After launching, the store read back from the phone
+passes `PRAGMA integrity_check` and still holds exactly the backed-up rows — one script with the
+original UUID `EFEE56D8…D232` and creation time, one settings row — so the app opened it rather than
+seeding a fresh one. The data was test data: the inherited sample script. The backup stays at
+`/Users/sid/Desktop/cointerview-device-backup-2026-09-24/`.
+
+Build note: as macOS user `sid`, the build-stamp script's `git` refuses the `sidousan` checkout and
+stamps "unknown"; build with `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*'`.
 
 ## Evaluation — what is and is not known
 
@@ -100,7 +120,7 @@ labelled by one author, and active mode's 1.2 s deadline would fall back often. 
 
 | Item | State |
 | --- | --- |
-| **iPhone install** | **Blocked by iOS, not signing.** The installed copy was signed by `HKRALWACQ8`; iOS refuses a cross-team upgrade (`MismatchedApplicationIdentifierEntitlement`). Installing requires removing it, which deletes its data. A read-only copy of its data container's store is at `/Users/sid/Desktop/cointerview-device-backup-2026-09-24/` (`CoInterview.store` + `-wal` + `-shm`). **Restoration is unverified**: the three files are a copy of the SwiftData store, not a tested backup, and nothing has been restored from them. Removal is the owner's decision (not yet authorised); after it, restore would be `xcrun devicectl device copy to --domain-type appDataContainer --domain-identifier talk.cointerview` into `Library/Application Support/` before first launch, then check the data in the app |
+| ~~iPhone install~~ | **Done 2026-09-24** — see "Phone" below. Previously: blocked by iOS, not signing. The installed copy was signed by `HKRALWACQ8`; iOS refuses a cross-team upgrade (`MismatchedApplicationIdentifierEntitlement`). Installing requires removing it, which deletes its data. A read-only copy of its data container's store is at `/Users/sid/Desktop/cointerview-device-backup-2026-09-24/` (`CoInterview.store` + `-wal` + `-shm`). **Restoration is unverified**: the three files are a copy of the SwiftData store, not a tested backup, and nothing has been restored from them. Removal is the owner's decision (not yet authorised); after it, restore would be `xcrun devicectl device copy to --domain-type appDataContainer --domain-identifier talk.cointerview` into `Library/Application Support/` before first launch, then check the data in the app |
 | Dark-mode screenshots | Not captured (deliberately not resumed) |
 | `COINTERVIEW_TOKENS` | Still the documented placeholder in some local configs; rotate on Fly and in `Local-Debug.xcconfig` together |
 
