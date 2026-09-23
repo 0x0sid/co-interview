@@ -925,5 +925,6 @@ whole request. Repeated garbled forms of one name are resolved together, with a 
 assumption; latest version numbers are never stated as fact; the model never narrates the
 conversation or its choice of line.
 
-Replay of the captured requests, same model (`google/gemini-2.5-flash-lite`): before 12/21 met on
-`266bef1`; after 71/72 over two passes of 4×. Evidence: `docs/evidence/topic-2026-09-24/`.
+Replay of the captured requests, same model (`google/gemini-2.5-flash-lite`), same checks: the 23:18
+prompt met 17/27 and the morning prompt 19/27 (both 0/3 on the phone's intermediate tap and 0/3 on the
+chip); after, 71/72 over two passes of 4×. Evidence: `docs/evidence/topic-2026-09-24/`.
