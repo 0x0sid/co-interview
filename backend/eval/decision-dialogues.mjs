@@ -26,7 +26,7 @@ import { evaluate, costUSD } from "../providers/typesafe.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 function args(argv) {
-  const o = { captured: "", split: "heldout", answers: "", token: "", decisionRepeat: "3", answerRepeat: "2", relation: "", parent: "", withdraws: "", tune: false, out: "", label: "" };
+  const o = { captured: "", split: "heldout", answers: "", token: "", decisionRepeat: "3", answerRepeat: "2", relation: "", parent: "", withdraws: "", only: "", tune: false, out: "", label: "" };
   for (let i = 2; i < argv.length; i += 1) {
     const key = argv[i].replace(/^--/, "");
     if (key === "tune") { o.tune = true; continue; }
@@ -113,7 +113,8 @@ async function main() {
   const thresholds = { relation: Number(o.relation || 0.5), parent: Number(o.parent || 0.5), withdraws: Number(o.withdraws || 0.7) };
 
   const dir = join(o.captured, o.split);
-  const dialogues = readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")));
+  const dialogues = readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")))
+    .filter((d) => !o.only || o.only.split(",").includes(d.id));
   const rows = [];
   for (const dialogue of dialogues) {
     for (const [index, tap] of dialogue.taps.entries()) {

@@ -1,0 +1,536 @@
+{
+ "summary": {
+  "split": "regression",
+  "label": "before-regression",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-23T23:54:09.082Z",
+  "conversations": 1,
+  "taps": 3,
+  "chips": 0,
+  "decisionRepeat": 1,
+  "answerRepeat": 4,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 3,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "66.7% (2/3)",
+   "parentAccuracy": "100.0% (3/3)",
+   "parentAccuracyWhereAParentExists": "100.0% (1/1)",
+   "accepted": "66.7% (2/3)",
+   "acceptedCorrect": "100.0% (2/2)",
+   "latencyP50": 448,
+   "latencyP95": 498,
+   "readyAtTapIfTapComes1500msAfterSpeech": "100.0% (3/3)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (3/3)",
+   "costUSD": 0.000143
+  },
+  "legacy": {
+   "calls": 3,
+   "failed": 0,
+   "relationAccuracy": "100.0% (3/3)",
+   "parentAccuracy": "100.0% (3/3)",
+   "parentAccuracyWhereAParentExists": "100.0% (1/1)",
+   "latencyP50": 429,
+   "latencyP95": 485
+  },
+  "answers": {
+   "A_correctCurrentRequest": "100.0% (12/12)",
+   "C_correctCurrentRequest": "100.0% (12/12)",
+   "C_answersActuallyShapedByADecision": 8,
+   "topicSwitchTaps": {
+    "A": "100.0% (8/8)",
+    "C": "100.0% (8/8)"
+   },
+   "attachTaps": {
+    "A": "—",
+    "C": "—"
+   },
+   "chips": "—",
+   "firstSentenceRelevantTaps": "—"
+  },
+  "tuning": null
+ },
+ "rows": [
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Java/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Could you compare Java 8 and Java 9?",
+    "And Java 7."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 498,
+     "cost": 0.000033096,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.55,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.55,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": false,
+      "reason": "\"continuation\" without a matching earlier request",
+      "interpretation": null
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 350,
+     "usage": {
+      "input_tokens": 1030,
+      "output_tokens": 149,
+      "cost": 0.00004326
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 840,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 8 introduced significant features like lambda expressions, the Stream API, and default methods in interfaces. Java 9 built upon this with modules (Project Jigsaw) for better code organization and encapsulation, private methods in interfaces, and the reactive streams API. Java 7, released earlier, focused on smaller improvements such as the diamond operator for generics, try-with-resources for automatic resource management, and improved exception handling.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 736,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "The primary differences between Java 7, 8, and 9 lie in their feature sets. Java 7 introduced features like the try-with-resources statement and improved exception handling. Java 8 was a major release, bringing functional programming capabilities with lambda expressions, the Stream API, and default methods in interfaces. Java 9 continued this evolution with modules (Project Jigsaw), the `var` keyword for local variable type inference, and reactive streams.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 707,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "You're asking for a comparison of Java 7, 8, and 9. Java 8 introduced significant features like lambdas, streams, and the new Date and Time API. Java 9 built on this with modules (Project Jigsaw), the `var` keyword for local variable type inference, and improvements to the Stream API. Each version brought advancements in performance, security, and language features.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 785,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "You're asking for a comparison of Java 7, 8, and 9. Java 8 introduced significant features like lambdas, streams, and the default method in interfaces, which greatly improved code conciseness and functional programming capabilities. Java 9 built on this with modules (Project Jigsaw) for better code organization and security, the `var` keyword for local variable type inference, and improvements to the Stream API. Each version brought advancements in performance, security, and developer productivity.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 840,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 8 introduced significant features like lambda expressions, the Stream API, and default methods in interfaces. Java 9 built upon this with modules (Project Jigsaw) for better code organization and encapsulation, private methods in interfaces, and the reactive streams API. Java 7, released earlier, focused on smaller improvements such as the diamond operator for generics, try-with-resources for automatic resource management, and improved exception handling.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    },
+    {
+     "status": 200,
+     "ms": 736,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "The primary differences between Java 7, 8, and 9 lie in their feature sets. Java 7 introduced features like the try-with-resources statement and improved exception handling. Java 8 was a major release, bringing functional programming capabilities with lambda expressions, the Stream API, and default methods in interfaces. Java 9 continued this evolution with modules (Project Jigsaw), the `var` keyword for local variable type inference, and reactive streams.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    },
+    {
+     "status": 200,
+     "ms": 707,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "You're asking for a comparison of Java 7, 8, and 9. Java 8 introduced significant features like lambdas, streams, and the new Date and Time API. Java 9 built on this with modules (Project Jigsaw), the `var` keyword for local variable type inference, and improvements to the Stream API. Each version brought advancements in performance, security, and language features.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    },
+    {
+     "status": 200,
+     "ms": 785,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "You're asking for a comparison of Java 7, 8, and 9. Java 8 introduced significant features like lambdas, streams, and the default method in interfaces, which greatly improved code conciseness and functional programming capabilities. Java 9 built on this with modules (Project Jigsaw) for better code organization and security, the `var` keyword for local variable type inference, and improvements to the Stream API. Each version brought advancements in performance, security, and developer productivity.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java versions|which Java/i"
+    ],
+    "parent": [
+     "none"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "And Java 10.",
+    "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+    "which one it is?",
+    "And what about Angura?",
+    "Could you tell me the difference between Aguila one Angular?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 448,
+     "cost": 0.000049434,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.91,
+     "parent": "none",
+     "parentConfidence": 0.87,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.91,
+      "parent": "none",
+      "parentConfidence": 0.87,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 429,
+     "usage": {
+      "input_tokens": 1294,
+      "output_tokens": 187,
+      "cost": 0.000054348
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 651,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases that introduced a new architecture, moving from AngularJS to a component-based framework. Subsequent versions have focused on performance improvements, developer experience, and new features like standalone components and improved server-side rendering.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 853,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases that introduced a new architecture, moving away from AngularJS. Angular 2 was a complete rewrite, and subsequent versions have built upon that foundation, with ongoing improvements to performance, tooling, and features.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 590,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases, with Angular 2 being a complete rewrite of Angular 1. Subsequent versions have focused on incremental improvements and new features.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 724,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases, with Angular 2 being a complete rewrite of Angular 1. Subsequent versions have built upon the foundation of Angular 2, introducing improvements and new features. The term \"Ongula\" and \"Oula\" appear to be mis-transcriptions; if you meant Angular 1 and Angular 2, the primary difference is the architectural shift.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 613,
+     "title": "Angular versions comparison",
+     "text": "The latest version of Angular is not specified. Could you please clarify which version you are referring to as the \"latest\"?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 572,
+     "title": "Angular versions comparison",
+     "text": "I can explain the differences between Angular versions. To do that, I need to know which specific versions you're interested in. Could you clarify if you mean Angular 1 and Angular 2, or perhaps a different set of versions?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 482,
+     "title": "Angular versions comparison",
+     "text": "The request is unclear. Could you please specify which versions of Angular you would like me to compare?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 523,
+     "title": "Angular versions comparison",
+     "text": "I can help with that. Could you please specify which version of Angular you are referring to as \"Ongula one\" and \"Oula 2\"? Also, could you clarify what you mean by \"Angura\"?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java \\d|Java versions/"
+    ],
+    "parent": [
+     "req2",
+     "none"
+    ],
+    "relation": [
+     "new_request",
+     "continuation"
+    ]
+   },
+   "newInput": [
+    "I'mura 2 and I'm gonna free.",
+    "The 3rd version, not free.",
+    "No, we're not talking about Java anymore.",
+    "We're talking about Angura GS.",
+    "Angula.",
+    "Angular.",
+    "GS.",
+    "What's the difference between angular one, 2 and the latt version?",
+    "Please tell me more."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 384,
+     "cost": 0.000060354,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.67,
+     "parent": "req2",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2",
+      "AF71483F-FBF5-48BB-956B-627412D680BC": "req3"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.67,
+      "parent": "2726622A-9506-412D-9EF1-931D74A3EB46",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 485,
+     "usage": {
+      "input_tokens": 1530,
+      "output_tokens": 194,
+      "cost": 0.00006426
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 655,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "The request is to compare Angular versions 1, 2, and the latest. To provide a comprehensive answer, I need to know which specific version is considered the \"latest\" in this context. Could you please clarify what you mean by the latest version?",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 727,
+     "title": "Angular versions comparison",
+     "text": "The request seems to be about comparing different versions of Angular. To provide a helpful comparison, could you please specify which versions of Angular you're interested in? For example, are you looking to compare Angular 1.x with later versions like Angular 2+, or perhaps different major releases within the Angular 2+ era?",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 547,
+     "title": "Angular versions comparison",
+     "text": "The request seems to be about the differences between Angular 1, Angular 2, and the latest version of Angular. Could you please specify which version you consider the \"latest\"?",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 640,
+     "title": "Angular versions comparison",
+     "text": "The request is to compare Angular versions. Could you please specify which versions of Angular you're interested in comparing? For example, are you asking about Angular 1, Angular 2, and the latest version, or a different set of versions?",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 753,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "AngularJS (version 1) and Angular (versions 2 and later) are fundamentally different frameworks. AngularJS is a JavaScript-based framework, while Angular is a complete rewrite in TypeScript. Key differences include architecture, performance, and features. Angular 2 introduced a component-based architecture, improved performance, and a more modern development experience. The \"latest version\" refers to the most recent stable release of Angular, which continues to build upon the foundation of Angular 2 with ongoing improvements and new features.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 777,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "AngularJS (version 1) and Angular (versions 2 and later) are fundamentally different frameworks. AngularJS is a JavaScript-based framework, while Angular is a complete rewrite in TypeScript. Key differences include architecture, performance, and language. Angular 2 introduced a component-based architecture, improved performance, and a more modular design compared to AngularJS. The \"latest version\" refers to the current release of Angular, which continues to evolve with new features and improvements, but the core architectural shift happened between AngularJS and Angular 2.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 564,
+     "title": "Angular versions comparison",
+     "text": "The request seems to be asking for a comparison of Angular versions, specifically Angular 1, Angular 2, and the latest version. Could you please specify which is the latest version you are interested in?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 498,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "The request seems to be asking for a comparison of Angular versions 1, 2, and the latest release. Could you please specify which version you consider to be the \"latest\"?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  }
+ ]
+}

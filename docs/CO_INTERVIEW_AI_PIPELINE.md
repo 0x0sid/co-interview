@@ -1018,3 +1018,18 @@ multi-line first request and the withdrawal direction were fixed on development 
 Earlier harness artifact, disclosed: the first held-out run answered chips against placeholder parent
 answers (the capture stub's text), which made every chip miss; the stub now names what it was asked,
 and only answers were re-run. Decisions and thresholds were unaffected.
+
+### Continuation means "answer the addition" (2026-09-24, midday)
+
+The held-out run showed an applied `continuation` making the model re-explain the parent request
+before the addition ("And compound indexes" answered as MongoDB indexing first). The interpretation
+is now a small contract with separate parts — **latest request or addition**, **parent context**
+(marked "already answered — do not repeat that answer" when it was), **still applies**, and any
+**correction** or **withdrawal** — labelled as inferred, with the raw speech still in TO ANSWER NOW.
+The baseline rules say the same without Jev: an addition to an answered request leads with the
+addition; if the parent is still unanswered in the same tap, the two are one request.
+
+Regression evidence, not a fresh benchmark (these cases were seen while working on it), same model,
+answers ×4: `ho-en-04#1` with the interpretation applied 2/4 → **4/4**; the other 23 targeted and
+regression taps 4/4 before and after, for both A and C; the Java and note phone cases unchanged
+(`docs/evidence/continuation-2026-09-24/`). Jev stays in shadow.

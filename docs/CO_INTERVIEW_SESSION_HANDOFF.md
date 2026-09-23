@@ -122,6 +122,11 @@ worse and was reverted. Not fixed by switching models silently: that is a separa
 Real-provider UI capture (opt-in, billed): `TEST_RUNNER_COINTERVIEW_LIVE_UI=1 xcodebuild test …
 -only-testing:prompterUITests/LiveProviderCaptureTests`. It drives Live with `-LiveScriptedSpeech`.
 
+## Continuation contract (2026-09-24, midday)
+
+Backend-only: an addition is answered first, with its parent as context (pipeline §18, last part).
+The phone keeps app `7db02bd`. Jev stays in shadow.
+
 ## Focused Jev decisions, in shadow (2026-09-24, late morning)
 
 See pipeline §18. **Fly: `COPILOT_DECISION_MODE = "shadow"`, session opt-in unset.** Rollback: set

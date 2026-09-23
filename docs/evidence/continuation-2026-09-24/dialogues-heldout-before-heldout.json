@@ -1,0 +1,1015 @@
+{
+ "summary": {
+  "split": "heldout",
+  "label": "before-heldout",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-23T23:53:04.965Z",
+  "conversations": 3,
+  "taps": 6,
+  "chips": 0,
+  "decisionRepeat": 1,
+  "answerRepeat": 4,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 6,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "100.0% (6/6)",
+   "parentAccuracy": "100.0% (6/6)",
+   "parentAccuracyWhereAParentExists": "100.0% (3/3)",
+   "accepted": "100.0% (6/6)",
+   "acceptedCorrect": "100.0% (6/6)",
+   "latencyP50": 577,
+   "latencyP95": 864,
+   "readyAtTapIfTapComes1500msAfterSpeech": "66.7% (4/6)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (6/6)",
+   "costUSD": 0.000238
+  },
+  "legacy": {
+   "calls": 6,
+   "failed": 0,
+   "relationAccuracy": "100.0% (6/6)",
+   "parentAccuracy": "100.0% (6/6)",
+   "parentAccuracyWhereAParentExists": "100.0% (3/3)",
+   "latencyP50": 415,
+   "latencyP95": 512
+  },
+  "answers": {
+   "A_correctCurrentRequest": "100.0% (24/24)",
+   "C_correctCurrentRequest": "91.7% (22/24)",
+   "C_answersActuallyShapedByADecision": 24,
+   "topicSwitchTaps": {
+    "A": "100.0% (4/4)",
+    "C": "100.0% (4/4)"
+   },
+   "attachTaps": {
+    "A": "100.0% (8/8)",
+    "C": "75.0% (6/8)"
+   },
+   "chips": "—",
+   "firstSentenceRelevantTaps": "75.0% (6/8)"
+  },
+  "tuning": null
+ },
+ "rows": [
+  {
+   "dialogue": "ho-en-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/garbage|collector|\\bGC\\b/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Can you explain how garbage collection works in Go?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 826,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "59A6FA00-20FF-4EFA-B9F4-3385F044F56E": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 512,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 818,
+     "title": "Garbage collection in Go",
+     "text": "Garbage collection in Go is a concurrent, tri-color, mark-and-sweep system. It works by identifying and reclaiming memory that is no longer in use by the program. The process involves marking all reachable objects and then sweeping away the unmarked ones. This happens concurrently with the application, minimizing pauses.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 686,
+     "title": "Garbage collection in Go",
+     "text": "Garbage collection in Go is a concurrent, tri-color mark-and-sweep system. It automatically reclaims memory that is no longer in use by the program. The process involves marking all reachable objects and then sweeping away the unmarked ones. This happens concurrently with the application, minimizing pauses.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 759,
+     "title": "How garbage collection works in Go",
+     "text": "Garbage collection in Go is an automatic memory management process that reclaims memory that is no longer in use by the program. Go uses a concurrent, tri-color mark-and-sweep garbage collector. It works by marking all reachable objects from the program's roots (like global variables and stack frames) and then sweeping away the unmarked objects, freeing their memory. This process runs concurrently with the application, minimizing pauses.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 667,
+     "title": "Garbage collection in Go",
+     "text": "Garbage collection in Go is a concurrent, tri-color, mark-and-sweep system. It automatically reclaims memory that is no longer in use by the program. The collector runs in the background, minimizing pauses and ensuring efficient memory management without manual intervention. This allows developers to focus on application logic rather than memory deallocation.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 754,
+     "title": "How garbage collection works in Go",
+     "text": "Garbage collection in Go is an automatic memory management system that reclaims memory that is no longer in use. It uses a concurrent, tri-color mark-and-sweep algorithm. This means it can identify and free up memory without stopping the entire program for extended periods. The process involves marking all reachable objects and then sweeping away the unmarked ones.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 750,
+     "title": "How garbage collection works in Go",
+     "text": "Garbage collection in Go is a concurrent, tri-color mark-and-sweep system. It automatically reclaims memory that is no longer in use by the program. The process involves marking all reachable objects from the program's roots (like global variables and stack frames) and then sweeping away any objects that were not marked. This happens concurrently with program execution, minimizing pauses.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 755,
+     "title": "How garbage collection works in Go",
+     "text": "Garbage collection in Go is a concurrent, tri-color mark-and-sweep system. It works by identifying live objects and reclaiming memory occupied by unreachable ones. The process involves marking all reachable objects starting from the program's roots, then sweeping through the heap to free unmarked objects. This happens concurrently with program execution, minimizing application pauses.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 773,
+     "title": "How garbage collection works in Go",
+     "text": "Garbage collection in Go is primarily handled by a concurrent, tri-color mark-and-sweep algorithm. When a program runs, the garbage collector identifies objects that are no longer reachable from the program's roots (like global variables and the call stack). It then reclaims the memory occupied by these unreachable objects, making it available for new allocations. This process happens concurrently with the program's execution, minimizing pauses.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "ho-en-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "firstMust": "/coroutine|Kotlin/i",
+    "must": [
+     "/coroutine/i"
+    ],
+    "mustNot": [
+     "/garbage collect/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "Okay, forget Go for a second.",
+    "Let's talk about Kotlin. How do coroutines differ from threads?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 458,
+     "cost": 0.000046788,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.31,
+     "labels": {
+      "59A6FA00-20FF-4EFA-B9F4-3385F044F56E": "req1",
+      "B14C4AE8-39BC-4F33-9796-AD29AD9DF656": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "59A6FA00-20FF-4EFA-B9F4-3385F044F56E",
+      "parentConfidence": 0.31,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 413,
+     "usage": {
+      "input_tokens": 1240,
+      "output_tokens": 185,
+      "cost": 0.00005208
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 698,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a way to write asynchronous code that looks sequential. They are lighter than threads, allowing for many more concurrent operations with less overhead. Threads are managed by the operating system and have a heavier context-switching cost. Coroutines are cooperative, meaning they yield control explicitly, while threads are preemptive.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 719,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a more lightweight concurrency primitive than threads. Threads are managed by the operating system and have significant overhead in terms of memory and context switching. Coroutines, on the other hand, are managed by the Kotlin runtime and allow for cooperative multitasking, meaning they yield control voluntarily. This makes them much more efficient for handling a large number of concurrent operations.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 911,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a way to write asynchronous code that is more sequential and easier to read than traditional callback-based approaches. They are a lightweight abstraction over threads, meaning many coroutines can run on a single thread. Threads, on the other hand, are a more heavyweight operating system construct. Coroutines are managed by the Kotlin runtime and can be suspended and resumed without blocking the underlying thread, whereas threads typically block when waiting for an operation to complete. This makes coroutines more efficient for I/O-bound tasks and for managing a large number of concurrent operations.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 800,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines offer a more lightweight and efficient way to handle asynchronous operations compared to traditional threads. Coroutines are not tied to specific OS threads and can be managed by the Kotlin runtime, allowing for many coroutines to run on a small number of threads. This makes them ideal for I/O-bound tasks and concurrent programming, preventing blocking and improving scalability. Threads, on the other hand, are heavier and directly managed by the operating system, with each thread consuming more resources.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 789,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a lightweight concurrency primitive that allow for asynchronous programming with sequential-style code. They are managed by the Kotlin runtime and can be run on a limited number of threads, making them more efficient than traditional threads. Threads, on the other hand, are managed by the operating system and are more resource-intensive. Coroutines can suspend and resume their execution without blocking the underlying thread, enabling better resource utilization and scalability.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 693,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a concurrency design pattern that allows for asynchronous programming in a sequential style. They are lighter than threads, meaning you can have many more coroutines running concurrently than threads. Threads are managed by the operating system, while coroutines are managed by the Kotlin runtime. This difference in management leads to coroutines being more efficient for I/O-bound tasks and for handling a large number of concurrent operations.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 757,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a lightweight concurrency primitive that allow for sequential-style code to perform asynchronous operations. They are managed by the Kotlin runtime and can be run on threads, but multiple coroutines can share a single thread. Threads, on the other hand, are managed by the operating system and are more resource-intensive. Coroutines offer better scalability and more efficient resource utilization compared to traditional threads.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 781,
+     "title": "Kotlin coroutines vs threads",
+     "text": "Kotlin coroutines are a lightweight concurrency primitive that allow for asynchronous programming with sequential-style code. They are managed by the Kotlin runtime and can be suspended and resumed without blocking the underlying thread. Threads, on the other hand, are heavier operating system constructs that are managed by the JVM. While threads can also be used for concurrency, they have higher overhead and can lead to issues like deadlocks and race conditions if not managed carefully. Coroutines offer a more efficient and manageable way to handle concurrent operations in Kotlin.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "ho-en-03",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Spring Boot/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 864,
+     "cost": 0.000033054,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.98,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "7CED4C93-E555-4C82-B82C-A9870D9ABD67": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.98,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 437,
+     "usage": {
+      "input_tokens": 1032,
+      "output_tokens": 149,
+      "cost": 0.000043344
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 812,
+     "title": "Compare Spring Boot 2, 3 and Framework 5",
+     "text": "Spring Boot 3 is a major upgrade from Spring Boot 2, built on Spring Framework 6. Key differences include a move to Jakarta EE 9+, requiring Java 17+, and significant dependency updates. Spring Framework 5, while foundational, is a distinct library that Spring Boot 2 and 3 build upon. Spring Boot 3 offers improved performance and new features compared to Spring Boot 2.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 955,
+     "title": "Compare Spring Boot 2, 3 and Framework 5",
+     "text": "Spring Boot 3 is a major upgrade from Spring Boot 2, built on Spring Framework 6. It requires Java 17 or higher and introduces significant changes like Jakarta EE 9+ support, replacing the `javax` namespace with `jakarta`. Spring Framework 5, on the other hand, is the foundation for Spring Boot 2 and supports Java 8+. While Spring Boot 3 offers newer features and performance improvements, migrating from Spring Boot 2 involves adapting to these namespace changes and updated dependencies.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 761,
+     "title": "Compare Spring Boot 2, 3, and Spring Framework 5",
+     "text": "Spring Boot 3 is a major upgrade from Spring Boot 2, built on Spring Framework 6 and requiring Java 17. Key differences include native support for GraalVM, updated dependency management, and new features like observability. Spring Framework 5, on the other hand, is the foundation upon which Spring Boot 2 was built, and it predates the significant changes seen in Spring Boot 3 and Spring Framework 6.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 794,
+     "title": "Compare Spring Boot 2, 3, and Framework 5",
+     "text": "Spring Boot 3 is a major upgrade from Spring Boot 2, built on Spring Framework 6. Key differences include a move to Jakarta EE 9+ and Java 17 as the baseline. Spring Boot 2, on the other hand, is based on Spring Framework 5 and supports Java 8+. Spring Framework 5 itself is the foundation for Spring Boot 2, providing core features like dependency injection and AOP.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 893,
+     "title": "Compare Spring Boot 2, 3, and Spring Framework 5",
+     "text": "Spring Boot 3, released in late 2022, is a major upgrade from Spring Boot 2, primarily due to its adoption of Jakarta EE 9 and Java 17 as baseline requirements. This means Spring Boot 3 is not compatible with older Java versions or libraries that haven't migrated to Jakarta EE. Spring Framework 5, on the other hand, is the foundation upon which Spring Boot 2 was built, and while it's still widely used, Spring Boot 3 represents a significant evolution in the ecosystem.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 820,
+     "title": "Compare Spring Boot 2, 3, and Framework 5",
+     "text": "Spring Boot 3 is a significant upgrade from Spring Boot 2, primarily driven by its adoption of Jakarta EE and Java 17 as baseline requirements. This means Spring Boot 3 is not compatible with older Java versions and uses new package names for EE APIs. Spring Framework 5, while foundational, is a much older version and predates these specific Spring Boot releases, offering core features that Spring Boot builds upon.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 828,
+     "title": "Compare Spring Boot 2, 3, and Spring Framework 5",
+     "text": "Spring Boot 3 is a major upgrade from Spring Boot 2, primarily driven by the adoption of Java 17 as the baseline and the upgrade to Spring Framework 6. Key differences include enhanced support for GraalVM native images, improved observability features, and updated dependency management. Spring Framework 5, on the other hand, is the foundation upon which Spring Boot 2 was built, focusing on reactive programming models and functional programming styles. Spring Boot 3 represents a significant architectural shift, while Spring Framework 5 is a foundational library.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 790,
+     "title": "Compare Spring Boot 2, 3, and Spring Framework 5",
+     "text": "Spring Boot 3, released in late 2022, is a major upgrade from Spring Boot 2. The most significant change is the move to Jakarta EE and Java 17 as the baseline. Spring Framework 5, on the other hand, is the foundation upon which Spring Boot 2 was built, and it continues to be supported. Spring Boot 3 offers improved performance, new features, and updated dependencies compared to Spring Boot 2.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "ho-en-03",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Boot 2|Spring Boot 2|\\b2\\b/",
+     "/\\b3\\b/"
+    ],
+    "mustNot": [
+     "/Framework 5|Spring 5/i"
+    ],
+    "parent": "req1",
+    "relation": "correction"
+   },
+   "newInput": [
+    "Actually, only compare Spring Boot 2 and 3."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 475,
+     "cost": 0.000047208,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "7CED4C93-E555-4C82-B82C-A9870D9ABD67": "req1",
+      "822F323C-3B98-4EAD-B2D4-34D760E9C232": "req2"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 1,
+      "parent": "7CED4C93-E555-4C82-B82C-A9870D9ABD67",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 356,
+     "usage": {
+      "input_tokens": 1253,
+      "output_tokens": 187,
+      "cost": 0.000052626
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 673,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 brings significant updates over Spring Boot 2, primarily driven by the adoption of Java 17 as the baseline and the upgrade to Spring Framework 6. Key changes include dependency updates, such as Jakarta EE 9+ support and Hibernate 6. Performance improvements and new features are also part of this release.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 713,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 introduced significant changes, most notably the upgrade to Java 17 as a baseline and the adoption of Jakarta EE 9. This means Spring Boot 3 applications require Java 17 or later and use Jakarta EE namespaces instead of Java EE. Spring Boot 2, on the other hand, supported Java 8 and earlier versions of EE. Performance improvements and dependency updates are also key differences.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 716,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 brings significant updates over Spring Boot 2, primarily driven by the adoption of Java 17 as the baseline and the upgrade to Spring Framework 6. Key differences include improved observability with Micrometer Tracing, native support for GraalVM, and updated dependency versions across the ecosystem. Spring Boot 3 also introduces new features like the `AutoConfiguration.imports` mechanism for more explicit configuration and enhanced support for Jakarta EE.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 663,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 brings significant updates over Spring Boot 2, primarily driven by the upgrade to Java 17 as the baseline. Key changes include the adoption of Jakarta EE 9 and 10, replacing the older `javax.persistence` with `jakarta.persistence`, which impacts package names. Performance improvements and new features are also part of this major release.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 745,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 introduced significant changes over Spring Boot 2, primarily driven by the upgrade to Java 17 as the baseline JDK and Spring Framework 6. Key differences include enhanced support for GraalVM native images, improved observability features, and updated dependencies across the ecosystem. Spring Boot 3 also brings changes to configuration properties and a more streamlined approach to reactive programming.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 735,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 introduces significant changes compared to Spring Boot 2, primarily driven by the adoption of Java 17 as the baseline and the upgrade to Spring Framework 6. Key differences include enhanced support for GraalVM native images, improved observability features, and updated dependency management. Spring Boot 3 also brings a more streamlined configuration experience and new features for cloud-native development.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 673,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 brings significant updates over Spring Boot 2, primarily driven by the upgrade to Java 17 as the baseline and the adoption of Spring Framework 6. Key differences include enhanced support for GraalVM native images, improved observability features, and updated dependencies across the ecosystem. Spring Boot 3 also introduces new features like the Jakarta EE 9+ migration and enhanced configuration properties.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 765,
+     "title": "Compare Spring Boot 2 and 3",
+     "text": "Spring Boot 3 introduced significant changes compared to Spring Boot 2. The most notable is the upgrade to Java 17 as the baseline version, requiring Java 17 or higher for development and runtime. Spring Boot 3 also fully embraces the Jakarta EE 9+ namespace, meaning imports have changed from `javax.servlet` to `jakarta.servlet`. Additionally, it leverages Spring Framework 6, bringing further improvements and new features.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "ho-en-04",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/index/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How does indexing work in MongoDB?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 736,
+     "cost": 0.000032676,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "8DC9AF87-D0F2-4590-9986-06DE881C8656": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 427,
+     "usage": {
+      "input_tokens": 1023,
+      "output_tokens": 149,
+      "cost": 0.000042966
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 737,
+     "title": "MongoDB indexing",
+     "text": "Indexing in MongoDB works by creating a data structure that stores a small portion of the collection's data set in an easily traversable form. This allows MongoDB to perform queries more efficiently without scanning every document in a collection. Indexes can contain the values of a subset of fields of a document, or the entire document itself.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 703,
+     "title": "MongoDB indexing",
+     "text": "Indexing in MongoDB works by creating a data structure that stores a small portion of the collection's field values as a linked list. This allows MongoDB to perform queries more efficiently by only scanning the index instead of the entire collection. Indexes can be created on single fields, multiple fields, or even on embedded documents and arrays.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 743,
+     "title": "How indexing works in MongoDB",
+     "text": "MongoDB uses indexes to speed up query operations. An index is a special data structure, typically a B-tree, that stores a small portion of the collection's data set in an easily traversable form. This allows MongoDB to quickly locate and access specific documents without scanning the entire collection. Indexes can be created on one or more fields.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 706,
+     "title": "MongoDB indexing",
+     "text": "Indexing in MongoDB works by creating a data structure, typically a B-tree, that stores a small portion of the collection's data set in an easily traversable form. This allows MongoDB to quickly locate and access specific documents without scanning every document in a collection. Indexes can be created on one or more fields, and they significantly speed up query performance by reducing the number of documents that need to be examined.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 690,
+     "title": "How indexing works in MongoDB",
+     "text": "Indexing in MongoDB works by creating a data structure, typically a B-tree, that stores a small portion of the collection's data in an ordered way. This allows MongoDB to quickly locate documents without scanning the entire collection. When you query your data, MongoDB can use the index to find the relevant documents much faster. This significantly improves query performance, especially for large collections.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 696,
+     "title": "How indexing works in MongoDB",
+     "text": "Indexing in MongoDB works by creating a data structure, typically a B-tree, that stores a small portion of the collection's data in an easily traversable form. This allows MongoDB to quickly locate documents without scanning every document in a collection. Indexes can be created on one or more fields. When a query is executed, MongoDB can use the index to find the relevant documents much faster than a collection scan.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 753,
+     "title": "How indexing works in MongoDB",
+     "text": "Indexing in MongoDB works by creating a data structure, typically a B-tree, that stores a small portion of the collection's data set in an easily traversable form. This allows MongoDB to quickly locate and access specific documents without scanning the entire collection. Indexes can be created on one or more fields, and they significantly speed up query performance by reducing the number of documents that need to be examined.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 777,
+     "title": "How indexing works in MongoDB",
+     "text": "Indexing in MongoDB works by creating a data structure that stores a small portion of the collection's data set in an easily traversable form. This allows MongoDB to perform queries more efficiently without scanning every document in a collection. Indexes can contain references to fields within documents, or even entire documents. When a query is made, MongoDB can use the index to quickly locate the matching documents, significantly speeding up read operations.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "ho-en-04",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "firstMust": "/compound/i",
+    "must": [
+     "/compound/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "And compound indexes."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 577,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "8DC9AF87-D0F2-4590-9986-06DE881C8656": "req1",
+      "A49CD2CD-BD0E-49CF-804A-92F62DC1CD89": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.95,
+      "parent": "8DC9AF87-D0F2-4590-9986-06DE881C8656",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does indexing work in MongoDB?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 415,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 187,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 727,
+     "title": "Compound indexes in MongoDB",
+     "text": "Compound indexes in MongoDB allow you to index multiple fields within a single index. This can significantly improve the performance of queries that filter or sort on those fields. MongoDB supports compound indexes in a specific order of fields, and queries that match the order of fields in the index will benefit the most.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 697,
+     "title": "Compound indexes in MongoDB",
+     "text": "Compound indexes in MongoDB allow you to index multiple fields within a single index. This can significantly improve the performance of queries that filter or sort on these fields. When creating a compound index, the order of fields matters. MongoDB uses the fields in the order they are specified in the index definition to satisfy query conditions.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 835,
+     "title": "Compound indexes in MongoDB",
+     "text": "Compound indexes in MongoDB allow you to index multiple fields within a single index. This can significantly improve the performance of queries that filter or sort on those fields. MongoDB supports compound indexes on any number of fields. The order of fields in a compound index is important, as it determines how the index can be used to satisfy queries. For example, an index on `(field1, field2)` can efficiently query on `field1` alone, or on both `field1` and `field2`, but not on `field2` alone.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 900,
+     "title": "Compound indexes in MongoDB",
+     "text": "Compound indexes in MongoDB allow you to index multiple fields within a single index. This can significantly improve the performance of queries that filter or sort on those fields. When creating a compound index, the order of fields is crucial. MongoDB uses the order specified to match query criteria. For example, an index on `{\"field1\": 1, \"field2\": 1}` would be efficient for queries filtering on `field1` or on both `field1` and `field2`, but less so for queries only filtering on `field2`.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 688,
+     "title": "MongoDB indexing and compound indexes",
+     "text": "MongoDB indexing speeds up query performance by creating data structures that allow the database to find documents more quickly without scanning the entire collection. Compound indexes involve multiple fields, ordered by the fields' importance. They are particularly useful for queries that filter or sort on multiple fields, and the order of fields in the index definition matters for query optimization.",
+     "met": false,
+     "failures": [
+      "first sentence lacks /compound/i"
+     ],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does indexing work in MongoDB?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 706,
+     "title": "MongoDB compound indexes",
+     "text": "MongoDB compound indexes allow you to index multiple fields in a single index. This can significantly improve the performance of queries that filter or sort on those fields. When creating a compound index, the order of the fields matters. MongoDB will use the index for queries that match the leading fields of the index. For example, an index on `(field1, field2)` can efficiently query on `field1` alone, or on both `field1` and `field2`.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does indexing work in MongoDB?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 845,
+     "title": "MongoDB indexing and compound indexes",
+     "text": "MongoDB uses indexes to speed up query operations by allowing the database to find specific documents more quickly without scanning every document in a collection. Compound indexes are indexes that consist of two or more fields. They are useful for queries that filter or sort on multiple fields, as they can satisfy queries that match the leading fields of the index.",
+     "met": false,
+     "failures": [
+      "first sentence lacks /compound/i"
+     ],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does indexing work in MongoDB?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 821,
+     "title": "MongoDB compound indexes",
+     "text": "MongoDB compound indexes allow you to index multiple fields in a single index. This can significantly improve the performance of queries that filter or sort on those fields. When creating a compound index, the order of the fields matters. MongoDB will use the index for queries that match the leading fields of the index. For example, an index on `(field1, field2)` can efficiently query on `field1` alone, or on both `field1` and `field2`.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does indexing work in MongoDB?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  }
+ ]
+}

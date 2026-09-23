@@ -357,6 +357,11 @@ TO ANSWER NOW can hold several things, in the order they were said. They are not
   it is still relevant and was not abandoned, briefly, after it.
 - The scope rules below — keep every item, a bare item extends a list — apply **within the current
   request**. They never revive a topic the speaker has left.
+- **An addition to a request you have already answered** (it is in YOUR EARLIER SUGGESTIONS) means:
+  answer the addition, using that request as context. Lead with the addition itself; do not repeat,
+  recap or re-explain the earlier answer before getting to it. "And compound indexes" after an answer
+  about indexes is answered by explaining compound indexes. If the request it adds to is itself still
+  in TO ANSWER NOW — nothing has answered it yet — the two are one request: answer it whole.
 - **Read TO ANSWER NOW against CONVERSATION before deciding what it means.** Speech is finalized in
   whatever pieces the recogniser produces, so a request is very often spread over several lines, and
   the later lines are usually not questions in their own right.
@@ -699,22 +704,36 @@ function buildAnswerMessages(body, words) {
  * dropped in silence, because the user can see they attached it and would otherwise assume it was
  * read.
  */
-/** The prompt text for an accepted decision. Fixed sentences; the only free text is the request's own words. */
+/**
+ * The prompt text for an accepted decision, as a small contract with separate parts — the latest
+ * request or addition, the parent context, what still applies, and any correction or withdrawal —
+ * so "adds to" can never read as "repeat the earlier answer first". Fixed sentences; the only free
+ * text is a request's own words. The raw speech stays in TO ANSWER NOW; this is inferred meaning.
+ */
 function interpretationBlock(interpretation) {
   const words = clip(interpretation.parentWords ?? "", 400);
   const quoted = words ? `"${words}"` : "";
-  const line = {
+  const answered = interpretation.parentStatus === "answered";
+  const parentLine = (use) => `- Parent context${answered ? " (already answered — do not repeat that answer)" : ""}: ${quoted}. ${use}`;
+  const parts = {
     new_request: !words
-      ? "It is a new request, separate from the earlier ones."
+      ? ["- Latest request: the newest speech in TO ANSWER NOW. It is new, separate from the earlier requests."]
       : interpretation.withdrawn
-        ? `It is a new request, and the speaker has moved on from the earlier request ${quoted}: do not answer that one.`
-        : `It is a new request that returns to the subject of an earlier one: ${quoted}.`,
-    continuation: `It adds to the earlier request ${quoted}. Answer that request together with the addition.`,
-    correction: `It corrects or narrows the earlier request ${quoted}. Answer the corrected request only.`,
-    abandonment: `It withdraws the earlier request ${quoted}. Do not answer that; answer only what is still being asked, if anything.`,
+        ? ["- Latest request: the newest speech in TO ANSWER NOW. It is new.",
+           `- Withdrawn: the speaker has moved on from ${quoted}. Do not answer it; it is history.`]
+        : ["- Latest request: the newest speech in TO ANSWER NOW. It returns to an earlier subject.",
+           parentLine("Use it to understand what is being asked now.")],
+    continuation: ["- Latest addition: the newest speech in TO ANSWER NOW. Lead with it and answer it.",
+      parentLine("Use it only as context for the addition."),
+      "- Still applies: the parent's subject and any limits it set, unless the new speech changes them."],
+    correction: ["- Latest request: the corrected request — the parent as changed by the newest speech in TO ANSWER NOW.",
+      parentLine("It is the wording being corrected."),
+      "- Correction: where the newest speech and the parent disagree, the newest speech wins; items it drops are not answered."],
+    abandonment: [`- Withdrawn: ${quoted}. Do not answer it; it is history.`,
+      "- Latest request: whatever else is still being asked in TO ANSWER NOW, if anything."],
   }[interpretation.relation];
-  if (!line || (interpretation.relation !== "new_request" && !words)) return "";
-  return `REQUEST STRUCTURE (a decision classifier's reading of TO ANSWER NOW; use it to settle what is being asked, check it against the words, and never mention it):\n${line}`;
+  if (!parts || (interpretation.relation !== "new_request" && !words)) return "";
+  return `REQUEST STRUCTURE (a decision classifier's reading of TO ANSWER NOW — inferred, not said; check it against the words, and never mention it):\n${parts.join("\n")}`;
 }
 
 function acceptedImages(body) {

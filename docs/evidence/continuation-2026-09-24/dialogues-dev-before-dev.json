@@ -1,0 +1,1169 @@
+{
+ "summary": {
+  "split": "dev",
+  "label": "before-dev",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-23T23:53:53.156Z",
+  "conversations": 4,
+  "taps": 7,
+  "chips": 0,
+  "decisionRepeat": 1,
+  "answerRepeat": 4,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 7,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "100.0% (7/7)",
+   "parentAccuracy": "100.0% (7/7)",
+   "parentAccuracyWhereAParentExists": "100.0% (3/3)",
+   "accepted": "100.0% (7/7)",
+   "acceptedCorrect": "100.0% (7/7)",
+   "latencyP50": 476,
+   "latencyP95": 953,
+   "readyAtTapIfTapComes1500msAfterSpeech": "85.7% (6/7)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (7/7)",
+   "costUSD": 0.000269
+  },
+  "legacy": {
+   "calls": 7,
+   "failed": 0,
+   "relationAccuracy": "100.0% (7/7)",
+   "parentAccuracy": "100.0% (7/7)",
+   "parentAccuracyWhereAParentExists": "100.0% (3/3)",
+   "latencyP50": 415,
+   "latencyP95": 713
+  },
+  "answers": {
+   "A_correctCurrentRequest": "100.0% (28/28)",
+   "C_correctCurrentRequest": "100.0% (28/28)",
+   "C_answersActuallyShapedByADecision": 28,
+   "topicSwitchTaps": {
+    "A": "100.0% (4/4)",
+    "C": "100.0% (4/4)"
+   },
+   "attachTaps": {
+    "A": "100.0% (8/8)",
+    "C": "100.0% (8/8)"
+   },
+   "chips": "—",
+   "firstSentenceRelevantTaps": "—"
+  },
+  "tuning": null
+ },
+ "rows": [
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/block/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How do blocks work in Ruby?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 953,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "52FD82A7-BE7A-435A-82D9-5FC5BC333A13": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 473,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 708,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, and creating DSLs. When a block is passed to a method, it can be executed using the `yield` keyword within that method. This allows for flexible and expressive code.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 713,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, and creating DSLs. They can accept arguments and can access variables from their surrounding scope.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 671,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, and creating DSLs. They can accept arguments and return values.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 683,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, or to encapsulate behavior. When a method receives a block, it can execute that block using the `yield` keyword.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 698,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, or to define custom control flow. When a method is called with a block, the block's code is executed within the context of that method.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 770,
+     "title": "How blocks work in Ruby",
+     "text": "Blocks are a fundamental feature in Ruby for grouping code that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks can accept arguments and are often used for iteration, callbacks, or creating DSLs. When a method is called with a block, the block's code is executed within the context of that method.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 777,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, or to encapsulate behavior. When a method accepts a block, it can execute that block using the `yield` keyword. This allows for flexible and expressive code, enabling methods to perform actions defined by the caller.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 752,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, or to encapsulate behavior. When a method is called with a block, the block's code is executed within the context of that method.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/optional/i"
+    ],
+    "mustNot": [
+     "/Ruby block/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "We're done with Ruby.",
+    "What are optionals in Swift?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 424,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.38,
+     "labels": {
+      "52FD82A7-BE7A-435A-82D9-5FC5BC333A13": "req1",
+      "E5D861F4-19FC-4C57-80DC-7DC14BCEAB73": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.38,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 330,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 664,
+     "title": "Swift optionals",
+     "text": "Optionals in Swift are a type that represents either a wrapped value or a `nil` value. They are used to handle the absence of a value, preventing common programming errors like null pointer exceptions. You can unwrap an optional using methods like `if let` or `guard let` to safely access its value if it exists.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 688,
+     "title": "Swift optionals",
+     "text": "Optionals in Swift are a type that represents either a wrapped value or a `nil` value. They are used to handle the absence of a value, preventing runtime crashes that can occur when trying to access a non-existent value. You can check if an optional contains a value and unwrap it safely.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 685,
+     "title": "Swift optionals",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are represented by a type name with a question mark after it, like `String?`. This indicates that the variable can either hold a value of that type, or it can be `nil`, meaning it has no value.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 729,
+     "title": "Swift optionals",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are represented by a type name with a question mark after it, like `String?`. This indicates that a variable of this type can either hold a value of the specified type, or it can hold `nil`, which signifies no value. This helps prevent runtime errors that can occur when trying to access a non-existent value.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 778,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are declared using a question mark after the type, like `String?` or `Int?`. This indicates that the variable might hold a value of that type, or it might hold `nil`, which represents the absence of a value. You need to safely unwrap optionals before using their values to avoid runtime errors.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 636,
+     "title": "Swift optionals",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are represented by a type with a question mark after it, like `String?`. This means the variable can either hold a value of that type, or it can be `nil`, indicating no value is present. This helps prevent runtime errors caused by trying to access a value that doesn't exist.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 761,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are declared using a question mark after the type, like `String?` or `Int?`. This indicates that the variable might hold a value of that type, or it might hold `nil`, which represents the absence of a value. You must safely unwrap an optional before you can use its value, typically using `if let` or `guard let` statements to check if it contains a value.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 760,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are declared using a question mark after the type, like `String?` or `Int?`. This indicates that the variable might hold a value of that type, or it might hold `nil`, which represents the absence of a value. You need to safely unwrap optionals before using their values to avoid runtime errors.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-02",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/\\b11\\b/",
+     "/\\b17\\b/",
+     "/\\b21\\b/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What's new in Java 11 compared to Java 8?",
+    "And Java 17.",
+    "Plus Java 21."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 526,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.63,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1683A453-9ACF-48ED-BAF1-78FAA2AB7568": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.63,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 420,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 873,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference (var), enhanced `String` methods, and the HTTP Client API. Java 17 brought LTS features such as sealed classes, pattern matching for `instanceof`, and foreign-function memory access. Java 21, the latest LTS, includes virtual threads, structured concurrency, and pattern matching for switch. Each release builds upon the last, offering performance improvements and new language constructs.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 828,
+     "title": "Java 8, 11, 17, and 21 features",
+     "text": "Java 11 introduced features like local-variable type inference, enhanced `String` methods, and the `HttpClient` API. Java 17 brought LTS features such as sealed classes, pattern matching for `switch`, and `for-each` loops. Java 21, the latest LTS, includes virtual threads, structured concurrency, and pattern matching for `switch` enhancements. Each release builds upon the previous ones, adding significant new capabilities and improvements.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 832,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference and new HTTP client APIs. Java 17 brought LTS stability with features such as sealed classes and pattern matching for `instanceof`. Java 21, also an LTS release, further enhanced pattern matching, introduced virtual threads for improved concurrency, and added new APIs for string templates. Each version builds upon the last, offering performance improvements and new language constructs.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 831,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference (`var`), enhanced `String` methods, and the HTTP Client API. Java 17 brought LTS (Long-Term Support) status, sealed classes, pattern matching for `instanceof`, and new `Switch` expressions. Java 21, also an LTS release, further enhanced pattern matching, introduced virtual threads for improved concurrency, and added new collection features. Each release builds upon the last, offering performance improvements, new language constructs, and API enhancements.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 797,
+     "title": "Java 11, 17, and 21 features",
+     "text": "Java 11 introduced features like local-variable type inference and enhanced string methods. Java 17 brought LTS stability with pattern matching for `instanceof` and sealed classes. Java 21, the latest LTS, includes virtual threads for better concurrency and pattern matching for switch statements. Each release builds on the previous ones, offering performance improvements and new language constructs.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 763,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference (`var`), HTTP/2 client, and new String methods. Java 17 brought enhanced sealed classes, pattern matching for `switch`, and deprecation of the Applet API. Java 21, the latest LTS release, includes virtual threads, structured concurrency, and pattern matching improvements. Each version builds upon the last, offering significant language and platform enhancements.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 803,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference and HTTP/2 client. Java 17 brought pattern matching for `switch`, sealed classes, and a new `StringTemplate` API. Java 21 further enhanced pattern matching, introduced virtual threads for concurrency, and added sequenced collections. Each version builds upon the last with significant improvements.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 848,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference, new HTTP client, and enhanced String methods. Java 17 brought pattern matching for `instanceof`, sealed classes, and a new rendering pipeline for Swing. Java 21, the latest LTS release, includes virtual threads, structured concurrency, and pattern matching for switch. Each release builds upon the last, offering significant performance and language improvements.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 325,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "C27A0844-391A-4ADD-B747-F633A94A3B06": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 713,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 754,
+     "title": "Compare serverless functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute services. They allow you to run code without provisioning or managing servers. Key differences lie in their ecosystems, pricing models, and integration capabilities. Lambda is deeply integrated with AWS services, Azure Functions with the Microsoft ecosystem, and Google Cloud Functions with Google Cloud Platform. Each offers various triggers, language support, and performance characteristics, making the best choice dependent on your existing cloud infrastructure and specific project needs.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 663,
+     "title": "Compare serverless compute platforms",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with their respective cloud ecosystems, supported languages, and specific features like cold start times and execution limits. Each platform offers a robust solution for event-driven architectures and microservices.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 649,
+     "title": "Compare serverless functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute services. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with other cloud services within their respective ecosystems, supported languages, and execution environments. Each offers a pay-per-execution model, but the specifics of free tiers and billing can vary.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 652,
+     "title": "Compare serverless functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless computing platforms. They allow you to run code without provisioning or managing servers. Key differences often lie in their pricing models, integration with other cloud services within their respective ecosystems, supported programming languages, and specific features like cold start performance or execution duration limits.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 648,
+     "title": "Compare AWS Lambda, Azure Functions, Google Cloud Functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all serverless compute services that allow you to run code without provisioning or managing servers. They differ in their ecosystems, pricing models, and integration capabilities. AWS Lambda is known for its broad integration with other AWS services. Azure Functions offers strong integration with the Microsoft ecosystem and a flexible programming model. Google Cloud Functions integrates well with Google Cloud Platform services and offers a pay-per-use model.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 668,
+     "title": "Compare serverless compute platforms",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with their respective cloud ecosystems, supported languages, and execution environments. Each offers a pay-per-execution model, but the specifics of free tiers and pricing tiers can vary.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 671,
+     "title": "Compare serverless compute platforms",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with their respective cloud ecosystems, supported runtimes, and specific features like cold start performance and execution duration limits. Each platform offers a robust solution for event-driven architectures and microservices.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 638,
+     "title": "Compare serverless compute platforms",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with other cloud services, supported languages, and execution environments. AWS Lambda is often seen as the most mature, while Azure Functions offers strong integration with the Microsoft ecosystem, and Google Cloud Functions excels in its integration with Google Cloud services.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i",
+     "/Azure/i"
+    ],
+    "mustNot": [
+     "/Google Cloud Functions/i"
+    ],
+    "parent": "req1",
+    "relation": "correction"
+   },
+   "newInput": [
+    "Just Lambda and Azure Functions, actually."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 476,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.98,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "C27A0844-391A-4ADD-B747-F633A94A3B06": "req1",
+      "E8D6313E-B35D-4A30-AEF8-73A0DF5B9CA5": "req2"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.98,
+      "parent": "C27A0844-391A-4ADD-B747-F633A94A3B06",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.85,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 400,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 830,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its simplicity and deep integration with other AWS services, often leading to faster cold starts. Azure Functions offers more language flexibility and integrates tightly with the Azure ecosystem, with a strong focus on developer experience and tooling. The choice often depends on your existing cloud infrastructure and specific project needs.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 710,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its event-driven architecture and tight integration with other AWS services, often leading to faster cold starts in some scenarios. Azure Functions offers strong integration with the Azure ecosystem and a flexible programming model, with options for different hosting plans. Both support multiple languages and provide auto-scaling capabilities.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 729,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its event-driven architecture and tight integration with other AWS services. Azure Functions offers similar capabilities with strong ties to the Azure ecosystem and a flexible programming model. Both abstract away infrastructure management, enabling developers to focus on writing code and responding to events.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 845,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its pay-per-execution model. Azure Functions offers similar capabilities with strong ties to the Azure ecosystem and flexible hosting options, including consumption and dedicated plans. Both support various programming languages and event triggers.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 659,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its event-driven architecture. Azure Functions offers similar capabilities, with strong integration into the Azure ecosystem and flexible hosting options. Both support multiple programming languages and provide automatic scaling.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 735,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda, from Amazon Web Services, is known for its extensive integration with other AWS services and its wide range of triggers. Azure Functions, from Microsoft Azure, offers strong integration with the Azure ecosystem and supports a variety of languages and triggers, including HTTP and timers. Both services offer pay-per-execution pricing models.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 626,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its event-driven architecture. Azure Functions offers strong integration with Microsoft's ecosystem and a variety of triggers and bindings. Both support multiple programming languages and offer pay-per-execution pricing models.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 644,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its event-driven architecture. Azure Functions offers strong integration with Microsoft's ecosystem and a variety of triggers and bindings. Both support multiple programming languages and offer pay-as-you-go pricing.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/cach/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How does caching work in Redis?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 560,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "7E34828D-769B-4E71-8032-05F7791C6558": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 415,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 706,
+     "title": "How caching works in Redis",
+     "text": "Caching in Redis works by storing frequently accessed data in memory for fast retrieval. When a request comes in, Redis first checks its in-memory cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), the data is fetched from the primary data store, then stored in Redis for future requests, and finally returned to the user. This significantly speeds up read operations.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 764,
+     "title": "How caching works in Redis",
+     "text": "Redis can function as a cache by storing frequently accessed data in memory for fast retrieval. When a request for data comes in, the application first checks Redis. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), the application fetches the data from the primary data source, stores it in Redis for future requests, and then returns it. This significantly reduces latency and load on the primary data store.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 735,
+     "title": "How caching works in Redis",
+     "text": "Caching in Redis involves storing frequently accessed data in memory for faster retrieval. When a request comes in, the application first checks Redis. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), the application fetches the data from the primary data source, then stores it in Redis for future requests before returning it. Redis offers various eviction policies to manage memory when it's full, deciding which data to remove to make space for new data.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 701,
+     "title": "How caching works in Redis",
+     "text": "Redis is an in-memory data structure store that can be used as a cache. It stores data in key-value pairs. When data is requested, Redis first checks if it's in the cache. If it is, the data is returned directly, which is very fast. If the data is not in the cache, it's fetched from the primary data source, then stored in Redis for future requests. This significantly speeds up data retrieval for frequently accessed information.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 824,
+     "title": "How caching works in Redis",
+     "text": "Redis is an in-memory data structure store that can be used as a cache. It stores data in key-value pairs, and its speed comes from keeping this data in RAM. When used as a cache, Redis intercepts requests for data. If the data is present in Redis (a cache hit), it's returned quickly. If not (a cache miss), the request goes to the primary data source, and the retrieved data is then stored in Redis for future requests. Redis offers various eviction policies to manage cache size when it fills up.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 726,
+     "title": "How caching works in Redis",
+     "text": "Redis can be used as a cache by storing frequently accessed data in memory. When a request comes in, the application first checks Redis. If the data is found (a cache hit), it's returned quickly. If not (a cache miss), the application fetches the data from the primary data source, stores it in Redis for future requests, and then returns it. This reduces load on the primary data source and speeds up response times. Redis offers various data structures and eviction policies to manage cached data effectively.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 791,
+     "title": "How caching works in Redis",
+     "text": "Caching in Redis works by storing frequently accessed data in memory for fast retrieval. When a request comes in, Redis first checks its in-memory cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis fetches the data from the primary data store, serves it to the client, and then stores a copy in its cache for future requests. Redis offers various eviction policies to manage cache size when it becomes full.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 741,
+     "title": "How caching works in Redis",
+     "text": "Redis is an in-memory data structure store that can be used as a cache. It works by storing data in RAM, which allows for very fast read and write operations. When used as a cache, Redis stores frequently accessed data. When an application needs data, it first checks Redis. If the data is found (a cache hit), it's returned quickly. If not (a cache miss), the application retrieves it from the primary data source, and then stores a copy in Redis for future requests. This significantly speeds up data retrieval for repeated access.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/evict/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "And eviction policies."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 452,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.95,
+     "labels": {
+      "2F6BC4ED-7AEB-4AE1-B911-5131927E39EE": "req2",
+      "7E34828D-769B-4E71-8032-05F7791C6558": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.95,
+      "parent": "7E34828D-769B-4E71-8032-05F7791C6558",
+      "parentConfidence": 0.95,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 393,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 690,
+     "title": "Redis eviction policies",
+     "text": "Redis eviction policies determine which keys are removed from the cache when it reaches its memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), TTL (Time To Live), and random eviction. LRU removes the keys that haven't been accessed for the longest time. LFU removes keys that have been accessed the fewest times. TTL removes keys that have expired. Random eviction removes keys at random.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 736,
+     "title": "Redis eviction policies",
+     "text": "Redis eviction policies determine which keys are removed from the cache when memory is full and new data needs to be added. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), TTL (Time To Live), and random eviction. Each policy prioritizes different criteria for removing data to make space.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 688,
+     "title": "Redis eviction policies",
+     "text": "Redis eviction policies determine which keys are removed from the cache when it reaches its maximum memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), TTL (Time To Live), and random eviction. LRU removes the keys that haven't been accessed for the longest time. LFU removes keys that have been accessed the fewest times. TTL removes keys that have expired based on their set expiration time. Random eviction simply removes a random key.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 635,
+     "title": "Redis eviction policies",
+     "text": "Redis eviction policies determine which keys are removed from the cache when it reaches its maximum memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), TTL (Time To Live), and random eviction. The choice of policy depends on the application's access patterns and memory management needs.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 773,
+     "title": "Redis caching and eviction policies",
+     "text": "Caching in Redis works by storing data in memory for fast retrieval. When a request comes in, Redis first checks its cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis fetches the data from a slower source, stores it in the cache, and then returns it.\n\nEviction policies determine which keys are removed from the cache when it's full. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction. These ensure that the most relevant data remains accessible.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 860,
+     "title": "Redis caching and eviction policies",
+     "text": "Redis caching works by storing frequently accessed data in memory for fast retrieval. When data is requested, Redis first checks its cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis retrieves it from the primary data store, serves it to the client, and then stores a copy in the cache.\n\nEviction policies determine which data to remove from the cache when it reaches its memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction, ensuring that the most valuable data remains cached.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 808,
+     "title": "Redis caching and eviction policies",
+     "text": "Caching in Redis works by storing data in memory for fast retrieval. When a request comes in, Redis checks its memory. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis fetches it from the primary data store, returns it to the client, and stores it in memory for future requests.\n\nEviction policies determine which keys are removed from memory when Redis needs space for new data. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction, ensuring that the most relevant data remains cached.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 744,
+     "title": "Redis caching and eviction policies",
+     "text": "Caching in Redis works by storing data in memory for fast retrieval. When a request comes in, Redis first checks if the data is in the cache. If it is, the data is returned immediately. If not, Redis fetches the data from the primary data store, returns it to the client, and also stores it in the cache for future requests.\n\nEviction policies determine which keys are removed from the cache when it reaches its memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction, ensuring that the most relevant data remains accessible.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  }
+ ]
+}

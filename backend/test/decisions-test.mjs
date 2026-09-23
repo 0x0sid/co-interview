@@ -496,10 +496,17 @@ try {
         return JSON.stringify(upstreamBodies);
       };
       check("no interpretation, no block", !(await sentWith({})).includes("REQUEST STRUCTURE"));
-      check("a continuation names the request it adds to",
-        (await sentWith({ interpretation: { relation: "continuation", parentWords: "Could you compare Java 8 and Java 9?" } })).includes("It adds to the earlier request"));
+      const continuation = await sentWith({ interpretation: { relation: "continuation", parentWords: "Explain MongoDB indexes.", parentStatus: "answered" } });
+      check("a continuation leads with the addition", continuation.includes("Latest addition") && continuation.includes("Lead with it"));
+      check("an answered parent is context, not something to repeat", continuation.includes("Parent context (already answered — do not repeat that answer)") && continuation.includes("Explain MongoDB indexes."));
+      check("what still applies is its own part", continuation.includes("- Still applies:"));
+      const correction = await sentWith({ interpretation: { relation: "correction", parentWords: "Compare Java 7, 8 and 9", parentStatus: "answered" } });
+      check("a correction wins over the parent's wording", correction.includes("- Correction:") && correction.includes("the newest speech wins"));
+      const moved = await sentWith({ interpretation: { relation: "new_request", parentWords: "Compare Java 8 and 9", parentStatus: "answered", withdrawn: true } });
+      check("a withdrawn parent is history, and the new request is answered", moved.includes("- Withdrawn:") && moved.includes("Latest request"));
       check("an abandonment tells the model not to answer it",
-        (await sentWith({ interpretation: { relation: "abandonment", parentWords: "Compare Java" } })).includes("Do not answer that"));
+        (await sentWith({ interpretation: { relation: "abandonment", parentWords: "Compare Java" } })).includes("Do not answer it"));
+      check("the raw speech stays in TO ANSWER NOW, the structure is marked as inferred", continuation.includes("And Java 7.") && continuation.includes("inferred, not said"));
       check("a relation that needs a request and has none adds nothing",
         !(await sentWith({ interpretation: { relation: "correction", parentWords: "" } })).includes("REQUEST STRUCTURE"));
       check("a tapped action ignores any interpretation",
