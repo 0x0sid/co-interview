@@ -1,0 +1,3944 @@
+{
+ "summary": {
+  "split": "dev",
+  "label": "tune",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-23T22:29:35.371Z",
+  "conversations": 12,
+  "taps": 23,
+  "chips": 0,
+  "decisionRepeat": 3,
+  "answerRepeat": 0,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 69,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "100.0% (69/69)",
+   "parentAccuracy": "100.0% (69/69)",
+   "parentAccuracyWhereAParentExists": "100.0% (30/30)",
+   "accepted": "98.6% (68/69)",
+   "acceptedCorrect": "100.0% (68/68)",
+   "latencyP50": 373,
+   "latencyP95": 511,
+   "readyAtTapIfTapComes1500msAfterSpeech": "98.6% (68/69)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (69/69)",
+   "costUSD": 0.002704
+  },
+  "legacy": {
+   "calls": 69,
+   "failed": 0,
+   "relationAccuracy": "95.7% (66/69)",
+   "parentAccuracy": "100.0% (69/69)",
+   "parentAccuracyWhereAParentExists": "100.0% (30/30)",
+   "latencyP50": 350,
+   "latencyP95": 538
+  },
+  "answers": null,
+  "tuning": [
+   {
+    "relation": 0.35,
+    "parent": 0.35,
+    "withdraws": 0.6,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.35,
+    "withdraws": 0.7,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.35,
+    "withdraws": 0.8,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.5,
+    "withdraws": 0.6,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.5,
+    "withdraws": 0.7,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.5,
+    "withdraws": 0.8,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.65,
+    "withdraws": 0.6,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.65,
+    "withdraws": 0.7,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.65,
+    "withdraws": 0.8,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.8,
+    "withdraws": 0.6,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.8,
+    "withdraws": 0.7,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.35,
+    "parent": 0.8,
+    "withdraws": 0.8,
+    "accepted": 69,
+    "right": 69,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.35,
+    "withdraws": 0.6,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.35,
+    "withdraws": 0.7,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.35,
+    "withdraws": 0.8,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.5,
+    "withdraws": 0.6,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.5,
+    "withdraws": 0.7,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.5,
+    "withdraws": 0.8,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.65,
+    "withdraws": 0.6,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.65,
+    "withdraws": 0.7,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.65,
+    "withdraws": 0.8,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.8,
+    "withdraws": 0.6,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.8,
+    "withdraws": 0.7,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.5,
+    "parent": 0.8,
+    "withdraws": 0.8,
+    "accepted": 68,
+    "right": 68,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.35,
+    "withdraws": 0.6,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.35,
+    "withdraws": 0.7,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.35,
+    "withdraws": 0.8,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.5,
+    "withdraws": 0.6,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.5,
+    "withdraws": 0.7,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.5,
+    "withdraws": 0.8,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.65,
+    "withdraws": 0.6,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.65,
+    "withdraws": 0.7,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.65,
+    "withdraws": 0.8,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.8,
+    "withdraws": 0.6,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.8,
+    "withdraws": 0.7,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.65,
+    "parent": 0.8,
+    "withdraws": 0.8,
+    "accepted": 66,
+    "right": 66,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.35,
+    "withdraws": 0.6,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.35,
+    "withdraws": 0.7,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.35,
+    "withdraws": 0.8,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.5,
+    "withdraws": 0.6,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.5,
+    "withdraws": 0.7,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.5,
+    "withdraws": 0.8,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.65,
+    "withdraws": 0.6,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.65,
+    "withdraws": 0.7,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.65,
+    "withdraws": 0.8,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.8,
+    "withdraws": 0.6,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.8,
+    "withdraws": 0.7,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   },
+   {
+    "relation": 0.8,
+    "parent": 0.8,
+    "withdraws": 0.8,
+    "accepted": 63,
+    "right": 63,
+    "n": 69
+   }
+  ]
+ },
+ "rows": [
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/block/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How do blocks work in Ruby?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 621,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 293,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 299,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 328,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 290,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 327,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/optional/i"
+    ],
+    "mustNot": [
+     "/Ruby block/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "We're done with Ruby.",
+    "What are optionals in Swift?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 380,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.37,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1",
+      "E8A3AB0E-C80C-48DA-85EB-A4EEB11AE165": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.37,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 270,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.45,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1",
+      "E8A3AB0E-C80C-48DA-85EB-A4EEB11AE165": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.45,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 401,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.35,
+     "labels": {
+      "A9B8E894-532C-42B7-B96D-06B510DF6C4D": "req1",
+      "E8A3AB0E-C80C-48DA-85EB-A4EEB11AE165": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.35,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 352,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 538,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 321,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-02",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/\\b11\\b/",
+     "/\\b17\\b/",
+     "/\\b21\\b/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What's new in Java 11 compared to Java 8?",
+    "And Java 17.",
+    "Plus Java 21."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 378,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.53,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0A59320B-845C-4092-8704-307FCB7A5487": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.53,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 679,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.63,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0A59320B-845C-4092-8704-307FCB7A5487": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.63,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 439,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.49,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0A59320B-845C-4092-8704-307FCB7A5487": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.49,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "accepted": false,
+      "reason": "relation confidence 0.49 below 0.5",
+      "interpretation": null
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 276,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 440,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 306,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 347,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 332,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 452,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 319,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 438,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 319,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i",
+     "/Azure/i"
+    ],
+    "mustNot": [
+     "/Google Cloud Functions/i"
+    ],
+    "parent": "req1",
+    "relation": "correction"
+   },
+   "newInput": [
+    "Just Lambda and Azure Functions, actually."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 342,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.97,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1",
+      "A5BFCA8B-60C6-4B5E-970A-5DB35F93F33A": "req2"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.97,
+      "parent": "316EB471-F172-4345-B298-58AE1D6DD478",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.86,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 388,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.98,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1",
+      "A5BFCA8B-60C6-4B5E-970A-5DB35F93F33A": "req2"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.98,
+      "parent": "316EB471-F172-4345-B298-58AE1D6DD478",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.87,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 1186,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.99,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "316EB471-F172-4345-B298-58AE1D6DD478": "req1",
+      "A5BFCA8B-60C6-4B5E-970A-5DB35F93F33A": "req2"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.99,
+      "parent": "316EB471-F172-4345-B298-58AE1D6DD478",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.86,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 314,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 306,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 299,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/cach/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How does caching work in Redis?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 381,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 388,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 325,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 330,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 407,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 330,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/evict/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "And eviction policies."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 413,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 0.96,
+     "labels": {
+      "33E35628-4003-44DC-81F5-31F6F2E71CD8": "req2",
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.96,
+      "parent": "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B",
+      "parentConfidence": 0.96,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 320,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.94,
+     "parent": "req1",
+     "parentConfidence": 0.96,
+     "labels": {
+      "33E35628-4003-44DC-81F5-31F6F2E71CD8": "req2",
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.94,
+      "parent": "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B",
+      "parentConfidence": 0.96,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 366,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.95,
+     "labels": {
+      "33E35628-4003-44DC-81F5-31F6F2E71CD8": "req2",
+      "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.95,
+      "parent": "B75823A6-5F52-46AA-85F9-F3A1E6DE2C1B",
+      "parentConfidence": 0.95,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 298,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 350,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 320,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/hash/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What is a hash table?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 304,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 359,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 458,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 405,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 304,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 478,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/revers/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How would you reverse a linked list?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 295,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 447,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 364,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 431,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 395,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 317,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/collision/i"
+    ],
+    "mustNot": [
+     "/linked list/i"
+    ],
+    "parent": "req1",
+    "relation": "new_request",
+    "withdrawn": false
+   },
+   "newInput": [
+    "Back to hash tables, how do you handle collisions?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 444,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "50B19C97-A58C-4BA7-88C9-EC2704C82994": "req3",
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.96,
+      "parent": "A0F79C35-1655-4F7A-91CC-3613B5B39FDE",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 439,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "50B19C97-A58C-4BA7-88C9-EC2704C82994": "req3",
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "A0F79C35-1655-4F7A-91CC-3613B5B39FDE",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 480,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "50B19C97-A58C-4BA7-88C9-EC2704C82994": "req3",
+      "A0F79C35-1655-4F7A-91CC-3613B5B39FDE": "req1",
+      "A0718381-516C-4655-BC70-F23CB234B814": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "A0F79C35-1655-4F7A-91CC-3613B5B39FDE",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 260,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 532,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 439,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-06",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/state/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Explain Terraform state files."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 467,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 363,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 511,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 452,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 355,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 351,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-06",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Ansible/i"
+    ],
+    "mustNot": [
+     "/state file/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "Forget Terraform. How does Ansible work?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 469,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.47,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1",
+      "DF98CB78-FBD0-4220-8BF0-EBE345BC939C": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "90E8B2B0-0A87-493C-879A-B77F9D49AA40",
+      "parentConfidence": 0.47,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 444,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.42,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1",
+      "DF98CB78-FBD0-4220-8BF0-EBE345BC939C": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "90E8B2B0-0A87-493C-879A-B77F9D49AA40",
+      "parentConfidence": 0.42,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 326,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.41,
+     "labels": {
+      "90E8B2B0-0A87-493C-879A-B77F9D49AA40": "req1",
+      "DF98CB78-FBD0-4220-8BF0-EBE345BC939C": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "90E8B2B0-0A87-493C-879A-B77F9D49AA40",
+      "parentConfidence": 0.41,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 291,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 390,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 323,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-07",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Why do you want to leave your current job?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 317,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 332,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 347,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 848,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 476,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 297,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-07",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ],
+    "parent": [
+     "req1",
+     "none"
+    ],
+    "relation": [
+     "continuation",
+     "new_request"
+    ]
+   },
+   "newInput": [
+    "And what are you looking for next?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 352,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.88,
+     "parent": "req1",
+     "parentConfidence": 0.46,
+     "labels": {
+      "D26C7218-B3E3-48A7-B5F0-44EA730EE766": "req2",
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.88,
+      "parent": "E132EE81-B632-431D-BCA8-0BF1C80C6B0D",
+      "parentConfidence": 0.46,
+      "problems": [],
+      "withdraws": 0.07,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 392,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.86,
+     "parent": "req1",
+     "parentConfidence": 0.43,
+     "labels": {
+      "D26C7218-B3E3-48A7-B5F0-44EA730EE766": "req2",
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.86,
+      "parent": "E132EE81-B632-431D-BCA8-0BF1C80C6B0D",
+      "parentConfidence": 0.43,
+      "problems": [],
+      "withdraws": 0.08,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 429,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.89,
+     "parent": "req1",
+     "parentConfidence": 0.42,
+     "labels": {
+      "D26C7218-B3E3-48A7-B5F0-44EA730EE766": "req2",
+      "E132EE81-B632-431D-BCA8-0BF1C80C6B0D": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.89,
+      "parent": "E132EE81-B632-431D-BCA8-0BF1C80C6B0D",
+      "parentConfidence": 0.42,
+      "problems": [],
+      "withdraws": 0.09,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 479,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 306,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 408,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-08",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/rate|limit|token bucket/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Mm-hmm.",
+    "Sure.",
+    "How would you rate-limit an API?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 394,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1113B75E-9D5D-4FEF-A53C-BE41DD724619": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 344,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1113B75E-9D5D-4FEF-A53C-BE41DD724619": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 448,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1113B75E-9D5D-4FEF-A53C-BE41DD724619": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 320,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 315,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 403,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-09",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/event/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Tell me about event sourcing."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 435,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 430,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 355,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 361,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 529,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 334,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-en-09",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "abandonment"
+   },
+   "newInput": [
+    "Actually, skip that one."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 357,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1",
+      "ACE5CBEB-C04B-4D19-8341-73E3A45AE6D4": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "8F53AE21-DC80-4DE8-94F3-132B2B36D448",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.95,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 286,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1",
+      "ACE5CBEB-C04B-4D19-8341-73E3A45AE6D4": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "8F53AE21-DC80-4DE8-94F3-132B2B36D448",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.95,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 478,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.98,
+     "labels": {
+      "8F53AE21-DC80-4DE8-94F3-132B2B36D448": "req1",
+      "ACE5CBEB-C04B-4D19-8341-73E3A45AE6D4": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "8F53AE21-DC80-4DE8-94F3-132B2B36D448",
+      "parentConfidence": 0.98,
+      "problems": [],
+      "withdraws": 0.95,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 312,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 415,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 354,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-01",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/charge|balanc|répartit/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Comment fonctionne un load balancer ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 315,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 373,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 371,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 278,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 331,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 438,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-01",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/HTTPS|TLS|SSL/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "Et en HTTPS."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 471,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.98,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1",
+      "741331E7-BE48-4763-9430-634C68012F52": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.95,
+      "parent": "6A886493-382F-4727-91BD-A45F359C18F2",
+      "parentConfidence": 0.98,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 369,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.94,
+     "parent": "req1",
+     "parentConfidence": 0.97,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1",
+      "741331E7-BE48-4763-9430-634C68012F52": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.94,
+      "parent": "6A886493-382F-4727-91BD-A45F359C18F2",
+      "parentConfidence": 0.97,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 369,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 0.98,
+     "labels": {
+      "6A886493-382F-4727-91BD-A45F359C18F2": "req1",
+      "741331E7-BE48-4763-9430-634C68012F52": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.96,
+      "parent": "6A886493-382F-4727-91BD-A45F359C18F2",
+      "parentConfidence": 0.98,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 482,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 434,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 413,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-02",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Kafka/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Qu'est-ce que Kafka ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 463,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 335,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 376,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 329,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 551,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 457,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-02",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/RabbitMQ/i"
+    ],
+    "mustNot": [],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 511,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.93,
+     "labels": {
+      "178C65FB-84D9-48A2-A231-7EEC4ACDE407": "req2",
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "A2927473-5999-46BC-843F-A1D1E88AAB93",
+      "parentConfidence": 0.93,
+      "problems": [],
+      "withdraws": 0.98,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 446,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.88,
+     "labels": {
+      "178C65FB-84D9-48A2-A231-7EEC4ACDE407": "req2",
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "A2927473-5999-46BC-843F-A1D1E88AAB93",
+      "parentConfidence": 0.88,
+      "problems": [],
+      "withdraws": 0.98,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 320,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.92,
+     "labels": {
+      "178C65FB-84D9-48A2-A231-7EEC4ACDE407": "req2",
+      "A2927473-5999-46BC-843F-A1D1E88AAB93": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "A2927473-5999-46BC-843F-A1D1E88AAB93",
+      "parentConfidence": 0.92,
+      "problems": [],
+      "withdraws": 0.98,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 308,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 435,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 381,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-03",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/client|produit|valeur/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Comment présenteriez-vous notre produit à un client hésitant ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 329,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 393,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 287,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 838,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 317,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 348,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  },
+  {
+   "dialogue": "dv-fr-03",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/concurrent|prix|valeur/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "Et s'il compare avec un concurrent moins cher ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 319,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.67,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "A50A9B82-F4BD-4A61-AEF2-D98F4145CFFB": "req2",
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.67,
+      "parent": "D321BEA3-8C30-424A-9F8D-874FE966F070",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 364,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.66,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "A50A9B82-F4BD-4A61-AEF2-D98F4145CFFB": "req2",
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.66,
+      "parent": "D321BEA3-8C30-424A-9F8D-874FE966F070",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 292,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.66,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "A50A9B82-F4BD-4A61-AEF2-D98F4145CFFB": "req2",
+      "D321BEA3-8C30-424A-9F8D-874FE966F070": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.66,
+      "parent": "D321BEA3-8C30-424A-9F8D-874FE966F070",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 343,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 320,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 410,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [],
+   "answersC": []
+  }
+ ]
+}

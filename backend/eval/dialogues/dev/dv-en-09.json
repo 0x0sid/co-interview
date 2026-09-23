@@ -1,0 +1,33 @@
+{
+ "split": "dev",
+ "id": "dv-en-09",
+ "language": "en",
+ "domain": "technical",
+ "about": "abandonment only",
+ "steps": [
+  {
+   "say": "Tell me about event sourcing."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/event/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Actually, skip that one."
+  },
+  {
+   "tap": {
+    "relation": "abandonment",
+    "parent": "req1",
+    "must": [],
+    "mustNot": []
+   }
+  }
+ ]
+}

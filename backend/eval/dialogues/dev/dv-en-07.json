@@ -1,0 +1,41 @@
+{
+ "split": "dev",
+ "id": "dv-en-07",
+ "language": "en",
+ "domain": "behavioral",
+ "about": "personal follow-up",
+ "steps": [
+  {
+   "say": "Why do you want to leave your current job?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ]
+   }
+  },
+  {
+   "say": "And what are you looking for next?"
+  },
+  {
+   "tap": {
+    "relation": [
+     "continuation",
+     "new_request"
+    ],
+    "parent": [
+     "req1",
+     "none"
+    ],
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ]
+   }
+  }
+ ]
+}

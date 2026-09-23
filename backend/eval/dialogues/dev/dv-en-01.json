@@ -1,0 +1,44 @@
+{
+ "split": "dev",
+ "id": "dv-en-01",
+ "language": "en",
+ "domain": "technical",
+ "about": "topic change",
+ "steps": [
+  {
+   "say": "How do blocks work in Ruby?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/block/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "We're done with Ruby."
+  },
+  {
+   "say": "What are optionals in Swift?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/optional/i"
+    ],
+    "mustNot": [
+     "/Ruby block/i"
+    ],
+    "withdrawn": true
+   }
+  }
+ ]
+}

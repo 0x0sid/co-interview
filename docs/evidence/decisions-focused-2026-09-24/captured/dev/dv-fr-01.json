@@ -1,0 +1,151 @@
+{
+  "id" : "dv-fr-01",
+  "language" : "fr",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "10DE93FF-48CD-4581-8180-37B6650BA880" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "F5AF937B-F894-4765-9CC0-A470A5ADEC95",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "88692FAB-7340-4D89-B904-7D6A9394248E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Comment fonctionne un load balancer ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "619E42B7-B6A1-4FCF-8FFE-5694F3A6D74B",
+        "snapshotID" : "4A56DA64-485A-4868-9600-40891E8EE4F9",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/charge|balanc|répartit\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "2FBF8E6D-81D4-4881-A826-A7F016F0F1C0",
+        "diagnosticsSessionID" : "F5AF937B-F894-4765-9CC0-A470A5ADEC95",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Comment fonctionne un load balancer ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Comment fonctionne un load balancer ?",
+        "recentConversation" : [
+          "Comment fonctionne un load balancer ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "7B3D50F9-C277-4B48-8D09-6E580128C58B" : "req2",
+        "10DE93FF-48CD-4581-8180-37B6650BA880" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "10DE93FF-48CD-4581-8180-37B6650BA880",
+            "sourceText" : "Comment fonctionne un load balancer ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "F5AF937B-F894-4765-9CC0-A470A5ADEC95",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "14B66C2F-D7E9-4224-8A23-3EBBD061B297",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Et en HTTPS."
+          }
+        ],
+        "preceding" : [
+          "Comment fonctionne un load balancer ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "619E42B7-B6A1-4FCF-8FFE-5694F3A6D74B",
+        "snapshotID" : "DB79E483-FEC5-46F1-B8A6-4E26C95FD497",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/HTTPS|TLS|SSL\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "76576B60-AB95-4685-84ED-B3F8C59C028C",
+        "diagnosticsSessionID" : "F5AF937B-F894-4765-9CC0-A470A5ADEC95",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Et en HTTPS."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Comment fonctionne un load balancer ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Et en HTTPS.",
+        "recentConversation" : [
+          "Comment fonctionne un load balancer ?",
+          "Et en HTTPS."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

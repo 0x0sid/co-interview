@@ -1,0 +1,151 @@
+{
+  "id" : "ho-en-11",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "C2EC720F-4BAB-4E15-A1CE-C7A9FFED2ADB" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "82552115-2378-43EF-BE65-DB46F025DF37",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "4CE9C739-135B-4239-BC97-F8C87A7D755B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How would you handle a customer who wants a discount we can't give?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "4D60D699-6421-4954-B463-216DA8B86AD3",
+        "snapshotID" : "20EB4D4A-97E6-44E2-AE1B-D7B95A7B440B",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/discount|value|price\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "AD0CE8BE-93D5-406A-AF30-6ECA035BC39C",
+        "diagnosticsSessionID" : "82552115-2378-43EF-BE65-DB46F025DF37",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How would you handle a customer who wants a discount we can't give?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How would you handle a customer who wants a discount we can't give?",
+        "recentConversation" : [
+          "How would you handle a customer who wants a discount we can't give?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "A3DBD723-087C-48CD-8CB0-54F9AC48FA78" : "req2",
+        "C2EC720F-4BAB-4E15-A1CE-C7A9FFED2ADB" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "C2EC720F-4BAB-4E15-A1CE-C7A9FFED2ADB",
+            "sourceText" : "How would you handle a customer who wants a discount we can't give?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "82552115-2378-43EF-BE65-DB46F025DF37",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "CFB1E8B2-17DA-4404-81DA-60F0A69E1100",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And if they threaten to cancel?"
+          }
+        ],
+        "preceding" : [
+          "How would you handle a customer who wants a discount we can't give?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "4D60D699-6421-4954-B463-216DA8B86AD3",
+        "snapshotID" : "22AFC2BF-382E-49CF-BCBE-AB970203A6DA",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/cancel|leave|churn\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "A752C976-DA30-4AC7-996B-D533F1FAFE07",
+        "diagnosticsSessionID" : "82552115-2378-43EF-BE65-DB46F025DF37",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And if they threaten to cancel?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How would you handle a customer who wants a discount we can't give?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And if they threaten to cancel?",
+        "recentConversation" : [
+          "How would you handle a customer who wants a discount we can't give?",
+          "And if they threaten to cancel?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

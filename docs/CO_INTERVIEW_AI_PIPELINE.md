@@ -928,3 +928,93 @@ conversation or its choice of line.
 Replay of the captured requests, same model (`google/gemini-2.5-flash-lite`), same checks: the 23:18
 prompt met 17/27 and the morning prompt 19/27 (both 0/3 on the phone's intermediate tap and 0/3 on the
 chip); after, 71/72 over two passes of 4×. Evidence: `docs/evidence/topic-2026-09-24/`.
+
+---
+
+## 18. Focused request decisions, in shadow (2026-09-24)
+
+**Supersedes §15's strategy; §15's transport, modes and safety rules still hold.** Jev is no longer
+asked from the detector's classify call. It judged speech against card titles — the answer model's
+own summaries — and nothing it returned could be used at Generate time.
+
+### Who owns what
+
+| Code | Jev (proposes) | Answer model |
+| --- | --- | --- |
+| transcript chronology, ids, revisions; snapshots and coverage; latest-first priority; pages and stream-to-page association; duplicates and stale results | how the newest speech relates to earlier requests, and which one it refers to | reading recognition errors in context; titles, answers, code, follow-ups |
+
+### The decision
+
+The screen (`RequestDecisionTracker` in `InterviewScreenModel`) builds a bounded snapshot: every line
+not yet covered by a request, with ids, revisions and final flags; up to six lines before them; and
+up to five recent requests **by their own words** (never titles), each pending, answered or
+superseded. No answers, note, attachments or documents. `POST /v1/copilot/decide` asks three
+independent questions in one call (`decisions.mjs`, prompt `focused-2026-09-24.2`):
+
+- `relation` (Choice): new_request, continuation, correction, abandonment, non_request, unclear —
+  boundary cases in the criteria; a withdrawal and a new request in one breath is a new request.
+- `parent` (Choice): the candidate requests, none, unclear.
+- `withdraws` (Noul): whether the speech moves away from an earlier subject — the difference between
+  "forget X, what about Y?" and "back to X", which the relation alone cannot express.
+
+Code combines them. Thresholds, tuned on development dialogues only: relation 0.5, parent 0.5,
+withdrawal 0.7. Low confidence, a relation that needs a parent without a trusted one, or an unoffered
+option is a fallback with its reason — never a guess.
+
+### When, and what it may change
+
+Asked in the background: after a 0.7 s stability interval, one call in flight per session, the next
+call rebuilt from the state as it then is (every unprocessed utterance included; nothing queued),
+no call when the evidence is unchanged, no retries. Results are cached against the evidence — speech
+ids, revisions and text, and the candidates and their status — and discarded on a session change.
+
+At Generate nothing is awaited. A cached decision is used only if its key still matches, the backend
+said `apply`, and it was accepted. It then travels as a structured `interpretation` that the backend
+turns into one fixed sentence (REQUEST STRUCTURE); the request still carries the whole conversation.
+Chips never carry one. Every tap records whether a decision shaped it, and why not
+("shadow: … not applied", "stale: …", "decision still in flight").
+
+### A transcript bug found on the way
+
+Closing an utterance with its final result keeps the revision it had as a partial, and the live feed
+re-emitted lines only on a revision change. So any line that had partial results stayed on screen as
+its last partial, marked not final — and a request, which carries final lines plus only the newest one
+as provisional, dropped it if it was not the last line. Lines are now re-emitted on any change of
+text, finality or revision (`FinalizedPartialTests`). This is a plausible cause of the earlier
+unreproducible "Compare Java 8 and Java 10", where middle lines of a comparison went missing.
+
+### Evaluation (`backend/eval/dialogues`, `backend/eval/decision-dialogues.mjs`)
+
+Dialogues are whole conversations with tap boundaries, captured through the real app pipeline
+(`DialogueCaptureTests`), split by conversation: 12 development, 20 held-out (frozen in `f528f45`
+before any Jev call on them), 4 regression (the cases debugged earlier). Decisions ×3, answers ×2.
+
+Held-out: 20 conversations, 41 taps, 2 chips.
+
+| | A: Jev off (corrected baseline) | B: earlier Jev strategy | C: focused strategy |
+| --- | --- | --- | --- |
+| Relation accuracy | — | 95.1% (117/123) | **100% (123/123)** |
+| Parent accuracy | — | 100% (123/123)¹ | 98.4% (121/123) |
+| Accepted / accepted correct | — | — | 95.1% (117/123) / **100% (117/117)** |
+| Answers meeting the tap's checks | **96.5% (83/86)** | not applied | 94.2% (81/86) |
+| Topic-switch taps | 100% (26/26) | — | 100% (26/26) |
+| Continuation / correction taps | **100% (14/14)** | — | 92.9% (13/14) |
+| Chips on old pages | 100% (4/4) | — | 100% (4/4) |
+| Lost speech / duplicate pages | 0 / 0 | — | 0 / 0 |
+| Decision latency p50 / p95 | — | 344 / 465 ms | 356 / 488 ms |
+| Ready at a tap 1.5 s after speech | — | — | 100% |
+| Added Generate latency | — | — | 0 (never awaited; tested) |
+| Cost, 123 decisions | — | — | $0.0049 |
+
+¹ B was given the requests' own words rather than the titles it used in production, to be fair to it.
+
+**Not activated.** The decisions are accurate, but on these dialogues they did not improve the
+answers: the corrected baseline already chose the right request on every topic switch, and one
+accepted `continuation` made the model re-explain the parent request before the addition ("MongoDB
+indexing… compound indexes"). The interpretation's wording is the next thing to change — and has to be
+measured on fresh dialogues, because the held-out set has now shown this case. Mixed utterances, the
+multi-line first request and the withdrawal direction were fixed on development data only.
+
+Earlier harness artifact, disclosed: the first held-out run answered chips against placeholder parent
+answers (the capture stub's text), which made every chip miss; the stub now names what it was asked,
+and only answers were re-run. Decisions and thresholds were unaffected.

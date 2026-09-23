@@ -1,0 +1,271 @@
+{
+  "id" : "rg-02",
+  "language" : "en",
+  "split" : "regression",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "43E22300-96B3-45B3-8314-89C656BA5040" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "E161A5A1-601E-45D4-AF46-6E988DDC0062",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Angular GS version one"
+          },
+          {
+            "id" : "7CEDA678-14EE-40CA-B371-A1872B4F61BE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Iura JS version two"
+          },
+          {
+            "id" : "A2392659-F51C-404A-B981-6FE6596B724E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Angular JS"
+          },
+          {
+            "id" : "B1CE3BC3-5357-40D5-AC61-05C71CFCEDDE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Version one and version two, what's the difference?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "97F06E5C-1F28-470B-A7FC-FF923CAE46C6",
+        "snapshotID" : "ADB01ECE-7B9F-4CC2-86E7-8EE670DC7390",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+          "\/not (?:a )?(?:recogni[sz]ed|standard)|seems to be asking\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "5B24F79D-4FA9-4EBD-9C91-0E841A0253F2",
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "43E22300-96B3-45B3-8314-89C656BA5040" : "req1",
+        "BDFDC244-D3D2-428E-8569-792DE8ACAC5F" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "43E22300-96B3-45B3-8314-89C656BA5040",
+            "sourceText" : "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "704F97A3-B115-46F7-B9A2-2E507E4FBE4F",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And the latest version?"
+          }
+        ],
+        "preceding" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "97F06E5C-1F28-470B-A7FC-FF923CAE46C6",
+        "snapshotID" : "CB7D4BE1-DC7E-4D82-95FF-CA9DAC4A2613",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+          "\/Angular\\s*v?(?:1[4-9]|2\\d)\\b\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "35CE87AA-F121-440A-9672-A992CDC33456",
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And the latest version?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And the latest version?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?",
+          "And the latest version?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "43E22300-96B3-45B3-8314-89C656BA5040" : "req1",
+        "BDFDC244-D3D2-428E-8569-792DE8ACAC5F" : "req2",
+        "DCA93EF4-FF8B-4DAD-BE9A-7A5D9D16EA00" : "req3"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "BDFDC244-D3D2-428E-8569-792DE8ACAC5F",
+            "sourceText" : "And the latest version?",
+            "status" : "answered"
+          },
+          {
+            "id" : "43E22300-96B3-45B3-8314-89C656BA5040",
+            "sourceText" : "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "3DDB642E-C183-4B36-89C7-CE433D7780B0",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Let's switch topics. How does Kubernetes handle rolling updates?"
+          }
+        ],
+        "preceding" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?",
+          "And the latest version?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "97F06E5C-1F28-470B-A7FC-FF923CAE46C6",
+        "snapshotID" : "8B57448C-C810-4854-A77D-0283EA35F9E1",
+        "stateRevision" : 10
+      },
+      "expect" : {
+        "must" : [
+          "\/Kubernetes|rolling\/i"
+        ],
+        "mustNot" : [
+          "\/Angular\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "C1B50E9A-D078-4AB7-BDDE-3BEF4B6DBB1B",
+        "diagnosticsSessionID" : "3E026007-23EF-4CB1-ABBB-EB054D0D2C74",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Let's switch topics. How does Kubernetes handle rolling updates?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?”: an explanation of that.",
+          "In answer to “And the latest version?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Let's switch topics. How does Kubernetes handle rolling updates?",
+        "recentConversation" : [
+          "Angular GS version one",
+          "Iura JS version two",
+          "Angular JS",
+          "Version one and version two, what's the difference?",
+          "And the latest version?",
+          "Let's switch topics. How does Kubernetes handle rolling updates?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

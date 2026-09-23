@@ -132,6 +132,12 @@ final class CopilotSessionCoordinator {
         audio.onSilenceTick = { [weak self] now in self?.tick(now: now) }
     }
 
+    /// The provider's focused decision, for the screen's tracker. The provider stays private here.
+    func decisionService() -> RequestDecisionTracker.Decide {
+        let provider = self.provider
+        return { snapshot in try await provider.decide(snapshot) }
+    }
+
     // MARK: - Session lifecycle
 
     func startListening() {
@@ -638,6 +644,7 @@ final class CopilotSessionCoordinator {
             actionParentQuestion: discussion?.actionParentQuestion,
             actionParentAnswer: discussion?.actionParentAnswer,
             actionParentAnswerVersion: discussion?.actionParentAnswerVersion,
+            interpretation: discussion?.requestedAction == nil ? discussion?.interpretation : nil,
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
                       locator: $0.locator, text: $0.text)

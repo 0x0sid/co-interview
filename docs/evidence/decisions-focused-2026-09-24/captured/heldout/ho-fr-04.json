@@ -1,0 +1,157 @@
+{
+  "id" : "ho-fr-04",
+  "language" : "fr",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "703254E8-A83F-4CF7-B386-C418FDC588EF" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "671020B4-BDD8-4913-8DD6-DED8C2ADEF4B",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "194F5B8C-EB06-4DBB-8C8D-526FFC7E613B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Parlez-moi de votre plus grande réussite professionnelle."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "5918F883-07D3-42A1-8876-B77F1E26A81E",
+        "snapshotID" : "F42B2333-CA64-4C07-AFF3-38CC0595957C",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/en tant qu'IA|modèle de langage\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "6E5F6B5B-BBC4-4158-86EC-5DB95967DD90",
+        "diagnosticsSessionID" : "671020B4-BDD8-4913-8DD6-DED8C2ADEF4B",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Parlez-moi de votre plus grande réussite professionnelle."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Parlez-moi de votre plus grande réussite professionnelle.",
+        "recentConversation" : [
+          "Parlez-moi de votre plus grande réussite professionnelle."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "4C2DC9E2-DC34-4D7B-9870-7BCEE703FCA0" : "req2",
+        "703254E8-A83F-4CF7-B386-C418FDC588EF" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "703254E8-A83F-4CF7-B386-C418FDC588EF",
+            "sourceText" : "Parlez-moi de votre plus grande réussite professionnelle.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "671020B4-BDD8-4913-8DD6-DED8C2ADEF4B",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "191C9524-EFED-4B3D-8F95-C1A1B78F6C48",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Et quel a été votre plus grand échec ?"
+          }
+        ],
+        "preceding" : [
+          "Parlez-moi de votre plus grande réussite professionnelle."
+        ],
+        "requestActive" : false,
+        "sessionID" : "5918F883-07D3-42A1-8876-B77F1E26A81E",
+        "snapshotID" : "0874FEB2-4221-4806-B8E0-173D3E0F2705",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/en tant qu'IA|modèle de langage\/i"
+        ],
+        "parent" : [
+          "req1",
+          "none"
+        ],
+        "relation" : [
+          "new_request",
+          "continuation"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B995E2E0-23DA-409E-AEBF-2137CBF28390",
+        "diagnosticsSessionID" : "671020B4-BDD8-4913-8DD6-DED8C2ADEF4B",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Et quel a été votre plus grand échec ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Parlez-moi de votre plus grande réussite professionnelle.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Et quel a été votre plus grand échec ?",
+        "recentConversation" : [
+          "Parlez-moi de votre plus grande réussite professionnelle.",
+          "Et quel a été votre plus grand échec ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

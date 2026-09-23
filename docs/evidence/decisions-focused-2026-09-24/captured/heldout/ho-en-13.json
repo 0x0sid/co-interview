@@ -1,0 +1,85 @@
+{
+  "id" : "ho-en-13",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "FA17D3F3-7003-4822-A398-233297CA2985" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "52EDE72A-5720-4F30-8491-34387DFD73FB",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "63129D6B-A690-4531-8588-73021938F12F",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is a mutex?"
+          },
+          {
+            "id" : "8F387608-41A9-4FE0-9053-76EBFE89245A",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And separately, what's a semaphore?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "D9A30B18-D1DB-40BC-9754-B156496D0D15",
+        "snapshotID" : "9CA2F837-5B49-4FC5-9DF5-DECCDFE9A1C4",
+        "stateRevision" : 2
+      },
+      "expect" : {
+        "firstMust" : "\/semaphore\/i",
+        "must" : [
+          "\/semaphore\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "DA38BAFC-18BE-402B-A33D-219E87C41EE7",
+        "diagnosticsSessionID" : "52EDE72A-5720-4F30-8491-34387DFD73FB",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is a mutex?",
+          "And separately, what's a semaphore?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is a mutex? And separately, what's a semaphore?",
+        "recentConversation" : [
+          "What is a mutex?",
+          "And separately, what's a semaphore?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

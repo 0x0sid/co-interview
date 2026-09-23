@@ -1,0 +1,170 @@
+{
+  "id" : "ho-en-08",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "6FDC9784-ACC1-4FF7-9413-974ED70745B7" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "9A953F26-CC7C-4A66-8265-6D4A6AE16EF3",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "0355856A-9A82-44D3-9B82-A52414D96A92",
+            "isFinal" : true,
+            "revision" : 1,
+            "text" : "How do you scale a WebSocket server?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "47EEC044-326F-47A8-B03F-8EC77FD7F175",
+        "snapshotID" : "4DEADDB2-199A-4A6D-8E7D-C31E26981696",
+        "stateRevision" : 3
+      },
+      "expect" : {
+        "must" : [
+          "\/socket\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B5EBAB77-8DA5-4095-A5AB-240B15A83AF3",
+        "diagnosticsSessionID" : "9A953F26-CC7C-4A66-8265-6D4A6AE16EF3",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How do you scale a WebSocket server?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How do you scale a WebSocket server?",
+        "recentConversation" : [
+          "How do you scale a WebSocket server?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "6FDC9784-ACC1-4FF7-9413-974ED70745B7" : "req1",
+        "923F1622-2A77-4105-A84B-F157C5477F31" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "6FDC9784-ACC1-4FF7-9413-974ED70745B7",
+            "sourceText" : "How do you scale a WebSocket server?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "9A953F26-CC7C-4A66-8265-6D4A6AE16EF3",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "E965FE08-21B7-4CF2-BD8F-EB7D8D27E174",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Okay."
+          },
+          {
+            "id" : "6FFF587A-E0C1-40F4-B792-73F040925BE7",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Right."
+          },
+          {
+            "id" : "D03E2590-7A14-463A-90BB-15C200E2AC7F",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is backpressure?"
+          }
+        ],
+        "preceding" : [
+          "How do you scale a WebSocket server?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "47EEC044-326F-47A8-B03F-8EC77FD7F175",
+        "snapshotID" : "82950DBA-5F83-4E99-A218-F3033460579E",
+        "stateRevision" : 8
+      },
+      "expect" : {
+        "must" : [
+          "\/backpressure|back pressure\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "634C377F-CCEE-4A5B-998A-FFBBFAC537A0",
+        "diagnosticsSessionID" : "9A953F26-CC7C-4A66-8265-6D4A6AE16EF3",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Okay.",
+          "Right.",
+          "What is backpressure?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How do you scale a WebSocket server?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Okay. Right. What is backpressure?",
+        "recentConversation" : [
+          "How do you scale a WebSocket server?",
+          "Okay.",
+          "Right.",
+          "What is backpressure?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

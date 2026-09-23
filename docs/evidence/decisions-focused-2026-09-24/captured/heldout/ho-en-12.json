@@ -1,0 +1,152 @@
+{
+  "id" : "ho-en-12",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "CDE02193-36BB-4DC1-952F-DA320A6CC4D5" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "5AE9EA84-6651-4E71-B51F-07034F1971DE",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "DD272324-FA98-45A4-9302-EA159986FA3E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How do computed properties work in view JS?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "E39A6089-62CC-46FC-BEDE-35451AB98F31",
+        "snapshotID" : "FB429BE0-F83E-46BC-9155-58DBBEEE59E0",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/computed\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "59CFD5ED-1CB2-4E40-9B21-700F151905BE",
+        "diagnosticsSessionID" : "5AE9EA84-6651-4E71-B51F-07034F1971DE",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How do computed properties work in view JS?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How do computed properties work in view JS?",
+        "recentConversation" : [
+          "How do computed properties work in view JS?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "AC88DC69-C9EA-4786-BD1F-4D496C77F91F" : "req2",
+        "CDE02193-36BB-4DC1-952F-DA320A6CC4D5" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "CDE02193-36BB-4DC1-952F-DA320A6CC4D5",
+            "sourceText" : "How do computed properties work in view JS?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "5AE9EA84-6651-4E71-B51F-07034F1971DE",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "45DCE162-50F7-43E6-81C0-EE39E821AFB8",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Sorry, I meant watchers, not computed properties."
+          }
+        ],
+        "preceding" : [
+          "How do computed properties work in view JS?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "E39A6089-62CC-46FC-BEDE-35451AB98F31",
+        "snapshotID" : "34334D13-E504-4955-8DA9-B07A7FA0F410",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "firstMust" : "\/watch\/i",
+        "must" : [
+          "\/watch\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "correction"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "978B3D48-CC70-48BA-A904-E0B9FE517E95",
+        "diagnosticsSessionID" : "5AE9EA84-6651-4E71-B51F-07034F1971DE",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Sorry, I meant watchers, not computed properties."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How do computed properties work in view JS?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Sorry, I meant watchers, not computed properties.",
+        "recentConversation" : [
+          "How do computed properties work in view JS?",
+          "Sorry, I meant watchers, not computed properties."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

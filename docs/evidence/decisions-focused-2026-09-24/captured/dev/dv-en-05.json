@@ -1,0 +1,236 @@
+{
+  "id" : "dv-en-05",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "2A541903-5DF1-44B0-BDBD-1537145E115E" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "7A497E66-8C53-440C-80BE-60E1FC6DBB72",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is a hash table?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "115C10F3-3A24-4DA9-9AFF-3208AF7B6DF3",
+        "snapshotID" : "CBC98BDA-3DAB-4538-8997-2F22604E53C7",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/hash\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "576A3A90-D076-4293-BD6D-45991CD13043",
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is a hash table?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is a hash table?",
+        "recentConversation" : [
+          "What is a hash table?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "2A541903-5DF1-44B0-BDBD-1537145E115E" : "req1",
+        "6ADF3FDA-4515-4181-A8D6-9EFC2A6F3680" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "2A541903-5DF1-44B0-BDBD-1537145E115E",
+            "sourceText" : "What is a hash table?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "563E4483-F9BC-470B-A2A9-33C082D1CCE7",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How would you reverse a linked list?"
+          }
+        ],
+        "preceding" : [
+          "What is a hash table?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "115C10F3-3A24-4DA9-9AFF-3208AF7B6DF3",
+        "snapshotID" : "A3F94B8D-1978-4442-A4FA-80CB937E603F",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/revers\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "4C2506C5-F5B9-4554-BA19-D87A1CF1190B",
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How would you reverse a linked list?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is a hash table?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How would you reverse a linked list?",
+        "recentConversation" : [
+          "What is a hash table?",
+          "How would you reverse a linked list?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "2A541903-5DF1-44B0-BDBD-1537145E115E" : "req1",
+        "6ADF3FDA-4515-4181-A8D6-9EFC2A6F3680" : "req2",
+        "4192F304-872F-45B0-BC5A-E751B08FE7A1" : "req3"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "6ADF3FDA-4515-4181-A8D6-9EFC2A6F3680",
+            "sourceText" : "How would you reverse a linked list?",
+            "status" : "answered"
+          },
+          {
+            "id" : "2A541903-5DF1-44B0-BDBD-1537145E115E",
+            "sourceText" : "What is a hash table?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "08AE53C8-468C-41B2-840B-BCE9596C0240",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Back to hash tables, how do you handle collisions?"
+          }
+        ],
+        "preceding" : [
+          "What is a hash table?",
+          "How would you reverse a linked list?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "115C10F3-3A24-4DA9-9AFF-3208AF7B6DF3",
+        "snapshotID" : "73736CE0-60FB-4FC8-B42D-402B9B2D59CB",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/collision\/i"
+        ],
+        "mustNot" : [
+          "\/linked list\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "new_request",
+        "withdrawn" : false
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "C88C39A7-3B8C-45C0-9DF8-446C28477261",
+        "diagnosticsSessionID" : "C3764E98-983C-468C-A263-068454680FB6",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Back to hash tables, how do you handle collisions?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is a hash table?”: an explanation of that.",
+          "In answer to “How would you reverse a linked list?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Back to hash tables, how do you handle collisions?",
+        "recentConversation" : [
+          "What is a hash table?",
+          "How would you reverse a linked list?",
+          "Back to hash tables, how do you handle collisions?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

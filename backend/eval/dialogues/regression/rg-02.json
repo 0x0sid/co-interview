@@ -1,0 +1,63 @@
+{
+ "split": "regression",
+ "id": "rg-02",
+ "language": "en",
+ "domain": "technical",
+ "about": "garbled names, the latest version, then a new topic",
+ "steps": [
+  {
+   "say": "Angular GS version one"
+  },
+  {
+   "say": "Iura JS version two"
+  },
+  {
+   "say": "Angular JS"
+  },
+  {
+   "say": "Version one and version two, what's the difference?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/not (?:a )?(?:recogni[sz]ed|standard)|seems to be asking/i"
+    ]
+   }
+  },
+  {
+   "say": "And the latest version?"
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Angular\\s*v?(?:1[4-9]|2\\d)\\b/i"
+    ]
+   }
+  },
+  {
+   "say": "Let's switch topics. How does Kubernetes handle rolling updates?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Kubernetes|rolling/i"
+    ],
+    "mustNot": [
+     "/Angular/i"
+    ]
+   }
+  }
+ ]
+}

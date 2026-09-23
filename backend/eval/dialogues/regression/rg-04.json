@@ -1,0 +1,72 @@
+{
+ "split": "regression",
+ "id": "rg-04",
+ "language": "en",
+ "domain": "technical",
+ "about": "an old page, a new question, and a chip on the old page",
+ "steps": [
+  {
+   "say": "Could you compare Java 8 and Java 9?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Java/"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "What's the difference between Angular one and Angular two?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "select": 0
+  },
+  {
+   "say": "And how does routing work in Angular?"
+  },
+  {
+   "tap": {
+    "relation": [
+     "continuation",
+     "new_request"
+    ],
+    "parent": [
+     "req2",
+     "none"
+    ],
+    "must": [
+     "/rout/i",
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java \\d/"
+    ]
+   }
+  },
+  {
+   "chip": "example",
+   "page": 0,
+   "expect": {
+    "must": [
+     "/Java|lambda/i"
+    ],
+    "mustNot": [
+     "/Angular/i"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,237 @@
+{
+  "id" : "ho-en-05",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "09CBD414-447B-4D48-ADD8-1D62C672415B" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "90F7862C-79DF-4C3E-8EE6-D4F63D5F8D84",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is dependency injection?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "3382BE79-B119-4B58-AED0-8AE9BF76346D",
+        "snapshotID" : "C9811C42-952C-4955-BC68-16882F375EFB",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/depend|inject\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "DF9A8FA6-DD2E-404E-A4A3-B18D4CEBC368",
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is dependency injection?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is dependency injection?",
+        "recentConversation" : [
+          "What is dependency injection?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "09CBD414-447B-4D48-ADD8-1D62C672415B" : "req1",
+        "090BDDD8-F05B-404E-A9C7-A2EE5C28C86A" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "09CBD414-447B-4D48-ADD8-1D62C672415B",
+            "sourceText" : "What is dependency injection?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "BC60E161-8A05-4DA3-9C3E-179FB1DDB531",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How do you handle merge conflicts in Git?"
+          }
+        ],
+        "preceding" : [
+          "What is dependency injection?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "3382BE79-B119-4B58-AED0-8AE9BF76346D",
+        "snapshotID" : "4443A22A-A591-4056-AF88-119D476F7393",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/merge|conflict\/i"
+        ],
+        "mustNot" : [
+          "\/dependency injection\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "12165026-13E0-485A-B19E-77437D0A80FC",
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How do you handle merge conflicts in Git?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is dependency injection?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How do you handle merge conflicts in Git?",
+        "recentConversation" : [
+          "What is dependency injection?",
+          "How do you handle merge conflicts in Git?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "09CBD414-447B-4D48-ADD8-1D62C672415B" : "req1",
+        "090BDDD8-F05B-404E-A9C7-A2EE5C28C86A" : "req2",
+        "68039F23-9181-4EB1-99F1-608C6F5FB83D" : "req3"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "090BDDD8-F05B-404E-A9C7-A2EE5C28C86A",
+            "sourceText" : "How do you handle merge conflicts in Git?",
+            "status" : "answered"
+          },
+          {
+            "id" : "09CBD414-447B-4D48-ADD8-1D62C672415B",
+            "sourceText" : "What is dependency injection?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "8E23E0B0-8A99-441D-8984-2599A8B2C085",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Going back to dependency injection, how does it help with testing?"
+          }
+        ],
+        "preceding" : [
+          "What is dependency injection?",
+          "How do you handle merge conflicts in Git?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "3382BE79-B119-4B58-AED0-8AE9BF76346D",
+        "snapshotID" : "A948ED2F-70BD-40BA-9C39-6B92AA31800C",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/inject|depend\/i",
+          "\/test\/i"
+        ],
+        "mustNot" : [
+          "\/merge conflict\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "new_request",
+        "withdrawn" : false
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "A83475BF-EF81-4A27-A54F-E7770D25BC83",
+        "diagnosticsSessionID" : "E7B54988-A867-4985-9804-ABDC44023ECD",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Going back to dependency injection, how does it help with testing?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is dependency injection?”: an explanation of that.",
+          "In answer to “How do you handle merge conflicts in Git?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Going back to dependency injection, how does it help with testing?",
+        "recentConversation" : [
+          "What is dependency injection?",
+          "How do you handle merge conflicts in Git?",
+          "Going back to dependency injection, how does it help with testing?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

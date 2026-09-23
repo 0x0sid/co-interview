@@ -61,6 +61,7 @@ enum DiagnosticsExport {
         out.append("| Session id | `\(trace.sessionID.uuidString)` |")
         out.append("| App | \(trace.appVersion) (\(trace.appBuild)) · commit `\(trace.commit)` |")
         out.append("| Backend | \(trace.backendVersion ?? "unknown") |")
+        out.append("| Decision | \(Redaction.redact(trace.decision ?? "not recorded")) |")
         out.append("| Tapped | \(trace.tappedAt.map(GenerateDiagnostics.stamp) ?? "—") |")
         out.append("| Tap outcome | **\(trace.outcome.rawValue)**\(trace.outcomeReason.map { " — \($0)" } ?? "") |")
         out.append("| Interpreted title | \(trace.interpretedTitle ?? "(none yet)") |")
@@ -308,6 +309,7 @@ enum DiagnosticsExport {
             "attemptFailures": trace.attemptFailures.map(Redaction.redact),
             "stream": trace.streamOutcome.rawValue,
             "interpretedTitle": trace.interpretedTitle as Any? ?? NSNull(),
+            "decision": trace.decision as Any? ?? NSNull(),
             "answer": ["version": trace.answerVersion as Any? ?? NSNull(),
                        "characters": trace.answerCharacters] as [String: Any],
             "timingsMs": [

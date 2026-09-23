@@ -1,0 +1,157 @@
+{
+  "id" : "dv-en-07",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "6061960C-BE4A-44C5-BF18-5A4D75C83D71" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "22FAEA8B-9FE4-4385-86C6-6CD3E4F43163",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "8CAA0F6F-905D-4AD5-B4B3-95CC34EE7F06",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Why do you want to leave your current job?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "6FDAE7B7-DBAE-4B4B-9FCF-12AC58F3F562",
+        "snapshotID" : "75389782-10EE-4ED3-864C-48BEC37DC623",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/as an AI\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "80EDE99D-B0AC-4957-858E-13B2A7CD27ED",
+        "diagnosticsSessionID" : "22FAEA8B-9FE4-4385-86C6-6CD3E4F43163",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Why do you want to leave your current job?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Why do you want to leave your current job?",
+        "recentConversation" : [
+          "Why do you want to leave your current job?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "77CCA7F7-BB06-40CC-AE1A-095D5BB5FDA3" : "req2",
+        "6061960C-BE4A-44C5-BF18-5A4D75C83D71" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "6061960C-BE4A-44C5-BF18-5A4D75C83D71",
+            "sourceText" : "Why do you want to leave your current job?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "22FAEA8B-9FE4-4385-86C6-6CD3E4F43163",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "A8E753ED-8606-46AF-A1AB-3F5385897029",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And what are you looking for next?"
+          }
+        ],
+        "preceding" : [
+          "Why do you want to leave your current job?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "6FDAE7B7-DBAE-4B4B-9FCF-12AC58F3F562",
+        "snapshotID" : "CA5AA40C-D2BD-4FD0-B2BD-B824DA938E2C",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/as an AI\/i"
+        ],
+        "parent" : [
+          "req1",
+          "none"
+        ],
+        "relation" : [
+          "continuation",
+          "new_request"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "CEE5907C-6E21-40EE-B7BD-D66B9A702423",
+        "diagnosticsSessionID" : "22FAEA8B-9FE4-4385-86C6-6CD3E4F43163",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And what are you looking for next?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Why do you want to leave your current job?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And what are you looking for next?",
+        "recentConversation" : [
+          "Why do you want to leave your current job?",
+          "And what are you looking for next?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

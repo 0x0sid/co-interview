@@ -1,0 +1,164 @@
+{
+  "id" : "ho-en-01",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "59A6FA00-20FF-4EFA-B9F4-3385F044F56E" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "A35F9033-93E0-44A0-A6FE-13D6A0431695",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "9FC1997A-4C1F-4993-A46C-19EB746BFD75",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Can you explain how garbage collection works in Go?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "D40536BD-CFE9-4223-A2D1-E8C4D96F3B9C",
+        "snapshotID" : "CD2C3882-9097-42BC-8B22-1E4269EDC88F",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/garbage|collector|\\bGC\\b\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "7AA9E361-272D-4CA0-95B6-8ED5F07E7866",
+        "diagnosticsSessionID" : "A35F9033-93E0-44A0-A6FE-13D6A0431695",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Can you explain how garbage collection works in Go?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Can you explain how garbage collection works in Go?",
+        "recentConversation" : [
+          "Can you explain how garbage collection works in Go?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "59A6FA00-20FF-4EFA-B9F4-3385F044F56E" : "req1",
+        "B14C4AE8-39BC-4F33-9796-AD29AD9DF656" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "59A6FA00-20FF-4EFA-B9F4-3385F044F56E",
+            "sourceText" : "Can you explain how garbage collection works in Go?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "A35F9033-93E0-44A0-A6FE-13D6A0431695",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "DF752BB5-7183-47CE-9537-E8211D2DB2CC",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Okay, forget Go for a second."
+          },
+          {
+            "id" : "D61FB738-1A03-48BE-9A14-F29958EB9E32",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Let's talk about Kotlin. How do coroutines differ from threads?"
+          }
+        ],
+        "preceding" : [
+          "Can you explain how garbage collection works in Go?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "D40536BD-CFE9-4223-A2D1-E8C4D96F3B9C",
+        "snapshotID" : "FA21E1E2-8D50-4612-AA05-F7CAA997993D",
+        "stateRevision" : 5
+      },
+      "expect" : {
+        "firstMust" : "\/coroutine|Kotlin\/i",
+        "must" : [
+          "\/coroutine\/i"
+        ],
+        "mustNot" : [
+          "\/garbage collect\/i"
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "1D4BD5E2-F2F3-4D4E-B2EB-DD7FAFE634E3",
+        "diagnosticsSessionID" : "A35F9033-93E0-44A0-A6FE-13D6A0431695",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Okay, forget Go for a second.",
+          "Let's talk about Kotlin. How do coroutines differ from threads?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Can you explain how garbage collection works in Go?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Okay, forget Go for a second. Let's talk about Kotlin. How do coroutines differ from threads?",
+        "recentConversation" : [
+          "Can you explain how garbage collection works in Go?",
+          "Okay, forget Go for a second.",
+          "Let's talk about Kotlin. How do coroutines differ from threads?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

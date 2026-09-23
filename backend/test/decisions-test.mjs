@@ -13,7 +13,9 @@ import { setTimeout as delay } from "node:timers/promises";
 import {
   decisionConfigFromEnv, decisionApiKey, validateAnswers, decide, publicDecisionConfig, snapshotFromClassifyBody, buildJevQuestions, buildJevState,
   interpretJev, baselineDecision, compareDecisions, DecisionRecorder, DecisionShadow, applyActiveDecision, logLine,
+  focusedSnapshotFromBody, buildFocusedQuestions, buildFocusedState, combineFocused, RELATION_OPTIONS,
 } from "../decisions.mjs";
+import { readdirSync, readFileSync } from "node:fs";
 import { evaluate, costUSD } from "../providers/typesafe.mjs";
 import { score } from "../eval/decisions/metrics.mjs";
 import { loadCases, runAnswerCompleteness } from "../eval/decisions/run-decision-eval.mjs";
@@ -68,6 +70,14 @@ const typesafeStub = createServer(async (request, response) => {
   if (mode === "badrole") {
     response.writeHead(200, { "content-type": "application/json" });
     return response.end(JSON.stringify({ model: "typesafe/jev-1.13-20260917", answers: jevAnswers({ role: { type: "choice", choice: "banana", probabilities: { banana: 1 }, confidence: 1 } }), usage: {} }));
+  }
+  if (mode === "focused") {
+    const f = stub.focused ?? { relation: "continuation", rc: 0.9, parent: "r1", pc: 0.85 };
+    const answers = { relation: { type: "choice", choice: f.relation, probabilities: { [f.relation]: f.rc }, confidence: f.rc } };
+    if (body.questions?.parent) answers.parent = { type: "choice", choice: f.parent, probabilities: { [f.parent]: f.pc }, confidence: f.pc };
+    if (body.questions?.withdraws) answers.withdraws = { type: "noul", noul: f.w ?? 0.1 };
+    response.writeHead(200, { "content-type": "application/json" });
+    return response.end(JSON.stringify({ model: "typesafe/jev-1.13-20260917", answers, usage: { input_tokens: 400, output_tokens: 20, cost: 0.0000168 } }));
   }
   if (mode === "filler") {
     response.writeHead(200, { "content-type": "application/json" });
@@ -338,118 +348,164 @@ try {
     check("an unsure decision falls back to the detector", applyActiveDecision(baselineResult, snapshot, unsure, config).controlledBy === "baseline");
   }
 
-  console.log("server: shadow never delays the detector");
+  console.log("focused strategy: questions and combination");
   {
+    const snapshot = focusedSnapshotFromBody({
+      sessionID: "s", stateRevision: 3, snapshotID: "snap",
+      newSpeech: [{ id: "u9", revision: 1, isFinal: true, text: "And Postgres." }],
+      preceding: ["Could you compare MySQL and SQLite?"],
+      candidates: [{ id: "req-db", sourceText: "Could you compare MySQL and SQLite?", status: "answered" }, { id: "req-old", sourceText: "Tell me about yourself.", status: "answered" }],
+    });
+    const { questions, parentKeys } = buildFocusedQuestions(snapshot);
+    check("three batched questions: relation, parent, withdrawal", Object.keys(questions).join() === "relation,parent,withdraws" && questions.relation.type === "choice" && questions.withdraws.type === "noul");
+    check("relation offers all six relationships", Object.keys(questions.relation.criteria).join() === "new_request,continuation,correction,abandonment,non_request,unclear");
+    check("parent offers the candidates by their own words, plus none and unclear",
+      Object.keys(questions.parent.criteria).join() === "r1,r2,none,unclear" && questions.parent.criteria.r1.includes("MySQL and SQLite") && parentKeys.r2 === "req-old");
+    const state = buildFocusedState(snapshot);
+    check("the state carries only the new speech, a little before it, and the requests", Object.keys(state).join() === "setting,language,conversation_before,newest_speech,earlier_requests");
+    check("no candidates → no parent question", !buildFocusedQuestions(focusedSnapshotFromBody({ newSpeech: [{ id: "a", text: "Hi" }] })).questions.parent);
+
+    const ans = (relation, rc, parent, pc, withdraws = 0.1) => ({
+      relation: { type: "choice", choice: relation, probabilities: { [relation]: rc }, confidence: rc },
+      parent: { type: "choice", choice: parent, probabilities: { [parent]: pc }, confidence: pc },
+      withdraws: { type: "noul", noul: withdraws },
+    });
+    const t = { relation: 0.5, parent: 0.5, withdraws: 0.7 };
+    const cont = combineFocused(ans("continuation", 0.9, "r1", 0.9), parentKeys, snapshot, t);
+    check("a confident continuation with its parent is accepted", cont.accepted && cont.interpretation.relation === "continuation" && cont.interpretation.parentWords.includes("MySQL"));
+    check("a continuation without a matching parent falls back", !combineFocused(ans("continuation", 0.9, "none", 0.9), parentKeys, snapshot, t).accepted);
+    check("a low-confidence relation falls back", /below/.test(combineFocused(ans("continuation", 0.3, "r1", 0.9), parentKeys, snapshot, t).reason));
+    check("a low-confidence parent falls back", /parent confidence/.test(combineFocused(ans("correction", 0.9, "r1", 0.2), parentKeys, snapshot, t).reason));
+    const fresh = combineFocused(ans("new_request", 0.9, "none", 0.9), parentKeys, snapshot, t);
+    check("a new request needs no parent", fresh.accepted && fresh.interpretation.parentWords === null);
+    const back = combineFocused(ans("new_request", 0.9, "r2", 0.9), parentKeys, snapshot, t);
+    check("a new request with a trusted parent returns to that subject", back.accepted && back.interpretation.parentWords === "Tell me about yourself." && back.interpretation.withdrawn === false);
+    const away = combineFocused(ans("new_request", 0.9, "r1", 0.9, 0.95), parentKeys, snapshot, t);
+    check("a new request that drops its parent says so", away.accepted && away.interpretation.withdrawn === true);
+    const unsureDirection = combineFocused(ans("new_request", 0.9, "r1", 0.9, 0.5), parentKeys, snapshot, t);
+    check("an unclear direction passes no parent on", unsureDirection.accepted && unsureDirection.interpretation.parentWords === null);
+    check("non-requests and unclear speech are never applied", !combineFocused(ans("non_request", 0.99, "none", 0.9), parentKeys, snapshot, t).accepted && !combineFocused(ans("unclear", 0.99, "none", 0.9), parentKeys, snapshot, t).accepted);
+    check("an unoffered choice is invalid, not guessed", /invalid/.test(combineFocused(ans("banana", 0.99, "r1", 0.9), parentKeys, snapshot, t).reason));
+
+    const heldout = readdirSync(new URL("../eval/dialogues/heldout", import.meta.url)).filter((f) => f.endsWith(".json"))
+      .flatMap((f) => JSON.parse(readFileSync(new URL(`../eval/dialogues/heldout/${f}`, import.meta.url), "utf8")).steps.filter((s) => s.say).map((s) => s.say));
+    const prompt = JSON.stringify(RELATION_OPTIONS) + JSON.stringify(questions.relation.instructions) + JSON.stringify(questions.parent.instructions);
+    const leaked = heldout.filter((line) => line.length > 14 && prompt.includes(line));
+    check(`no held-out line appears in the focused questions (${heldout.length} lines checked)`, heldout.length > 0 && leaked.length === 0, leaked.join(" | "));
+  }
+
+  console.log("server: /decide");
+  {
+    const decideBody = (overrides = {}) => ({
+      sessionID: "session-F", stateRevision: 7, snapshotID: "snap-F1", diagnosticsSessionID: "diag-F", language: "en",
+      newSpeech: [{ id: "u1", revision: 2, isFinal: true, text: SECRET_SPEECH }],
+      preceding: ["Could you compare Java 8 and Java 9?"],
+      candidates: [{ id: "req-1", sourceText: "Could you compare Java 8 and Java 9?", status: "answered" }],
+      ...overrides,
+    });
+    stub.mode = "focused";
     const { child, logs } = startServer(9923, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: "shadow" });
     await delay(600);
     try {
-      const health = await (await fetch("http://127.0.0.1:9923/health")).json();
-      check("health reports shadow mode without the key", health.decisions?.mode === "shadow" && !JSON.stringify(health).includes("test-typesafe-key"));
+      stub.requests.length = 0;
+      const classify = await (await fetch("http://127.0.0.1:9923/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody()) })).json();
+      await delay(200);
+      check("the detector's classify call no longer asks Jev", classify.kind === "new_question" && stub.requests.length === 0);
+
+      const shadow = await (await fetch("http://127.0.0.1:9923/v1/copilot/decide", { method: "POST", headers: auth, body: JSON.stringify(decideBody()) })).json();
+      check("shadow returns the decision but never apply", shadow.mode === "shadow" && shadow.eligible === true && shadow.apply === false);
+      check("the decision names its prompt version, models and revision", shadow.prompt_version && shadow.answered_model && shadow.state_revision === 7);
+      check("the accepted interpretation is structured, not prose", shadow.interpretation?.relation === "continuation" && shadow.interpretation.parentWords.includes("Java 8"));
+      const sent = stub.requests.at(-1).body;
+      check("Jev is asked the three focused questions, batched", Object.keys(sent.questions).join() === "relation,parent,withdraws");
+      check("Jev is sent the bounded snapshot only", sent.state.newest_speech[0] === SECRET_SPEECH && !JSON.stringify(sent.state).includes("priorSuggestions"));
+
+      const optIn = await (await fetch("http://127.0.0.1:9923/v1/copilot/decide", { method: "POST", headers: auth, body: JSON.stringify(decideBody({ requestActive: true })) })).json();
+      check("a session asking for active is refused while the operator has not allowed it", optIn.apply === false && optIn.active_for_session === false);
+
+      const records = await (await fetch("http://127.0.0.1:9923/v1/copilot/diagnostics/decisions?session=diag-F", { headers: auth })).json();
+      check("decisions are recorded against the diagnostics session", records.records.length === 2);
+      check("records and logs carry no conversation text", !JSON.stringify(records).includes("secret-marker-7731") && !logs.join("").includes("secret-marker-7731"));
+      check("the log line says what was decided and whether it applied", logs.join("").includes("[decision] shadow") && logs.join("").includes("apply=false"));
 
       stub.delayMs = 1200;
-      stub.requests.length = 0;
-      const started = Date.now();
-      const response = await fetch("http://127.0.0.1:9923/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody()) });
-      const payload = await response.json();
-      const elapsed = Date.now() - started;
-      check("the detector's verdict is returned unchanged", response.status === 200 && payload.kind === "new_question");
-      check("the response does not wait for Jev", elapsed < 900, `elapsed=${elapsed}ms`);
-
-      const pending = await (await fetch("http://127.0.0.1:9923/v1/copilot/diagnostics/decisions?session=diag-A", { headers: auth })).json();
-      check("the record exists at once, queued", pending.records?.[0]?.jev.status === "queued");
-
-      // Generate is a separate route and never touches the decision queue.
+      const deciding = fetch("http://127.0.0.1:9923/v1/copilot/decide", { method: "POST", headers: auth, body: JSON.stringify(decideBody({ snapshotID: "slow" })) });
       const answerStarted = Date.now();
       const answer = await fetch("http://127.0.0.1:9923/v1/copilot/answer", { method: "POST", headers: auth, body: JSON.stringify({ question: "q", recentConversation: ["q"], newInput: ["q"], passages: [], language: "en", targetWordRange: [40, 80], projectID: "p" }) });
       await answer.text();
-      check("an answer streams while a shadow call is in flight", answer.status === 200 && Date.now() - answerStarted < 900);
-
-      await delay(1500);
+      check("an answer streams while a decision is in flight", answer.status === 200 && Date.now() - answerStarted < 900);
+      await deciding;
       stub.delayMs = 0;
-      const done = await (await fetch("http://127.0.0.1:9923/v1/copilot/diagnostics/decisions?session=diag-A", { headers: auth })).json();
-      const record = done.records[0];
-      check("the comparison completes afterwards", record.jev.status === "ok" && record.comparison && record.jev.role === "continuation");
-      check("ids, revisions, model and config version are recorded", record.snapshot_id === "snap-1" && record.utterances[0].revision === 2 && record.jev.answered_model === "jev-1.13.0" && record.config_version);
-      check("usage and published cost are recorded", record.jev.usage.input_tokens === 500 && record.jev.cost_usd > 0);
-      check("the context boundary is recorded", record.context.conversation_lines_sent_to_jev === 1 && /unaffected/.test(record.context.answer_request));
-      check("no conversation text without content capture", !JSON.stringify(done).includes("secret-marker-7731"));
-      check("the backend log carries no conversation text", !logs.join("").includes("secret-marker-7731") && logs.join("").includes("[decision] shadow"));
-      check("Jev received the newest speech as the thing to judge", stub.requests.at(-1).body.state.newest_speech === SECRET_SPEECH);
-
-      const unauthorized = await fetch("http://127.0.0.1:9923/v1/copilot/diagnostics/decisions?session=diag-A");
-      check("decision records need the client token", unauthorized.status === 401);
-    } finally {
-      child.kill();
-      stub.delayMs = 0;
-    }
-  }
-
-  console.log("server: content capture needs both switches");
-  {
-    const { child } = startServer(9924, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: "shadow", COPILOT_DIAGNOSTICS: "1" });
-    await delay(600);
-    try {
-      await fetch("http://127.0.0.1:9924/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody({ diagnosticsSessionID: "diag-B", captureContent: true })) });
-      await fetch("http://127.0.0.1:9924/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody({ diagnosticsSessionID: "diag-C", sessionID: "session-C" })) });
-      await delay(300);
-      const captured = await (await fetch("http://127.0.0.1:9924/v1/copilot/diagnostics/decisions?session=diag-B", { headers: auth })).json();
-      const uncaptured = await (await fetch("http://127.0.0.1:9924/v1/copilot/diagnostics/decisions?session=diag-C", { headers: auth })).json();
-      check("an opted-in request keeps its text", captured.records[0].content?.new_speech === SECRET_SPEECH);
-      check("a request that did not opt in keeps none", !JSON.stringify(uncaptured).includes("secret-marker-7731"));
-    } finally {
-      child.kill();
-    }
-  }
-
-  console.log("server: an unavailable decision service changes nothing");
-  {
-    const { child } = startServer(9925, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: "shadow", TYPESAFE_BASE: "http://127.0.0.1:9" });
-    await delay(600);
-    try {
-      const response = await fetch("http://127.0.0.1:9925/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody({ diagnosticsSessionID: "diag-D" })) });
-      check("classification still answers", response.status === 200 && (await response.json()).kind === "new_question");
-      await delay(800);
-      const records = await (await fetch("http://127.0.0.1:9925/v1/copilot/diagnostics/decisions?session=diag-D", { headers: auth })).json();
-      check("the failure is recorded with its reason", records.records[0].jev.status === "failed" && records.records[0].jev.failure.reason);
-    } finally {
-      child.kill();
-    }
-  }
-
-  console.log("server: off without a key");
-  {
-    const { child } = startServer(9926, {});
-    await delay(600);
-    try {
-      const health = await (await fetch("http://127.0.0.1:9926/health")).json();
-      check("health says off, and why", health.decisions.mode === "off" && health.decisions.key_configured === false);
-      const response = await fetch("http://127.0.0.1:9926/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody()) });
-      const payload = await response.json();
-      check("classification is exactly as before", response.status === 200 && payload.kind === "new_question" && !("decision" in payload));
-      const records = await fetch("http://127.0.0.1:9926/v1/copilot/diagnostics/decisions?session=diag-A", { headers: auth });
-      check("no decision records exist", records.status === 404);
-      check("no TypeSafe request was made", !stub.requests.some((r) => r.body?.state?.newest_speech === SECRET_SPEECH && r.auth === "Bearer "));
-    } finally {
-      child.kill();
-    }
-  }
-
-  console.log("server: active mode falls back in time");
-  {
-    const { child } = startServer(9927, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: "active", COPILOT_DECISION_ACTIVE: "role", COPILOT_DECISION_ACTIVE_TIMEOUT_MS: "300" });
-    await delay(600);
-    try {
-      stub.mode = "filler";
-      const overridden = await (await fetch("http://127.0.0.1:9927/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody()) })).json();
-      check("a trusted decision controls the verdict", overridden.kind === "none" && overridden.decision.controlled_by === "jev:role");
-      stub.delayMs = 1000;
-      const started = Date.now();
-      const fallback = await (await fetch("http://127.0.0.1:9927/v1/copilot/classify", { method: "POST", headers: auth, body: JSON.stringify(classifyBody({ snapshotID: "snap-2" })) })).json();
-      check("a late decision falls back to the detector within its deadline", fallback.kind === "new_question" && fallback.decision.controlled_by === "baseline" && Date.now() - started < 900);
     } finally {
       child.kill();
       stub.mode = "ok";
       stub.delayMs = 0;
+    }
+  }
+
+  console.log("server: limited-active per session, and off");
+  {
+    stub.mode = "focused";
+    const body = JSON.stringify({ sessionID: "s", stateRevision: 1, snapshotID: "x", newSpeech: [{ id: "u", revision: 0, isFinal: true, text: "And Java 7." }],
+      candidates: [{ id: "req-1", sourceText: "Compare Java 8 and 9", status: "answered" }], requestActive: true });
+    const { child } = startServer(9924, { TYPESAFE_API_KEY: "test-typesafe-key", COPILOT_DECISION_MODE: "shadow", COPILOT_DECISION_SESSION_OPT_IN: "1" });
+    await delay(600);
+    try {
+      const optedIn = await (await fetch("http://127.0.0.1:9924/v1/copilot/decide", { method: "POST", headers: auth, body })).json();
+      check("an opted-in session gets apply on an accepted decision", optedIn.apply === true && optedIn.mode === "shadow");
+      const other = await (await fetch("http://127.0.0.1:9924/v1/copilot/decide", { method: "POST", headers: auth, body: body.replace('"requestActive":true', '"requestActive":false') })).json();
+      check("every other session stays in shadow", other.apply === false);
+      const health = await (await fetch("http://127.0.0.1:9924/health")).json();
+      check("health reports the opt-in and the prompt version", health.decisions.session_opt_in === true && health.decisions.prompt_version);
+      stub.focused = { relation: "continuation", rc: 0.3, parent: "r1", pc: 0.9 };
+      const unsure = await (await fetch("http://127.0.0.1:9924/v1/copilot/decide", { method: "POST", headers: auth, body })).json();
+      check("an unsure decision is never applied, and says why", unsure.apply === false && /below/.test(unsure.fallback_reason));
+      stub.focused = null;
+    } finally {
+      child.kill();
+      stub.mode = "ok";
+    }
+    const off = startServer(9925, {});
+    await delay(600);
+    try {
+      const response = await (await fetch("http://127.0.0.1:9925/v1/copilot/decide", { method: "POST", headers: auth, body })).json();
+      check("with decisions off, /decide says so and applies nothing", response.mode === "off" && response.apply === false);
+    } finally {
+      off.child.kill();
+    }
+    const down = startServer(9926, { TYPESAFE_API_KEY: "k", COPILOT_DECISION_MODE: "shadow", TYPESAFE_BASE: "http://127.0.0.1:9" });
+    await delay(600);
+    try {
+      const failed = await (await fetch("http://127.0.0.1:9926/v1/copilot/decide", { method: "POST", headers: auth, body })).json();
+      check("an unreachable decision service is an explicit fallback", failed.apply === false && failed.eligible === false && failed.fallback_reason);
+    } finally {
+      down.child.kill();
+    }
+  }
+
+  console.log("the answer prompt carries an applied interpretation, and only then");
+  {
+    const { child } = startServer(9927, {});
+    await delay(600);
+    try {
+      const base = { question: "q", passages: [], language: "en", targetWordRange: [40, 80], projectID: "p",
+        recentConversation: ["Could you compare Java 8 and Java 9?", "And Java 7."], newInput: ["And Java 7."] };
+      const sentWith = async (extra) => {
+        upstreamBodies.length = 0;
+        await (await fetch("http://127.0.0.1:9927/v1/copilot/answer", { method: "POST", headers: auth, body: JSON.stringify({ ...base, ...extra }) })).text();
+        return JSON.stringify(upstreamBodies);
+      };
+      check("no interpretation, no block", !(await sentWith({})).includes("REQUEST STRUCTURE"));
+      check("a continuation names the request it adds to",
+        (await sentWith({ interpretation: { relation: "continuation", parentWords: "Could you compare Java 8 and Java 9?" } })).includes("It adds to the earlier request"));
+      check("an abandonment tells the model not to answer it",
+        (await sentWith({ interpretation: { relation: "abandonment", parentWords: "Compare Java" } })).includes("Do not answer that"));
+      check("a relation that needs a request and has none adds nothing",
+        !(await sentWith({ interpretation: { relation: "correction", parentWords: "" } })).includes("REQUEST STRUCTURE"));
+      check("a tapped action ignores any interpretation",
+        !(await sentWith({ requestedAction: "Give an example.", actionParentQuestion: "q", interpretation: { relation: "new_request" } })).includes("REQUEST STRUCTURE"));
+    } finally {
+      child.kill();
     }
   }
 

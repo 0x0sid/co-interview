@@ -29,7 +29,7 @@ final class LiveInterviewFeed: InterviewFeed {
     private var versionByRequest: [UUID: AnswerVersionID] = [:]
     private var emittedLengthByRequest: [UUID: Int] = [:]
     /// Transcript utterances already announced, so a revision does not re-announce a line.
-    private var emittedUtteranceRevisions: [UtteranceID: Int] = [:]
+    private var emittedUtteranceRevisions: [UtteranceID: String] = [:]
     private var emittedUtteranceOrder: [UtteranceID] = []
     /// Entries created by Generate rather than by detection.
     private var discussionQuestionIDByRequest: [UUID: UUID] = [:]
@@ -212,10 +212,15 @@ final class LiveInterviewFeed: InterviewFeed {
     /// A revision updates the line it belongs to rather than appending a second copy — that is what
     /// `ConversationLog`'s stable utterance identities are for.
     private func emitTranscriptChanges() {
+        // **Keyed on what the screen shows, not the revision alone.** Closing an utterance with its
+        // final result keeps the revision it had as a partial, so a revision-only check never sent the
+        // finalized line: it stayed on screen as its last partial, marked not final, and requests —
+        // which carry final lines plus only the newest one as provisional — dropped it.
         for utterance in coordinator.conversation.utterances {
             let known = emittedUtteranceRevisions[utterance.id]
-            guard known != utterance.revision else { continue }
-            emittedUtteranceRevisions[utterance.id] = utterance.revision
+            let signature = Self.signature(utterance.text, revision: utterance.revision, isFinal: true)
+            guard known != signature else { continue }
+            emittedUtteranceRevisions[utterance.id] = signature
             if known == nil { emittedUtteranceOrder.append(utterance.id) }
             continuation.yield(.transcriptLine(TranscriptLine(
                 id: utterance.id,
@@ -229,8 +234,9 @@ final class LiveInterviewFeed: InterviewFeed {
 
         if let open = coordinator.conversation.openUtterance {
             let known = emittedUtteranceRevisions[open.id]
-            guard known != open.revision else { return }
-            emittedUtteranceRevisions[open.id] = open.revision
+            let signature = Self.signature(open.text, revision: open.revision, isFinal: false)
+            guard known != signature else { return }
+            emittedUtteranceRevisions[open.id] = signature
             continuation.yield(.transcriptLine(TranscriptLine(
                 id: open.id,
                 text: open.text,
@@ -239,6 +245,10 @@ final class LiveInterviewFeed: InterviewFeed {
                 isFinal: false
             )))
         }
+    }
+
+    private static func signature(_ text: String, revision: Int, isFinal: Bool) -> String {
+        "\(revision)|\(isFinal)|\(text)"
     }
 
     private func isDetectedQuestion(_ utteranceID: UtteranceID) -> Bool {

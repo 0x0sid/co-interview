@@ -1,0 +1,297 @@
+{
+  "id" : "rg-04",
+  "language" : "en",
+  "split" : "regression",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "2EA156C3-CA5A-492A-8769-8223C0752C2C",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Could you compare Java 8 and Java 9?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "2A664060-F5D5-40DA-98DD-021B076C145B",
+        "snapshotID" : "39B6317D-92DE-49F4-9DF3-BFFE094E6DFF",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Java\/"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "0B3B8DB0-03D1-4F7E-BFB3-6858036C42E2",
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you compare Java 8 and Java 9?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you compare Java 8 and Java 9?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E" : "req2",
+        "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6",
+            "sourceText" : "Could you compare Java 8 and Java 9?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "571D7BB6-1E7E-444A-94C9-9048B176B9E7",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What's the difference between Angular one and Angular two?"
+          }
+        ],
+        "preceding" : [
+          "Could you compare Java 8 and Java 9?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "2A664060-F5D5-40DA-98DD-021B076C145B",
+        "snapshotID" : "47E051A9-57F7-4386-B851-3E621CF737DF",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "1A7204CC-7F44-411E-8514-E67AC3E24361",
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What's the difference between Angular one and Angular two?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Could you compare Java 8 and Java 9?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What's the difference between Angular one and Angular two?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E" : "req2",
+        "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6" : "req1",
+        "DB88571F-9708-4A55-809B-CFAACD5554CF" : "req3"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E",
+            "sourceText" : "What's the difference between Angular one and Angular two?",
+            "status" : "answered"
+          },
+          {
+            "id" : "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6",
+            "sourceText" : "Could you compare Java 8 and Java 9?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "97AF4826-83AD-4B1D-8186-F21F233504C3",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And how does routing work in Angular?"
+          }
+        ],
+        "preceding" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "2A664060-F5D5-40DA-98DD-021B076C145B",
+        "snapshotID" : "6C75D603-3C46-4BD3-942D-86622343E231",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/rout\/i",
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+          "\/Java \\d\/"
+        ],
+        "parent" : [
+          "req2",
+          "none"
+        ],
+        "relation" : [
+          "continuation",
+          "new_request"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "352FC461-6165-4DB8-BC67-CEDC7D596C14",
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And how does routing work in Angular?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Could you compare Java 8 and Java 9?”: an explanation of that.",
+          "In answer to “What's the difference between Angular one and Angular two?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And how does routing work in Angular?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?",
+          "And how does routing work in Angular?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E" : "req2",
+        "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6" : "req1",
+        "DB88571F-9708-4A55-809B-CFAACD5554CF" : "req3"
+      },
+      "chipParent" : "req1",
+      "expect" : {
+        "must" : [
+          "\/Java|lambda\/i"
+        ],
+        "mustNot" : [
+          "\/Angular\/i"
+        ]
+      },
+      "kind" : "chip",
+      "request" : {
+        "actionParentAnswer" : "In answer to “Could you compare Java 8 and Java 9?”: an explanation of that.",
+        "actionParentAnswerVersion" : 1,
+        "actionParentQuestion" : "Could you compare Java 8 and Java 9?",
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "D9A6A2B5-4EF8-419F-A4EE-F7094EFA82AE",
+        "diagnosticsSessionID" : "22336D29-D357-493F-A3E6-289A6120F089",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Could you compare Java 8 and Java 9?”: an explanation of that.",
+          "In answer to “What's the difference between Angular one and Angular two?”: an explanation of that.",
+          "In answer to “And how does routing work in Angular?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Give one concrete example of what you just explained.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "What's the difference between Angular one and Angular two?",
+          "And how does routing work in Angular?"
+        ],
+        "requestedAction" : "Give one concrete example of what you just explained.",
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

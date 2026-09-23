@@ -1,0 +1,154 @@
+{
+  "id" : "ho-en-10",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "992BBD0C-F15A-40E2-8D87-41790E017E8C" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "A016047A-8AF9-4037-B021-F4688E03EAB1",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "B28EF5E7-25ED-4CBF-8390-24B2B7358FEE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Tell me about a time you led a team through a difficult deadline."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "0107A59E-1A06-49ED-A664-C0635E550E3D",
+        "snapshotID" : "2B2EA53C-EEB2-47AC-876A-2E90A11E94C1",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/as an AI|language model\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "2080D379-7E9E-47A1-899B-9A8ABEF982D4",
+        "diagnosticsSessionID" : "A016047A-8AF9-4037-B021-F4688E03EAB1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Tell me about a time you led a team through a difficult deadline."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Tell me about a time you led a team through a difficult deadline.",
+        "recentConversation" : [
+          "Tell me about a time you led a team through a difficult deadline."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "485DC32A-83EC-4C12-B39A-015B4777E495" : "req2",
+        "992BBD0C-F15A-40E2-8D87-41790E017E8C" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "992BBD0C-F15A-40E2-8D87-41790E017E8C",
+            "sourceText" : "Tell me about a time you led a team through a difficult deadline.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "A016047A-8AF9-4037-B021-F4688E03EAB1",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "01CE0430-11A5-4AFA-9FC1-2D153FC2C7A5",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What would you do differently?"
+          }
+        ],
+        "preceding" : [
+          "Tell me about a time you led a team through a difficult deadline."
+        ],
+        "requestActive" : false,
+        "sessionID" : "0107A59E-1A06-49ED-A664-C0635E550E3D",
+        "snapshotID" : "7FF87988-EE22-4226-A0CD-40B5B2A634AD",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/as an AI|language model\/i"
+        ],
+        "parent" : "req1",
+        "relation" : [
+          "continuation",
+          "new_request"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "BBE3FD53-C0DD-4741-ADDC-8491454EAF96",
+        "diagnosticsSessionID" : "A016047A-8AF9-4037-B021-F4688E03EAB1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What would you do differently?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Tell me about a time you led a team through a difficult deadline.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What would you do differently?",
+        "recentConversation" : [
+          "Tell me about a time you led a team through a difficult deadline.",
+          "What would you do differently?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

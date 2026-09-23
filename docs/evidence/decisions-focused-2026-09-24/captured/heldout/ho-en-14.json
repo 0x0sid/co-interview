@@ -1,0 +1,151 @@
+{
+  "id" : "ho-en-14",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "6A01C0C3-7A10-49CA-A517-AE7345CBD0AB" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "757FEEAD-BF44-486E-ACEF-040EF235B48A",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "281000DC-C7A2-4DF2-97D6-F8F3C29A9057",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How do microservices communicate with each other?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "CC510EB6-A20F-4441-80D2-731C0B63E097",
+        "snapshotID" : "CDB1D9E0-9254-4B68-B9A4-261C70781BE0",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/microservice|service\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "F3698F2E-9482-4853-BF35-19507D840B4A",
+        "diagnosticsSessionID" : "757FEEAD-BF44-486E-ACEF-040EF235B48A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How do microservices communicate with each other?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How do microservices communicate with each other?",
+        "recentConversation" : [
+          "How do microservices communicate with each other?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "6A01C0C3-7A10-49CA-A517-AE7345CBD0AB" : "req1",
+        "880957CF-EDF9-4C98-B873-DE5B22051594" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "6A01C0C3-7A10-49CA-A517-AE7345CBD0AB",
+            "sourceText" : "How do microservices communicate with each other?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "757FEEAD-BF44-486E-ACEF-040EF235B48A",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "6BE720D7-6B6F-4A64-A9DB-DA342862EB1C",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Actually, never mind that question."
+          }
+        ],
+        "preceding" : [
+          "How do microservices communicate with each other?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "CC510EB6-A20F-4441-80D2-731C0B63E097",
+        "snapshotID" : "B6F45A9E-3DFC-45B4-8158-593389097E3F",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "abandonment"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "D7923817-FE2B-4CCA-9B69-76F5BE9FB527",
+        "diagnosticsSessionID" : "757FEEAD-BF44-486E-ACEF-040EF235B48A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Actually, never mind that question."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How do microservices communicate with each other?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Actually, never mind that question.",
+        "recentConversation" : [
+          "How do microservices communicate with each other?",
+          "Actually, never mind that question."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

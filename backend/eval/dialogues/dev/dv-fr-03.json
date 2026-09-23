@@ -1,0 +1,35 @@
+{
+ "split": "dev",
+ "id": "dv-fr-03",
+ "language": "fr",
+ "domain": "sales",
+ "about": "entretien commercial",
+ "steps": [
+  {
+   "say": "Comment présenteriez-vous notre produit à un client hésitant ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/client|produit|valeur/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Et s'il compare avec un concurrent moins cher ?"
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/concurrent|prix|valeur/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

@@ -1,0 +1,95 @@
+{
+  "id" : "ho-en-02",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "75BC290C-0CA9-4105-A707-A1338BC6829A" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "9007F044-8ABE-453F-8FA4-6438A8697658",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "84DE9845-2802-428A-BDE8-60FD02FB992B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What changed between Node 16 and Node 18?"
+          },
+          {
+            "id" : "7CEF6FBF-9886-4659-8B3E-58508647D8C3",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And Node 20."
+          },
+          {
+            "id" : "607A7FD3-2765-4D2C-8462-BA1E6C0496D0",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Also Node 22."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "F4E8371F-BAC7-466B-A0B7-6B1A22D0B063",
+        "snapshotID" : "762FFDFD-C6CD-4510-B01E-4E14E528554B",
+        "stateRevision" : 3
+      },
+      "expect" : {
+        "must" : [
+          "\/\\b16\\b\/",
+          "\/\\b18\\b\/",
+          "\/\\b20\\b\/",
+          "\/\\b22\\b\/"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "1CD26851-DCCF-45E8-99CC-5DDCAA85F3D4",
+        "diagnosticsSessionID" : "9007F044-8ABE-453F-8FA4-6438A8697658",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What changed between Node 16 and Node 18?",
+          "And Node 20.",
+          "Also Node 22."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What changed between Node 16 and Node 18? And Node 20. Also Node 22.",
+        "recentConversation" : [
+          "What changed between Node 16 and Node 18?",
+          "And Node 20.",
+          "Also Node 22."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

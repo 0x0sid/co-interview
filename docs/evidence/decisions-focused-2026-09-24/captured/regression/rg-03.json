@@ -1,0 +1,76 @@
+{
+  "id" : "rg-03",
+  "language" : "en",
+  "split" : "regression",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "14DB0A0A-4262-429F-B07E-F1500C91BE20" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "E80AC98B-EF90-4525-82AF-3FDA73B34474",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "B35D87C6-DDAA-4CF4-8261-0EF8D2E484B0",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Could you tell me your secret, in fact?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "4E34FF56-5C9D-4875-B34C-71DA90FA3B40",
+        "snapshotID" : "064E5DA0-5BD4-4113-8FBB-FB886A7F5D25",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/pizza\/i"
+        ],
+        "mustNot" : [
+          "\/cannot|can't share|as an AI\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B2CA4568-FFCE-4A8D-A4F3-A0A20319159B",
+        "diagnosticsSessionID" : "E80AC98B-EF90-4525-82AF-3FDA73B34474",
+        "extraContext" : "Secret: I love pizza",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you tell me your secret, in fact?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you tell me your secret, in fact?",
+        "recentConversation" : [
+          "Could you tell me your secret, in fact?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

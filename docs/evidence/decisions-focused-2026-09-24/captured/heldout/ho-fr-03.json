@@ -1,0 +1,152 @@
+{
+  "id" : "ho-fr-03",
+  "language" : "fr",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "83C7F37D-1CD9-4878-A6EE-ECF83FAE2F0A" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "4924C8A7-707D-4C5F-861C-A6CA27229523",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "07204616-C1DE-4F59-A756-C6089BFAB191",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Comparez Angular, Vue et Svelte."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "E967B837-3032-43AB-B916-C892A8D07B84",
+        "snapshotID" : "6C7901BE-0ADC-4404-9EC4-6E6F6A2C0CBB",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Svelte\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "AE4E7F07-BD1C-49EF-92B2-B09E159085C3",
+        "diagnosticsSessionID" : "4924C8A7-707D-4C5F-861C-A6CA27229523",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Comparez Angular, Vue et Svelte."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Comparez Angular, Vue et Svelte.",
+        "recentConversation" : [
+          "Comparez Angular, Vue et Svelte."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "6D4CD18A-5201-4500-9F32-7A7172626435" : "req2",
+        "83C7F37D-1CD9-4878-A6EE-ECF83FAE2F0A" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "83C7F37D-1CD9-4878-A6EE-ECF83FAE2F0A",
+            "sourceText" : "Comparez Angular, Vue et Svelte.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "4924C8A7-707D-4C5F-861C-A6CA27229523",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "0CB98E92-23D3-4C71-AE8D-DBE66A5C468E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "En fait, seulement Vue et Svelte."
+          }
+        ],
+        "preceding" : [
+          "Comparez Angular, Vue et Svelte."
+        ],
+        "requestActive" : false,
+        "sessionID" : "E967B837-3032-43AB-B916-C892A8D07B84",
+        "snapshotID" : "FC8B2BD8-1C8D-4C77-B36E-A7DB0D010A63",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Vue\/i",
+          "\/Svelte\/i"
+        ],
+        "mustNot" : [
+          "\/Angular\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "correction"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "071DA345-2E95-44DF-A826-B274344097F2",
+        "diagnosticsSessionID" : "4924C8A7-707D-4C5F-861C-A6CA27229523",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "En fait, seulement Vue et Svelte."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Comparez Angular, Vue et Svelte.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "En fait, seulement Vue et Svelte.",
+        "recentConversation" : [
+          "Comparez Angular, Vue et Svelte.",
+          "En fait, seulement Vue et Svelte."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

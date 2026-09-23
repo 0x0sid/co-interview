@@ -1,0 +1,27 @@
+{
+ "split": "regression",
+ "id": "rg-03",
+ "language": "en",
+ "domain": "personal",
+ "about": "the pizza note entered before Generate",
+ "steps": [
+  {
+   "say": "Could you tell me your secret, in fact?"
+  },
+  {
+   "note": "Secret: I love pizza"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/pizza/i"
+    ],
+    "mustNot": [
+     "/cannot|can't share|as an AI/i"
+    ]
+   }
+  }
+ ]
+}

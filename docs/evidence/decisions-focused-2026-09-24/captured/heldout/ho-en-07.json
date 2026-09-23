@@ -1,0 +1,208 @@
+{
+  "id" : "ho-en-07",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "8180E07F-49E6-4846-9625-0E9089466D9D" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "DFC4276C-CAF5-4F4B-A4BA-53A81D6EE2C1",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "74719C63-D557-4472-BCA7-66D6016AEE33",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is a closure in JavaScript?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "4EB03BFE-24FC-4E38-9E17-FF54EBCA7E9C",
+        "snapshotID" : "D1D84AD2-45BA-47ED-B4B5-58309175FACA",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/closure\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "71E4DA93-76AC-41B2-AAE9-C548B75F97B4",
+        "diagnosticsSessionID" : "DFC4276C-CAF5-4F4B-A4BA-53A81D6EE2C1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is a closure in JavaScript?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is a closure in JavaScript?",
+        "recentConversation" : [
+          "What is a closure in JavaScript?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "8180E07F-49E6-4846-9625-0E9089466D9D" : "req1"
+      },
+      "chipParent" : "req1",
+      "expect" : {
+        "must" : [
+          "\/closure\/i"
+        ],
+        "mustNot" : [
+          "\/debounce\/i"
+        ]
+      },
+      "kind" : "chip",
+      "request" : {
+        "actionParentAnswer" : "In answer to “What is a closure in JavaScript?”: an explanation of that.",
+        "actionParentAnswerVersion" : 1,
+        "actionParentQuestion" : "What is a closure in JavaScript?",
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B1204DC2-F9CE-40F6-A06C-864A1D72E50B",
+        "diagnosticsSessionID" : "DFC4276C-CAF5-4F4B-A4BA-53A81D6EE2C1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is a closure in JavaScript?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Give one concrete example of what you just explained.",
+        "recentConversation" : [
+          "What is a closure in JavaScript?",
+          "And how would you debounce a function?"
+        ],
+        "requestedAction" : "Give one concrete example of what you just explained.",
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "74DE0B2F-A342-41F3-AA10-86FDDAD3D7AF" : "req2",
+        "8180E07F-49E6-4846-9625-0E9089466D9D" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "8180E07F-49E6-4846-9625-0E9089466D9D",
+            "sourceText" : "What is a closure in JavaScript?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "DFC4276C-CAF5-4F4B-A4BA-53A81D6EE2C1",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "028C96DC-3671-4C08-B73F-4AEB24D585CD",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And how would you debounce a function?"
+          }
+        ],
+        "preceding" : [
+          "What is a closure in JavaScript?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "4EB03BFE-24FC-4E38-9E17-FF54EBCA7E9C",
+        "snapshotID" : "D317691C-6FE2-4123-9739-C7A931D4353F",
+        "stateRevision" : 6
+      },
+      "expect" : {
+        "must" : [
+          "\/debounce\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : [
+          "new_request",
+          "continuation"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "4A8C1D35-C629-42FD-AF2A-B2819A3EC41F",
+        "diagnosticsSessionID" : "DFC4276C-CAF5-4F4B-A4BA-53A81D6EE2C1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And how would you debounce a function?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is a closure in JavaScript?”: an explanation of that.",
+          "An example about the earlier answer."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And how would you debounce a function?",
+        "recentConversation" : [
+          "What is a closure in JavaScript?",
+          "And how would you debounce a function?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

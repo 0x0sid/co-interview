@@ -1,0 +1,94 @@
+{
+  "id" : "dv-en-02",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "1683A453-9ACF-48ED-BAF1-78FAA2AB7568" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "B4C8FCB1-4625-4EB5-91E6-B6FCC6C39F07",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "0E7E406A-3A61-47E2-B785-BBB71CAD61DF",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What's new in Java 11 compared to Java 8?"
+          },
+          {
+            "id" : "01214FC3-D0C9-4CB3-901F-E94479B1467B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And Java 17."
+          },
+          {
+            "id" : "561123B6-57EC-496A-9C11-B296672D5F72",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Plus Java 21."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "099FFEB6-4919-468E-8380-F24FF82789AD",
+        "snapshotID" : "A3D070B5-EC05-4513-B80E-869960D9027F",
+        "stateRevision" : 3
+      },
+      "expect" : {
+        "must" : [
+          "\/\\b11\\b\/",
+          "\/\\b17\\b\/",
+          "\/\\b21\\b\/"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "C649ADEF-DEAD-444B-B2E3-B22C349E48FE",
+        "diagnosticsSessionID" : "B4C8FCB1-4625-4EB5-91E6-B6FCC6C39F07",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What's new in Java 11 compared to Java 8?",
+          "And Java 17.",
+          "Plus Java 21."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What's new in Java 11 compared to Java 8? And Java 17. Plus Java 21.",
+        "recentConversation" : [
+          "What's new in Java 11 compared to Java 8?",
+          "And Java 17.",
+          "Plus Java 21."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

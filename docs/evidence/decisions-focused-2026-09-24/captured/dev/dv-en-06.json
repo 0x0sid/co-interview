@@ -1,0 +1,155 @@
+{
+  "id" : "dv-en-06",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "DE934599-C665-47A1-B356-2BB00F9E5343" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "7970B307-A32C-48CB-A092-E39F65146A24",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "EA331CB5-B008-4F77-B6D5-5F885BB84283",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Explain Terraform state files."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "BF94D4A9-DACB-483D-9831-E3068A993A8C",
+        "snapshotID" : "05D194DD-82DB-4CDB-BB2C-160E4F3A738A",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/state\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "9EBB0134-5B00-4135-BC63-8B7BD702CC38",
+        "diagnosticsSessionID" : "7970B307-A32C-48CB-A092-E39F65146A24",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Explain Terraform state files."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Explain Terraform state files.",
+        "recentConversation" : [
+          "Explain Terraform state files."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "77F149AF-2DDF-441F-8DBD-994FEA3115A5" : "req2",
+        "DE934599-C665-47A1-B356-2BB00F9E5343" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "DE934599-C665-47A1-B356-2BB00F9E5343",
+            "sourceText" : "Explain Terraform state files.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "7970B307-A32C-48CB-A092-E39F65146A24",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "FF34D8DC-A216-46D7-9DB8-F7376D131CAB",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Forget Terraform. How does Ansible work?"
+          }
+        ],
+        "preceding" : [
+          "Explain Terraform state files."
+        ],
+        "requestActive" : false,
+        "sessionID" : "BF94D4A9-DACB-483D-9831-E3068A993A8C",
+        "snapshotID" : "8C6D9D5A-FA75-4105-A847-DD6BED40D321",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Ansible\/i"
+        ],
+        "mustNot" : [
+          "\/state file\/i"
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "AD978916-4EFA-477F-B5C4-44EAB1DB8C38",
+        "diagnosticsSessionID" : "7970B307-A32C-48CB-A092-E39F65146A24",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Forget Terraform. How does Ansible work?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Explain Terraform state files.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Forget Terraform. How does Ansible work?",
+        "recentConversation" : [
+          "Explain Terraform state files.",
+          "Forget Terraform. How does Ansible work?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+ "split": "regression",
+ "id": "rg-01",
+ "language": "en",
+ "domain": "technical",
+ "about": "the phone's Java → Angular session with intermediate taps",
+ "steps": [
+  {
+   "say": "Could you compare Java 8 and Java 9?"
+  },
+  {
+   "say": "And Java 7."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Java/"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "And Java 10."
+  },
+  {
+   "say": "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?"
+  },
+  {
+   "say": "which one it is?"
+  },
+  {
+   "say": "And what about Angura?"
+  },
+  {
+   "say": "Could you tell me the difference between Aguila one Angular?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none"
+    ],
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java versions|which Java/i"
+    ],
+    "withdrawn": true
+   }
+  },
+  {
+   "say": "I'mura 2 and I'm gonna free."
+  },
+  {
+   "say": "The 3rd version, not free."
+  },
+  {
+   "say": "No, we're not talking about Java anymore."
+  },
+  {
+   "say": "We're talking about Angura GS."
+  },
+  {
+   "say": "Angula."
+  },
+  {
+   "say": "Angular."
+  },
+  {
+   "say": "GS."
+  },
+  {
+   "say": "What's the difference between angular one, 2 and the latt version?"
+  },
+  {
+   "say": "Please tell me more."
+  },
+  {
+   "tap": {
+    "relation": [
+     "new_request",
+     "continuation"
+    ],
+    "parent": [
+     "req2",
+     "none"
+    ],
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java \\d|Java versions/"
+    ]
+   }
+  }
+ ]
+}

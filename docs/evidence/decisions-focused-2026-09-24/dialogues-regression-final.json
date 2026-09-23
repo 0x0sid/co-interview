@@ -1,0 +1,2128 @@
+{
+ "summary": {
+  "split": "regression",
+  "label": "final",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-23T22:40:07.840Z",
+  "conversations": 4,
+  "taps": 10,
+  "chips": 1,
+  "decisionRepeat": 3,
+  "answerRepeat": 2,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 30,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "90.0% (27/30)",
+   "parentAccuracy": "100.0% (30/30)",
+   "parentAccuracyWhereAParentExists": "100.0% (9/9)",
+   "accepted": "90.0% (27/30)",
+   "acceptedCorrect": "100.0% (27/27)",
+   "latencyP50": 306,
+   "latencyP95": 427,
+   "readyAtTapIfTapComes1500msAfterSpeech": "100.0% (30/30)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (30/30)",
+   "costUSD": 0.001315
+  },
+  "legacy": {
+   "calls": 30,
+   "failed": 0,
+   "relationAccuracy": "100.0% (30/30)",
+   "parentAccuracy": "100.0% (30/30)",
+   "parentAccuracyWhereAParentExists": "100.0% (9/9)",
+   "latencyP50": 348,
+   "latencyP95": 653
+  },
+  "answers": {
+   "A_correctCurrentRequest": "100.0% (22/22)",
+   "C_correctCurrentRequest": "100.0% (22/22)",
+   "C_answersActuallyShapedByADecision": 18,
+   "topicSwitchTaps": {
+    "A": "100.0% (10/10)",
+    "C": "100.0% (10/10)"
+   },
+   "attachTaps": {
+    "A": "100.0% (2/2)",
+    "C": "100.0% (2/2)"
+   },
+   "chips": "100.0% (2/2)",
+   "firstSentenceRelevantTaps": "—"
+  },
+  "tuning": null
+ },
+ "rows": [
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Java/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Could you compare Java 8 and Java 9?",
+    "And Java 7."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 527,
+     "cost": 0.000033096,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.56,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.56,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": false,
+      "reason": "\"continuation\" without a matching earlier request",
+      "interpretation": null
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 281,
+     "cost": 0.000033096,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.65,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.65,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": false,
+      "reason": "\"continuation\" without a matching earlier request",
+      "interpretation": null
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 380,
+     "cost": 0.000033096,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.54,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.54,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": false,
+      "reason": "\"continuation\" without a matching earlier request",
+      "interpretation": null
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 415,
+     "usage": {
+      "input_tokens": 1030,
+      "output_tokens": 149,
+      "cost": 0.00004326
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 417,
+     "usage": {
+      "input_tokens": 1030,
+      "output_tokens": 149,
+      "cost": 0.00004326
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 441,
+     "usage": {
+      "input_tokens": 1030,
+      "output_tokens": 149,
+      "cost": 0.00004326
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 891,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 7 introduced the diamond operator for type inference and try-with-resources. Java 8 was a major release, bringing lambdas, the Stream API, and default methods to interfaces. Java 9 continued this evolution with modules (Project Jigsaw), the `var` keyword for local variable type inference, and reactive streams. Each version built upon the last, enhancing language features and improving code organization.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 829,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 8 introduced significant features like lambda expressions, the Stream API, and default methods in interfaces. Java 9 built upon this with modules (Project Jigsaw) for better code organization and security, the `var` keyword for local variable type inference, and improvements to the Stream API. Java 7, released earlier, focused on smaller enhancements such as the diamond operator for generics and try-with-resources for automatic resource management.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 891,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 7 introduced the diamond operator for type inference and try-with-resources. Java 8 was a major release, bringing lambdas, the Stream API, and default methods to interfaces. Java 9 continued this evolution with modules (Project Jigsaw), the `var` keyword for local variable type inference, and reactive streams. Each version built upon the last, enhancing language features and improving code organization.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    },
+    {
+     "status": 200,
+     "ms": 829,
+     "title": "Compare Java 7, 8, and 9",
+     "text": "Java 8 introduced significant features like lambda expressions, the Stream API, and default methods in interfaces. Java 9 built upon this with modules (Project Jigsaw) for better code organization and security, the `var` keyword for local variable type inference, and improvements to the Stream API. Java 7, released earlier, focused on smaller enhancements such as the diamond operator for generics and try-with-resources for automatic resource management.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java versions|which Java/i"
+    ],
+    "parent": [
+     "none"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "And Java 10.",
+    "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+    "which one it is?",
+    "And what about Angura?",
+    "Could you tell me the difference between Aguila one Angular?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 427,
+     "cost": 0.000049434,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.9,
+     "parent": "none",
+     "parentConfidence": 0.84,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.9,
+      "parent": "none",
+      "parentConfidence": 0.84,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 262,
+     "cost": 0.000049434,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.92,
+     "parent": "none",
+     "parentConfidence": 0.87,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.92,
+      "parent": "none",
+      "parentConfidence": 0.87,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 325,
+     "cost": 0.000049434,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.92,
+     "parent": "none",
+     "parentConfidence": 0.88,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.92,
+      "parent": "none",
+      "parentConfidence": 0.88,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 394,
+     "usage": {
+      "input_tokens": 1294,
+      "output_tokens": 187,
+      "cost": 0.000054348
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 366,
+     "usage": {
+      "input_tokens": 1294,
+      "output_tokens": 187,
+      "cost": 0.000054348
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 307,
+     "usage": {
+      "input_tokens": 1294,
+      "output_tokens": 187,
+      "cost": 0.000054348
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 664,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases, with Angular 2 being a complete rewrite. Subsequent versions, like Angular 4 through 17, have introduced incremental improvements and new features, focusing on performance, developer experience, and modern web standards.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 570,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is version 17. Angular 1 and Angular 2 were significant releases, with Angular 2 being a complete rewrite of Angular 1. Subsequent versions have built upon Angular 2's architecture, introducing improvements and new features.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 761,
+     "title": "Compare Angular versions",
+     "text": "AngularJS, often referred to as Angular 1, is a complete rewrite of the framework. Angular (versions 2 and later) is a platform and framework for building mobile and desktop web applications. The key differences lie in their architecture, language, and performance. Angular uses TypeScript, while AngularJS uses JavaScript. Angular is also significantly more performant and modular.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 836,
+     "title": "Compare Angular versions",
+     "text": "The latest stable version of Angular is currently version 17. Angular 1 and Angular 2 were significant releases that introduced a new architecture, moving from JavaScript to TypeScript and adopting a component-based structure. Subsequent versions have built upon this foundation, introducing features like Ivy rendering engine, improved performance, and developer experience enhancements.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-01",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java \\d|Java versions/"
+    ],
+    "parent": [
+     "req2",
+     "none"
+    ],
+    "relation": [
+     "new_request",
+     "continuation"
+    ]
+   },
+   "newInput": [
+    "I'mura 2 and I'm gonna free.",
+    "The 3rd version, not free.",
+    "No, we're not talking about Java anymore.",
+    "We're talking about Angura GS.",
+    "Angula.",
+    "Angular.",
+    "GS.",
+    "What's the difference between angular one, 2 and the latt version?",
+    "Please tell me more."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 391,
+     "cost": 0.000060354,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.64,
+     "parent": "req2",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2",
+      "AF71483F-FBF5-48BB-956B-627412D680BC": "req3"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.64,
+      "parent": "2726622A-9506-412D-9EF1-931D74A3EB46",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 333,
+     "cost": 0.000060354,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.69,
+     "parent": "req2",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2",
+      "AF71483F-FBF5-48BB-956B-627412D680BC": "req3"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.69,
+      "parent": "2726622A-9506-412D-9EF1-931D74A3EB46",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.93,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 321,
+     "cost": 0.000060354,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.71,
+     "parent": "req2",
+     "parentConfidence": 1,
+     "labels": {
+      "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9": "req1",
+      "2726622A-9506-412D-9EF1-931D74A3EB46": "req2",
+      "AF71483F-FBF5-48BB-956B-627412D680BC": "req3"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.71,
+      "parent": "2726622A-9506-412D-9EF1-931D74A3EB46",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 837,
+     "usage": {
+      "input_tokens": 1530,
+      "output_tokens": 194,
+      "cost": 0.00006426
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 402,
+     "usage": {
+      "input_tokens": 1530,
+      "output_tokens": 194,
+      "cost": 0.00006426
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 303,
+     "usage": {
+      "input_tokens": 1530,
+      "output_tokens": 194,
+      "cost": 0.00006426
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 569,
+     "title": "Angular versions comparison",
+     "text": "I can explain the differences between Angular versions. To give you the most accurate information, could you please specify which \"latest version\" you are referring to?",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 694,
+     "title": "Angular versions comparison",
+     "text": "The request seems to be asking for a comparison of Angular versions, specifically Angular 1, 2, and the latest version. Could you please specify which version you consider the \"latest\" for Angular?",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 560,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "The request seems to be asking for a comparison of Angular versions 1, 2, and the latest version. To provide an accurate answer, could you please specify which version you consider the \"latest\"?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 661,
+     "title": "Angular versions 1, 2, and latest",
+     "text": "AngularJS (version 1) and Angular (versions 2 and later) are fundamentally different frameworks. AngularJS is a JavaScript-based framework, while Angular is a complete rewrite in TypeScript, offering a more modern architecture, improved performance, and better tooling. The latest version of Angular continues to build on this foundation with ongoing enhancements.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-02",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/not (?:a )?(?:recogni[sz]ed|standard)|seems to be asking/i"
+    ],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Angular GS version one",
+    "Iura JS version two",
+    "Angular JS",
+    "Version one and version two, what's the difference?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 260,
+     "cost": 0.0000336,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.99,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.99,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 318,
+     "cost": 0.0000336,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.99,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.99,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 374,
+     "cost": 0.0000336,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.99,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.99,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 299,
+     "usage": {
+      "input_tokens": 1036,
+      "output_tokens": 149,
+      "cost": 0.000043512
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 313,
+     "usage": {
+      "input_tokens": 1036,
+      "output_tokens": 149,
+      "cost": 0.000043512
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 321,
+     "usage": {
+      "input_tokens": 1036,
+      "output_tokens": 149,
+      "cost": 0.000043512
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 736,
+     "title": "Angular JS versions comparison",
+     "text": "Could you please clarify which two versions of Angular JS you would like me to compare? The conversation mentioned \"Angular GS version one\" and \"Iura JS version two,\" which seem to be different frameworks. If you meant Angular JS version one and a different version of Angular JS, please specify.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 665,
+     "title": "Angular JS version 1 vs 2",
+     "text": "The primary difference between Angular JS (version 1) and Angular (version 2, often just called Angular) lies in their architecture and core concepts. Angular JS was a JavaScript-based framework, while Angular is a complete rewrite using TypeScript, featuring a component-based architecture, improved performance, and a more modern development experience.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 705,
+     "title": "Difference between Angular JS versions",
+     "text": "The main difference between Angular JS version one and version two lies in their architecture and features. Version two, now known as Angular, is a complete rewrite with a component-based structure, TypeScript support, and improved performance. Version one, often referred to as AngularJS, uses a different model with controllers and scopes.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 673,
+     "title": "Difference between Angular JS versions",
+     "text": "The primary difference between Angular JS version one and version two lies in their architecture and features. Version two, now known as Angular, is a complete rewrite. It uses TypeScript, offers improved performance, a component-based structure, and a more modern approach to data binding and dependency injection compared to the original AngularJS.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-02",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Angular\\s*v?(?:1[4-9]|2\\d)\\b/i"
+    ],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "And the latest version?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 293,
+     "cost": 0.000047796,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.67,
+     "parent": "req1",
+     "parentConfidence": 0.94,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.67,
+      "parent": "43E22300-96B3-45B3-8314-89C656BA5040",
+      "parentConfidence": 0.94,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 293,
+     "cost": 0.000047796,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.64,
+     "parent": "req1",
+     "parentConfidence": 0.94,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.64,
+      "parent": "43E22300-96B3-45B3-8314-89C656BA5040",
+      "parentConfidence": 0.94,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 334,
+     "cost": 0.000047796,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.66,
+     "parent": "req1",
+     "parentConfidence": 0.93,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.66,
+      "parent": "43E22300-96B3-45B3-8314-89C656BA5040",
+      "parentConfidence": 0.93,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 325,
+     "usage": {
+      "input_tokens": 1267,
+      "output_tokens": 187,
+      "cost": 0.000053214
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 353,
+     "usage": {
+      "input_tokens": 1267,
+      "output_tokens": 187,
+      "cost": 0.000053214
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 389,
+     "usage": {
+      "input_tokens": 1267,
+      "output_tokens": 187,
+      "cost": 0.000053214
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 723,
+     "title": "Latest version of Angular JS",
+     "text": "The latest stable version of Angular JS is version 1.8.2. It's important to note that Angular JS, also known as AngularJS, is distinct from Angular (versions 2 and later). Angular JS reached its end-of-life in December 2021, meaning it no longer receives official support or updates.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 684,
+     "title": "Latest Angular version",
+     "text": "The latest stable version of Angular is currently version 17. Angular follows semantic versioning, and new major versions are typically released every six months, with minor and patch releases in between. It's always a good idea to check the official Angular website or their GitHub repository for the most up-to-date release information.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 762,
+     "title": "Latest version of Angular JS",
+     "text": "The latest version of Angular JS is version 1.8.x. It's important to note that Angular JS, also known as AngularJS, is distinct from modern Angular (versions 2 and above). While version 1.8.x is the final release in the AngularJS line, the framework has been superseded by Angular, which is a complete rewrite and a different technology.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 710,
+     "title": "Latest version of Angular JS",
+     "text": "The latest version of Angular JS is version 1.8.x. Angular JS is a JavaScript framework for building dynamic web applications. It follows the MVC (Model-View-Controller) pattern and provides features like data binding, directives, and dependency injection to simplify front-end development.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Angular GS version one Iura JS version two Angular JS Version one and version two, what's the difference?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-02",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Kubernetes|rolling/i"
+    ],
+    "mustNot": [
+     "/Angular/i"
+    ],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Let's switch topics. How does Kubernetes handle rolling updates?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 359,
+     "cost": 0.000051786,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2",
+      "DCA93EF4-FF8B-4DAD-BE9A-7A5D9D16EA00": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.92,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 293,
+     "cost": 0.000051786,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2",
+      "DCA93EF4-FF8B-4DAD-BE9A-7A5D9D16EA00": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.92,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 306,
+     "cost": 0.000051786,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "43E22300-96B3-45B3-8314-89C656BA5040": "req1",
+      "BDFDC244-D3D2-428E-8569-792DE8ACAC5F": "req2",
+      "DCA93EF4-FF8B-4DAD-BE9A-7A5D9D16EA00": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.92,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 309,
+     "usage": {
+      "input_tokens": 1350,
+      "output_tokens": 193,
+      "cost": 0.0000567
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 422,
+     "usage": {
+      "input_tokens": 1350,
+      "output_tokens": 193,
+      "cost": 0.0000567
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 375,
+     "usage": {
+      "input_tokens": 1350,
+      "output_tokens": 193,
+      "cost": 0.0000567
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 672,
+     "title": "Kubernetes rolling updates",
+     "text": "Kubernetes handles rolling updates by gradually replacing old pods with new ones. It ensures that new pods are ready and healthy before terminating the old ones, minimizing downtime. This process can be configured with parameters like `maxUnavailable` and `maxSurge` to control the pace of the update and the desired availability.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 584,
+     "title": "How Kubernetes handles rolling updates",
+     "text": "Kubernetes handles rolling updates by gradually replacing old pods with new ones. It uses a deployment object to manage this process. When you update a deployment, Kubernetes creates new pods with the updated configuration and then terminates the old pods. This ensures that your application remains available throughout the update process, with zero downtime.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 597,
+     "title": "Kubernetes rolling updates",
+     "text": "Kubernetes handles rolling updates by gradually replacing old pods with new ones. It ensures that new pods are ready and serving traffic before terminating the old ones. This process minimizes downtime and maintains application availability during updates.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 639,
+     "title": "Kubernetes rolling updates",
+     "text": "Kubernetes handles rolling updates by gradually replacing old pods with new ones. It first creates new pods with the updated configuration. Once the new pods are ready and passing health checks, Kubernetes terminates the old pods. This process ensures that the application remains available throughout the update, minimizing downtime.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-03",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/pizza/i"
+    ],
+    "mustNot": [
+     "/cannot|can't share|as an AI/i"
+    ],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Could you tell me your secret, in fact?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 285,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14DB0A0A-4262-429F-B07E-F1500C91BE20": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 298,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14DB0A0A-4262-429F-B07E-F1500C91BE20": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 298,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14DB0A0A-4262-429F-B07E-F1500C91BE20": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 263,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 296,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 246,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 514,
+     "title": "Tell me your secret",
+     "text": "My secret is that I love pizza.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 475,
+     "title": "Tell me your secret",
+     "text": "My secret is that I love pizza.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 500,
+     "title": "The speaker's secret",
+     "text": "My secret is that I love pizza.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 502,
+     "title": "The speaker's secret",
+     "text": "My secret is that I love pizza.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-04",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Java/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Could you compare Java 8 and Java 9?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 277,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 302,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 268,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 653,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 413,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 280,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 798,
+     "title": "Compare Java 8 and Java 9",
+     "text": "Java 9 introduced several significant features over Java 8. Key among these were the Java Platform Module System (JPMS), which aimed to improve the structure and scalability of large applications by breaking the JDK into modules. It also brought in JShell, an interactive Read-Eval-Print Loop (REPL) for Java, and improvements to the Stream API, such as `takeWhile` and `dropWhile`.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 683,
+     "title": "Compare Java 8 and Java 9",
+     "text": "Java 9 introduced several significant features that built upon Java 8. Key among these were modules, which allowed for better code organization and encapsulation through the Java Platform Module System (JPMS). Java 9 also brought improvements to the Stream API, including `takeWhile` and `dropWhile` methods, and introduced the `Optional` class's `ifPresentOrElse` method.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 759,
+     "title": "Compare Java 8 and Java 9",
+     "text": "Java 9 introduced several significant features over Java 8. The most prominent is the Java Platform Module System (JPMS), also known as Project Jigsaw, which allows for modularizing the JDK and applications. Java 9 also brought improvements to the Streams API, including `takeWhile`, `dropWhile`, and `iterate` methods. Additionally, it introduced private methods in interfaces and the `Optional.ifPresentOrElse` method.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 783,
+     "title": "Compare Java 8 and Java 9",
+     "text": "Java 9 introduced several significant features over Java 8. Key among these were the Java Platform Module System (JPMS), which aimed to improve the structure and scalability of large applications, and the introduction of the `jshell` tool, an interactive Java shell. Additionally, Java 9 brought improvements to the Stream API, such as `takeWhile` and `dropWhile` methods, and enhanced the HTTP/2 client.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-04",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Angular/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What's the difference between Angular one and Angular two?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 301,
+     "cost": 0.000046284,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.08,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 268,
+     "cost": 0.000046284,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.09,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 307,
+     "cost": 0.000046284,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.07,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 326,
+     "usage": {
+      "input_tokens": 1231,
+      "output_tokens": 185,
+      "cost": 0.000051702
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 345,
+     "usage": {
+      "input_tokens": 1231,
+      "output_tokens": 185,
+      "cost": 0.000051702
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 363,
+     "usage": {
+      "input_tokens": 1231,
+      "output_tokens": 185,
+      "cost": 0.000051702
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 810,
+     "title": "Angular 1 vs Angular 2",
+     "text": "AngularJS (version 1) and Angular (version 2 and later) are fundamentally different frameworks, despite the similar names. Angular 2 was a complete rewrite, introducing a component-based architecture, TypeScript as the primary language, and a more modern approach to data binding and performance. AngularJS is more monolithic and uses JavaScript. The transition between them is not an upgrade but a migration.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 864,
+     "title": "Angular 1 vs Angular 2",
+     "text": "AngularJS (version 1) and Angular (version 2 and later) are fundamentally different frameworks, despite the similar names. Angular 2 was a complete rewrite, not an upgrade. Key differences include a component-based architecture in Angular versus AngularJS's controller-based approach, and the use of TypeScript in Angular, which offers static typing and other modern language features, whereas AngularJS was primarily written in JavaScript. Performance and tooling are also significantly improved in Angular.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 818,
+     "title": "Angular 1 vs Angular 2",
+     "text": "AngularJS (version 1) and Angular (version 2 and later) are fundamentally different frameworks, despite the similar names. Angular 2 was a complete rewrite, introducing a component-based architecture, TypeScript as the primary language, and a more modular design. AngularJS is more of a monolithic framework with directives and controllers. The transition involved significant changes in how applications are structured and developed.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 768,
+     "title": "Angular 1 vs Angular 2",
+     "text": "AngularJS (version 1) and Angular (version 2 and later) are fundamentally different frameworks. Angular 2+ is a complete rewrite, built from the ground up with a new architecture. Key differences include the use of TypeScript, a component-based structure, and improved performance. While both are used for building single-page applications, they are not directly compatible.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-04",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/rout/i",
+     "/Angular/i"
+    ],
+    "mustNot": [
+     "/Java \\d/"
+    ],
+    "parent": [
+     "req2",
+     "none"
+    ],
+    "relation": [
+     "continuation",
+     "new_request"
+    ]
+   },
+   "newInput": [
+    "And how does routing work in Angular?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 324,
+     "cost": 0.00005061,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.96,
+     "parent": "req2",
+     "parentConfidence": 0.75,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1",
+      "DB88571F-9708-4A55-809B-CFAACD5554CF": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.96,
+      "parent": "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E",
+      "parentConfidence": 0.75,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What's the difference between Angular one and Angular two?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 315,
+     "cost": 0.00005061,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.96,
+     "parent": "req2",
+     "parentConfidence": 0.79,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1",
+      "DB88571F-9708-4A55-809B-CFAACD5554CF": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.96,
+      "parent": "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E",
+      "parentConfidence": 0.79,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What's the difference between Angular one and Angular two?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 373,
+     "cost": 0.00005061,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req2",
+     "parentConfidence": 0.74,
+     "labels": {
+      "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E": "req2",
+      "942B9F54-07AA-4BAF-B7C3-B85B46F3C3B6": "req1",
+      "DB88571F-9708-4A55-809B-CFAACD5554CF": "req3"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "9EA4F292-8E73-49E0-9A2F-BD46A68FEF5E",
+      "parentConfidence": 0.74,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What's the difference between Angular one and Angular two?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 348,
+     "usage": {
+      "input_tokens": 1322,
+      "output_tokens": 194,
+      "cost": 0.000055524
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 292,
+     "usage": {
+      "input_tokens": 1322,
+      "output_tokens": 194,
+      "cost": 0.000055524
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req2",
+     "latencyMs": 433,
+     "usage": {
+      "input_tokens": 1322,
+      "output_tokens": 194,
+      "cost": 0.000055524
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 741,
+     "title": "Angular routing",
+     "text": "Routing in Angular is handled by the `@angular/router` module. It allows you to define a mapping between different URL paths and the components that should be displayed for those paths. You configure this mapping in an array of route objects, specifying the path and the component. The router then uses this configuration to navigate between views as the user interacts with the application.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 764,
+     "title": "Angular routing explained",
+     "text": "Routing in Angular is handled by the Angular Router module. It allows you to define a mapping between different URL paths and the components that should be displayed when those paths are accessed. You configure routes in an array, specifying the path and the component for each entry. The router then intercepts navigation events and displays the appropriate component in a designated router outlet within your application's template.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 847,
+     "title": "Angular routing",
+     "text": "Routing in Angular allows you to define different views or components that appear based on the URL. You configure routes in a routing module, mapping specific URL paths to components. When the URL changes, Angular's router matches the path to a configured route and displays the associated component, often within a `<router-outlet>` directive. This enables single-page applications where different sections are loaded dynamically without full page reloads.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "What's the difference between Angular one and Angular two?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 785,
+     "title": "Angular routing",
+     "text": "Routing in Angular allows you to define different views or components that are displayed based on the URL. You configure routes using a `Routes` array, mapping URL paths to specific components. When the URL changes, Angular's router matches the path to a route and displays the associated component, enabling navigation within your single-page application.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "What's the difference between Angular one and Angular two?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "rg-04",
+   "language": "en",
+   "index": 3,
+   "kind": "chip",
+   "expect": {
+    "must": [
+     "/Java|lambda/i"
+    ],
+    "mustNot": [
+     "/Angular/i"
+    ]
+   },
+   "newInput": [],
+   "lostSpeech": null,
+   "focused": [],
+   "legacy": [],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 912,
+     "title": "Java 8 vs Java 9 example",
+     "text": "Here is a concrete example illustrating a key difference between Java 8 and Java 9: the introduction of the `try-with-resources` statement enhancement. In Java 8, you had to explicitly declare and initialize a resource within the `try` block. For instance, `try (FileInputStream fis = new FileInputStream(\"file.txt\"))`. Java 9 allows for the use of already declared and initialized resources, simplifying the syntax to `try (fis)`. This reduces boilerplate code and improves readability.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 831,
+     "title": "Java 8 vs Java 9 example",
+     "text": "Here is a concrete example illustrating a difference between Java 8 and Java 9. In Java 8, you would typically use `Optional.ofNullable()` to handle potentially null values. For instance, `Optional.ofNullable(myVariable)` would wrap `myVariable` if it's not null. Java 9 introduced `Optional.orElseThrow()`, which allows you to throw a specific exception if the Optional is empty, providing more explicit error handling.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 912,
+     "title": "Java 8 vs Java 9 example",
+     "text": "Here is a concrete example illustrating a key difference between Java 8 and Java 9: the introduction of the `try-with-resources` statement enhancement. In Java 8, you had to explicitly declare and initialize a resource within the `try` block. For instance, `try (FileInputStream fis = new FileInputStream(\"file.txt\"))`. Java 9 allows for the use of already declared and initialized resources, simplifying the syntax to `try (fis)`. This reduces boilerplate code and improves readability.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    },
+    {
+     "status": 200,
+     "ms": 831,
+     "title": "Java 8 vs Java 9 example",
+     "text": "Here is a concrete example illustrating a difference between Java 8 and Java 9. In Java 8, you would typically use `Optional.ofNullable()` to handle potentially null values. For instance, `Optional.ofNullable(myVariable)` would wrap `myVariable` if it's not null. Java 9 introduced `Optional.orElseThrow()`, which allows you to throw a specific exception if the Optional is empty, providing more explicit error handling.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    }
+   ]
+  }
+ ]
+}

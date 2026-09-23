@@ -1,0 +1,155 @@
+{
+  "id" : "dv-fr-02",
+  "language" : "fr",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "5DA12FC3-EDFA-4AC2-B025-E93052F38903" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "C57887E5-DC81-4484-AEB6-5B69F4EEF8D1",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "93996900-C75D-4C3D-BA84-280DA1E08B47",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Qu'est-ce que Kafka ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "F03D384B-B38C-4E92-ACF7-7888FA698F83",
+        "snapshotID" : "9E6B9343-E93C-4BB1-A1CC-F0F0A4EEA1F7",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Kafka\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "D9C9A52D-045A-4D0C-B742-70C8F42E35CE",
+        "diagnosticsSessionID" : "C57887E5-DC81-4484-AEB6-5B69F4EEF8D1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Qu'est-ce que Kafka ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Qu'est-ce que Kafka ?",
+        "recentConversation" : [
+          "Qu'est-ce que Kafka ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "5DA12FC3-EDFA-4AC2-B025-E93052F38903" : "req1",
+        "F8CDABAF-77C8-465F-B59C-C6CD28F449C8" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "5DA12FC3-EDFA-4AC2-B025-E93052F38903",
+            "sourceText" : "Qu'est-ce que Kafka ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "C57887E5-DC81-4484-AEB6-5B69F4EEF8D1",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "53A455D9-3D3A-489C-A525-2E0907ED1588",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+          }
+        ],
+        "preceding" : [
+          "Qu'est-ce que Kafka ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "F03D384B-B38C-4E92-ACF7-7888FA698F83",
+        "snapshotID" : "765B1FA9-2842-4E82-B2CF-1211904BE134",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/RabbitMQ\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "D7B8B0F5-3D32-4868-8067-6567D1E0A658",
+        "diagnosticsSessionID" : "C57887E5-DC81-4484-AEB6-5B69F4EEF8D1",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Qu'est-ce que Kafka ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Laissons Kafka de côté. Parlez-moi de RabbitMQ.",
+        "recentConversation" : [
+          "Qu'est-ce que Kafka ?",
+          "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "id" : "dv-en-04",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "7E34828D-769B-4E71-8032-05F7791C6558" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "03C8F3EE-495D-4F4A-832A-D7738D55666A",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "E0629416-0A40-4C6D-A8F5-44889C0FED76",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How does caching work in Redis?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "AEA047DD-B845-4FCA-94E0-AD085B05BB7A",
+        "snapshotID" : "BD814782-C0EA-4D74-B987-E4CD9757D60E",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/cach\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B6833BF8-2A8B-4A02-8899-80E868521A79",
+        "diagnosticsSessionID" : "03C8F3EE-495D-4F4A-832A-D7738D55666A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How does caching work in Redis?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How does caching work in Redis?",
+        "recentConversation" : [
+          "How does caching work in Redis?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "2F6BC4ED-7AEB-4AE1-B911-5131927E39EE" : "req2",
+        "7E34828D-769B-4E71-8032-05F7791C6558" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "7E34828D-769B-4E71-8032-05F7791C6558",
+            "sourceText" : "How does caching work in Redis?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "03C8F3EE-495D-4F4A-832A-D7738D55666A",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "5A765272-7FBB-42A3-8907-F2960BE6F3AC",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And eviction policies."
+          }
+        ],
+        "preceding" : [
+          "How does caching work in Redis?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "AEA047DD-B845-4FCA-94E0-AD085B05BB7A",
+        "snapshotID" : "7486B2C3-16EF-41B1-8607-DBF05D84CF18",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/evict\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "26AD815A-9F9F-42E9-B7DA-567E6A6CAE4D",
+        "diagnosticsSessionID" : "03C8F3EE-495D-4F4A-832A-D7738D55666A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And eviction policies."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How does caching work in Redis?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And eviction policies.",
+        "recentConversation" : [
+          "How does caching work in Redis?",
+          "And eviction policies."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

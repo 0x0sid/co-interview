@@ -21,6 +21,11 @@ struct DiagnosticsDebugSection: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
+            Toggle("Apply Jev decisions (this session)", isOn: $diagnostics.isDecisionApplyRequested)
+            Text("Asks the backend to let accepted decisions shape this session's requests. It has effect only if the backend allows per-session opt-in; otherwise decisions are recorded, not used. Returns to off when the next session starts.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
             LabeledContent("Session", value: diagnostics.sessionID.uuidString.prefix(8).description)
             LabeledContent("Traces", value: "\(diagnostics.traces.count) of \(GenerateDiagnostics.maximumTraces)")
             LabeledContent("Captured text", value: diagnostics.hasCapturedContent ? "present" : "none")

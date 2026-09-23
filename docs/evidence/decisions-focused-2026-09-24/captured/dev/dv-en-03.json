@@ -1,0 +1,152 @@
+{
+  "id" : "dv-en-03",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "C27A0844-391A-4ADD-B747-F633A94A3B06" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "6E6028B1-862B-4EFD-9D29-7D96A4FBBD3E",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "04D01940-B5EB-4456-A0E3-28D89DF0E704",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "90CE5603-1E64-4D77-9DA4-FEC31631DF1B",
+        "snapshotID" : "B57FC376-E353-47B1-B82A-F8C5E07FE030",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Lambda\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "E37B0F9E-7268-4CEC-8AA5-F4DCD6D6563C",
+        "diagnosticsSessionID" : "6E6028B1-862B-4EFD-9D29-7D96A4FBBD3E",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+        "recentConversation" : [
+          "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "C27A0844-391A-4ADD-B747-F633A94A3B06" : "req1",
+        "E8D6313E-B35D-4A30-AEF8-73A0DF5B9CA5" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "C27A0844-391A-4ADD-B747-F633A94A3B06",
+            "sourceText" : "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "6E6028B1-862B-4EFD-9D29-7D96A4FBBD3E",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "0B939572-9084-4C8D-94DF-6C699177EFFE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Just Lambda and Azure Functions, actually."
+          }
+        ],
+        "preceding" : [
+          "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+        ],
+        "requestActive" : false,
+        "sessionID" : "90CE5603-1E64-4D77-9DA4-FEC31631DF1B",
+        "snapshotID" : "CE56AB7B-8740-426C-A59C-AF5C5F6D4072",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Lambda\/i",
+          "\/Azure\/i"
+        ],
+        "mustNot" : [
+          "\/Google Cloud Functions\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "correction"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "A67179B4-AFE6-4A76-A53E-508E827A0DCF",
+        "diagnosticsSessionID" : "6E6028B1-862B-4EFD-9D29-7D96A4FBBD3E",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Just Lambda and Azure Functions, actually."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Compare AWS Lambda, Azure Functions and Google Cloud Functions.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Just Lambda and Azure Functions, actually.",
+        "recentConversation" : [
+          "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+          "Just Lambda and Azure Functions, actually."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+ "split": "dev",
+ "id": "dv-en-03",
+ "language": "en",
+ "domain": "technical",
+ "about": "narrowing",
+ "steps": [
+  {
+   "say": "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Lambda/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Just Lambda and Azure Functions, actually."
+  },
+  {
+   "tap": {
+    "relation": "correction",
+    "parent": "req1",
+    "must": [
+     "/Lambda/i",
+     "/Azure/i"
+    ],
+    "mustNot": [
+     "/Google Cloud Functions/i"
+    ]
+   }
+  }
+ ]
+}

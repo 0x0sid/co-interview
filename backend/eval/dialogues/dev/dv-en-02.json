@@ -1,0 +1,30 @@
+{
+ "split": "dev",
+ "id": "dv-en-02",
+ "language": "en",
+ "domain": "technical",
+ "about": "versions before one Generate",
+ "steps": [
+  {
+   "say": "What's new in Java 11 compared to Java 8?"
+  },
+  {
+   "say": "And Java 17."
+  },
+  {
+   "say": "Plus Java 21."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/\\b11\\b/",
+     "/\\b17\\b/",
+     "/\\b21\\b/"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

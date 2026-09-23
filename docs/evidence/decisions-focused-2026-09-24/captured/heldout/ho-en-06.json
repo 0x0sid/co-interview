@@ -1,0 +1,293 @@
+{
+  "id" : "ho-en-06",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "183F3509-F067-414C-9B09-BFEA12A62D12",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Explain the CAP theorem."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "B16C0103-1C82-49AD-BE97-62386BAE65B5",
+        "snapshotID" : "1952FB03-2FED-4727-830E-245B36C38463",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/CAP|consisten|partition\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "13A6E236-E063-4314-B7E8-29CF6A6BD272",
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Explain the CAP theorem."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Explain the CAP theorem.",
+        "recentConversation" : [
+          "Explain the CAP theorem."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD" : "req1",
+        "691F8244-2B3B-4DE9-8944-AC012462BC88" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD",
+            "sourceText" : "Explain the CAP theorem.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "09AC112C-BA8F-4C31-A3E2-AD23740C7BF6",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is eventual consistency?"
+          }
+        ],
+        "preceding" : [
+          "Explain the CAP theorem."
+        ],
+        "requestActive" : false,
+        "sessionID" : "B16C0103-1C82-49AD-BE97-62386BAE65B5",
+        "snapshotID" : "5C1A50BD-17A4-4C16-8286-118804315982",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/eventual\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "A766388C-B6D9-41DF-B993-FB4798B4FFBC",
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is eventual consistency?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Explain the CAP theorem.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is eventual consistency?",
+        "recentConversation" : [
+          "Explain the CAP theorem.",
+          "What is eventual consistency?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "0D3B272D-2B9D-4C5B-8A43-EE9FC25D1CDA" : "req3",
+        "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD" : "req1",
+        "691F8244-2B3B-4DE9-8944-AC012462BC88" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "691F8244-2B3B-4DE9-8944-AC012462BC88",
+            "sourceText" : "What is eventual consistency?",
+            "status" : "answered"
+          },
+          {
+            "id" : "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD",
+            "sourceText" : "Explain the CAP theorem.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "3CD1B250-BE35-4678-8011-4A7D0468E081",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How would you design a URL shortener?"
+          }
+        ],
+        "preceding" : [
+          "Explain the CAP theorem.",
+          "What is eventual consistency?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "B16C0103-1C82-49AD-BE97-62386BAE65B5",
+        "snapshotID" : "4B2201C0-DA0E-4050-9EAC-7236A9646318",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/shorten|URL\/i"
+        ],
+        "mustNot" : [
+          "\/CAP theorem\/i"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B31C25A4-B8D0-4EF5-A76D-7AAA17CBBD2A",
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How would you design a URL shortener?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Explain the CAP theorem.”: an explanation of that.",
+          "In answer to “What is eventual consistency?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How would you design a URL shortener?",
+        "recentConversation" : [
+          "Explain the CAP theorem.",
+          "What is eventual consistency?",
+          "How would you design a URL shortener?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "0D3B272D-2B9D-4C5B-8A43-EE9FC25D1CDA" : "req3",
+        "480E2D25-3CE4-48EA-BC9C-C00CB2BA4FCD" : "req1",
+        "691F8244-2B3B-4DE9-8944-AC012462BC88" : "req2"
+      },
+      "chipParent" : "req1",
+      "expect" : {
+        "must" : [
+          "\/CAP|consisten|partition|availab\/i"
+        ],
+        "mustNot" : [
+          "\/shorten\/i"
+        ]
+      },
+      "kind" : "chip",
+      "request" : {
+        "actionParentAnswer" : "In answer to “Explain the CAP theorem.”: an explanation of that.",
+        "actionParentAnswerVersion" : 1,
+        "actionParentQuestion" : "Explain the CAP theorem.",
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "8725E94D-BC18-4C7A-B546-331728FDDF6E",
+        "diagnosticsSessionID" : "6B6CE9E1-257B-490C-A4B8-D0EBDE83078F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Explain the CAP theorem.”: an explanation of that.",
+          "In answer to “What is eventual consistency?”: an explanation of that.",
+          "In answer to “How would you design a URL shortener?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Give one concrete example of what you just explained.",
+        "recentConversation" : [
+          "Explain the CAP theorem.",
+          "What is eventual consistency?",
+          "How would you design a URL shortener?"
+        ],
+        "requestedAction" : "Give one concrete example of what you just explained.",
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

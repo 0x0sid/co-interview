@@ -1,0 +1,359 @@
+{
+  "id" : "rg-01",
+  "language" : "en",
+  "split" : "regression",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "F284B1AD-5563-4EFA-B8B2-98A1404DFF7A",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Could you compare Java 8 and Java 9?"
+          },
+          {
+            "id" : "7F898C25-2407-465C-817B-AF6C247B327D",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And Java 7."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "604025F3-85C6-409E-B2C3-F9DE218021A1",
+        "snapshotID" : "0121D06C-7973-4278-9160-E9F9BA436204",
+        "stateRevision" : 2
+      },
+      "expect" : {
+        "must" : [
+          "\/Java\/"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "88A0E908-F6F3-482D-9094-0633E9BDCE28",
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Could you compare Java 8 and Java 9? And Java 7.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9" : "req1",
+        "2726622A-9506-412D-9EF1-931D74A3EB46" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9",
+            "sourceText" : "Could you compare Java 8 and Java 9? And Java 7.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "86C22E31-CB2E-4AB7-8E1B-F448405CB4CE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And Java 10."
+          },
+          {
+            "id" : "E63C20B7-4B29-4E1B-A509-46C8F0D0C705",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?"
+          },
+          {
+            "id" : "37621407-97D7-4699-8437-564F91F69663",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "which one it is?"
+          },
+          {
+            "id" : "35BDDA07-A127-4C3F-963C-77CCB5EFCADF",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And what about Angura?"
+          },
+          {
+            "id" : "7480B17C-4E99-41A0-9045-BB3DB32A74BE",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Could you tell me the difference between Aguila one Angular?"
+          }
+        ],
+        "preceding" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7."
+        ],
+        "requestActive" : false,
+        "sessionID" : "604025F3-85C6-409E-B2C3-F9DE218021A1",
+        "snapshotID" : "23BC599F-71A2-4CB0-B217-AD02147F27C0",
+        "stateRevision" : 9
+      },
+      "expect" : {
+        "must" : [
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+          "\/Java versions|which Java\/i"
+        ],
+        "parent" : [
+          "none"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "875E9964-C337-4C64-BDB0-919BD17664FE",
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Could you compare Java 8 and Java 9? And Java 7.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7.",
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9" : "req1",
+        "2726622A-9506-412D-9EF1-931D74A3EB46" : "req2",
+        "AF71483F-FBF5-48BB-956B-627412D680BC" : "req3"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "2726622A-9506-412D-9EF1-931D74A3EB46",
+            "sourceText" : "And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?",
+            "status" : "answered"
+          },
+          {
+            "id" : "03DE4202-2F2D-4A9E-9B02-D9EE4D4583B9",
+            "sourceText" : "Could you compare Java 8 and Java 9? And Java 7.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "367A77C7-E82D-4E53-AE48-41B805690F0F",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "I'mura 2 and I'm gonna free."
+          },
+          {
+            "id" : "1EBB2195-7A10-4DBA-ABAD-455369913B04",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "The 3rd version, not free."
+          },
+          {
+            "id" : "DC8ABF0E-6472-40F7-80F6-5690F5DCDAEC",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "No, we're not talking about Java anymore."
+          },
+          {
+            "id" : "03F29992-06E9-4FF0-A72D-F991333D06C9",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "We're talking about Angura GS."
+          },
+          {
+            "id" : "28374FF1-7E46-4558-A8D5-6BEE07BC1A23",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Angula."
+          },
+          {
+            "id" : "6204F31F-F25A-47F4-AE91-96798E12EA7B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Angular."
+          },
+          {
+            "id" : "285521C7-136F-4B35-A4A6-59A2E5839CBF",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "GS."
+          },
+          {
+            "id" : "A96F6204-4B8E-4238-95E6-A31151B38B43",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What's the difference between angular one, 2 and the latt version?"
+          },
+          {
+            "id" : "F586D5BE-F8C5-4FA8-8BB5-8BC393AAF397",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Please tell me more."
+          }
+        ],
+        "preceding" : [
+          "And Java 7.",
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "604025F3-85C6-409E-B2C3-F9DE218021A1",
+        "snapshotID" : "90796029-62D1-4273-AF2D-77B23E0792D4",
+        "stateRevision" : 20
+      },
+      "expect" : {
+        "must" : [
+          "\/Angular\/i"
+        ],
+        "mustNot" : [
+          "\/Java \\d|Java versions\/"
+        ],
+        "parent" : [
+          "req2",
+          "none"
+        ],
+        "relation" : [
+          "new_request",
+          "continuation"
+        ]
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "4818971E-7FBC-438D-A956-696773E06F11",
+        "diagnosticsSessionID" : "587E8146-1E1B-4ECB-99DC-528D05FFD64F",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "I'mura 2 and I'm gonna free.",
+          "The 3rd version, not free.",
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angura GS.",
+          "Angula.",
+          "Angular.",
+          "GS.",
+          "What's the difference between angular one, 2 and the latt version?",
+          "Please tell me more."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Could you compare Java 8 and Java 9? And Java 7.”: an explanation of that.",
+          "In answer to “And Java 10. Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura? which one it is? And what about Angura? Could you tell me the difference between Aguila one Angular?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "I'mura 2 and I'm gonna free. The 3rd version, not free. No, we're not talking about Java anymore. We're talking about Angura GS. Angula. Angular. GS. What's the difference between angular one, 2 and the latt version? Please tell me more.",
+        "recentConversation" : [
+          "Could you compare Java 8 and Java 9?",
+          "And Java 7.",
+          "And Java 10.",
+          "Okay, and can you tell me more about the difference between Ongula one Oula 2 and the latest version of Angura?",
+          "which one it is?",
+          "And what about Angura?",
+          "Could you tell me the difference between Aguila one Angular?",
+          "I'mura 2 and I'm gonna free.",
+          "The 3rd version, not free.",
+          "No, we're not talking about Java anymore.",
+          "We're talking about Angura GS.",
+          "Angula.",
+          "Angular.",
+          "GS.",
+          "What's the difference between angular one, 2 and the latt version?",
+          "Please tell me more."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

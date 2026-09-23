@@ -1,0 +1,39 @@
+{
+ "split": "dev",
+ "id": "dv-fr-02",
+ "language": "fr",
+ "domain": "technical",
+ "about": "changement de sujet",
+ "steps": [
+  {
+   "say": "Qu'est-ce que Kafka ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Kafka/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/RabbitMQ/i"
+    ],
+    "mustNot": [],
+    "withdrawn": true
+   }
+  }
+ ]
+}

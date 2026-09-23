@@ -1,0 +1,164 @@
+{
+  "id" : "ho-fr-02",
+  "language" : "fr",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "C04B6A6F-7A6A-4473-9CCA-69D15254326A" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "561EC0E2-CC47-4291-B7EE-C0CF2433B9D7",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "5F30A2A6-E98C-481E-9035-87C717E87C30",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Qu'est-ce qu'une API REST ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "09BE0A7F-D004-447F-BD51-4264273C406E",
+        "snapshotID" : "2C8D93F8-BB7E-406C-81B6-726A69DAB9A0",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/REST\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "92A022F3-318D-4D23-AE8D-67608601D84D",
+        "diagnosticsSessionID" : "561EC0E2-CC47-4291-B7EE-C0CF2433B9D7",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Qu'est-ce qu'une API REST ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Qu'est-ce qu'une API REST ?",
+        "recentConversation" : [
+          "Qu'est-ce qu'une API REST ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "389373F7-A99C-4B3F-B3EB-0587A17D066D" : "req2",
+        "C04B6A6F-7A6A-4473-9CCA-69D15254326A" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "C04B6A6F-7A6A-4473-9CCA-69D15254326A",
+            "sourceText" : "Qu'est-ce qu'une API REST ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "561EC0E2-CC47-4291-B7EE-C0CF2433B9D7",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "8D774944-4A89-49FF-B7ED-11C6B28A4246",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "On ne parle plus de REST."
+          },
+          {
+            "id" : "15D96CF6-D126-479A-ACC9-432C24386B0A",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Expliquez-moi GraphQL."
+          }
+        ],
+        "preceding" : [
+          "Qu'est-ce qu'une API REST ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "09BE0A7F-D004-447F-BD51-4264273C406E",
+        "snapshotID" : "D048098B-C8E1-49CB-8D5F-A33CCADE99A3",
+        "stateRevision" : 5
+      },
+      "expect" : {
+        "firstMust" : "\/GraphQL\/i",
+        "must" : [
+          "\/GraphQL\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "87E7128C-D9CC-49D6-9FAD-5AB2124C66BA",
+        "diagnosticsSessionID" : "561EC0E2-CC47-4291-B7EE-C0CF2433B9D7",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "On ne parle plus de REST.",
+          "Expliquez-moi GraphQL."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Qu'est-ce qu'une API REST ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "On ne parle plus de REST. Expliquez-moi GraphQL.",
+        "recentConversation" : [
+          "Qu'est-ce qu'une API REST ?",
+          "On ne parle plus de REST.",
+          "Expliquez-moi GraphQL."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

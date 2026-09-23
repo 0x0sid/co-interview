@@ -1,0 +1,163 @@
+{
+  "id" : "dv-en-01",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "52FD82A7-BE7A-435A-82D9-5FC5BC333A13" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "23582255-D90D-45B0-B20A-855AA73886FF",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "CA0008BD-BBFB-4AE7-A832-363DAC135397",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How do blocks work in Ruby?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "EB6C939E-A02E-42F7-8078-CFACEE046816",
+        "snapshotID" : "3549591B-9B6D-47DB-AD4B-C3CFF28471BA",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/block\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "F3AFA6C6-C9F6-4C94-9352-5FAED1D082AF",
+        "diagnosticsSessionID" : "23582255-D90D-45B0-B20A-855AA73886FF",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How do blocks work in Ruby?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How do blocks work in Ruby?",
+        "recentConversation" : [
+          "How do blocks work in Ruby?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "52FD82A7-BE7A-435A-82D9-5FC5BC333A13" : "req1",
+        "E5D861F4-19FC-4C57-80DC-7DC14BCEAB73" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "52FD82A7-BE7A-435A-82D9-5FC5BC333A13",
+            "sourceText" : "How do blocks work in Ruby?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "23582255-D90D-45B0-B20A-855AA73886FF",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "A64340B7-1909-40DF-A343-C0A51CA61F23",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "We're done with Ruby."
+          },
+          {
+            "id" : "A4A83A86-4862-4844-B0E2-253E63AA28FF",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What are optionals in Swift?"
+          }
+        ],
+        "preceding" : [
+          "How do blocks work in Ruby?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "EB6C939E-A02E-42F7-8078-CFACEE046816",
+        "snapshotID" : "FE5ED7B6-2B60-4AE5-A1B8-7E360BFB4500",
+        "stateRevision" : 5
+      },
+      "expect" : {
+        "must" : [
+          "\/optional\/i"
+        ],
+        "mustNot" : [
+          "\/Ruby block\/i"
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "391BF357-6C50-4771-8637-59CDC069A370",
+        "diagnosticsSessionID" : "23582255-D90D-45B0-B20A-855AA73886FF",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "We're done with Ruby.",
+          "What are optionals in Swift?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How do blocks work in Ruby?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "We're done with Ruby. What are optionals in Swift?",
+        "recentConversation" : [
+          "How do blocks work in Ruby?",
+          "We're done with Ruby.",
+          "What are optionals in Swift?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

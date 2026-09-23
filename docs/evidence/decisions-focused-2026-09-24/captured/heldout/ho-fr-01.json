@@ -1,0 +1,151 @@
+{
+  "id" : "ho-fr-01",
+  "language" : "fr",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "DE143915-6C7B-4D51-BE87-8D3751F9761D" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "FAD3B0F6-684B-4AD4-84E8-E61E6BB951BE",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "E7F1FDB6-067E-482E-A679-16E5E7813062",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Pouvez-vous expliquer le fonctionnement de Docker ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "E7EC954B-EA3B-4058-9663-9FC3AAC0B376",
+        "snapshotID" : "26F7B12F-9BFD-4639-90C7-6412CD61E9E0",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Docker|conteneur\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "A1C49001-2602-473D-A4C1-C9DD70972012",
+        "diagnosticsSessionID" : "FAD3B0F6-684B-4AD4-84E8-E61E6BB951BE",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Pouvez-vous expliquer le fonctionnement de Docker ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Pouvez-vous expliquer le fonctionnement de Docker ?",
+        "recentConversation" : [
+          "Pouvez-vous expliquer le fonctionnement de Docker ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "DE143915-6C7B-4D51-BE87-8D3751F9761D" : "req1",
+        "DF950DF5-CE0F-4D54-BE54-CF96B441DF86" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "DE143915-6C7B-4D51-BE87-8D3751F9761D",
+            "sourceText" : "Pouvez-vous expliquer le fonctionnement de Docker ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "FAD3B0F6-684B-4AD4-84E8-E61E6BB951BE",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "97C38807-1BE8-4B45-977C-5FB73E8529FF",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Et Kubernetes."
+          }
+        ],
+        "preceding" : [
+          "Pouvez-vous expliquer le fonctionnement de Docker ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "E7EC954B-EA3B-4058-9663-9FC3AAC0B376",
+        "snapshotID" : "0C01C9E4-7543-440D-903B-DB1B0249EEFF",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Kubernetes\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "75E53EAC-62B9-421B-8F88-ACAEFE20E628",
+        "diagnosticsSessionID" : "FAD3B0F6-684B-4AD4-84E8-E61E6BB951BE",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Et Kubernetes."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Pouvez-vous expliquer le fonctionnement de Docker ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Et Kubernetes.",
+        "recentConversation" : [
+          "Pouvez-vous expliquer le fonctionnement de Docker ?",
+          "Et Kubernetes."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

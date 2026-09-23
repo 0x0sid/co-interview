@@ -1,0 +1,92 @@
+{
+  "id" : "dv-en-08",
+  "language" : "en",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "5E37DF2E-4E49-462F-AFCF-66711EAB01A3" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "8983F277-5F73-4526-8F8B-C9A9DB468D14",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "76E10A6B-681F-435A-9D87-BA916979BD78",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Mm-hmm."
+          },
+          {
+            "id" : "888B1933-611B-4230-97F2-523757B7CCB9",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Sure."
+          },
+          {
+            "id" : "39AFD046-8F40-4088-83BE-486216D8AAAA",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How would you rate-limit an API?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "E16D73E8-675A-4C22-BAE4-B767311632A8",
+        "snapshotID" : "ED2BEA84-3767-4490-8652-607594AAE8FC",
+        "stateRevision" : 3
+      },
+      "expect" : {
+        "must" : [
+          "\/rate|limit|token bucket\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "B89A6B5F-9448-431F-8ED5-BED2C4FC56ED",
+        "diagnosticsSessionID" : "8983F277-5F73-4526-8F8B-C9A9DB468D14",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Mm-hmm.",
+          "Sure.",
+          "How would you rate-limit an API?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Mm-hmm. Sure. How would you rate-limit an API?",
+        "recentConversation" : [
+          "Mm-hmm.",
+          "Sure.",
+          "How would you rate-limit an API?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

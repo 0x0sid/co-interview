@@ -53,6 +53,9 @@ struct DiscussionSnapshot: Sendable, Equatable {
     var actionParentQuestion: String?
     var actionParentAnswer: String?
     var actionParentAnswerVersion: Int?
+    /// An accepted, applicable decision about `newInput`, taken from the tracker **at the tap** and
+    /// fixed with the rest of the snapshot. Nil means the request is built as with decisions off.
+    var interpretation: RequestInterpretation?
 
     /// The whole conversation, oldest first — speech only, in the order it was said.
     var allLines: [String] { background + newInput + (provisional.map { [$0] } ?? []) }

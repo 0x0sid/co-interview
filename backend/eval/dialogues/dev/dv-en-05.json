@@ -1,0 +1,51 @@
+{
+ "split": "dev",
+ "id": "dv-en-05",
+ "language": "en",
+ "domain": "technical",
+ "about": "return to an older topic",
+ "steps": [
+  {
+   "say": "What is a hash table?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/hash/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "How would you reverse a linked list?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/revers/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Back to hash tables, how do you handle collisions?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "req1",
+    "must": [
+     "/collision/i"
+    ],
+    "mustNot": [
+     "/linked list/i"
+    ],
+    "withdrawn": false
+   }
+  }
+ ]
+}

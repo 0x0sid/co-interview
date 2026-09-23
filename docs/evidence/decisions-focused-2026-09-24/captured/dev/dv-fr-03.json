@@ -1,0 +1,151 @@
+{
+  "id" : "dv-fr-03",
+  "language" : "fr",
+  "split" : "dev",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "AB245756-AA3F-4246-ADCE-BCC2618DB5BE" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "7AE0A80B-1385-4EA0-A0F5-59BA186ECC5A",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "7628047C-2661-428D-9F95-1E337D8813B2",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Comment présenteriez-vous notre produit à un client hésitant ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "DADB38CA-F857-415C-8288-AC4A79D996DC",
+        "snapshotID" : "642C7E11-1551-4965-A78C-5567B6FCC439",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/client|produit|valeur\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "E6364780-70EE-4ACC-91ED-E82BDCE71072",
+        "diagnosticsSessionID" : "7AE0A80B-1385-4EA0-A0F5-59BA186ECC5A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Comment présenteriez-vous notre produit à un client hésitant ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Comment présenteriez-vous notre produit à un client hésitant ?",
+        "recentConversation" : [
+          "Comment présenteriez-vous notre produit à un client hésitant ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "2B0C39BF-B14C-4386-9298-ABE160B1BED8" : "req2",
+        "AB245756-AA3F-4246-ADCE-BCC2618DB5BE" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "AB245756-AA3F-4246-ADCE-BCC2618DB5BE",
+            "sourceText" : "Comment présenteriez-vous notre produit à un client hésitant ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "7AE0A80B-1385-4EA0-A0F5-59BA186ECC5A",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "0B53F9C1-A1E6-4464-9DCD-EB0EE59F483E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Et s'il compare avec un concurrent moins cher ?"
+          }
+        ],
+        "preceding" : [
+          "Comment présenteriez-vous notre produit à un client hésitant ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "DADB38CA-F857-415C-8288-AC4A79D996DC",
+        "snapshotID" : "C33217D6-0500-4488-9104-2D0C7E0A8FF2",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/concurrent|prix|valeur\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "18F94780-50D2-4C3A-88D0-AF80FF2FF6FB",
+        "diagnosticsSessionID" : "7AE0A80B-1385-4EA0-A0F5-59BA186ECC5A",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Et s'il compare avec un concurrent moins cher ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Comment présenteriez-vous notre produit à un client hésitant ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Et s'il compare avec un concurrent moins cher ?",
+        "recentConversation" : [
+          "Comment présenteriez-vous notre produit à un client hésitant ?",
+          "Et s'il compare avec un concurrent moins cher ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

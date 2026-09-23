@@ -31,9 +31,10 @@ import { acceptsImages } from "./capabilities.mjs";
 import * as openai from "./providers/openai.mjs";
 import * as openrouter from "./providers/openrouter.mjs";
 import {
-  decisionConfigFromEnv, decisionApiKey, publicDecisionConfig, snapshotFromClassifyBody, baselineDecision,
-  DecisionRecorder, DecisionShadow, decide, applyActiveDecision,
+  decisionConfigFromEnv, decisionApiKey, publicDecisionConfig, DecisionRecorder,
+  focusedSnapshotFromBody, decideFocused, FOCUSED_PROMPT_VERSION,
 } from "./decisions.mjs";
+import { costUSD } from "./providers/typesafe.mjs";
 
 /**
  * Loads `backend/.env` into `process.env` if it exists.
@@ -195,15 +196,13 @@ const providerMode = FAKE ? "fake" : keyFor(baseConfig.text_provider) ? "configu
  */
 const decisionConfig = FAKE ? { ...decisionConfigFromEnv({}), modeReason: "development fake" } : decisionConfigFromEnv();
 const decisionRecorder = new DecisionRecorder();
-const decisionShadow = new DecisionShadow({
-  config: decisionConfig,
-  apiKey: FAKE ? "" : decisionApiKey(decisionConfig),
-  recorder: decisionRecorder,
-  log: (line) => console.log(line),
-  // Conversation text enters a decision record only under the same two conditions as the answer
-  // path's provider messages: the operator enabled content diagnostics, and the request opted in.
-  contentAllowed: DIAGNOSTICS_ENABLED,
-});
+const decisionApiKeyValue = FAKE ? "" : decisionApiKey(decisionConfig);
+/**
+ * Limited-active for one session at a time: with this on, a session that asks (`requestActive`, a
+ * Debug toggle in the app) gets `apply: true` on accepted decisions while every other session stays
+ * in shadow. Off by default; turning it off is a configuration change, not a deploy of code.
+ */
+const DECISION_SESSION_OPT_IN = process.env.COPILOT_DECISION_SESSION_OPT_IN === "1";
 
 // ---------------------------------------------------------------------------------------------
 // Prompts
@@ -651,6 +650,11 @@ function buildAnswerMessages(body, words) {
         || clip(body.question, 2000)
         || "(nothing new — answer the end of CONVERSATION)"
     }`,
+    // A decision classifier's reading of the new speech, attached by the app only when the decision
+    // was accepted and the session's mode applies it. Advisory: the words themselves still decide.
+    ...(!body.requestedAction && body.interpretation && typeof body.interpretation.relation === "string"
+      ? [interpretationBlock(body.interpretation)].filter(Boolean)
+      : []),
     // A button the speaker pressed, not words they said. Kept in its own block so it can never be
     // read back as part of the interview, and placed last because it is the most recent intent.
     ...(body.requestedAction
@@ -695,6 +699,24 @@ function buildAnswerMessages(body, words) {
  * dropped in silence, because the user can see they attached it and would otherwise assume it was
  * read.
  */
+/** The prompt text for an accepted decision. Fixed sentences; the only free text is the request's own words. */
+function interpretationBlock(interpretation) {
+  const words = clip(interpretation.parentWords ?? "", 400);
+  const quoted = words ? `"${words}"` : "";
+  const line = {
+    new_request: !words
+      ? "It is a new request, separate from the earlier ones."
+      : interpretation.withdrawn
+        ? `It is a new request, and the speaker has moved on from the earlier request ${quoted}: do not answer that one.`
+        : `It is a new request that returns to the subject of an earlier one: ${quoted}.`,
+    continuation: `It adds to the earlier request ${quoted}. Answer that request together with the addition.`,
+    correction: `It corrects or narrows the earlier request ${quoted}. Answer the corrected request only.`,
+    abandonment: `It withdraws the earlier request ${quoted}. Do not answer that; answer only what is still being asked, if anything.`,
+  }[interpretation.relation];
+  if (!line || (interpretation.relation !== "new_request" && !words)) return "";
+  return `REQUEST STRUCTURE (a decision classifier's reading of TO ANSWER NOW; use it to settle what is being asked, check it against the words, and never mention it):\n${line}`;
+}
+
 function acceptedImages(body) {
   if (!Array.isArray(body.images)) return [];
   return body.images
@@ -913,13 +935,6 @@ async function handleClassify(request, response) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   request.on("close", () => controller.abort());
 
-  // Active mode asks Jev **at the same time** as the detector, so it can only shorten the wait, never
-  // add a round trip. Its own deadline, not the request's: it must never hold the detector's verdict.
-  const snapshot = decisionConfig.mode === "off" ? null : snapshotFromClassifyBody(body);
-  const activeDecision = snapshot && decisionConfig.mode === "active" && decisionConfig.activeDecisions.length
-    ? decide({ snapshot, config: decisionConfig, apiKey: decisionShadow.apiKey, timeoutMs: decisionConfig.activeTimeoutMs })
-    : null;
-  const detectionStarted = Date.now();
 
   try {
     const messages = buildDetectionMessages(body);
@@ -937,31 +952,10 @@ async function handleClassify(request, response) {
     if (!outcome.ok) {
       return send(response, outcome.status === 429 ? 429 : 502, { error: "provider_error", detail: outcome.message });
     }
-    const baselineMeta = {
-      model: outcome.meta?.resolvedModel ?? config.detection_model_id,
-      latencyMs: Date.now() - detectionStarted,
-      questionText: outcome.result?.question_text ?? null,
-    };
-
-    let result = outcome.result;
-    let decision;
-    if (activeDecision) {
-      const jev = await activeDecision;
-      const applied = applyActiveDecision(outcome.result, snapshot, jev, decisionConfig);
-      result = applied.result;
-      decisionShadow.observe(snapshot);
-      const record = decisionShadow.newRecord(snapshot, baselineDecision(outcome.result, snapshot), baselineMeta);
-      record.controlled_by = applied.controlledBy;
-      record.fallback_reason = applied.fallbackReason;
-      decisionShadow.finish(record, jev.ok
-        ? { status: "ok", jev, baseline: baselineDecision(outcome.result, snapshot) }
-        : { status: "failed", reason: jev.reason, jev });
-      decision = { mode: "active", controlled_by: applied.controlledBy, record_id: record.record_id };
-    }
-
+    // Jev is no longer asked from here. It judged speech against card titles and could not be used at
+    // Generate time; the focused strategy is asked from the screen, through /v1/copilot/decide.
     send(response, 200, {
-      ...result,
-      ...(decision ? { decision } : {}),
+      ...outcome.result,
       is_fake: false,
       route: {
         gateway: config.text_provider,
@@ -974,16 +968,65 @@ async function handleClassify(request, response) {
       },
     });
 
-    // Shadow: only now, with the detector's verdict already on its way to the app. Nothing awaits it.
-    if (snapshot && decisionConfig.mode === "shadow") {
-      decisionShadow.submit(snapshot, baselineDecision(outcome.result, snapshot), baselineMeta);
-    }
   } catch (error) {
     if (controller.signal.aborted) return send(response, 504, { error: "timeout_or_cancelled" });
     send(response, 502, { error: "provider_error", detail: String(error).slice(0, 300) });
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/**
+ * One focused decision about the screen's newest speech (decisions.mjs). Called in the background by
+ * the app while speech arrives — **never** at Generate — at most once at a time per session.
+ *
+ * `apply` is true only when the operator's mode is active, or the session asked for limited-active and
+ * the operator allows that, **and** the decision was accepted in code. Otherwise the app keeps the
+ * result for diagnostics and builds its request exactly as it would with decisions off.
+ */
+async function handleDecide(request, response) {
+  const body = await readBody(request);
+  if (decisionConfig.mode === "off") return send(response, 200, { mode: "off", apply: false, eligible: false });
+  const snapshot = focusedSnapshotFromBody(body);
+  if (!snapshot.newSpeech.length) return send(response, 400, { error: "newSpeech is required" });
+
+  const outcome = await decideFocused({ snapshot, config: decisionConfig, apiKey: decisionApiKeyValue, timeoutMs: decisionConfig.shadowTimeoutMs });
+  const combined = outcome.combined ?? null;
+  const eligible = Boolean(outcome.ok && combined?.accepted);
+  const activeForSession = decisionConfig.mode === "active" || (snapshot.requestActive && DECISION_SESSION_OPT_IN);
+  const apply = eligible && activeForSession;
+  const answer = (id) => outcome.answers?.[id] ? { choice: outcome.answers[id].choice ?? null, confidence: outcome.answers[id].confidence ?? null, probabilities: outcome.answers[id].probabilities ?? null } : null;
+  const payload = {
+    mode: decisionConfig.mode,
+    apply,
+    eligible,
+    active_for_session: activeForSession,
+    prompt_version: FOCUSED_PROMPT_VERSION,
+    requested_model: decisionConfig.model,
+    answered_model: outcome.model ?? null,
+    snapshot_id: snapshot.snapshotID,
+    state_revision: snapshot.stateRevision,
+    relation: answer("relation"),
+    parent: answer("parent"),
+    combined_parent_id: combined?.parent ?? null,
+    interpretation: eligible ? combined.interpretation : null,
+    fallback_reason: outcome.ok ? combined?.reason ?? null : outcome.reason,
+    timed_out: outcome.reason === "timeout",
+    latency_ms: outcome.latencyMs ?? null,
+    usage: outcome.usage ?? null,
+    cost_usd: outcome.ok ? costUSD(outcome.model, outcome.usage) : null,
+  };
+  // Metadata only, as for every other decision record; text only under both content switches.
+  const record = { ...payload, record_id: `${snapshot.snapshotID ?? "snap"}`, recorded_at: new Date().toISOString(),
+    session_id: snapshot.sessionID, diagnostics_session_id: snapshot.diagnosticsSessionID,
+    utterances: snapshot.newSpeech.map((u) => ({ id: u.id, revision: u.revision, is_final: u.isFinal })),
+    candidate_ids: snapshot.candidates.map((c) => c.id), interpretation: payload.interpretation ? { relation: payload.interpretation.relation, has_parent: Boolean(payload.interpretation.parentWords) } : null };
+  if (DIAGNOSTICS_ENABLED && snapshot.captureContent) record.content = { new_speech: snapshot.newSpeech.map((u) => u.text), interpretation: payload.interpretation };
+  decisionRecorder.add(record);
+  console.log(`[decision] ${decisionConfig.mode} session=${String(snapshot.sessionID).slice(0, 8)} snapshot=${String(snapshot.snapshotID).slice(0, 8)} rev=${snapshot.stateRevision} ` +
+    `${outcome.ok ? `relation=${payload.relation?.choice}(${payload.relation?.confidence}) parent=${payload.parent?.choice ?? "-"} eligible=${eligible} apply=${apply}${payload.fallback_reason ? ` fallback="${payload.fallback_reason}"` : ""}` : `failed=${outcome.reason}`} ` +
+    `latency=${outcome.latencyMs}ms`);
+  send(response, 200, payload);
 }
 
 async function handleAnswer(request, response) {
@@ -1241,7 +1284,7 @@ const server = createServer(async (request, response) => {
         answer_accepts_images: FAKE ? false : acceptsImages(baseConfig.answer_model_id),
         request_overrides: ALLOW_REQUEST_OVERRIDES,
         // Mode and model only; whether a key exists, never its value.
-        decisions: publicDecisionConfig(decisionConfig),
+        decisions: { ...publicDecisionConfig(decisionConfig), session_opt_in: DECISION_SESSION_OPT_IN, prompt_version: FOCUSED_PROMPT_VERSION },
       });
     }
 
@@ -1256,7 +1299,7 @@ const server = createServer(async (request, response) => {
         ...publicConfig(baseConfig),
         provider_configured: providerMode === "configured" || FAKE,
         is_fake: FAKE,
-        decisions: publicDecisionConfig(decisionConfig),
+        decisions: { ...publicDecisionConfig(decisionConfig), session_opt_in: DECISION_SESSION_OPT_IN, prompt_version: FOCUSED_PROMPT_VERSION },
       });
     }
 
@@ -1271,7 +1314,7 @@ const server = createServer(async (request, response) => {
       if (!session) return send(response, 400, { error: "session is required" });
       return send(response, 200, {
         session,
-        decisions: publicDecisionConfig(decisionConfig),
+        decisions: { ...publicDecisionConfig(decisionConfig), session_opt_in: DECISION_SESSION_OPT_IN, prompt_version: FOCUSED_PROMPT_VERSION },
         records: decisionRecorder.list(session),
       });
     }
@@ -1298,6 +1341,7 @@ const server = createServer(async (request, response) => {
 
     if (request.method !== "POST") return send(response, 405, { error: "method_not_allowed" });
     if (url.pathname === "/v1/copilot/classify") return await handleClassify(request, response);
+    if (url.pathname === "/v1/copilot/decide") return await handleDecide(request, response);
     if (url.pathname === "/v1/copilot/answer") return await handleAnswer(request, response);
     send(response, 404, { error: "not_found" });
   } catch (error) {

@@ -102,6 +102,9 @@ struct AnswerRequest: Sendable, Encodable {
     var actionParentQuestion: String?
     var actionParentAnswer: String?
     var actionParentAnswerVersion: Int?
+    /// An accepted decision about the new speech, attached only when the backend said this session
+    /// may apply it. Omitted otherwise — the request is then exactly what it is with decisions off.
+    var interpretation: RequestInterpretation?
     let passages: [Passage]
     let language: String
     let targetWordRange: [Int]
@@ -175,6 +178,9 @@ extension CopilotProviding {
     /// Most providers keep nothing: there is no backend to ask.
     func diagnosticsProviderMessages(requestID: String) async -> String? { nil }
     func decisionRecords(diagnosticsSessionID: String) async -> String? { nil }
+    func decide(_ snapshot: DecisionSnapshot) async throws -> DecisionOutcome {
+        throw CopilotProviderError.unconfigured("no decision service")
+    }
 }
 
 enum CopilotProviderError: Error, Sendable, Equatable {
@@ -236,6 +242,10 @@ protocol CopilotProviding: Sendable {
     /// existing detector's verdict beside Jev's for each classification (pipeline §15). Nil when
     /// decisions are off on the backend or nothing was recorded; never an error worth surfacing.
     func decisionRecords(diagnosticsSessionID: String) async -> String?
+
+    /// One focused decision about the newest speech (pipeline §18). Called in the background while
+    /// speech arrives, never at Generate.
+    func decide(_ snapshot: DecisionSnapshot) async throws -> DecisionOutcome
 
     /// Human-readable label for what actually served the request, shown in the UI ("gpt-5.4-nano",
     /// "development fake").
@@ -329,6 +339,13 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         guard let (data, response) = try? await session.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return String(data: data, encoding: .utf8)
+    }
+
+    func decide(_ snapshot: DecisionSnapshot) async throws -> DecisionOutcome {
+        let body = try JSONEncoder().encode(snapshot)
+        let (data, response) = try await session.data(for: makeRequest(path: "v1/copilot/decide", body: body))
+        try Self.check(response: response, data: data)
+        return try JSONDecoder().decode(DecisionOutcome.self, from: data)
     }
 
     private func makeRequest(path: String, body: Data) -> URLRequest {

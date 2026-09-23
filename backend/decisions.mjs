@@ -689,3 +689,175 @@ export function logLine(record) {
   if (j.answered_model) parts.push(`model=${j.answered_model}`);
   return parts.join(" ");
 }
+
+// =============================================================================================
+// Focused strategy (2026-09-24): how the newest speech relates to the requests already made.
+// =============================================================================================
+//
+// The strategy above ("legacy", role / parent / answer need, asked from the detector's classify call)
+// judged speech against card *titles* — the answer model's own summaries — and could not be used at
+// Generate time. This one is asked from the screen, where requests, coverage and pages live:
+//
+// - **Code owns** chronology, identities, snapshots, coverage, latest-first priority, pages and
+//   stale-result rejection. Jev owns two narrow judgments, asked together because neither needs the
+//   other's answer, and combined here.
+// - Candidates are earlier **requests by their own words** — the speech each Generate was asked about
+//   — never a generated title.
+// - A decision proposes a structured interpretation for the next answer request. It never writes a
+//   question, never decides correctness, never gates Generate, and the answer request still carries
+//   the whole conversation.
+
+export const FOCUSED_PROMPT_VERSION = "focused-2026-09-24.2";
+const MAX_CANDIDATES = 5;
+const MAX_NEW_LINES = 12;
+const MAX_PRECEDING_LINES = 6;
+
+export const RELATION_OPTIONS = {
+  new_request:
+    "It asks for something not already being asked: a question or an instruction on its own subject — with or without a question mark (\"tell me about…\", \"show me an example\", \"walk me through…\"). This includes coming back to an earlier subject with a fresh question, and speech that drops the old subject **and** asks a new question in the same breath (\"forget Python, how does React render?\") — the new question is what counts.",
+  continuation:
+    "It adds to a request that is already being asked, without replacing it: one more item for a comparison (\"and Postgres\"), a qualifier (\"in production\"), the rest of an unfinished sentence, or \"tell me more\" about the same thing.",
+  correction:
+    "It changes or narrows a request already made, keeping its subject: \"actually, only the first two\", \"no, I meant the older version\", \"just the performance side\".",
+  abandonment:
+    "It withdraws a request or a subject and asks nothing new yet: \"forget that\", \"we're not talking about that any more\", \"never mind the database question\".",
+  non_request:
+    "It asks for nothing: an acknowledgement, a greeting, filler, or a statement or explanation (\"okay\", \"right\", \"we mostly use Postgres here\").",
+  unclear:
+    "Too fragmentary or garbled to tell which of the above it is.",
+};
+
+/** The screen's decision snapshot, validated and bounded. Text is clipped; nothing is invented. */
+export function focusedSnapshotFromBody(body) {
+  const lines = (list, max) => (Array.isArray(list) ? list : []).slice(-max);
+  const newSpeech = lines(body.newSpeech, MAX_NEW_LINES)
+    .filter((u) => u && typeof u.text === "string" && u.text.trim())
+    .map((u) => ({ id: clip(u.id, 64), revision: Number.isInteger(u.revision) ? u.revision : 0, isFinal: u.isFinal === true, text: clip(u.text, 400) }));
+  const candidates = (Array.isArray(body.candidates) ? body.candidates : []).slice(0, MAX_CANDIDATES)
+    .filter((c) => c && typeof c.id === "string" && typeof c.sourceText === "string" && c.sourceText.trim())
+    .map((c) => ({ id: clip(c.id, 64), sourceText: clip(c.sourceText, 400), status: ["pending", "answered", "superseded"].includes(c.status) ? c.status : "answered" }));
+  return {
+    sessionID: clip(body.sessionID, 64) || null,
+    stateRevision: Number.isInteger(body.stateRevision) ? body.stateRevision : null,
+    snapshotID: clip(body.snapshotID, 64) || null,
+    diagnosticsSessionID: clip(body.diagnosticsSessionID, 64) || null,
+    captureContent: body.captureContent === true,
+    requestActive: body.requestActive === true,
+    language: clip(body.language, 16) || "en",
+    newSpeech,
+    preceding: lines(body.preceding, MAX_PRECEDING_LINES).filter((t) => typeof t === "string").map((t) => clip(t, 400)),
+    candidates,
+  };
+}
+
+/** Only what the two judgments need: the new speech, just enough before it, and the requests. */
+export function buildFocusedState(snapshot) {
+  return {
+    setting: "A live job interview, transcribed by speech recognition: punctuation may be missing and words misheard. An interviewer asks; the candidate answers.",
+    language: snapshot.language,
+    conversation_before: snapshot.preceding,
+    newest_speech: snapshot.newSpeech.map((u) => u.text),
+    earlier_requests: snapshot.candidates.map((c, index) => ({ key: `r${index + 1}`, status: c.status, words: c.sourceText })),
+  };
+}
+
+export function buildFocusedQuestions(snapshot) {
+  const questions = {
+    relation: {
+      type: "choice",
+      instructions: "`newest_speech` is what was said most recently, oldest line first; its last substantive line matters most, and lines that together make up one request — a question and the items or details added right after it — count as that one request. How does it relate to the requests in `earlier_requests`? Judge the newest speech only; `conversation_before` is context for reading it.",
+      criteria: RELATION_OPTIONS,
+    },
+  };
+  const parentKeys = {};
+  if (snapshot.candidates.length) {
+    const criteria = {};
+    snapshot.candidates.forEach((candidate, index) => {
+      const key = `r${index + 1}`;
+      parentKeys[key] = candidate.id;
+      criteria[key] = `It is about earlier request ${key} (${candidate.status}), whose words were: "${candidate.sourceText}" — adding to it, correcting it, withdrawing it, or returning to its subject.`;
+    });
+    criteria.none = "It is about none of the earlier requests: a subject not asked about before, or speech that refers to no request.";
+    criteria.unclear = "It could be about more than one of them, or it is impossible to tell.";
+    questions.parent = {
+      type: "choice",
+      instructions: "Which request in `earlier_requests`, if any, does `newest_speech` refer to, explicitly or implicitly? Judge the subject it is about, whatever it asks.",
+      criteria,
+    };
+    // Independent of the other two, so it can share the call: it says whether a parent that a new
+    // request names is being left behind or returned to — the difference between "forget X, what
+    // about Y?" and "back to X: …", which the relation alone cannot express.
+    questions.withdraws = {
+      type: "noul",
+      instructions: "Does `newest_speech` say that the speaker is dropping, leaving or no longer asking about a subject from `earlier_requests`?",
+      criteria: {
+        true: "It drops or moves away from an earlier subject (\"forget that\", \"not that any more\", \"let's leave that aside\").",
+        false: "It keeps, adds to, corrects or returns to an earlier subject, or refers to none.",
+      },
+    };
+  }
+  return { questions, parentKeys };
+}
+
+/** Thresholds are tuned on development dialogues (eval/dialogues), never on held-out ones. */
+export const FOCUSED_THRESHOLDS = { relation: 0.5, parent: 0.5, withdraws: 0.7 };
+
+/**
+ * Combines the two answers in code. Anything unsupported — low confidence, a relationship that needs
+ * a parent without one, a parent that is not a candidate — is a fallback with its reason, never a
+ * speculative interpretation.
+ */
+export function combineFocused(answers, parentKeys, snapshot, thresholds = FOCUSED_THRESHOLDS) {
+  const problems = validateAnswers(buildFocusedQuestions(snapshot).questions, answers);
+  const read = (id) => (problems.some((p) => p.startsWith(`${id}:`)) ? null : answers?.[id]);
+  const relationAnswer = read("relation");
+  const parentAnswer = read("parent");
+  const relation = relationAnswer?.choice ?? null;
+  const relationConfidence = relationAnswer?.confidence ?? null;
+  const parentChoice = snapshot.candidates.length ? parentAnswer?.choice ?? null : "none";
+  const parentConfidence = snapshot.candidates.length ? parentAnswer?.confidence ?? null : 1;
+  const parentID = parentChoice && parentKeys[parentChoice] ? parentKeys[parentChoice] : null;
+  const parent = parentID ? snapshot.candidates.find((c) => c.id === parentID) : null;
+  const base = { relation, relationConfidence, parent: parentChoice === null ? null : (parentID ?? parentChoice), parentConfidence, problems };
+
+  const fallback = (reason) => ({ ...base, accepted: false, reason, interpretation: null });
+  if (!relation) return fallback(problems.length ? `invalid answer: ${problems.join("; ")}` : "no relation answer");
+  if (!(relationConfidence >= thresholds.relation)) return fallback(`relation confidence ${relationConfidence} below ${thresholds.relation}`);
+  if (relation === "unclear") return fallback("relation unclear");
+  if (relation === "non_request") return fallback("no request in the newest speech");
+  const parentTrusted = parent && parentConfidence >= thresholds.parent;
+
+  const withdrawsAnswer = read("withdraws");
+  const withdraws = typeof withdrawsAnswer?.noul === "number" ? withdrawsAnswer.noul : null;
+  base.withdraws = withdraws;
+  if (relation === "new_request") {
+    // A new request needs no parent. With a trusted one, the speaker is either leaving that subject
+    // ("forget X — what about Y?") or returning to it; the withdrawal answer says which, and when it
+    // is unsure the parent is simply not passed on.
+    if (!parentTrusted) return { ...base, accepted: true, reason: null, interpretation: { relation, parentWords: null, parentStatus: null, withdrawn: false } };
+    if (withdraws !== null && withdraws >= thresholds.withdraws) {
+      return { ...base, accepted: true, reason: null, interpretation: { relation, parentWords: parent.sourceText, parentStatus: parent.status, withdrawn: true } };
+    }
+    if (withdraws !== null && withdraws <= 1 - thresholds.withdraws) {
+      return { ...base, accepted: true, reason: null, interpretation: { relation, parentWords: parent.sourceText, parentStatus: parent.status, withdrawn: false } };
+    }
+    return { ...base, accepted: true, reason: "withdrawal unclear: earlier request not passed on", interpretation: { relation, parentWords: null, parentStatus: null, withdrawn: false } };
+  }
+  // continuation, correction, abandonment: meaningless without the request they are about.
+  if (!parentTrusted) {
+    return fallback(parent ? `parent confidence ${parentConfidence} below ${thresholds.parent}` : `"${relation}" without a matching earlier request`);
+  }
+  return { ...base, accepted: true, reason: null, interpretation: { relation, parentWords: parent.sourceText, parentStatus: parent.status, withdrawn: relation === "abandonment" } };
+}
+
+/** One focused decision. Never throws; failures come back with their reason. */
+export async function decideFocused({ snapshot, config, apiKey, evaluate = typesafe.evaluate, timeoutMs, thresholds = FOCUSED_THRESHOLDS }) {
+  if (!snapshot.newSpeech.length) return { ok: false, reason: "no new speech", latencyMs: 0, attempts: 0 };
+  const { questions, parentKeys } = buildFocusedQuestions(snapshot);
+  const result = await evaluate({
+    apiKey, transport: config.transport, base: config.base, model: config.model,
+    state: buildFocusedState(snapshot), questions, timeoutMs, maxAttempts: 1,
+  });
+  if (!result.ok) return result;
+  return { ...result, combined: combineFocused(result.answers, parentKeys, snapshot, thresholds) };
+}

@@ -1,0 +1,41 @@
+{
+ "split": "dev",
+ "id": "dv-en-06",
+ "language": "en",
+ "domain": "technical",
+ "about": "withdrawal plus new request",
+ "steps": [
+  {
+   "say": "Explain Terraform state files."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/state/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Forget Terraform. How does Ansible work?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/Ansible/i"
+    ],
+    "mustNot": [
+     "/state file/i"
+    ],
+    "withdrawn": true
+   }
+  }
+ ]
+}

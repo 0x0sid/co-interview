@@ -1,0 +1,155 @@
+{
+  "id" : "ho-en-09",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "3A46DF80-114D-48C0-BF42-DFCD312B512D" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "DE60CA16-2BAD-4F33-A838-ADCD2B1FB9D3",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "953BB873-39ED-4399-A2C4-8858A81BCDA9",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "What is Rust's borrow checker?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "01F077EE-5E17-43E2-A5E7-341364305E96",
+        "snapshotID" : "3E4CA7F4-96D2-49C8-A1ED-8C4F4BBAFA3D",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/borrow\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "D7BD9326-88B8-4895-9D2B-9D92D490580A",
+        "diagnosticsSessionID" : "DE60CA16-2BAD-4F33-A838-ADCD2B1FB9D3",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "What is Rust's borrow checker?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "What is Rust's borrow checker?",
+        "recentConversation" : [
+          "What is Rust's borrow checker?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "3A46DF80-114D-48C0-BF42-DFCD312B512D" : "req1",
+        "F7853EB3-F40C-467C-942D-308933E6A4D6" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "3A46DF80-114D-48C0-BF42-DFCD312B512D",
+            "sourceText" : "What is Rust's borrow checker?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "DE60CA16-2BAD-4F33-A838-ADCD2B1FB9D3",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "BE8DDD9B-8C46-48C0-84E5-F065B632CA8D",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "No, not Rust anymore. Tell me how Elixir handles concurrency."
+          }
+        ],
+        "preceding" : [
+          "What is Rust's borrow checker?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "01F077EE-5E17-43E2-A5E7-341364305E96",
+        "snapshotID" : "86AC1107-79DC-4784-B942-07EDC4DFE11E",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Elixir|BEAM|process\/i"
+        ],
+        "mustNot" : [
+          "\/borrow\/i"
+        ],
+        "parent" : [
+          "none",
+          "req1"
+        ],
+        "relation" : "new_request",
+        "withdrawn" : true
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "85096798-EE3A-4FC6-82E4-4DB2AEC7E0BD",
+        "diagnosticsSessionID" : "DE60CA16-2BAD-4F33-A838-ADCD2B1FB9D3",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "No, not Rust anymore. Tell me how Elixir handles concurrency."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “What is Rust's borrow checker?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "No, not Rust anymore. Tell me how Elixir handles concurrency.",
+        "recentConversation" : [
+          "What is Rust's borrow checker?",
+          "No, not Rust anymore. Tell me how Elixir handles concurrency."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+ "split": "dev",
+ "id": "dv-en-04",
+ "language": "en",
+ "domain": "technical",
+ "about": "fragment after an answer",
+ "steps": [
+  {
+   "say": "How does caching work in Redis?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/cach/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "And eviction policies."
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/evict/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

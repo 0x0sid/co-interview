@@ -70,6 +70,24 @@ final class GenerateDiagnostics {
         #endif
     }
 
+    /// Limited-active for this session only: ask the backend to let accepted decisions shape requests.
+    /// It has effect only when the backend operator allows per-session opt-in. Returns to off with
+    /// every new session, like content capture.
+    var isDecisionApplyRequested = false {
+        didSet {
+            guard oldValue != isDecisionApplyRequested else { return }
+            #if DEBUG
+            note(isDecisionApplyRequested ? "Jev decisions requested for this session" : "Jev decisions no longer requested")
+            #endif
+        }
+    }
+
+    func recordDecisionUse(requestID: UUID, status: String) {
+        #if DEBUG
+        update(requestID) { $0.decision = status }
+        #endif
+    }
+
     // MARK: - Session
 
     func startSession(appBuild: String, commit: String) {
@@ -83,6 +101,7 @@ final class GenerateDiagnostics {
         // Off again for every new session. A capture turned on to chase one problem must not still
         // be running during the next interview.
         isContentCaptureEnabled = false
+        isDecisionApplyRequested = false
         note("Session started · build \(appBuild) · commit \(commit)")
         #endif
     }

@@ -1,0 +1,152 @@
+{
+  "id" : "ho-en-04",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "8DC9AF87-D0F2-4590-9986-06DE881C8656" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "1A69814A-9C86-402B-AF5A-4C7AB7BA6E75",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "0C6BC008-335D-49F8-B5D5-D975B0D1E90E",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "How does indexing work in MongoDB?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "0E96301D-2514-4B35-8677-C71B42C42B8A",
+        "snapshotID" : "124515F1-69B3-4C30-B144-3728F518E543",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/index\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "53CB25A6-F041-4608-8D68-3A86EA9CCAB4",
+        "diagnosticsSessionID" : "1A69814A-9C86-402B-AF5A-4C7AB7BA6E75",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "How does indexing work in MongoDB?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "How does indexing work in MongoDB?",
+        "recentConversation" : [
+          "How does indexing work in MongoDB?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "8DC9AF87-D0F2-4590-9986-06DE881C8656" : "req1",
+        "A49CD2CD-BD0E-49CF-804A-92F62DC1CD89" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "8DC9AF87-D0F2-4590-9986-06DE881C8656",
+            "sourceText" : "How does indexing work in MongoDB?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "1A69814A-9C86-402B-AF5A-4C7AB7BA6E75",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "9A37CCF9-22D3-4900-ABD3-80B9823E22F2",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "And compound indexes."
+          }
+        ],
+        "preceding" : [
+          "How does indexing work in MongoDB?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "0E96301D-2514-4B35-8677-C71B42C42B8A",
+        "snapshotID" : "D8F1AD0F-D0A7-4F82-8D00-50DE09F9DE23",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "firstMust" : "\/compound\/i",
+        "must" : [
+          "\/compound\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "req1",
+        "relation" : "continuation"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "02368B40-D482-4F69-B77B-4A1B1C8DE5EC",
+        "diagnosticsSessionID" : "1A69814A-9C86-402B-AF5A-4C7AB7BA6E75",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "And compound indexes."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “How does indexing work in MongoDB?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "And compound indexes.",
+        "recentConversation" : [
+          "How does indexing work in MongoDB?",
+          "And compound indexes."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

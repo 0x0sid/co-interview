@@ -119,6 +119,9 @@ struct GenerateTrace: Identifiable, Sendable {
     var answerCharacters = 0
 
     // The report.
+    /// Whether a focused decision shaped this request, and why or why not ("applied: continuation",
+    /// "shadow: … not applied", "stale: …", "decision still in flight"). Never content.
+    var decision: String?
     var problemNote: String?
     var markedAt: Date?
 

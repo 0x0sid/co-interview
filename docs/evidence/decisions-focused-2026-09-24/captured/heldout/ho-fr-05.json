@@ -1,0 +1,236 @@
+{
+  "id" : "ho-fr-05",
+  "language" : "fr",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "E9054F1C-C24F-4E3C-B738-40038B8AC2A7" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "ED6704D4-6F37-4F3C-94DD-B0204761CC19",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Qu'est-ce que le TDD ?"
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "0B7815FF-AF02-4475-B50B-35A5EA9C5443",
+        "snapshotID" : "9BF016E1-B626-420E-BA65-504A15CAB8F5",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/TDD|test\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "F56741AD-7DC9-4439-9AB9-55B0FA4B2F78",
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Qu'est-ce que le TDD ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Qu'est-ce que le TDD ?",
+        "recentConversation" : [
+          "Qu'est-ce que le TDD ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "1CA9605C-C9A8-4B2D-AAF8-4C96C8A63F7C" : "req2",
+        "E9054F1C-C24F-4E3C-B738-40038B8AC2A7" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "E9054F1C-C24F-4E3C-B738-40038B8AC2A7",
+            "sourceText" : "Qu'est-ce que le TDD ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "E11DC48E-B491-486D-99D6-DA8F1B6B1DDA",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Comment gérez-vous le stress ?"
+          }
+        ],
+        "preceding" : [
+          "Qu'est-ce que le TDD ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "0B7815FF-AF02-4475-B50B-35A5EA9C5443",
+        "snapshotID" : "7CD256AA-F781-4103-B75E-8D7239267B4A",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+
+        ],
+        "mustNot" : [
+          "\/TDD\/"
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "E703DEFF-F37A-423E-A5B5-CD367EEFA887",
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Comment gérez-vous le stress ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Qu'est-ce que le TDD ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Comment gérez-vous le stress ?",
+        "recentConversation" : [
+          "Qu'est-ce que le TDD ?",
+          "Comment gérez-vous le stress ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "1CA9605C-C9A8-4B2D-AAF8-4C96C8A63F7C" : "req2",
+        "D178B74A-4880-4DD6-8DC5-D470A9AB5FB8" : "req3",
+        "E9054F1C-C24F-4E3C-B738-40038B8AC2A7" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "1CA9605C-C9A8-4B2D-AAF8-4C96C8A63F7C",
+            "sourceText" : "Comment gérez-vous le stress ?",
+            "status" : "answered"
+          },
+          {
+            "id" : "E9054F1C-C24F-4E3C-B738-40038B8AC2A7",
+            "sourceText" : "Qu'est-ce que le TDD ?",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "language" : "fr",
+        "newSpeech" : [
+          {
+            "id" : "4F2AAB2D-E59D-4A5E-8F01-A2ACC1B8E44C",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Pour revenir au TDD, quels sont ses inconvénients ?"
+          }
+        ],
+        "preceding" : [
+          "Qu'est-ce que le TDD ?",
+          "Comment gérez-vous le stress ?"
+        ],
+        "requestActive" : false,
+        "sessionID" : "0B7815FF-AF02-4475-B50B-35A5EA9C5443",
+        "snapshotID" : "136E0D75-563B-4EDA-85B8-FD4AC965BB2A",
+        "stateRevision" : 7
+      },
+      "expect" : {
+        "must" : [
+          "\/TDD|test\/i"
+        ],
+        "mustNot" : [
+          "\/stress\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "new_request",
+        "withdrawn" : false
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "69341053-1C6E-4830-A760-BA2EAA215867",
+        "diagnosticsSessionID" : "F603D013-0E99-4DB3-A0C3-D38C6BF7033B",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "fr",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Pour revenir au TDD, quels sont ses inconvénients ?"
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Qu'est-ce que le TDD ?”: an explanation of that.",
+          "In answer to “Comment gérez-vous le stress ?”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Pour revenir au TDD, quels sont ses inconvénients ?",
+        "recentConversation" : [
+          "Qu'est-ce que le TDD ?",
+          "Comment gérez-vous le stress ?",
+          "Pour revenir au TDD, quels sont ses inconvénients ?"
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

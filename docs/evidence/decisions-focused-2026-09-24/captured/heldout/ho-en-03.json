@@ -1,0 +1,152 @@
+{
+  "id" : "ho-en-03",
+  "language" : "en",
+  "split" : "heldout",
+  "taps" : [
+    {
+      "candidateLabels" : {
+        "7CED4C93-E555-4C82-B82C-A9870D9ABD67" : "req1"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "3ABE4ECB-BA06-434D-9646-D0C4BBD0F8ED",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "7E02975C-AE79-4FAD-B8CA-8AB08F8C99B2",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+          }
+        ],
+        "preceding" : [
+
+        ],
+        "requestActive" : false,
+        "sessionID" : "12281147-B0EA-49A5-A88B-098EB42584FB",
+        "snapshotID" : "7F5683B8-1A34-4BC5-96D2-E76E2EE109FC",
+        "stateRevision" : 1
+      },
+      "expect" : {
+        "must" : [
+          "\/Spring Boot\/i"
+        ],
+        "mustNot" : [
+
+        ],
+        "parent" : "none",
+        "relation" : "new_request"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "28C59E62-AC9A-4671-ADB7-D22D7EAF6BA2",
+        "diagnosticsSessionID" : "3ABE4ECB-BA06-434D-9646-D0C4BBD0F8ED",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+        "recentConversation" : [
+          "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    },
+    {
+      "candidateLabels" : {
+        "7CED4C93-E555-4C82-B82C-A9870D9ABD67" : "req1",
+        "822F323C-3B98-4EAD-B2D4-34D760E9C232" : "req2"
+      },
+      "decisionSnapshot" : {
+        "candidates" : [
+          {
+            "id" : "7CED4C93-E555-4C82-B82C-A9870D9ABD67",
+            "sourceText" : "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+            "status" : "answered"
+          }
+        ],
+        "captureContent" : false,
+        "diagnosticsSessionID" : "3ABE4ECB-BA06-434D-9646-D0C4BBD0F8ED",
+        "language" : "en",
+        "newSpeech" : [
+          {
+            "id" : "0BAD3087-C9AA-4939-BC99-B4E19224084B",
+            "isFinal" : true,
+            "revision" : 0,
+            "text" : "Actually, only compare Spring Boot 2 and 3."
+          }
+        ],
+        "preceding" : [
+          "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+        ],
+        "requestActive" : false,
+        "sessionID" : "12281147-B0EA-49A5-A88B-098EB42584FB",
+        "snapshotID" : "949CE260-7C69-4726-BE94-432D35FA76E4",
+        "stateRevision" : 4
+      },
+      "expect" : {
+        "must" : [
+          "\/Boot 2|Spring Boot 2|\\b2\\b\/",
+          "\/\\b3\\b\/"
+        ],
+        "mustNot" : [
+          "\/Framework 5|Spring 5\/i"
+        ],
+        "parent" : "req1",
+        "relation" : "correction"
+      },
+      "kind" : "tap",
+      "request" : {
+        "captureProviderMessages" : false,
+        "diagnosticsRequestID" : "8618A44D-90E8-4D2F-A841-F1701A374C82",
+        "diagnosticsSessionID" : "3ABE4ECB-BA06-434D-9646-D0C4BBD0F8ED",
+        "extraContext" : "",
+        "images" : [
+
+        ],
+        "language" : "en",
+        "lastNewInputIsProvisional" : false,
+        "newInput" : [
+          "Actually, only compare Spring Boot 2 and 3."
+        ],
+        "passages" : [
+
+        ],
+        "priorSuggestions" : [
+          "In answer to “Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.”: an explanation of that."
+        ],
+        "projectID" : "live-session",
+        "projectInstructions" : "",
+        "question" : "Actually, only compare Spring Boot 2 and 3.",
+        "recentConversation" : [
+          "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5.",
+          "Actually, only compare Spring Boot 2 and 3."
+        ],
+        "targetWordRange" : [
+          40,
+          100
+        ]
+      }
+    }
+  ]
+}

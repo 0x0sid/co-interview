@@ -390,3 +390,43 @@ struct LiveInterviewFeedTests {
         #expect(coordinator.state == .active, "pausing listening ended the session")
     }
 }
+
+/// A line recognised in partial results and then finalized must reach the screen **as final, with the
+/// final wording** — and so reach the next request. It used not to: closing an utterance keeps its
+/// revision, the feed only re-emitted on a revision change, and the line stayed on screen as its last
+/// partial, marked not final. A request then dropped it entirely unless it happened to be the very
+/// last line, because a snapshot carries final lines plus only the newest one as provisional.
+@MainActor
+struct FinalizedPartialTests {
+    private typealias Support = CopilotTestSupport
+
+    @Test
+    func aFinalizedPartialReachesTheScreenAndTheRequest() async throws {
+        let provider = Support.StubProvider()
+        provider.classifications = [DetectionResult(kind: .none, questionText: "", confidence: 0.9)]
+        let coordinator = CopilotSessionCoordinator(
+            project: LiveSessionContext(language: .english),
+            provider: provider,
+            audio: InterviewAudioInput(makeService: { FakeTranscriptionService(results: []) }),
+            generationMode: .manual
+        )
+        let model = InterviewScreenModel(mode: .live, feed: LiveInterviewFeed(coordinator: coordinator))
+        model.start()
+
+        coordinator.ingest(Support.volatileDelta("Could you compare Java", at: 1))
+        coordinator.ingest(Support.volatileDelta("Could you compare Java 9 and Java 8", at: 1.5))
+        coordinator.ingest(Support.finalDelta("Could you compare Java 9 and Java 8 and Java 7?", at: 2))
+        coordinator.ingest(Support.volatileDelta("Java", at: 4))
+        coordinator.ingest(Support.finalDelta("Java 10.", at: 4.5))
+        try await Support.waitUntil("both finalized lines on screen") {
+            model.transcript.count == 2 && model.transcript.allSatisfy(\.isFinal)
+        }
+        #expect(model.transcript.map(\.text) == ["Could you compare Java 9 and Java 8 and Java 7?", "Java 10."])
+
+        model.generate(now: Date(timeIntervalSince1970: 1_000))
+        try await Support.waitUntil("the request") { provider.lastAnswerRequest != nil }
+        #expect(provider.lastAnswerRequest?.newInput == ["Could you compare Java 9 and Java 8 and Java 7?", "Java 10."],
+                "a finalized line was missing from the request")
+        model.stop()
+    }
+}
