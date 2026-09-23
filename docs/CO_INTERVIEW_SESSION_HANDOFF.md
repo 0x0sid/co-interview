@@ -53,6 +53,31 @@ HTTPS through `gh`.
   metrics, and an answer-request completeness check.
 - Display name Neverblank; team `P9Q6984LRS` on every target.
 
+## Deployed state (verified 2026-09-24)
+
+| | |
+| --- | --- |
+| App commit | `ce13de1` on `0x0sid/co-interview` `main` (this handoff update follows it) |
+| Mirror commit | `c9790c0` on `0x0sid/backend` `main` (authored as `sid <sid@MacBookPro-001.lan>` because the mirror had no git identity; now set to `0x0sid`, history not rewritten) |
+| Fly | release **v7**, image `deployment-01M37TBG9Y3BAFYZAPJ1ND3C1Z`, `COPILOT_BACKEND_VERSION=fly-c9790c0` |
+| Decisions on Fly | `/health` → `mode: shadow`, `transport: openrouter`, `model: typesafe/jev-1.13-20260917`, `key_configured: true`, `active_decisions: []` |
+| End-to-end on Fly | authenticated classify returned the detector's verdict in 0.98 s; its shadow record completed ~2 s later (`status: ok`, agreement, `controlled_by: baseline`, no conversation text); the log line carries metadata only; unauthenticated diagnostics → 401 |
+
+## Regression results
+
+- Backend: all five suites pass (configuration, contract, OpenRouter, diagnostics, decisions), in the app
+  repo and in the mirror.
+- `prompterTests`, run alone: **332 tests in 43 suites passed** (344 in the result bundle, counting
+  parameterised cases), 0 failed, 1 skipped (`aRealGenerateProducesAFullyPopulatedExport`, opt-in via
+  `COINTERVIEW_LIVE_DIAGNOSTICS=1`). An earlier full run with backend suites competing for the CPU
+  took 21 minutes and failed 27 tests, every one a 3-second `waitUntil` timeout; run alone the same
+  tests pass in 55 s. **Run the iOS suites on an otherwise idle machine.**
+- `prompterUITests`, run alone: **18 passed, 2 failed** — both inherited:
+  `testCaptureBarePromptScreen` (below) and `testLiveStateIsReportedHonestlyWhenUnconfigured`, which
+  waits for "Start live, LIVE mode" while a simulator with microphone and speech permission shows the
+  listen-only title "Start live (listening only)" (`CopilotStartScreen` → `LiveReadiness.isListenOnly`).
+  Code this increment did not touch; not fixed here.
+
 ## Evaluation — what is and is not known
 
 Held-out (52 synthetic cases), real calls on both sides, identical snapshots — pipeline §15:
