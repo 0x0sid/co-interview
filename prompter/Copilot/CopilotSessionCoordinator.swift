@@ -492,7 +492,10 @@ final class CopilotSessionCoordinator {
         // The card's own text is a placeholder until the model reports what it understood the
         // request to be. Naming it locally is what produced titles like "And Java 7." for a request
         // that was really a three-way comparison.
-        let question = discussion.newLines.joined(separator: " ")
+        // With no new speech the request is the tapped action itself, so that is what the card is
+        // named until the model reports the title it understood.
+        let spoken = discussion.newLines.joined(separator: " ")
+        let question = spoken.isEmpty ? (discussion.requestedAction ?? spoken) : spoken
         // Everything said up to now is what this request answers, so it is marked consumed and the
         // detection cut-off moves past it. Without this the same speech stayed pending, and the next
         // silence tick classified it and produced a second question for an answer already on screen.
@@ -606,6 +609,10 @@ final class CopilotSessionCoordinator {
             newInput: discussion?.newLines ?? [],
             lastNewInputIsProvisional: discussion?.provisional != nil,
             priorSuggestions: discussion?.priorSuggestions ?? [],
+            requestedAction: discussion?.requestedAction,
+            actionParentQuestion: discussion?.actionParentQuestion,
+            actionParentAnswer: discussion?.actionParentAnswer,
+            actionParentAnswerVersion: discussion?.actionParentAnswerVersion,
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
                       locator: $0.locator, text: $0.text)

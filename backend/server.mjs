@@ -555,6 +555,17 @@ function buildAnswerMessages(body, words) {
     `TO ANSWER NOW (said since your last suggestion — this is the request; read it against CONVERSATION):\n${
       newInputText || clip(body.question, 2000) || "(nothing new — answer the end of CONVERSATION)"
     }`,
+    // A button the speaker pressed, not words they said. Kept in its own block so it can never be
+    // read back as part of the interview, and placed last because it is the most recent intent.
+    ...(body.requestedAction
+      ? [
+          `REQUESTED ACTION (the speaker tapped this on screen just now — it was NOT spoken aloud, and the interviewer did not hear it):\n${clip(body.requestedAction, 500)}\n\n` +
+          `It applies to THIS answer, which is the one they were looking at — not to the most recent thing said:\n` +
+          `  question: ${clip(body.actionParentQuestion, 500) || "(not given)"}\n` +
+          `  answer${body.actionParentAnswerVersion ? ` (v${Number(body.actionParentAnswerVersion)})` : ""}: ${clip(body.actionParentAnswer, 4000) || "(not given)"}\n\n` +
+          `Do what the action asks of that answer. CONVERSATION is context for it; do not switch to a later topic just because it was spoken more recently.`,
+        ]
+      : []),
   ].join("\n\n");
 
   // Attachments become extra content parts on the same user message, after the text, so the model
@@ -838,7 +849,12 @@ async function handleClassify(request, response) {
 
 async function handleAnswer(request, response) {
   const body = await readBody(request, MAX_ANSWER_BODY_BYTES);
-  if (!body.question || typeof body.question !== "string") {
+  // A tapped follow-up action is a request in its own right and carries no spoken question, so
+  // either one satisfies this. Requiring `question` rejected every action the moment nothing had
+  // been said since the last answer — which is exactly when the chips are used.
+  const hasQuestion = typeof body.question === "string" && body.question.trim().length > 0;
+  const hasAction = typeof body.requestedAction === "string" && body.requestedAction.trim().length > 0;
+  if (!hasQuestion && !hasAction) {
     return send(response, 400, { error: "question is required" });
   }
   if (FAKE) {

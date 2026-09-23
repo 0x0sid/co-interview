@@ -66,6 +66,14 @@ struct AnswerRequest: Sendable, Encodable {
     /// Answers already suggested this session, oldest first, labelled to the model as its own
     /// suggestions — never as something the speaker said about themselves.
     var priorSuggestions: [String] = []
+    /// A follow-up the speaker tapped rather than said ("give an example"). Never speech, so it is
+    /// never presented to the model as something the speaker uttered.
+    var requestedAction: String?
+    /// The question and answer the tapped action refers to, so it is applied to the page the chip
+    /// was on rather than to whatever was answered most recently.
+    var actionParentQuestion: String?
+    var actionParentAnswer: String?
+    var actionParentAnswerVersion: Int?
     let passages: [Passage]
     let language: String
     let targetWordRange: [Int]

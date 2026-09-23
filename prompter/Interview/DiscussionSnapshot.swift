@@ -39,6 +39,20 @@ struct DiscussionSnapshot: Sendable, Equatable {
     var note: String = ""
     /// Identifiers of images prepared for this request.
     var attachmentIDs: [String] = []
+    /// A follow-up the speaker tapped ("give an example"), rather than something they said.
+    ///
+    /// Kept apart from speech for the same reason background is kept apart from new input: the
+    /// transcript is the record of what was said in the room, and a tapped chip was not said.
+    var requestedAction: String?
+    /// Which answer the tapped action was about.
+    ///
+    /// **The chip belongs to a page, not to "the latest answer".** Browsing back to question two and
+    /// tapping "give an example" means an example of *that* answer, and speech arriving in the room
+    /// meanwhile must not silently retarget it. The page's own question and answer version travel
+    /// with the request so the model resolves the action against the right thing.
+    var actionParentQuestion: String?
+    var actionParentAnswer: String?
+    var actionParentAnswerVersion: Int?
 
     /// The whole conversation, oldest first — speech only, in the order it was said.
     var allLines: [String] { background + newInput + (provisional.map { [$0] } ?? []) }
@@ -54,7 +68,11 @@ struct DiscussionSnapshot: Sendable, Equatable {
         provisional: String? = nil,
         priorSuggestions: [String] = [],
         note: String = "",
-        attachmentIDs: [String] = []
+        attachmentIDs: [String] = [],
+        requestedAction: String? = nil,
+        actionParentQuestion: String? = nil,
+        actionParentAnswer: String? = nil,
+        actionParentAnswerVersion: Int? = nil
     ) {
         self.background = background
         self.newInput = newInput
@@ -62,6 +80,10 @@ struct DiscussionSnapshot: Sendable, Equatable {
         self.priorSuggestions = priorSuggestions
         self.note = note
         self.attachmentIDs = attachmentIDs
+        self.requestedAction = requestedAction
+        self.actionParentQuestion = actionParentQuestion
+        self.actionParentAnswer = actionParentAnswer
+        self.actionParentAnswerVersion = actionParentAnswerVersion
     }
 
     /// Everything as new input. Convenience for callers with no coverage information.

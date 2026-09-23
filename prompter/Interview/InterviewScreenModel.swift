@@ -82,6 +82,22 @@ final class InterviewScreenModel {
     private var lastRequestedContextFingerprint: String?
     /// Kept after a request finishes so Retry can re-send exactly what failed.
     private var retainedSnapshots: [UUID: DiscussionSnapshot] = [:]
+    /// The interview's language, for anything the interface has to write in it.
+    ///
+    /// Live takes it from the session's project; Demo is scripted in English.
+    var interviewLanguage: InterviewLanguage { liveFeed?.coordinator.project.language ?? .english }
+
+    /// What to offer next on the page being looked at, or nothing while it is still writing.
+    var followUpActions: [FollowUpActions.Action] {
+        guard let question = currentQuestion,
+              let answer = question.selectedAnswer, answer.isComplete else { return [] }
+        return FollowUpActions.actions(
+            question: question.text,
+            blocks: answer.blocks,
+            language: interviewLanguage
+        )
+    }
+
     /// The one request currently running. Queued requests wait behind it.
     private(set) var activeRequestID: UUID?
     /// questionID → the request currently running for it, so a second tap cannot start a second one.
@@ -374,7 +390,17 @@ final class InterviewScreenModel {
     /// It answers **the latest discussion**, not whatever page is on screen, so browsing history
     /// does not change what the next tap asks about. Every accepted tap creates its own entry with
     /// its own immutable snapshot, including repeated taps about the same discussion.
-    func generate(now: Date = Date()) {
+    func generate(now: Date = Date()) { generate(action: nil, now: now) }
+
+    /// Generate, optionally carrying a follow-up action the speaker tapped.
+    ///
+    /// **A tapped action counts as new input.** It is a request the speaker just made, so the
+    /// "nothing new was said" guard does not apply to it — otherwise the chips would be dead
+    /// controls during the silence in which they are most useful. Everything else is identical:
+    /// the same whole-session snapshot, the same new tab, the same queue and duplicate rules.
+    ///
+    /// The action never enters the transcript. The transcript records what was said in the room.
+    func generate(action: FollowUpActions.Action?, for parent: InterviewQuestion? = nil, now: Date = Date()) {
         // Debounce: one press must not become two entries.
         if let last = lastGenerateTapAt, now.timeIntervalSince(last) < Self.generateDebounce {
             diagnostics.recordTap(requestID: nil, outcome: .debounced,
@@ -382,14 +408,14 @@ final class InterviewScreenModel {
             return
         }
 
-        guard hasAnythingToAnswer else {
+        guard hasAnythingToAnswer || action != nil else {
             emptyInputNotice = "Speak or add context first"
             diagnostics.recordTap(requestID: nil, outcome: .rejectedNothingToAnswer, reason: emptyInputNotice)
             return
         }
         // Nothing new since the last request. Rather than answering the same words twice, offer the
         // action the user actually wants — another version of the answer they already have.
-        guard hasNewInputToAnswer else {
+        guard hasNewInputToAnswer || action != nil else {
             emptyInputNotice = "No new question. Regenerate this answer?"
             diagnostics.recordTap(requestID: nil, outcome: .rejectedNothingNew, reason: emptyInputNotice)
             return
@@ -405,7 +431,22 @@ final class InterviewScreenModel {
 
         // The snapshot is taken here, at the tap, and never re-read. Later speech belongs to the
         // next request, not this one.
-        let snapshot = transcriptSnapshot()
+        var snapshot = transcriptSnapshot()
+        if let action {
+            snapshot.requestedAction = action.instruction
+            // **An action answers a page, not the newest speech.** Everything said so far is context
+            // for it, and nothing spoken is the request — so the whole conversation moves to
+            // background and `newInput` is empty. Without this an action tapped while the room kept
+            // talking would claim that speech as the thing it was answering.
+            snapshot.background = snapshot.allLines
+            snapshot.newInput = []
+            snapshot.provisional = nil
+            if let parent {
+                snapshot.actionParentQuestion = parent.text
+                snapshot.actionParentAnswer = parent.selectedAnswer?.proseText
+                snapshot.actionParentAnswerVersion = parent.selectedAnswer?.version
+            }
+        }
         let requestID = UUID()
         let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
         questions.append(entry)
@@ -426,8 +467,14 @@ final class InterviewScreenModel {
         readyQuestionNumber = nil
 
         // Reserve the input this request covers, so a second tap cannot enqueue the same snapshot.
-        for line in uncoveredLines { coveredLines[line.id] = Self.meaningfulWording(line.text) }
-        lastRequestedContextFingerprint = contextFingerprint
+        //
+        // **An action reserves nothing.** It is not answering the speech, so speech that arrived
+        // while the reader was browsing stays uncovered and is still there for the next ordinary
+        // Generate. Reserving it here would silently swallow a question nobody had answered.
+        if action == nil {
+            for line in uncoveredLines { coveredLines[line.id] = Self.meaningfulWording(line.text) }
+            lastRequestedContextFingerprint = contextFingerprint
+        }
 
         // Recorded *after* the request is fully formed and *before* it is queued, so a diagnostic
         // can never be the reason a request looks different from the one that was sent.

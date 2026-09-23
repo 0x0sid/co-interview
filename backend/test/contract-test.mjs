@@ -327,6 +327,45 @@ try {
     check("the title line is never shown to the reader", !/TITLE:/.test(titledText));
     check("the answer text survives the title line", /bound the queue/i.test(titledText));
 
+    // --- A tapped follow-up action ---------------------------------------------------------------
+    //
+    // It carries no spoken question, and it must be applied to the answer whose chip was tapped
+    // rather than to whatever was said most recently.
+
+    const actionResponse = await fetch(`${BASE}/v1/copilot/answer`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        question: "",
+        newInput: [],
+        recentConversation: ["What is a lambda in Java?", "Actually, tell me about your last project."],
+        requestedAction: "Give one concrete example of what you just explained.",
+        actionParentQuestion: "What a lambda is",
+        actionParentAnswer: "A lambda is an anonymous function you can pass around as a value.",
+        actionParentAnswerVersion: 1,
+        language: "en",
+        targetWordRange: [40, 90],
+        projectID: "p2",
+      }),
+    });
+    check("an action with no spoken question is accepted", actionResponse.status === 200);
+    await readStream(actionResponse);
+    const actionBody = JSON.stringify(lastUpstreamRequest.input);
+    check("the action reaches the provider", /REQUESTED ACTION/.test(actionBody));
+    check("it is marked as not spoken aloud", /NOT spoken aloud/.test(actionBody));
+    check("it names the answer it applies to", /What a lambda is/.test(actionBody));
+    check("it carries that answer's text", /pass around as a value/.test(actionBody));
+    check("it says not to follow the more recent topic",
+          /do not switch to a later topic/.test(actionBody));
+
+    // A request with neither a question nor an action is still refused.
+    const emptyResponse = await fetch(`${BASE}/v1/copilot/answer`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ question: "", language: "en", projectID: "p2" }),
+    });
+    check("a request with neither a question nor an action is refused", emptyResponse.status === 400);
+
     // --- Development diagnostics -----------------------------------------------------------------
     //
     // This server was started without COPILOT_DIAGNOSTICS, so the capture must be entirely inert:

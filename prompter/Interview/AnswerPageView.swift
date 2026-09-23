@@ -24,6 +24,9 @@ struct AnswerPageView: View {
     let failureMessage: String?
     let onGenerate: () -> Void
     let onFollowUps: () -> Void
+    /// What to offer next on this page. Empty while the answer is still being written.
+    var followUpActions: [FollowUpActions.Action] = []
+    var onFollowUpAction: (FollowUpActions.Action) -> Void = { _ in }
     let onBeginManualScroll: () -> Void
     let onEndManualScroll: (Range<Int>?) -> Void
     let onResumeFollowing: () -> Void
@@ -71,6 +74,10 @@ struct AnswerPageView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                if !followUpActions.isEmpty, answer?.isComplete == true {
+                    followUpActionRow
                 }
 
                 if !question.followUps.isEmpty, answer?.isComplete == true {
@@ -169,7 +176,9 @@ struct AnswerPageView: View {
                             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
-                        Text(text)
+                        // Streaming, or no alignment yet: same emphasis, no reading state to compose
+                        // with. The colour is the view's, so nothing here can be mistaken for "read".
+                        Text(AnswerKeywords.emphasised(text))
                             .font(InterviewTheme.Font.answer())
                             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
                             .foregroundStyle(InterviewTheme.Color.ink)
@@ -193,13 +202,16 @@ struct AnswerPageView: View {
     /// Paragraph *i* corresponds to prose block *i*, because `proseText` joins the prose blocks with
     /// a blank line and nothing else.
     private func styledParagraphs(for alignment: ReadingAlignment) -> [Text] {
-        let attributed = ScriptStyling.styledAttributedString(
+        var attributed = ScriptStyling.styledAttributedString(
             rawText: alignment.text,
             scriptIndex: alignment.scriptIndex,
             cursor: alignment.cursor,
             spokenTokenIndices: alignment.spokenTokenIndices,
             palette: InterviewTheme.readingPalette
         )
+        // Emphasis goes on *after* the reading colours and touches only weight, so the two systems
+        // stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
+        AnswerKeywords.emphasise(&attributed, source: alignment.text)
 
         // The character span of each paragraph, from the sentences that make it up.
         var spans: [(start: Int, end: Int)] = []
@@ -256,6 +268,37 @@ struct AnswerPageView: View {
                 .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.muted)
         }
+    }
+
+    /// One tap for the thing a speaker usually wants next.
+    ///
+    /// Only under a finished answer: offering "make it shorter" against half an answer would be
+    /// asking about text that does not exist yet. The row scrolls rather than wraps, so a long
+    /// label never pushes the answer around.
+    private var followUpActionRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(followUpActions) { action in
+                    Button { onFollowUpAction(action) } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: action.systemImage)
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(action.title)
+                                .font(InterviewTheme.Font.ui(13, weight: .medium, relativeTo: .footnote))
+                        }
+                        .foregroundStyle(InterviewTheme.Color.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(InterviewTheme.Color.questionPill, in: Capsule())
+                        .overlay(Capsule().stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(action.title)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .accessibilityIdentifier("follow-up-actions")
     }
 
     private var followUpsLink: some View {

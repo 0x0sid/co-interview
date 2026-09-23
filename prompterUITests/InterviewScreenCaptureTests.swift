@@ -126,6 +126,39 @@ final class InterviewScreenCaptureTests: XCTestCase {
         save(app, "07-expanded-transcript")
     }
 
+    /// The finished answer, its emphasised keywords, and the follow-up actions under it.
+    ///
+    /// The chips sit below the answer, so this scrolls to them: a screenshot taken at the top of the
+    /// page would show the feature only by its absence.
+    @MainActor
+    func testCaptureAnswerKeywordsAndFollowUpActions() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion"]
+        app.launch()
+        openDemo(app)
+
+        let question = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question 1'")).firstMatch
+        XCTAssertTrue(question.waitForExistence(timeout: 60), "no question page appeared")
+
+        let generate = app.buttons["Generate an answer"]
+        XCTAssertTrue(generate.waitForExistence(timeout: 10))
+        generate.tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 30), "no answer arrived")
+        save(app, "09-answer-with-keywords")
+
+        // Scroll to the follow-up chips under the answer.
+        let actions = app.otherElements["follow-up-actions"]
+        for _ in 0..<6 where !actions.exists { app.swipeUp() }
+        XCTAssertTrue(actions.waitForExistence(timeout: 10),
+                      "a finished answer offered no follow-up actions")
+        save(app, "10-follow-up-actions")
+
+        // The chips are real controls: at least one is tappable and named.
+        let chip = actions.buttons.firstMatch
+        XCTAssertTrue(chip.exists, "the follow-up row has no buttons in it")
+        XCTAssertFalse(chip.label.isEmpty, "a follow-up chip has no label")
+    }
+
     /// The end of a long answer can be scrolled out from under the floating toolbar.
     ///
     /// The pill floats over the page, so the bottom of the content is only reachable because the

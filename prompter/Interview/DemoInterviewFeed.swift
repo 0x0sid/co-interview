@@ -211,7 +211,7 @@ extension DemoInterviewFeed.Exchange {
             ],
             question: "How do you handle backpressure when the upstream produces faster than you can write?",
             blocks: [
-                .prose("We bound the queue rather than the producer. The writer pulls in batches, and when the queue reaches its limit the producer blocks instead of buffering without limit."),
+                .prose("We bound the queue rather than the producer. A BoundedQueue of 512 items gives the writer somewhere to pull batches from, and when it reaches its limit the producer blocks instead of buffering without limit."),
                 .code("""
                 let queue = BoundedQueue(capacity: 512)
 

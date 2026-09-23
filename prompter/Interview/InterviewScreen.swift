@@ -155,6 +155,10 @@ struct InterviewScreen: View {
                         failureMessage: index == model.currentIndex ? model.generationFailure : nil,
                         onGenerate: { model.generate(for: question) },
                         onFollowUps: { model.isFollowUpsSheetPresented = true },
+                        // Only the page being looked at offers actions: a chip on a page off-screen
+                        // is a control nobody can see being offered for an answer nobody is reading.
+                        followUpActions: index == model.currentIndex ? model.followUpActions : [],
+                        onFollowUpAction: { model.generate(action: $0, for: question) },
                         onBeginManualScroll: { model.beginManualScroll(on: question) },
                         onEndManualScroll: { model.endManualScroll(on: question, visibleTokens: $0) },
                         onResumeFollowing: { model.resumeFollowing(on: question) }
