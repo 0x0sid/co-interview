@@ -98,6 +98,30 @@ seeding a fresh one. The data was test data: the inherited sample script. The ba
 Build note: as macOS user `sid`, the build-stamp script's `git` refuses the `sidousan` checkout and
 stamps "unknown"; build with `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*'`.
 
+## Second phone test fixes (2026-09-24, evening)
+
+Evidence: `docs/evidence/phone-2026-09-24/` — `phone-regressions-before.md` and `-after.md` (the real
+provider's effective input, answer and timing per case) and `screens/` (the corrected build, real
+backend, scripted speech).
+
+| Reported | Cause found | Fix | State |
+| --- | --- | --- | --- |
+| Note "Secret: I love pizza" ignored | The note **did** reach the model; it answered as itself ("I cannot share personal information") because nothing said "you" meant the candidate | Rules and request labels now say who speaks and for whom the reply is written; the note is the candidate's own evidence, used exactly | 4/4 grounded in the final run, no added details |
+| — | A request's note came from the live field, not its tap snapshot | `extraContext` now comes from the snapshot | unit-tested |
+| "Java 10." reduced to 8 vs 10 | Not reproducible from any payload the transcript allows (all tap boundaries and a provisional last line: 12/12 in the final run). Most likely the transcript at the tap was still mid-revision | Rule: items stay in scope unless explicitly narrowed; the answer covers exactly what its title names | Turn on **Capture test content** in the next test so a repeat can be traced |
+| Serif, oversized answer | — | Hanken Grotesk 21pt, Dynamic Type (`.title3`), 1.4 line height | screenshots |
+| Gap under a short transcript | A scroll view given only a maximum takes all of it | Content-sized up to 168pt, then scrolls | screenshot |
+| Backticks around `var` | — | Hidden in the rendered text only; speech tokens unchanged | unit-tested |
+| Example/Go deeper under "no information" | — | The model marks `[needs: context|clarification]`; the page offers only **Add context**, which opens the note and sends nothing | unit- and screen-tested |
+
+**Still open:** with no note, a personal question is now correctly flagged `needs: context`, but the
+answer model (`google/gemini-2.5-flash-lite`) still words it as "I do not have a secret to share" — an
+unsupported claim about the candidate. Three prompt variants did not remove it; one made other cases
+worse and was reverted. Not fixed by switching models silently: that is a separate decision.
+
+Real-provider UI capture (opt-in, billed): `TEST_RUNNER_COINTERVIEW_LIVE_UI=1 xcodebuild test …
+-only-testing:prompterUITests/LiveProviderCaptureTests`. It drives Live with `-LiveScriptedSpeech`.
+
 ## Evaluation — what is and is not known
 
 Held-out (52 synthetic cases), real calls on both sides, identical snapshots — pipeline §15:

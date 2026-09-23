@@ -875,3 +875,22 @@ Unchanged from §13: the whole session is sent; over the 120 000-token budget th
 with `413 context_limit` and nothing is dropped. At characters ÷ 4 that is several hours of speech, so
 no compaction is added here. Any future compaction must keep unresolved questions, corrections and
 their antecedents, and record the boundary in diagnostics.
+
+---
+
+## 16. Whose voice, and what an answer asks for (2026-09-24)
+
+A phone test showed the model treating "you" in the interviewer's question as itself — "I cannot
+share personal information" — with the candidate's note sitting in the request. The rules now open
+by saying who is speaking and for whom the reply is written, the request labels repeat it where the
+model reads it, and the session note is labelled the candidate's own evidence, to be used exactly and
+never extended. Scope rules were tightened: items stay in scope unless explicitly narrowed, and the
+answer covers exactly what its TITLE names.
+
+**`needs`.** When an answer asks for a missing personal detail or for a clearer question, the model
+ends its TITLE line with `[needs: context]` or `[needs: clarification]`. The backend strips it and
+sends `{ "type": "needs", "value": … }`. The app then offers **Add context** (opens the note; sends
+nothing) instead of "Give an example" / "Go deeper". Structural, reported by the model — never guessed
+from wording.
+
+Evidence and the open issue: `docs/evidence/phone-2026-09-24/` and the session handoff.
