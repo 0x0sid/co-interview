@@ -1,0 +1,50 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-05",
+ "language": "fr",
+ "domain": "technical",
+ "about": "retour à un sujet antérieur",
+ "steps": [
+  {
+   "say": "Qu'est-ce que le TDD ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/TDD|test/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Comment gérez-vous le stress ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [],
+    "mustNot": [
+     "/TDD/"
+    ]
+   }
+  },
+  {
+   "say": "Pour revenir au TDD, quels sont ses inconvénients ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "req1",
+    "must": [
+     "/TDD|test/i"
+    ],
+    "mustNot": [
+     "/stress/i"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+ "split": "heldout",
+ "id": "ho-en-11",
+ "language": "en",
+ "domain": "sales",
+ "about": "a nontechnical scenario and its escalation",
+ "steps": [
+  {
+   "say": "How would you handle a customer who wants a discount we can't give?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/discount|value|price/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "And if they threaten to cancel?"
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/cancel|leave|churn/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

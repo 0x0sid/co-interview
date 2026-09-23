@@ -1,0 +1,36 @@
+{
+ "split": "heldout",
+ "id": "ho-en-04",
+ "language": "en",
+ "domain": "technical",
+ "about": "a fragment after the previous answer",
+ "steps": [
+  {
+   "say": "How does indexing work in MongoDB?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/index/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "And compound indexes."
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/compound/i"
+    ],
+    "mustNot": [],
+    "firstMust": "/compound/i"
+   }
+  }
+ ]
+}

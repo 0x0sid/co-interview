@@ -1,0 +1,44 @@
+{
+ "split": "heldout",
+ "id": "ho-en-01",
+ "language": "en",
+ "domain": "technical",
+ "about": "explicit topic change after an answer",
+ "steps": [
+  {
+   "say": "Can you explain how garbage collection works in Go?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/garbage|collector|\\bGC\\b/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Okay, forget Go for a second."
+  },
+  {
+   "say": "Let's talk about Kotlin. How do coroutines differ from threads?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/coroutine/i"
+    ],
+    "mustNot": [
+     "/garbage collect/i"
+    ],
+    "firstMust": "/coroutine|Kotlin/i"
+   }
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+{
+ "split": "heldout",
+ "id": "ho-en-06",
+ "language": "en",
+ "domain": "technical",
+ "about": "browsing an old page, a new question, then a chip on the old page",
+ "steps": [
+  {
+   "say": "Explain the CAP theorem."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/CAP|consisten|partition/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "What is eventual consistency?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/eventual/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "select": 0
+  },
+  {
+   "say": "How would you design a URL shortener?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/shorten|URL/i"
+    ],
+    "mustNot": [
+     "/CAP theorem/i"
+    ]
+   }
+  },
+  {
+   "chip": "example",
+   "page": 0,
+   "expect": {
+    "must": [
+     "/CAP|consisten|partition|availab/i"
+    ],
+    "mustNot": [
+     "/shorten/i"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "split": "heldout",
+ "id": "ho-en-03",
+ "language": "en",
+ "domain": "technical",
+ "about": "explicit narrowing",
+ "steps": [
+  {
+   "say": "Compare Spring Boot 2 and Spring Boot 3, and also Spring Framework 5."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Spring Boot/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Actually, only compare Spring Boot 2 and 3."
+  },
+  {
+   "tap": {
+    "relation": "correction",
+    "parent": "req1",
+    "must": [
+     "/Boot 2|Spring Boot 2|\\b2\\b/",
+     "/\\b3\\b/"
+    ],
+    "mustNot": [
+     "/Framework 5|Spring 5/i"
+    ]
+   }
+  }
+ ]
+}

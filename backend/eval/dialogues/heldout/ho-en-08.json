@@ -1,0 +1,54 @@
+{
+ "split": "heldout",
+ "id": "ho-en-08",
+ "language": "en",
+ "domain": "technical",
+ "about": "partial results revised, fillers, then a question",
+ "steps": [
+  {
+   "say": "How do you scale a",
+   "final": false
+  },
+  {
+   "say": "How do you scale a web socket",
+   "revise": true,
+   "final": false
+  },
+  {
+   "say": "How do you scale a WebSocket server?",
+   "revise": true
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/socket/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Okay."
+  },
+  {
+   "say": "Right."
+  },
+  {
+   "say": "What is backpressure?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/backpressure|back pressure/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

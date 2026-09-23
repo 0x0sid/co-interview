@@ -1,0 +1,35 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-01",
+ "language": "fr",
+ "domain": "technical",
+ "about": "continuation en français",
+ "steps": [
+  {
+   "say": "Pouvez-vous expliquer le fonctionnement de Docker ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Docker|conteneur/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Et Kubernetes."
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/Kubernetes/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

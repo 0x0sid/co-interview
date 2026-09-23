@@ -1,0 +1,40 @@
+{
+ "split": "heldout",
+ "id": "ho-en-09",
+ "language": "en",
+ "domain": "technical",
+ "about": "withdrawal and a new request in one utterance",
+ "steps": [
+  {
+   "say": "What is Rust's borrow checker?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/borrow/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "No, not Rust anymore. Tell me how Elixir handles concurrency."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/Elixir|BEAM|process/i"
+    ],
+    "mustNot": [
+     "/borrow/i"
+    ]
+   }
+  }
+ ]
+}

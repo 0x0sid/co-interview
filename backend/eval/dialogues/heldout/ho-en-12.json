@@ -1,0 +1,36 @@
+{
+ "split": "heldout",
+ "id": "ho-en-12",
+ "language": "en",
+ "domain": "technical",
+ "about": "a misheard framework and a correction",
+ "steps": [
+  {
+   "say": "How do computed properties work in view JS?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/computed/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Sorry, I meant watchers, not computed properties."
+  },
+  {
+   "tap": {
+    "relation": "correction",
+    "parent": "req1",
+    "must": [
+     "/watch/i"
+    ],
+    "mustNot": [],
+    "firstMust": "/watch/i"
+   }
+  }
+ ]
+}

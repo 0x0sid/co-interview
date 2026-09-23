@@ -1,0 +1,26 @@
+{
+ "split": "heldout",
+ "id": "ho-en-13",
+ "language": "en",
+ "domain": "technical",
+ "about": "two independent questions, latest first",
+ "steps": [
+  {
+   "say": "What is a mutex?"
+  },
+  {
+   "say": "And separately, what's a semaphore?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/semaphore/i"
+    ],
+    "mustNot": [],
+    "firstMust": "/semaphore/i"
+   }
+  }
+ ]
+}

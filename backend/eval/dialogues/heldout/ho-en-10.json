@@ -1,0 +1,38 @@
+{
+ "split": "heldout",
+ "id": "ho-en-10",
+ "language": "en",
+ "domain": "behavioral",
+ "about": "a personal question and its follow-up, no note",
+ "steps": [
+  {
+   "say": "Tell me about a time you led a team through a difficult deadline."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [],
+    "mustNot": [
+     "/as an AI|language model/i"
+    ]
+   }
+  },
+  {
+   "say": "What would you do differently?"
+  },
+  {
+   "tap": {
+    "relation": [
+     "continuation",
+     "new_request"
+    ],
+    "parent": "req1",
+    "must": [],
+    "mustNot": [
+     "/as an AI|language model/i"
+    ]
+   }
+  }
+ ]
+}

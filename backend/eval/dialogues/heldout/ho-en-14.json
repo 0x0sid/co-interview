@@ -1,0 +1,33 @@
+{
+ "split": "heldout",
+ "id": "ho-en-14",
+ "language": "en",
+ "domain": "technical",
+ "about": "abandonment with nothing new",
+ "steps": [
+  {
+   "say": "How do microservices communicate with each other?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/microservice|service/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Actually, never mind that question."
+  },
+  {
+   "tap": {
+    "relation": "abandonment",
+    "parent": "req1",
+    "must": [],
+    "mustNot": []
+   }
+  }
+ ]
+}

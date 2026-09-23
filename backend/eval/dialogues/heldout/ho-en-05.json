@@ -1,0 +1,53 @@
+{
+ "split": "heldout",
+ "id": "ho-en-05",
+ "language": "en",
+ "domain": "technical",
+ "about": "returning to an older topic",
+ "steps": [
+  {
+   "say": "What is dependency injection?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/depend|inject/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "How do you handle merge conflicts in Git?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/merge|conflict/i"
+    ],
+    "mustNot": [
+     "/dependency injection/i"
+    ]
+   }
+  },
+  {
+   "say": "Going back to dependency injection, how does it help with testing?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "req1",
+    "must": [
+     "/inject|depend/i",
+     "/test/i"
+    ],
+    "mustNot": [
+     "/merge conflict/i"
+    ]
+   }
+  }
+ ]
+}

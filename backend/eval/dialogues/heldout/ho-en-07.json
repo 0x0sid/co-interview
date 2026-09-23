@@ -1,0 +1,53 @@
+{
+ "split": "heldout",
+ "id": "ho-en-07",
+ "language": "en",
+ "domain": "technical",
+ "about": "a chip on an old page while new speech is pending",
+ "steps": [
+  {
+   "say": "What is a closure in JavaScript?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/closure/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "And how would you debounce a function?"
+  },
+  {
+   "chip": "example",
+   "page": 0,
+   "expect": {
+    "must": [
+     "/closure/i"
+    ],
+    "mustNot": [
+     "/debounce/i"
+    ]
+   }
+  },
+  {
+   "tap": {
+    "relation": [
+     "new_request",
+     "continuation"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/debounce/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

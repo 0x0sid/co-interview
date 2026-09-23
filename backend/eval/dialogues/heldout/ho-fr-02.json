@@ -1,0 +1,42 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-02",
+ "language": "fr",
+ "domain": "technical",
+ "about": "changement de sujet explicite",
+ "steps": [
+  {
+   "say": "Qu'est-ce qu'une API REST ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/REST/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "On ne parle plus de REST."
+  },
+  {
+   "say": "Expliquez-moi GraphQL."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "must": [
+     "/GraphQL/i"
+    ],
+    "mustNot": [],
+    "firstMust": "/GraphQL/i"
+   }
+  }
+ ]
+}

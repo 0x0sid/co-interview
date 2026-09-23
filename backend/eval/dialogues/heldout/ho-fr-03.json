@@ -1,0 +1,38 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-03",
+ "language": "fr",
+ "domain": "technical",
+ "about": "restriction explicite",
+ "steps": [
+  {
+   "say": "Comparez Angular, Vue et Svelte."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/Svelte/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "En fait, seulement Vue et Svelte."
+  },
+  {
+   "tap": {
+    "relation": "correction",
+    "parent": "req1",
+    "must": [
+     "/Vue/i",
+     "/Svelte/i"
+    ],
+    "mustNot": [
+     "/Angular/i"
+    ]
+   }
+  }
+ ]
+}

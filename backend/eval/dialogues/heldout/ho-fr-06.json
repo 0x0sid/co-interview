@@ -1,0 +1,35 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-06",
+ "language": "fr",
+ "domain": "technical",
+ "about": "fragment après la réponse",
+ "steps": [
+  {
+   "say": "Quelle est la différence entre une file et une pile ?"
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [
+     "/pile|file|LIFO|FIFO/i"
+    ],
+    "mustNot": []
+   }
+  },
+  {
+   "say": "Avec un exemple en C."
+  },
+  {
+   "tap": {
+    "relation": "continuation",
+    "parent": "req1",
+    "must": [
+     "/pile|file|stack|queue|push|pop/i"
+    ],
+    "mustNot": []
+   }
+  }
+ ]
+}

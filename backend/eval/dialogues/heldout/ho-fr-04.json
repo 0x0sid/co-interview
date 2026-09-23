@@ -1,0 +1,41 @@
+{
+ "split": "heldout",
+ "id": "ho-fr-04",
+ "language": "fr",
+ "domain": "behavioral",
+ "about": "entretien non technique, question de suivi",
+ "steps": [
+  {
+   "say": "Parlez-moi de votre plus grande réussite professionnelle."
+  },
+  {
+   "tap": {
+    "relation": "new_request",
+    "parent": "none",
+    "must": [],
+    "mustNot": [
+     "/en tant qu'IA|modèle de langage/i"
+    ]
+   }
+  },
+  {
+   "say": "Et quel a été votre plus grand échec ?"
+  },
+  {
+   "tap": {
+    "relation": [
+     "new_request",
+     "continuation"
+    ],
+    "parent": [
+     "req1",
+     "none"
+    ],
+    "must": [],
+    "mustNot": [
+     "/en tant qu'IA|modèle de langage/i"
+    ]
+   }
+  }
+ ]
+}
