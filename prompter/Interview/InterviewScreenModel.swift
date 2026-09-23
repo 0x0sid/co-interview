@@ -35,6 +35,9 @@ final class InterviewScreenModel {
     // MARK: Chrome
 
     var isTranscriptExpanded = false
+    /// Incremented to ask the transcript strip to put the keyboard in the note field — the "Add
+    /// context" recovery. A counter rather than a flag, so asking twice works twice.
+    private(set) var noteFocusRequest = 0
     /// The context panel lives inside the expanded transcript; its contents survive collapsing.
     ///
     /// **Closed until the user opens it.** It opened itself with the transcript, which cost the
@@ -94,6 +97,7 @@ final class InterviewScreenModel {
         return FollowUpActions.actions(
             question: question.text,
             blocks: answer.blocks,
+            need: answer.need,
             language: interviewLanguage
         )
     }
@@ -236,6 +240,11 @@ final class InterviewScreenModel {
         case .answerTopicResolved(let requestID, let topic):
             labelEntry(requestID: requestID, topic: topic)
             diagnostics.recordTitle(requestID: requestID, title: topic)
+
+        case .answerNeedsInput(let requestID, let need):
+            // It usually arrives with the title, before the answer exists; held until it does.
+            pendingNeeds[requestID] = need
+            applyPendingNeed(requestID: requestID)
 
         case .answerFailed(let requestID, let message):
             diagnostics.recordFailure(
@@ -401,6 +410,11 @@ final class InterviewScreenModel {
     ///
     /// The action never enters the transcript. The transcript records what was said in the room.
     func generate(action: FollowUpActions.Action?, for parent: InterviewQuestion? = nil, now: Date = Date()) {
+        // A local recovery action is not a request: it opens the note, and nothing is sent.
+        if action?.kind == .addContext {
+            openContextNote()
+            return
+        }
         // Debounce: one press must not become two entries.
         if let last = lastGenerateTapAt, now.timeIntervalSince(last) < Self.generateDebounce {
             diagnostics.recordTap(requestID: nil, outcome: .debounced,
@@ -961,6 +975,28 @@ final class InterviewScreenModel {
         questions[index] = question
         generation.answerID = answer.id
         generations[requestID] = generation
+        applyPendingNeed(requestID: requestID)
+    }
+
+    /// What each request's answer asked for, until that answer exists.
+    private var pendingNeeds: [UUID: AnswerNeed] = [:]
+
+    private func applyPendingNeed(requestID: UUID) {
+        guard let need = pendingNeeds[requestID], let generation = generations[requestID],
+              let answerID = generation.answerID,
+              let index = questions.firstIndex(where: { $0.id == generation.questionID }),
+              let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) else { return }
+        questions[index].answers[answerIndex].need = need
+        pendingNeeds[requestID] = nil
+    }
+
+    /// "Add context": opens the context panel with the keyboard in the note. Sends nothing, and
+    /// changes no answer — the next Generate carries the note, because the note is part of what a
+    /// tap snapshots.
+    func openContextNote() {
+        isTranscriptExpanded = true
+        isContextPanelOpen = true
+        noteFocusRequest += 1
     }
 
     /// Raw streamed text per answer, before it is split into prose and code.

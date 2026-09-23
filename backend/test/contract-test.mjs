@@ -63,7 +63,12 @@ const upstream = createServer(async (request, response) => {
   });
   // A model that opens with the interpreted title, as the rules ask it to. Split across deltas on
   // purpose: the stripper has to hold the line until its newline arrives, not just match one chunk.
-  const pieces = upstreamMode === "titled" ? [
+  const pieces = upstreamMode === "needs" ? [
+    "TITLE: Speaker's secret [needs: con",
+    "text]\n",
+    "Which secret would you like me to share? ",
+    "\nSOURCES: none",
+  ] : upstreamMode === "titled" ? [
     "TITLE: Compare Ja",
     "va 7, 8 and 9\n",
     "We bound the queue rather than the producer. ",
@@ -326,6 +331,16 @@ try {
     const titledText = titled.filter((e) => e.type === "delta").map((e) => e.text).join("");
     check("the title line is never shown to the reader", !/TITLE:/.test(titledText));
     check("the answer text survives the title line", /bound the queue/i.test(titledText));
+    check("an ordinary answer reports no needs", !titled.some((event) => event.type === "needs"));
+
+    // An answer that asks for a missing detail says so structurally, so the app can offer "Add
+    // context" instead of an example. The marker is split across deltas on purpose.
+    upstreamMode = "needs";
+    const needing = await send({ question: "Could you tell me your secret?", newInput: ["Could you tell me your secret?"] });
+    upstreamMode = "ok";
+    check("a needs marker becomes its own event", needing.find((event) => event.type === "needs")?.value === "context");
+    check("the marker is stripped from the title", needing.find((event) => event.type === "title")?.text === "Speaker's secret");
+    check("the marker never reaches the reader", !/needs:/i.test(needing.filter((e) => e.type === "delta").map((e) => e.text).join("")));
 
     // --- A tapped follow-up action ---------------------------------------------------------------
     //

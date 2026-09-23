@@ -63,6 +63,8 @@ final class CopilotSessionCoordinator {
     var onCardAppended: ((QuestionCard) -> Void)?
     /// A card's label changed because the model reported what it understood the request to be.
     var onCardRenamed: ((QuestionCardID, String) -> Void)?
+    /// A card's answer asked for context or clarification rather than answering.
+    var onAnswerNeeds: ((QuestionCardID, AnswerNeed) -> Void)?
     var onTranscriptChanged: (() -> Void)?
     /// Fired whenever a version's text, status or route changed.
     var onVersionChanged: ((AnswerVersionID, QuestionCardID) -> Void)?
@@ -619,7 +621,10 @@ final class CopilotSessionCoordinator {
             // Snapshotted here, with the question and the retrieved passages: what the request
             // carries is what the note said **at the moment Generate was pressed**. Editing the
             // note afterwards cannot change an answer already being written.
-            extraContext: sessionNote,
+            // The note as it was **when Generate was pressed**: the discussion snapshot carries it.
+            // Reading the live `sessionNote` here let a queued request pick up an edit made after
+            // its tap. Paths without a snapshot (typed, automatic) still use the session's note.
+            extraContext: discussion?.note ?? sessionNote,
             images: sessionImages,
             // The caller's snapshot when there is one, so a queued request still answers the
             // discussion it was created for rather than the newest speech.
@@ -742,6 +747,8 @@ final class CopilotSessionCoordinator {
                         // What the model understood the request to be. It renames the card the
                         // request belongs to — the transcript keeps the speaker's own wording.
                         self.renameCard(cardID, to: title)
+                    case .needs(let need):
+                        self.onAnswerNeeds?(cardID, need)
                     case .incomplete(let reason):
                         // Text already shown stays readable; the version is marked incomplete and the
                         // card offers Retry, which creates a **new** version rather than replacing it.

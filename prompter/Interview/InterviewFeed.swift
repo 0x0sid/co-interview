@@ -26,6 +26,8 @@ enum InterviewFeedEvent: Sendable {
     /// What the feed decided it was answering, when the screen did not supply a question. Carries
     /// the inferred question or topic so the entry can be labelled with something truthful.
     case answerTopicResolved(requestID: UUID, topic: String)
+    /// The answer asks for context or clarification instead of answering.
+    case answerNeedsInput(requestID: UUID, need: AnswerNeed)
     /// The generation did not produce an answer. Said plainly rather than left spinning.
     case answerFailed(requestID: UUID, message: String)
 }

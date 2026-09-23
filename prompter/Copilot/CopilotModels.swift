@@ -165,3 +165,11 @@ enum CopilotSessionState: String, Sendable {
     case active
     case ended
 }
+
+/// What an answer asked for instead of answering, as the model reported it.
+enum AnswerNeed: String, Sendable, Equatable {
+    /// A personal detail the note, instructions and documents do not contain.
+    case context
+    /// A clearer question: the request could not be read one way.
+    case clarification
+}

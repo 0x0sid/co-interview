@@ -81,7 +81,8 @@ struct InterviewScreen: View {
                         onRemoveImage: { model.removeAttachment(id: $0) },
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
                         limitationMessage: model.contextLimitationMessage,
-                        attachmentStates: model.attachmentLabels
+                        attachmentStates: model.attachmentLabels,
+                        noteFocusRequest: model.noteFocusRequest
                     )
                     pager
                 }

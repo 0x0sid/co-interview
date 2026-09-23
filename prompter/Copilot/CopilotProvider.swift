@@ -147,6 +147,10 @@ struct AnswerRoute: Sendable, Equatable {
 enum AnswerStreamEvent: Sendable, Equatable {
     /// Newly generated text, in order.
     case delta(String)
+    /// The model says this answer asks for something rather than answering: a personal detail the
+    /// supplied material lacks (`context`) or a clearer question (`clarification`). Structural,
+    /// from the backend's `needs` event — never inferred from the answer's wording.
+    case needs(AnswerNeed)
     /// The route that served (or is serving) this answer.
     case route(AnswerRoute)
     /// An attempt failed before any visible text and the backend is trying the fallback route.
@@ -422,6 +426,10 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
                         case "title":
                             if let text = event["text"] as? String, !text.isEmpty {
                                 continuation.yield(.title(text))
+                            }
+                        case "needs":
+                            if let value = event["value"] as? String, let need = AnswerNeed(rawValue: value) {
+                                continuation.yield(.needs(need))
                             }
                         case "done":
                             continuation.yield(.completed(usageOutputTokens: event["output_tokens"] as? Int))

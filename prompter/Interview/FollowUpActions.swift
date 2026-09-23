@@ -16,6 +16,13 @@ import Foundation
 /// is code; "make it shorter" only when the answer is long enough for that to mean anything.
 enum FollowUpActions {
     struct Action: Identifiable, Equatable, Sendable {
+        enum Kind: Equatable, Sendable {
+            /// Sent to the model as a tapped request about the page's answer.
+            case request
+            /// Handled on the device: opens the context note. Nothing is sent.
+            case addContext
+        }
+
         /// Stable across rebuilds of the same answer, so SwiftUI does not animate chips around.
         let id: String
         /// What the chip says. Short enough to read without stopping.
@@ -23,6 +30,7 @@ enum FollowUpActions {
         /// What is sent. Written as an instruction because that is what it is.
         let instruction: String
         let systemImage: String
+        var kind: Kind = .request
     }
 
     /// How long an answer has to be before shortening it is a sensible thing to offer, in words.
@@ -40,8 +48,25 @@ enum FollowUpActions {
     static func actions(
         question: String,
         blocks: [AnswerBlock],
+        need: AnswerNeed? = nil,
         language: InterviewLanguage
     ) -> [Action] {
+        // **An answer that asks for something is not something to expand on.** "Give an example" of
+        // "which detail do you mean?" helps nobody. What helps is supplying what was missing, so that
+        // is the one thing offered — reported by the model, never guessed from the wording.
+        if let need {
+            let french = language == .french
+            return [Action(
+                id: need == .context ? "add-context" : "clarify",
+                title: need == .context
+                    ? (french ? "Ajouter du contexte" : "Add context")
+                    : (french ? "Préciser la question" : "Clarify question"),
+                instruction: "",
+                systemImage: need == .context ? "note.text.badge.plus" : "questionmark.bubble",
+                kind: .addContext
+            )]
+        }
+
         let prose = blocks.compactMap { block -> String? in
             if case .prose(let text) = block { return text }
             return nil

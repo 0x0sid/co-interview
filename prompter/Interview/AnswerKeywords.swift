@@ -100,11 +100,34 @@ enum AnswerKeywords {
         }
     }
 
-    /// An attributed copy of `text` with its keywords emphasised and nothing else changed.
+    /// An attributed copy of `text` with its keywords emphasised and its inline-code markers hidden.
     static func emphasised(_ text: String, font: Font) -> AttributedString {
         var attributed = AttributedString(text)
         emphasise(&attributed, source: text, font: font)
+        hideInlineCodeMarkers(&attributed)
         return attributed
+    }
+
+    /// Removes the backticks around inline code from what is **displayed**.
+    ///
+    /// The model marks inline code the Markdown way, and `var` with its backticks is not something
+    /// to read aloud. They are removed here, at the very end, from the attributed string only: the
+    /// reading text, its tokens and the speech-following alignment are built from the original and
+    /// never see the change — the tokenizer ignores punctuation, so the spoken words are identical
+    /// either way. The code itself keeps its emphasis, which was applied before this runs.
+    static func hideInlineCodeMarkers(_ attributed: inout AttributedString) {
+        let plain = String(attributed.characters)
+        guard plain.contains("`"),
+              let regex = try? NSRegularExpression(pattern: "`([^`\n]{1,40})`") else { return }
+        let matches = regex.matches(in: plain, range: NSRange(plain.startIndex..., in: plain))
+        // Back to front, so earlier offsets stay valid while later characters are removed.
+        for match in matches.reversed() {
+            for offset in [match.range.location + match.range.length - 1, match.range.location] {
+                let index = String.Index(utf16Offset: offset, in: plain)
+                guard let range = Range(index..<plain.index(after: index), in: attributed) else { continue }
+                attributed.removeSubrange(range)
+            }
+        }
     }
 
     private static func attributedRange(

@@ -230,7 +230,11 @@ struct AnswerPageView: View {
             let end = String.Index(utf16Offset: span.end, in: alignment.text)
             guard start <= end, end <= alignment.text.endIndex,
                   let range = Range(start..<end, in: attributed) else { return nil }
-            return Text(AttributedString(attributed[range]))
+            // Sliced by the original offsets first, so the markers are hidden per paragraph and
+            // nothing about the alignment's character positions changes.
+            var paragraph = AttributedString(attributed[range])
+            AnswerKeywords.hideInlineCodeMarkers(&paragraph)
+            return Text(paragraph)
         }
     }
 
@@ -240,7 +244,7 @@ struct AnswerPageView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("No answer yet.")
-                .font(InterviewTheme.Font.answer(24))
+                .font(InterviewTheme.Font.answer(20))
                 .foregroundStyle(InterviewTheme.Color.muted)
             Button(action: onGenerate) {
                 HStack(spacing: 7) {

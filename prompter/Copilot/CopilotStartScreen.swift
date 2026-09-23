@@ -227,7 +227,12 @@ struct CopilotStartScreen: View {
             // fictional passages; the sample stays in Demo and in the pipeline prototype below.
             project: LiveSessionContext(language: language),
             provider: providerConfiguration.makeProvider(),
-            audio: InterviewAudioInput(makeService: { TranscriptionService(audioCapture: AudioCaptureService()) }),
+            audio: InterviewAudioInput(makeService: {
+                if let script = InterviewTestingFlags.scriptedLiveSpeech {
+                    return FakeTranscriptionService(results: script)
+                }
+                return TranscriptionService(audioCapture: AudioCaptureService())
+            }),
             generationMode: .manual
         )
         return LiveInterviewFeed(coordinator: coordinator)

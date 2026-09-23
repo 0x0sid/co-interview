@@ -56,6 +56,10 @@ final class LiveInterviewFeed: InterviewFeed {
             guard let self, let requestID = self.requestByCard[cardID] else { return }
             self.continuation.yield(.answerTopicResolved(requestID: requestID, topic: title))
         }
+        coordinator.onAnswerNeeds = { [weak self] cardID, need in
+            guard let self, let requestID = self.requestByCard[cardID] else { return }
+            self.continuation.yield(.answerNeedsInput(requestID: requestID, need: need))
+        }
         coordinator.onTranscriptChanged = { [weak self] in self?.emitTranscriptChanges() }
         coordinator.onVersionChanged = { [weak self] versionID, cardID in
             self?.emitAnswerChanges(versionID: versionID, cardID: cardID)

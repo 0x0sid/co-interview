@@ -63,9 +63,13 @@ enum InterviewTheme {
         static func ui(_ size: CGFloat, weight: Typography.Weight = .regular, relativeTo style: UIFont.TextStyle = .body) -> SwiftUI.Font {
             Typography.scaledHankenGrotesk(size, weight: weight, relativeTo: style)
         }
-        /// The answer — Source Serif 4 at 28pt, the size the board sets.
-        static func answer(_ size: CGFloat = 28, weight: Typography.Weight = .regular) -> SwiftUI.Font {
-            Typography.scaledSourceSerif4(size, weight: weight, relativeTo: .body)
+        /// The answer — Hanken Grotesk, the interface's own sans, at 21pt scaled with Dynamic Type.
+        ///
+        /// It was Source Serif 4 at 28pt. On a phone that set four or five words to a line and a
+        /// short answer ran off the screen; read from a glance mid-interview, the serif was also
+        /// harder to pick up again than the sans the rest of the screen already uses.
+        static func answer(_ size: CGFloat = Metric.answerSize, weight: Typography.Weight = .regular) -> SwiftUI.Font {
+            Typography.scaledHankenGrotesk(size, weight: weight, relativeTo: .title3)
         }
         /// Code — IBM Plex Mono.
         static func code(_ size: CGFloat = 12.5, weight: Typography.Weight = .regular) -> SwiftUI.Font {
@@ -74,21 +78,22 @@ enum InterviewTheme {
     }
 
     enum Metric {
-        /// Line height of the answer, as a multiple of its size (the board's 1.3).
-        static let answerLineHeight: CGFloat = 1.3
+        /// The answer's base size, before Dynamic Type.
+        static let answerSize: CGFloat = 21
+        /// Line height of the answer, as a multiple of its size.
+        static let answerLineHeight: CGFloat = 1.4
         /// Extra leading needed to reach that line height.
         ///
         /// **Not `size × (lineHeight − 1)`.** SwiftUI's `lineSpacing` is added *on top of* the font's
-        /// own line height, which for Source Serif 4 is already about 1.28× the point size. Treating
-        /// it as the whole line height set the answer at roughly 1.6× and looked visibly loose, so
-        /// this measures the face and adds only the difference.
+        /// own line height, so this measures the face and adds only the difference. (It is measured
+        /// at the base size; Dynamic Type scales the font, and the relative leading stays close.)
         static let answerLineSpacing: CGFloat = {
-            let size: CGFloat = 28
-            let font = UIFont(name: "SourceSerif4Roman-Regular", size: size) ?? .systemFont(ofSize: size)
+            let size = answerSize
+            let font = UIFont(name: "HankenGrotesk-Regular", size: size) ?? .systemFont(ofSize: size)
             return max(0, size * answerLineHeight - font.lineHeight)
         }()
-        /// Space between answer paragraphs.
-        static let answerParagraphSpacing: CGFloat = 18
+        /// Space between answer paragraphs: clearly a new paragraph, not a new section.
+        static let answerParagraphSpacing: CGFloat = 14
         /// The Generate button.
         static let generateDiameter: CGFloat = 56
         /// Height of the fade the content scrolls under.

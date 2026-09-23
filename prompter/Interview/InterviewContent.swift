@@ -78,6 +78,9 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
     /// already arrived. The text stays readable and the page says so, because silently presenting a
     /// truncated answer as complete is worse than showing less.
     var isIncomplete: Bool = false
+    /// Set when the model reported that this answer asks for context or clarification instead of
+    /// answering. It changes what is offered next, never the text.
+    var need: AnswerNeed?
     let createdAt: Date
 
     init(

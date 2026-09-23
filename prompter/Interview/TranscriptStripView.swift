@@ -24,12 +24,16 @@ struct TranscriptStripView: View {
     /// Per-attachment state text, so each thumbnail says what happened to it rather than leaving the
     /// user to guess whether it was used.
     var attachmentStates: [UUID: String] = [:]
+    /// Changes when "Add context" asks for the keyboard in the note field.
+    var noteFocusRequest: Int = 0
 
     @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var note: String = ""
     /// While the note has the keyboard, neither panel collapses under the user. Losing a half-typed
     /// note to a mistimed tap on a chevron is not a trade worth making for a few points of height.
     @FocusState private var isEditingNote: Bool
+    /// The expanded transcript's natural height, so a short transcript takes only the room it needs.
+    @State private var expandedContentHeight: CGFloat = 0
 
     /// **Collapsed is exactly two lines**: the last detected question and the newest thing said. It
     /// never grows, so the answer below it never moves as the conversation continues. Expanding
@@ -81,8 +85,13 @@ struct TranscriptStripView: View {
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { expandedContentHeight = $0 }
                     }
-                    .frame(maxHeight: Self.expandedMaxHeight)
+                    // **Content-sized up to the ceiling.** A scroll view given only a maximum takes the
+                    // whole maximum, so four short lines sat on top of a large empty band that pushed
+                    // the answer down. Its height is now what the lines need, capped, and past the cap
+                    // it scrolls within itself.
+                    .frame(height: min(max(expandedContentHeight, 1), Self.expandedMaxHeight))
                     .scrollBounceBehavior(.basedOnSize)
                 } else {
                     ForEach(visibleLines) { line in
@@ -96,6 +105,10 @@ struct TranscriptStripView: View {
             }
         }
         .onAppear { note = context.note }
+        .onChange(of: noteFocusRequest) { _, _ in
+            // The panel appears in the same update that asks for focus; focus it once it exists.
+            Task { @MainActor in isEditingNote = true }
+        }
     }
 
     @ViewBuilder
