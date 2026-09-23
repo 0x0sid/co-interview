@@ -37,7 +37,8 @@
     "mustNot": [
      "/garbage collect/i"
     ],
-    "firstMust": "/coroutine|Kotlin/i"
+    "firstMust": "/coroutine|Kotlin/i",
+    "withdrawn": true
    }
   }
  ]

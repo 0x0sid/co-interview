@@ -33,7 +33,8 @@
     ],
     "mustNot": [
      "/borrow/i"
-    ]
+    ],
+    "withdrawn": true
    }
   }
  ]
