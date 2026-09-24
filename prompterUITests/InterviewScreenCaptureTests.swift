@@ -150,6 +150,46 @@ final class InterviewScreenCaptureTests: XCTestCase {
         save(app, "07-expanded-transcript")
     }
 
+    /// Ultra Contrast is a fourth appearance choice beside System, Light and Dark, and the whole
+    /// app turns black and white when it is picked. Restores System afterwards.
+    @MainActor
+    func testUltraContrastIsSelectableInSettings() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion"]
+        app.launch()
+        let gear = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Settings'")).firstMatch
+        XCTAssertTrue(gear.waitForExistence(timeout: 20))
+        gear.tap()
+        let ultra = app.buttons["Ultra"]
+        XCTAssertTrue(ultra.waitForExistence(timeout: 10), "no Ultra Contrast choice")
+        for name in ["System", "Light", "Dark"] { XCTAssertTrue(app.buttons[name].exists, "\(name) is gone") }
+        ultra.tap()
+        XCTAssertTrue(ultra.isSelected)
+        save(app, "ultra-settings-picker")
+        app.buttons["System"].tap()
+        XCTAssertTrue(app.buttons["System"].isSelected)
+    }
+
+    /// Ultra Contrast in the demo: black and white, keywords bold, and speech-following shown by
+    /// underlining spoken words rather than dimming them.
+    @MainActor
+    func testCaptureUltraContrastReading() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion", "-UITestsAppearance", "ultraContrast"]
+        app.launch()
+        openDemo(app)
+        let question = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question 1'")).firstMatch
+        XCTAssertTrue(question.waitForExistence(timeout: 60), "no question page appeared")
+        let generate = app.buttons["Generate an answer"]
+        XCTAssertTrue(generate.waitForExistence(timeout: 10))
+        save(app, "ultra-0-listening")
+        generate.tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 30), "no answer arrived")
+        // Give the demo's simulated reading time to follow a few words.
+        _ = app.staticTexts["never-appears"].waitForExistence(timeout: 6)
+        save(app, "ultra-3-reading-underlined")
+    }
+
     /// The finished answer, its emphasised keywords, and the follow-up actions under it.
     ///
     /// The chips sit below the answer, so this scrolls to them: a screenshot taken at the top of the

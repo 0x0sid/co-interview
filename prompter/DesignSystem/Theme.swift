@@ -95,6 +95,8 @@ extension UIColor {
 /// migratable.
 enum AppearancePreference: String, CaseIterable, Identifiable {
     case system, light, dark
+    /// Pure black and white on the interview screen; dark everywhere else.
+    case ultraContrast
     var id: String { rawValue }
 
     var label: String {
@@ -102,15 +104,21 @@ enum AppearancePreference: String, CaseIterable, Identifiable {
         case .system: "System"
         case .light: "Light"
         case .dark: "Dark"
+        case .ultraContrast: "Ultra Contrast"
         }
     }
+
+    var isUltraContrast: Bool { self == .ultraContrast }
+
+    /// For the four-way segmented control, where "Ultra Contrast" would truncate.
+    var shortLabel: String { self == .ultraContrast ? "Ultra" : label }
 
     /// `nil` means "follow the system", which is the default.
     var colorScheme: ColorScheme? {
         switch self {
         case .system: nil
         case .light: .light
-        case .dark: .dark
+        case .dark, .ultraContrast: .dark
         }
     }
 }

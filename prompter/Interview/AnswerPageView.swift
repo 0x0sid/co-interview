@@ -11,6 +11,7 @@ import SwiftUI
 /// so the code is visible but never greyed out as if it had been spoken: `proseText` joins the prose
 /// blocks in order, and paragraph *i* of that text is prose block *i* here.
 struct AnswerPageView: View {
+    @Environment(\.ultraContrast) private var ultraContrast
     let question: InterviewQuestion
     let counterText: String
     let alignment: ReadingAlignment?
@@ -207,7 +208,8 @@ struct AnswerPageView: View {
             scriptIndex: alignment.scriptIndex,
             cursor: alignment.cursor,
             spokenTokenIndices: alignment.spokenTokenIndices,
-            palette: InterviewTheme.readingPalette
+            palette: InterviewTheme.readingPalette,
+            underlineSpoken: ultraContrast
         )
         // Emphasis goes on *after* the reading colours and touches only weight, so the two systems
         // stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
@@ -335,6 +337,7 @@ struct AnswerPageView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background(InterviewTheme.Color.questionPill, in: Capsule())
+            .ultraContrastOutline(Capsule())
         }
         .buttonStyle(.plain)
     }
@@ -348,6 +351,7 @@ struct AnswerPageView: View {
 struct CodeCardView: View {
     let code: String
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.ultraContrast) private var ultraContrast
     @State private var didCopy = false
 
     var body: some View {
@@ -359,21 +363,38 @@ struct CodeCardView: View {
                     .lineSpacing(12.5 * 0.5)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 13)
+                    // The named Copy button is taller than the icon; the code starts below it.
+                    .padding(.top, ultraContrast ? 30 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             Button {
                 UIPasteboard.general.string = code
                 didCopy = true
             } label: {
-                Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(InterviewTheme.Color.codeInk.opacity(0.7))
-                    .padding(10)
+                if ultraContrast {
+                    // Named, white and outlined, so it is found without relying on a faint icon.
+                    Label(didCopy ? "Copied" : "Copy", systemImage: didCopy ? "checkmark" : "doc.on.doc")
+                        .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
+                        .foregroundStyle(SwiftUI.Color.white)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(SwiftUI.Color.black, in: Capsule())
+                        .overlay(Capsule().strokeBorder(SwiftUI.Color.white, lineWidth: 1))
+                        .padding(7)
+                } else {
+                    Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(InterviewTheme.Color.codeInk.opacity(0.7))
+                        .padding(10)
+                }
             }
             .accessibilityLabel("Copy code")
         }
         .background {
-            if colorScheme == .dark {
+            if ultraContrast {
+                RoundedRectangle(cornerRadius: 13).fill(SwiftUI.Color.black)
+                RoundedRectangle(cornerRadius: 13).strokeBorder(SwiftUI.Color.white, lineWidth: 1.5)
+            } else if colorScheme == .dark {
                 RoundedRectangle(cornerRadius: 13).stroke(InterviewTheme.Color.hairline, lineWidth: 1)
             } else {
                 RoundedRectangle(cornerRadius: 13).fill(InterviewTheme.Color.codeCardLight)

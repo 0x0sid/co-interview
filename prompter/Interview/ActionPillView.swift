@@ -12,27 +12,36 @@ struct ActionPillView<MenuContent: View>: View {
     let onToggleRecording: () -> Void
     let onGenerate: () -> Void
     @ViewBuilder let menu: () -> MenuContent
+    @Environment(\.ultraContrast) private var ultraContrast
+
+    /// Secondary icons are softened in light and dark; Ultra Contrast keeps them pure white.
+    private var iconOpacity: Double { ultraContrast ? 1 : 0.72 }
 
     var body: some View {
         HStack(spacing: 14) {
             Button(action: onToggleRecording) {
                 Image(systemName: recording == .live ? "pause.fill" : "play.fill")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(InterviewTheme.Color.ink.opacity(0.72))
+                    .foregroundStyle(InterviewTheme.Color.ink.opacity(iconOpacity))
                     .frame(width: 40, height: 40)
             }
             .accessibilityLabel(recording == .live ? "Pause listening" : "Resume listening")
 
             Button(action: onGenerate) {
                 ZStack {
-                    Circle().fill(InterviewTheme.Color.primary.opacity(canGenerate || isGenerating ? 1 : 0.4))
+                    if ultraContrast && !(canGenerate || isGenerating) {
+                        // Disabled without a grey: an outlined circle and a white mark.
+                        Circle().strokeBorder(InterviewTheme.Color.primary, lineWidth: 2)
+                    } else {
+                        Circle().fill(InterviewTheme.Color.primary.opacity(canGenerate || isGenerating ? 1 : 0.4))
+                    }
                     if isGenerating, !InterviewTestingFlags.quietMotion {
                         ProgressView()
                             .progressViewStyle(.circular)
                             .tint(InterviewTheme.Color.onPrimary)
                     } else {
                         SparkleShape()
-                            .fill(InterviewTheme.Color.onPrimary)
+                            .fill(ultraContrast && !canGenerate ? InterviewTheme.Color.primary : InterviewTheme.Color.onPrimary)
                             .frame(width: 26, height: 26)
                     }
                 }
@@ -46,7 +55,7 @@ struct ActionPillView<MenuContent: View>: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(InterviewTheme.Color.ink.opacity(0.72))
+                    .foregroundStyle(InterviewTheme.Color.ink.opacity(iconOpacity))
                     .frame(width: 40, height: 40)
             }
             .accessibilityLabel("More actions")
@@ -54,6 +63,7 @@ struct ActionPillView<MenuContent: View>: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
         .background(InterviewTheme.Color.pillSurface, in: Capsule())
+        .ultraContrastOutline(Capsule())
         .shadow(color: .black.opacity(0.16), radius: 14, x: 0, y: 12)
     }
 }

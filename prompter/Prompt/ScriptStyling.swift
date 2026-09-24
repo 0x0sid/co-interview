@@ -119,7 +119,8 @@ enum ScriptStyling {
         scriptIndex: ScriptIndex,
         cursor: PromptCursor,
         spokenTokenIndices: Set<Int> = [],
-        palette: OutdoorMode.Palette = OutdoorMode.normal
+        palette: OutdoorMode.Palette = OutdoorMode.normal,
+        underlineSpoken: Bool = false
     ) -> AttributedString {
         var attributed = AttributedString(rawText)
         // Default: full-contrast ink. Anything not proven spoken stays this colour — including
@@ -131,7 +132,12 @@ enum ScriptStyling {
         for index in spokenTokenIndices where index >= 0 && index < scriptIndex.tokens.count {
             let token = scriptIndex.tokens[index]
             guard let attrRange = attributedRange(rangeStart: token.rangeStart, rangeEnd: token.rangeEnd, rawText: rawText, attributed: attributed) else { continue }
-            attributed[attrRange].foregroundColor = palette.spoken
+            // Ultra Contrast never dims the answer: a spoken word keeps full ink and is underlined.
+            if underlineSpoken {
+                attributed[attrRange].underlineStyle = .single
+            } else {
+                attributed[attrRange].foregroundColor = palette.spoken
+            }
         }
 
         return attributed

@@ -55,7 +55,7 @@ struct SettingsScreen: View {
                 Section("Appearance") {
                     Picker("Appearance", selection: appearanceBinding) {
                         ForEach(AppearancePreference.allCases) { option in
-                            Text(option.label).tag(option)
+                            Text(option.shortLabel).tag(option)
                         }
                     }
                     .pickerStyle(.segmented)

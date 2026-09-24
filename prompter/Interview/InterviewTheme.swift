@@ -12,47 +12,50 @@ import SwiftUI
 enum InterviewTheme {
     enum Color {
         /// Screen background. Warm off-white / greenish charcoal.
-        static let background = dynamic(light: 0xF8F5EF, dark: 0x1D2120)
+        static let background = dynamic(light: 0xF8F5EF, dark: 0x1D2120, ultra: 0x000000)
         /// Primary: deep teal / pale mint. Carries highlights, the Generate button and detected questions.
-        static let primary = dynamic(light: 0x2F6B5E, dark: 0xBEEBDC)
+        static let primary = dynamic(light: 0x2F6B5E, dark: 0xBEEBDC, ultra: 0xFFFFFF)
         /// Text on top of `primary`.
-        static let onPrimary = dynamic(light: 0xFFFFFF, dark: 0x16211D)
+        static let onPrimary = dynamic(light: 0xFFFFFF, dark: 0x16211D, ultra: 0x000000)
         /// Body text.
-        static let ink = dynamic(light: 0x1C201F, dark: 0xECF1EE)
+        static let ink = dynamic(light: 0x1C201F, dark: 0xECF1EE, ultra: 0xFFFFFF)
         /// Secondary labels, the counter, spoken-word fading.
-        static let muted = dynamic(light: 0x7A807D, dark: 0x8E9995)
+        static let muted = dynamic(light: 0x7A807D, dark: 0x8E9995, ultra: 0xFFFFFF)
         /// Header pieces, context panel, cards.
-        static let surface = dynamic(light: 0xFFFFFF, dark: 0x262C2A)
+        static let surface = dynamic(light: 0xFFFFFF, dark: 0x262C2A, ultra: 0x000000)
         /// The floating action pill.
-        static let pillSurface = dynamic(light: 0xFFFFFF, dark: 0x2A302E)
-        static let hairline = dynamic(light: 0xE5E0D6, dark: 0x333A38)
+        static let pillSurface = dynamic(light: 0xFFFFFF, dark: 0x2A302E, ultra: 0x000000)
+        static let hairline = dynamic(light: 0xE5E0D6, dark: 0x333A38, ultra: 0xFFFFFF)
         /// Question pill fill.
-        static let questionPill = dynamic(light: 0xE7EEEA, dark: 0x262C2A)
+        static let questionPill = dynamic(light: 0xE7EEEA, dark: 0x262C2A, ultra: 0x000000)
         /// Sparkle inside the question pill — dark on light, white on dark.
-        static let questionSparkle = dynamic(light: 0x1C201F, dark: 0xFFFFFF)
+        static let questionSparkle = dynamic(light: 0x1C201F, dark: 0xFFFFFF, ultra: 0xFFFFFF)
 
         /// **The only red in the design.** Nothing else may use it.
-        static let recording = dynamic(light: 0xD93C3C, dark: 0xFF6B6B)
+        static let recording = dynamic(light: 0xD93C3C, dark: 0xFF6B6B, ultra: 0xFFFFFF)
         /// The recording mark when listening is paused: hollow and grey, never red.
-        static let recordingPaused = dynamic(light: 0x9A9F9C, dark: 0x6E7A76)
+        static let recordingPaused = dynamic(light: 0x9A9F9C, dark: 0x6E7A76, ultra: 0xFFFFFF)
 
         /// Demo badge. Violet, so it reads as "this is not real" at a glance.
-        static let demoBadge = dynamic(light: 0x6C4BD1, dark: 0xB9A4F0)
+        static let demoBadge = dynamic(light: 0x6C4BD1, dark: 0xB9A4F0, ultra: 0xFFFFFF)
 
         /// Code card: a solid near-black card on light, a bordered transparent one on dark.
-        static let codeCardLight = SwiftUI.Color(uiColor: UIColor(rgb: 0x14171A))
-        static let codeInk = dynamic(light: 0xE9EDEB, dark: 0xD9E2DE)
-        static let codeType = dynamic(light: 0x8FD9C4, dark: 0xBEEBDC)
+        static let codeCardLight = dynamic(light: 0x14171A, dark: 0x14171A, ultra: 0x000000)
+        static let codeInk = dynamic(light: 0xE9EDEB, dark: 0xD9E2DE, ultra: 0xFFFFFF)
+        static let codeType = dynamic(light: 0x8FD9C4, dark: 0xBEEBDC, ultra: 0xFFFFFF)
         static let codeKeyword = SwiftUI.Color(uiColor: UIColor(rgb: 0xC7A6F0))
 
         /// Follow-up likelihood dots. Green, amber, grey — **never red** (§1: red is the recording mark).
-        static let likely = dynamic(light: 0x2F8B5E, dark: 0x86D6A8)
-        static let possible = dynamic(light: 0xB8801F, dark: 0xE0B36A)
-        static let lessLikely = dynamic(light: 0x8A908C, dark: 0x8E9995)
+        static let likely = dynamic(light: 0x2F8B5E, dark: 0x86D6A8, ultra: 0xFFFFFF)
+        static let possible = dynamic(light: 0xB8801F, dark: 0xE0B36A, ultra: 0xFFFFFF)
+        static let lessLikely = dynamic(light: 0x8A908C, dark: 0x8E9995, ultra: 0xFFFFFF)
 
-        static func dynamic(light: UInt32, dark: UInt32) -> SwiftUI.Color {
+        /// `ultra` is Ultra Contrast: pure black and white. It is resolved from a trait, not a
+        /// branch at the call site, so every view on this screen follows the choice unchanged.
+        static func dynamic(light: UInt32, dark: UInt32, ultra: UInt32) -> SwiftUI.Color {
             SwiftUI.Color(uiColor: UIColor { traits in
-                UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+                if traits[UltraContrastTrait.self] { return UIColor(rgb: ultra) }
+                return UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
             })
         }
     }
@@ -114,5 +117,61 @@ enum InterviewTheme {
             spoken: Color.muted,
             action: Color.primary
         )
+    }
+}
+
+// MARK: - Ultra Contrast
+
+/// Ultra Contrast (an `AppearancePreference`): pure black #000000 and pure white #FFFFFF, nothing
+/// between. A UIKit trait bridged to the SwiftUI environment, so the dynamic colours above resolve
+/// it the same way they resolve light and dark, and views that need more than a colour — outlines,
+/// underlined speech-following, full-opacity icons — read `\.ultraContrast`.
+struct UltraContrastTrait: UITraitDefinition {
+    static let defaultValue = false
+    static let affectsColorAppearance = true
+    static let name = "UltraContrast"
+
+    /// Sets or clears Ultra Contrast on every window the app has.
+    @MainActor
+    static func apply(_ isOn: Bool) {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.traitOverrides[UltraContrastTrait.self] = isOn
+            }
+        }
+    }
+}
+
+struct UltraContrastKey: UITraitBridgedEnvironmentKey {
+    static let defaultValue = false
+    static func read(from traitCollection: UITraitCollection) -> Bool { traitCollection[UltraContrastTrait.self] }
+    static func write(to mutableTraits: inout UIMutableTraits, value: Bool) { mutableTraits[UltraContrastTrait.self] = value }
+}
+
+extension EnvironmentValues {
+    var ultraContrast: Bool {
+        get { self[UltraContrastKey.self] }
+        set { self[UltraContrastKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// A white outline in Ultra Contrast, where a black card on black would otherwise vanish.
+    /// Nothing in light or dark.
+    func ultraContrastOutline<S: InsettableShape>(_ shape: S, lineWidth: CGFloat = 1.5) -> some View {
+        modifier(UltraContrastOutline(shape: shape, lineWidth: lineWidth))
+    }
+}
+
+private struct UltraContrastOutline<S: InsettableShape>: ViewModifier {
+    let shape: S
+    let lineWidth: CGFloat
+    @Environment(\.ultraContrast) private var ultraContrast
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if ultraContrast { shape.strokeBorder(SwiftUI.Color.white, lineWidth: lineWidth) }
+        }
     }
 }

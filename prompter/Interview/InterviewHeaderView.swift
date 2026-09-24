@@ -6,6 +6,7 @@ import SwiftUI
 /// The chevrons inside the pill move between question pages and disable themselves at the ends, so
 /// the pill is the whole of question navigation — there is no second set of controls elsewhere.
 struct InterviewHeaderView: View {
+    @Environment(\.ultraContrast) private var ultraContrast
     let title: String
     let recording: RecordingState
     /// True when the transcript is coming from a script rather than a microphone. The mark then
@@ -58,7 +59,7 @@ struct InterviewHeaderView: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(InterviewTheme.Color.ink.opacity(0.8))
+                .foregroundStyle(InterviewTheme.Color.ink.opacity(ultraContrast ? 1 : 0.8))
                 .frame(width: 38, height: 38)
                 .background(InterviewTheme.Color.surface, in: Circle())
                 .overlay(Circle().stroke(InterviewTheme.Color.hairline, lineWidth: 1))
@@ -70,7 +71,7 @@ struct InterviewHeaderView: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(InterviewTheme.Color.muted.opacity(isEnabled ? 1 : 0.35))
+                .foregroundStyle(InterviewTheme.Color.muted.opacity(isEnabled ? 1 : (ultraContrast ? 0.5 : 0.35)))
                 .frame(width: 26, height: 26)
         }
         .disabled(!isEnabled)

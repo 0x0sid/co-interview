@@ -17,7 +17,20 @@ struct RootView: View {
     /// session state: changing appearance re-renders the view tree, it does **not** rebuild the
     /// matcher, reset the cursor, clear spoken history or restart speech recognition.
     private var preferredScheme: ColorScheme? {
-        (settingsQuery.first?.appearance ?? .system).colorScheme
+        appearance.colorScheme
+    }
+
+    private var appearance: AppearancePreference {
+        #if DEBUG
+        // `-UITestsAppearance ultraContrast`: screenshots of an appearance without touching the
+        // stored setting. Debug only.
+        let arguments = ProcessInfo.processInfo.arguments
+        if let at = arguments.firstIndex(of: "-UITestsAppearance"), at + 1 < arguments.count,
+           let forced = AppearancePreference(rawValue: arguments[at + 1]) {
+            return forced
+        }
+        #endif
+        return settingsQuery.first?.appearance ?? .system
     }
 
     var body: some View {
@@ -35,6 +48,12 @@ struct RootView: View {
             #endif
         }
         .preferredColorScheme(preferredScheme)
+        // Ultra Contrast is a UIKit trait set on the windows, so every hosting controller — sheets and
+        // full-screen covers included — resolves the interview colours from it, and SwiftUI views
+        // read it back through the bridged `\.ultraContrast` key. (Setting it through
+        // `.environment` alone does not reach the trait collection colours are resolved against.)
+        .onAppear { UltraContrastTrait.apply(appearance.isUltraContrast) }
+        .onChange(of: appearance.isUltraContrast) { _, isOn in UltraContrastTrait.apply(isOn) }
         .task {
             // Configure once, honouring any cached entitlement so a premium reader opening offline
             // is not downgraded while the network call is in flight.

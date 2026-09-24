@@ -12,6 +12,12 @@ import SwiftUI
 struct InterviewScreen: View {
     @State private var model: InterviewScreenModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.ultraContrast) private var ultraContrast
+    @Environment(\.scenePhase) private var scenePhase
+    /// True from `model.start()` until the session ends; with the scene phase, decides whether the
+    /// screen is kept awake (`ScreenAwake`).
+    @State private var isSessionActive = false
+    private let screenAwake = ScreenAwake()
     let title: String
     /// What Live can do this session.
     ///
@@ -52,6 +58,14 @@ struct InterviewScreen: View {
         isRechecking = false
     }
 
+    /// Stops the session and hands the idle timer back to the system at once — not on the next
+    /// render, which may never come once the screen is gone.
+    private func endSession() {
+        model.stop()
+        isSessionActive = false
+        screenAwake.apply(sessionActive: false, sceneActive: scenePhase == .active)
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             InterviewTheme.Color.background.ignoresSafeArea()
@@ -64,7 +78,7 @@ struct InterviewScreen: View {
                     listeningLabel: model.mode == .live ? model.listeningState?.label : nil,
                     canGoToPrevious: model.canGoToPrevious,
                     canGoToNext: model.canGoToNext,
-                    onBack: { model.stop(); dismiss() },
+                    onBack: { endSession(); dismiss() },
                     onPrevious: { model.goToPrevious() },
                     onNext: { model.goToNext() },
                     onSettings: {}
@@ -96,11 +110,15 @@ struct InterviewScreen: View {
         .toolbar(.hidden, for: .navigationBar)
         .task {
             model.start()
+            isSessionActive = true
             // Ask the backend what the configured answer model can actually read, so the Context
             // panel tells the truth about attachments instead of guessing.
             model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
         }
-        .onDisappear { model.stop() }
+        .onDisappear { endSession() }
+        .onChange(of: ScreenAwake.shouldKeepAwake(sessionActive: isSessionActive, sceneActive: scenePhase == .active), initial: true) { _, _ in
+            screenAwake.apply(sessionActive: isSessionActive, sceneActive: scenePhase == .active)
+        }
         // A failed generation is the strongest signal that readiness is stale — re-check once so the
         // next attempt reports the real cause instead of repeating a snapshot taken minutes ago.
         .onChange(of: model.generationFailure) { _, failure in
@@ -180,7 +198,7 @@ struct InterviewScreen: View {
                 .foregroundStyle(InterviewTheme.Color.muted)
             Text("Questions appear here as they are detected. Answers are written only when you tap Generate.")
                 .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
-                .foregroundStyle(InterviewTheme.Color.muted.opacity(0.8))
+                .foregroundStyle(InterviewTheme.Color.muted.opacity(ultraContrast ? 1 : 0.8))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

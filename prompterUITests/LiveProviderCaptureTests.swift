@@ -23,8 +23,9 @@ final class LiveProviderCaptureTests: XCTestCase {
         add(attachment)
     }
 
-    private func launchLive(speech: [String], interval: Int = 3) -> XCUIApplication {
+    private func launchLive(speech: [String], interval: Int = 3, appearance: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
+        if let appearance { app.launchArguments += ["-UITestsAppearance", appearance] }
         app.launchArguments += ["-UITestsQuietMotion",
                                 "-LiveScriptedSpeech", speech.joined(separator: "||"),
                                 "-LiveScriptedSpeechInterval", String(interval)]
@@ -132,6 +133,18 @@ final class LiveProviderCaptureTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
         XCTAssertLessThanOrEqual(codeTexts.count, 1, "code appears in more than one text element — some of it is prose")
+    }
+
+    /// Ultra Contrast on a real answer with prose, emphasised keywords and a code card.
+    func testUltraContrastAnswerWithCode() throws {
+        let app = launchLive(speech: ["Show me a Java example of a lambda that sorts a list of strings."], appearance: "ultraContrast")
+        waitForTranscript(app, containing: "lambda")
+        app.buttons["Generate an answer"].tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 45), "no answer arrived")
+        save(app, "ultra-1-answer-with-code")
+        XCTAssertTrue(app.buttons["Copy code"].firstMatch.waitForExistence(timeout: 5), "the example did not become a code card")
+        app.swipeUp()
+        save(app, "ultra-2-scrolled-clear-of-toolbar")
     }
 
     /// With no note, the answer asks for the detail and the page offers Add context, not elaboration.
