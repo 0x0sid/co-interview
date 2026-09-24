@@ -31,6 +31,8 @@ struct AnswerPageView: View {
     let onBeginManualScroll: () -> Void
     let onEndManualScroll: (Range<Int>?) -> Void
     let onResumeFollowing: () -> Void
+    /// Opens what the request carried from the session's files.
+    var onShowProvenance: () -> Void = {}
 
     private var answer: InterviewAnswer? { question.selectedAnswer }
 
@@ -57,6 +59,18 @@ struct AnswerPageView: View {
                     generatingState
                 } else {
                     emptyState
+                }
+
+                if let answer, answer.isInterrupted {
+                    interruptedNotice
+                } else if failureMessage == nil, let answer, answer.isIncomplete, let stored = answer.failureMessage {
+                    Text(stored)
+                        .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                }
+
+                if let answer, answer.isComplete, let provenance = answer.provenance, !provenance.isEmpty {
+                    provenanceLink(provenance)
                 }
 
                 if let failureMessage {
@@ -323,6 +337,46 @@ struct AnswerPageView: View {
             .foregroundStyle(InterviewTheme.Color.primary)
         }
         .buttonStyle(.plain)
+    }
+
+    /// A restored answer that stopped when the app did. Nothing was re-sent; Retry is a choice.
+    private var interruptedNotice: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Interrupted — this answer stopped before it finished. Nothing was sent again.")
+                .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
+                .foregroundStyle(InterviewTheme.Color.muted)
+            if canRetry {
+                Button(action: onRetry) {
+                    Text("Retry")
+                        .font(InterviewTheme.Font.ui(13, weight: .semibold, relativeTo: .footnote))
+                        .foregroundStyle(InterviewTheme.Color.primary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("answer-interrupted")
+    }
+
+    /// "2 file excerpts included · 1 cited". Counts only; the sheet has the detail.
+    private func provenanceLink(_ provenance: AnswerProvenance) -> some View {
+        let included = provenance.included.count
+        let cited = provenance.included.filter(provenance.isCited).count
+        let label = "\(included) file excerpt\(included == 1 ? "" : "s") included" + (cited > 0 ? " · \(cited) cited" : "")
+        return Button(action: onShowProvenance) {
+            HStack(spacing: 5) {
+                Image(systemName: "paperclip")
+                    .font(.system(size: 11, weight: .semibold))
+                Text(label)
+                    .font(InterviewTheme.Font.ui(12.5, weight: .medium, relativeTo: .footnote))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .bold))
+            }
+            .foregroundStyle(InterviewTheme.Color.muted)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label + ". Show which excerpts")
     }
 
     private var resumeFollowingButton: some View {

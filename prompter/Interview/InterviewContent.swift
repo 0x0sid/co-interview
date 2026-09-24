@@ -81,6 +81,14 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
     /// Set when the model reported that this answer asks for context or clarification instead of
     /// answering. It changes what is offered next, never the text.
     var need: AnswerNeed?
+    /// Restored from a session the app stopped in the middle of: the text is as far as it got, and
+    /// nothing was re-sent. Retry is offered; it never happens by itself.
+    var isInterrupted: Bool = false
+    /// Why it failed, kept with the answer so a restored session can still say it.
+    var failureMessage: String?
+    /// Which file excerpts the request carried, and which the model cited. Nil for a request with no
+    /// files.
+    var provenance: AnswerProvenance?
     let createdAt: Date
 
     init(
@@ -222,69 +230,10 @@ struct TranscriptLine: Identifiable, Equatable, Sendable {
     }
 }
 
-/// An image attached to the context panel. **In memory only for this pass** — no persistence, no
-/// SwiftData, gone when the screen closes.
-struct ContextImage: Identifiable, Equatable, Sendable {
-    let id: UUID
-    let data: Data
-
-    init(id: UUID = UUID(), data: Data) {
-        self.id = id
-        self.data = data
-    }
-}
-
-/// What the user typed and attached in the context panel. Kept when the panel collapses.
+/// What the user typed in the context panel. Kept when the panel collapses. Files live in
+/// `SessionFiles`.
 struct ContextState: Equatable, Sendable {
-    static let imageLimit = 5
-
     var note: String = ""
-    private(set) var images: [ContextImage] = []
-
-    var isFull: Bool { images.count >= Self.imageLimit }
-    var counterText: String { "\(images.count)/\(Self.imageLimit) images" }
-
-    /// Adds an image if there is room. Returns whether it was added, so the caller can tell the
-    /// difference between "added" and "silently dropped".
-    @discardableResult
-    mutating func addImage(_ image: ContextImage) -> Bool {
-        guard !isFull else { return false }
-        images.append(image)
-        return true
-    }
-
-    mutating func removeImage(id: UUID) {
-        images.removeAll { $0.id == id }
-    }
-
-    #if DEBUG
-    /// Fills the panel with plainly-synthetic placeholder thumbnails, for the screenshot that has to
-    /// show a full context panel. Reachable only from a debug build and only when the launch
-    /// argument asks for it — never from ordinary use, and never with anyone's real photos.
-    static func synthetic(imageCount: Int, note: String) -> ContextState {
-        var state = ContextState()
-        state.note = note
-        let palette: [(CGFloat, CGFloat, CGFloat)] = [
-            (0.09, 0.10, 0.11), (1.0, 1.0, 1.0), (0.18, 0.42, 0.37), (0.11, 0.12, 0.13), (0.98, 0.98, 0.96)
-        ]
-        for index in 0..<min(imageCount, imageLimit) {
-            let (red, green, blue) = palette[index % palette.count]
-            let size = CGSize(width: 112, height: 112)
-            let image = UIGraphicsImageRenderer(size: size).image { context in
-                UIColor(red: red, green: green, blue: blue, alpha: 1).setFill()
-                context.fill(CGRect(origin: .zero, size: size))
-                UIColor(white: red > 0.5 ? 0.75 : 0.45, alpha: 1).setFill()
-                for line in 0..<4 {
-                    context.fill(CGRect(x: 14, y: 22 + line * 18, width: 84 - line * 13, height: 6))
-                }
-            }
-            if let data = image.pngData() {
-                state.addImage(ContextImage(data: data))
-            }
-        }
-        return state
-    }
-    #endif
 }
 
 /// What the recording mark in the header is saying.

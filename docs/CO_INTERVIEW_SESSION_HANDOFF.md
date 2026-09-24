@@ -210,3 +210,33 @@ RevenueCat (explicitly out of scope). Any Jev activation — only after shadow r
 - `backend/.env` and `prompter/Config/Local-Debug.xcconfig` (git-ignored, real credentials).
 - The device data backup above.
 - The session transcript.
+
+## Sessions, files and history (2026-09-25)
+
+- **Saved sessions** (`prompter/Sessions/`): SwiftData rows per session, utterance, question, answer
+  and attachment; incremental, debounced saves (`SessionRecorder`); sessions left open are marked
+  interrupted on launch; reopening restores content with the microphone off, labels partial answers
+  interrupted, re-sends nothing, and offers Resume interview and Retry. No audio is stored.
+- **Files** (`prompter/Files/`): originals in Application Support/NeverblankFiles (content-addressed,
+  shared across sessions, deleted when unreferenced); text extracted once on a dedicated serial queue
+  (images: Vision OCR; PDF: text layer with OCR for scanned pages; text/Markdown; RTF; DOCX body text).
+  Selected excerpts travel as `passages`; answers record what was included and what was cited.
+  Photos are never uploaded — only text read from them.
+- **Interview language**: "System language (…)" by default, English or Français; one setting drives
+  recognition and answer language; each session keeps the language it used.
+
+### Unresolved: pushed history screen froze the app
+
+A history list pushed from the start screen (`NavigationLink` or `navigationDestination`) re-rendered
+without end: the list's preference updates made `NavigationStackCoordinator.updateExtantViews` re-set
+the pushed view, which updated the list again (main-thread stack captured 2026-09-25). It looped with
+a closure property, a binding, a stable reference object, an inline title, no context menu, and even
+a minimal body of `List(sessions) { Text($0.title) }` over the same `@Query`. Standalone as a
+NavigationStack root it rendered once. The root cause inside SwiftUI is **not** established.
+
+**Working solution:** history is inline on the start screen — the latest three, expandable to all,
+with open, rename and delete per row — over the start screen's existing `@Query`, reading summary
+fields only (`answeredCount`, `fileCount`, dates). Verified under a deadline by
+`InterviewScreenCaptureTests.testCaptureSessionHistoryAndLanguageSelector` (expand, open with Resume,
+close, reopen another, rename, delete). Do not reintroduce a pushed `@Query` list without first
+reproducing this with a deadline.

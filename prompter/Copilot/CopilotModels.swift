@@ -85,6 +85,9 @@ struct AnswerVersion: Identifiable, Equatable, Sendable {
     /// Immutable reading segments frozen out of `committedText` (§7 fallback).
     var readableSegments: [String] = []
     var sources: [SourceReference] = []
+    /// Every passage the request carried — what was *included*, as opposed to `sources`, which is
+    /// what the model cited from them.
+    var includedPassages: [ProjectPassage] = []
     var modelLabel: String = ""
     /// What actually served this version, once the backend reports it.
     var route: AnswerRoute?

@@ -13,6 +13,9 @@ final class AppSettings {
     /// Interface language override. Empty means "follow the system", and English is the default
     /// the app ships with. An explicit existing choice is preserved.
     var interfaceLanguageRaw: String = ""
+    /// Interview language preference ("system", "english", "french"). System by default; each
+    /// session stores the language it actually used, so changing this never changes an old session.
+    var interviewLanguageRaw: String = InterviewLanguagePreference.system.rawValue
     var mirrorDefault: Bool
     var outdoorMode: Bool
     var hasCompletedDemo: Bool

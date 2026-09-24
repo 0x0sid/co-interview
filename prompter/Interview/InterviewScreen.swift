@@ -18,6 +18,12 @@ struct InterviewScreen: View {
     /// screen is kept awake (`ScreenAwake`).
     @State private var isSessionActive = false
     private let screenAwake = ScreenAwake()
+    /// The session's files, and — for a saved (live) session — what records it.
+    private let files: SessionFiles?
+    private let recorder: SessionRecorder?
+    @State private var isShowingFiles = false
+    @State private var isShowingSettings = false
+    @State private var provenanceToShow: ProvenanceSelection?
     let title: String
     /// What Live can do this session.
     ///
@@ -40,12 +46,17 @@ struct InterviewScreen: View {
         title: String = "Technical interview",
         feed: (any InterviewFeed)? = nil,
         readiness: LiveReadiness = LiveReadiness(),
-        recheckReadiness: (() async -> LiveReadiness)? = nil
+        recheckReadiness: (() async -> LiveReadiness)? = nil,
+        files: SessionFiles? = nil,
+        recorder: SessionRecorder? = nil,
+        restored: RestoredInterview? = nil
     ) {
         self.title = title
+        self.files = files
+        self.recorder = recorder
         _readiness = State(wrappedValue: readiness)
         self.recheckReadiness = recheckReadiness
-        _model = State(wrappedValue: InterviewScreenModel(mode: mode, feed: feed ?? DemoInterviewFeed()))
+        _model = State(wrappedValue: InterviewScreenModel(mode: mode, feed: feed ?? DemoInterviewFeed(), restored: restored))
     }
 
     /// Checks again, on demand. Used by Retry and after a generation fails, because the most common
@@ -54,7 +65,6 @@ struct InterviewScreen: View {
         guard let recheckReadiness, !isRechecking else { return }
         isRechecking = true
         readiness = await recheckReadiness()
-        model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
         isRechecking = false
     }
 
@@ -62,6 +72,7 @@ struct InterviewScreen: View {
     /// render, which may never come once the screen is gone.
     private func endSession() {
         model.stop()
+        recorder?.end()
         isSessionActive = false
         screenAwake.apply(sessionActive: false, sceneActive: scenePhase == .active)
     }
@@ -81,7 +92,7 @@ struct InterviewScreen: View {
                     onBack: { endSession(); dismiss() },
                     onPrevious: { model.goToPrevious() },
                     onNext: { model.goToNext() },
-                    onSettings: {}
+                    onSettings: { isShowingSettings = true }
                 )
 
                 VStack(spacing: 12) {
@@ -91,11 +102,9 @@ struct InterviewScreen: View {
                         isContextOpen: $model.isContextPanelOpen,
                         context: model.context,
                         onSelectQuestion: { model.select(questionID: $0) },
-                        onAddImage: { _ = model.attachImage($0.data) },
-                        onRemoveImage: { model.removeAttachment(id: $0) },
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
-                        limitationMessage: model.contextLimitationMessage,
-                        attachmentStates: model.attachmentLabels,
+                        filesLabel: files?.countLabel,
+                        onOpenFiles: { isShowingFiles = true },
                         noteFocusRequest: model.noteFocusRequest
                     )
                     pager
@@ -109,11 +118,33 @@ struct InterviewScreen: View {
         .background(InterviewTheme.Color.background)
         .toolbar(.hidden, for: .navigationBar)
         .task {
+            model.files = files
+            recorder?.attach(to: model)
+            recorder?.setRunning(scenePhase == .active)
             model.start()
             isSessionActive = true
-            // Ask the backend what the configured answer model can actually read, so the Context
-            // panel tells the truth about attachments instead of guessing.
-            model.applyBackendCapability(acceptsImages: readiness.answerAcceptsImages)
+            // A reopened session was not checked on the start screen; check it here so Retry and
+            // Generate say truthfully whether they can work.
+            if model.isAwaitingResume { await recheck() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Backgrounding is the last reliable moment before a possible termination: save now.
+            recorder?.setRunning(phase == .active)
+            if phase != .active { recorder?.flush() }
+        }
+        .sheet(isPresented: $isShowingFiles) {
+            if let files { AttachmentsSheet(files: files) }
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            InterviewSettingsSheet(
+                isLive: model.mode == .live,
+                language: model.liveLanguage ?? .english,
+                onLanguageChange: { model.changeLanguage($0) }
+            )
+        }
+        .sheet(item: $provenanceToShow) { selection in
+            AnswerProvenanceSheet(provenance: selection.provenance,
+                                  currentFileIDs: Set((files?.items ?? []).map(\.id.uuidString)))
         }
         .onDisappear { endSession() }
         .onChange(of: ScreenAwake.shouldKeepAwake(sessionActive: isSessionActive, sceneActive: scenePhase == .active), initial: true) { _, _ in
@@ -180,7 +211,12 @@ struct InterviewScreen: View {
                         onFollowUpAction: { model.generate(action: $0, for: question) },
                         onBeginManualScroll: { model.beginManualScroll(on: question) },
                         onEndManualScroll: { model.endManualScroll(on: question, visibleTokens: $0) },
-                        onResumeFollowing: { model.resumeFollowing(on: question) }
+                        onResumeFollowing: { model.resumeFollowing(on: question) },
+                        onShowProvenance: {
+                            if let provenance = question.selectedAnswer?.provenance {
+                                provenanceToShow = ProvenanceSelection(provenance: provenance)
+                            }
+                        }
                     )
                     .tag(index)
                 }
@@ -225,6 +261,9 @@ struct InterviewScreen: View {
                 ReadyChipView(questionNumber: number) { model.followReadyChip() }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+            if model.isAwaitingResume {
+                resumeButton
+            }
             if model.mode == .demo {
                 demoBadge
             } else if !readiness.canGenerate {
@@ -241,6 +280,27 @@ struct InterviewScreen: View {
         }
         .padding(.bottom, 26)
         .animation(.easeInOut(duration: 0.2), value: model.readyQuestionNumber)
+    }
+
+    /// A reopened session is on screen with the microphone off. Listening starts only here.
+    private var resumeButton: some View {
+        Button {
+            model.resumeInterview()
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                Text(model.wasInterrupted ? "Resume interrupted interview" : "Resume interview")
+                    .font(InterviewTheme.Font.ui(14, weight: .semibold, relativeTo: .subheadline))
+            }
+            .foregroundStyle(InterviewTheme.Color.onPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .background(InterviewTheme.Color.primary, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!readiness.canListen)
+        .accessibilityHint("Starts listening again. Earlier answers are not sent again.")
     }
 
     /// Says what this is, always, while the demo is running — including whether the fading text is a
@@ -390,5 +450,48 @@ struct InterviewLiveUnavailableView: View {
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(InterviewTheme.Color.background.ignoresSafeArea())
+    }
+}
+
+/// Wraps a provenance for `.sheet(item:)`.
+struct ProvenanceSelection: Identifiable {
+    let id = UUID()
+    let provenance: AnswerProvenance
+}
+
+/// The gear: the interview language, changeable mid-session without touching what was said.
+struct InterviewSettingsSheet: View {
+    let isLive: Bool
+    @State var language: InterviewLanguage
+    let onLanguageChange: (InterviewLanguage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    init(isLive: Bool, language: InterviewLanguage, onLanguageChange: @escaping (InterviewLanguage) -> Void) {
+        self.isLive = isLive
+        _language = State(initialValue: language)
+        self.onLanguageChange = onLanguageChange
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if isLive {
+                    Section {
+                        Picker("Interview language", selection: $language) {
+                            ForEach(InterviewLanguage.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                        }
+                        .onChange(of: language) { _, newValue in onLanguageChange(newValue) }
+                    } footer: {
+                        Text(InterviewLanguagePreference.explanation + " Changing it restarts recognition; the transcript and answers so far stay as they are and are not translated.")
+                    }
+                } else {
+                    Text("The demo is scripted in English.")
+                }
+            }
+            .navigationTitle("Interview settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .presentationDetents([.medium])
     }
 }

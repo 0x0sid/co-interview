@@ -380,30 +380,15 @@ struct InterviewScreenModelTests {
     // MARK: Context
 
     @Test
-    func contextAcceptsFiveImagesAndRefusesTheSixth() {
-        let (model, _) = Self.makeModel()
-        for index in 0..<ContextState.imageLimit {
-            #expect(model.addContextImage(ContextImage(data: Data([UInt8(index)]))))
-        }
-        #expect(model.context.images.count == 5)
-        #expect(model.context.isFull)
-        #expect(model.addContextImage(ContextImage(data: Data([99]))) == false)
-        #expect(model.context.images.count == 5)
-        #expect(model.context.counterText == "5/5 images")
-    }
-
-    @Test
     func collapsingTheTranscriptKeepsTheContextTheUserEntered() {
         let (model, _) = Self.makeModel()
         model.isTranscriptExpanded = true
         model.context.note = "Focus on Java 17"
-        for index in 0..<3 { model.addContextImage(ContextImage(data: Data([UInt8(index)]))) }
 
         model.collapseTranscript()
 
         #expect(model.isTranscriptExpanded == false)
         #expect(model.context.note == "Focus on Java 17")
-        #expect(model.context.images.count == 3)
     }
 
     // MARK: Recording / playback

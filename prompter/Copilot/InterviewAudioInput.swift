@@ -49,6 +49,17 @@ final class InterviewAudioInput {
         beginSession(resetActivityClock: true)
     }
 
+    /// A new recognition language. A running session restarts in it at once; a paused or idle one
+    /// uses it when it next starts.
+    func setLanguage(_ language: InterviewLanguage, contextualStrings: [String]) {
+        guard language != self.language else { return }
+        self.language = language
+        self.contextualStrings = contextualStrings
+        guard state == .listening || state == .starting else { return }
+        teardown()
+        beginSession(resetActivityClock: false)
+    }
+
     /// The user's explicit listening pause: new interview speech stops being processed and the
     /// microphone is released. **Distinct from pausing voice-following**, which only stops the reader
     /// from following and leaves listening untouched (§3).

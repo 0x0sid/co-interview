@@ -1,4 +1,3 @@
-import PhotosUI
 import SwiftUI
 
 /// The live transcript at the top of the screen, in its two states.
@@ -15,19 +14,14 @@ struct TranscriptStripView: View {
     @Binding var isContextOpen: Bool
     let context: ContextState
     let onSelectQuestion: (UUID) -> Void
-    let onAddImage: (ContextImage) -> Void
-    let onRemoveImage: (UUID) -> Void
     let onNoteChanged: (String) -> Void
-    /// Said **before** anything is generated when part of the attached context cannot actually be
-    /// used — so nobody attaches five screenshots and assumes the model read them.
-    var limitationMessage: String? = nil
-    /// Per-attachment state text, so each thumbnail says what happened to it rather than leaving the
-    /// user to guess whether it was used.
-    var attachmentStates: [UUID: String] = [:]
+    /// "1 file", "2 files" — images and documents together — or nil when nothing is attached.
+    var filesLabel: String? = nil
+    /// Opens the session's file list and import actions.
+    var onOpenFiles: () -> Void = {}
     /// Changes when "Add context" asks for the keyboard in the note field.
     var noteFocusRequest: Int = 0
 
-    @State private var pickerSelection: [PhotosPickerItem] = []
     @State private var note: String = ""
     /// While the note has the keyboard, neither panel collapses under the user. Losing a half-typed
     /// note to a mistimed tap on a chevron is not a trade worth making for a few points of height.
@@ -137,121 +131,63 @@ struct TranscriptStripView: View {
 
     // MARK: Context
 
-    /// Notes and images the user wants the answers to take into account.
+    /// The note and the files the answers should take into account.
     ///
-    /// **In memory only.** Nothing here is written to disk or sent anywhere in this build; it is the
-    /// shape the real context will take, filled with whatever the user attaches this session.
+    /// Files are a count and a button here — "2 files" — and the list, their states and the import
+    /// actions live in the Files sheet. The note stays inline because it is typed mid-interview.
     private var contextPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Button {
-                guard !isEditingNote else { return }
-                withAnimation(.easeInOut(duration: 0.2)) { isContextOpen.toggle() }
-            } label: {
-                HStack {
-                    Text("Context")
-                        .font(InterviewTheme.Font.ui(15, weight: .medium, relativeTo: .subheadline))
-                    Spacer()
-                    Text(context.counterText)
-                        .font(InterviewTheme.Font.ui(11.5, weight: .medium, relativeTo: .caption2))
-                        .monospacedDigit()
-                    Image(systemName: isContextOpen ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+            HStack(spacing: 10) {
+                Button {
+                    guard !isEditingNote else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { isContextOpen.toggle() }
+                } label: {
+                    HStack {
+                        Text("Context")
+                            .font(InterviewTheme.Font.ui(15, weight: .medium, relativeTo: .subheadline))
+                        Image(systemName: isContextOpen ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                        Spacer()
+                    }
+                    .foregroundStyle(InterviewTheme.Color.muted)
+                    .contentShape(Rectangle())
                 }
-                .foregroundStyle(InterviewTheme.Color.muted)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+
+                Button(action: onOpenFiles) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "paperclip")
+                            .font(.system(size: 13, weight: .semibold))
+                        if let filesLabel {
+                            Text(filesLabel)
+                                .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .caption1))
+                        }
+                    }
+                    .foregroundStyle(InterviewTheme.Color.primary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(InterviewTheme.Color.questionPill, in: Capsule())
+                    .ultraContrastOutline(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(filesLabel.map { "\($0) attached. Show files" } ?? "Attach files")
             }
-            .buttonStyle(.plain)
 
             if isContextOpen {
-                HStack(spacing: 10) {
-                    TextField("Anything the answers should know", text: $note)
-                        .focused($isEditingNote)
-                        .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                        .foregroundStyle(InterviewTheme.Color.ink)
-                        .onChange(of: note) { _, newValue in onNoteChanged(newValue) }
-                    PhotosPicker(selection: $pickerSelection, maxSelectionCount: ContextState.imageLimit, matching: .images) {
-                        Image(systemName: "photo")
-                            .font(.system(size: 15, weight: .regular))
-                            .foregroundStyle(InterviewTheme.Color.muted)
-                    }
-                    .disabled(context.isFull)
-                    .accessibilityLabel(context.isFull ? "Image limit reached" : "Add an image")
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
-                .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
-
-                if let limitationMessage {
-                    Text(limitationMessage)
-                        .font(InterviewTheme.Font.ui(11.5, relativeTo: .caption2))
-                        .foregroundStyle(InterviewTheme.Color.muted)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                if !context.images.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(context.images) { image in
-                                VStack(spacing: 3) {
-                                    thumbnail(image)
-                                    if let state = attachmentStates[image.id] {
-                                        Text(state)
-                                            .font(InterviewTheme.Font.ui(9.5, relativeTo: .caption2))
-                                            .foregroundStyle(InterviewTheme.Color.muted)
-                                            .lineLimit(2)
-                                            .multilineTextAlignment(.center)
-                                            .frame(width: 66)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.top, 5)
-                        .padding(.trailing, 5)
-                    }
-                }
+                TextField("Anything the answers should know", text: $note)
+                    .focused($isEditingNote)
+                    .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+                    .foregroundStyle(InterviewTheme.Color.ink)
+                    .onChange(of: note) { _, newValue in onNoteChanged(newValue) }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
+                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
             }
         }
         .padding(13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(InterviewTheme.Color.surface, in: RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
-        .onChange(of: pickerSelection) { _, items in
-            Task { await load(items) }
-        }
-    }
-
-    private func thumbnail(_ image: ContextImage) -> some View {
-        ZStack(alignment: .topTrailing) {
-            Group {
-                if let uiImage = UIImage(data: image.data) {
-                    Image(uiImage: uiImage).resizable().scaledToFill()
-                } else {
-                    InterviewTheme.Color.hairline
-                }
-            }
-            .frame(width: 56, height: 56)
-            .clipShape(RoundedRectangle(cornerRadius: 9))
-
-            Button {
-                onRemoveImage(image.id)
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 7, weight: .bold))
-                    .foregroundStyle(InterviewTheme.Color.background)
-                    .frame(width: 17, height: 17)
-                    .background(InterviewTheme.Color.ink, in: Circle())
-            }
-            .offset(x: 5, y: -5)
-            .accessibilityLabel("Remove image")
-        }
-    }
-
-    private func load(_ items: [PhotosPickerItem]) async {
-        for item in items {
-            guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-            onAddImage(ContextImage(data: data))
-        }
-        pickerSelection = []
     }
 }

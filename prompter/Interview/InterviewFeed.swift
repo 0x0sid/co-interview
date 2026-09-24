@@ -28,6 +28,9 @@ enum InterviewFeedEvent: Sendable {
     case answerTopicResolved(requestID: UUID, topic: String)
     /// The answer asks for context or clarification instead of answering.
     case answerNeedsInput(requestID: UUID, need: AnswerNeed)
+    /// What the request carried from the session's files, and what the model cited. Sent when the
+    /// request finishes, successfully or not.
+    case answerProvenance(requestID: UUID, provenance: AnswerProvenance)
     /// The generation did not produce an answer. Said plainly rather than left spinning.
     case answerFailed(requestID: UUID, message: String)
 }

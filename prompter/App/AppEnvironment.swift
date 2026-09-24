@@ -15,6 +15,17 @@ enum AppEnvironment {
     /// scripts, settings or usage ledger.
     static let storeFileName = "CoInterview.store"
 
+    /// Interview sessions and their files. Added entities only — an existing store gains empty tables
+    /// and keeps every row it had (`SessionPersistenceTests` opens an old-schema store to check).
+    static let sessionModels: [any PersistentModel.Type] = [
+        InterviewSessionRecord.self,
+        SessionUtteranceRecord.self,
+        SessionQuestionRecord.self,
+        SessionAnswerRecord.self,
+        SessionAttachmentRecord.self,
+        FileExtractionRecord.self,
+    ]
+
     static func makeModelContainer() -> ModelContainer {
         // NOTE (inherited): this schema is Prompter's. It is carried over as scaffolding so the app
         // builds and runs; it is **not** an approved Co-Interview data model. See
@@ -24,7 +35,7 @@ enum AppEnvironment {
             PromptSession.self,
             UsageLedger.self,
             AppSettings.self,
-        ])
+        ] + sessionModels)
         let url = URL.applicationSupportDirectory.appending(path: storeFileName)
         let configuration = ModelConfiguration(schema: schema, url: url)
         do {

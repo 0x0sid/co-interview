@@ -293,23 +293,22 @@ final class CopilotEntryUITests: XCTestCase {
     @MainActor
     func testTranscriptExpandsToShowContextAndKeepsItOnCollapse() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticContextImages", "5"]
+        app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticFiles"]
         app.launch()
         openDemo(app)
 
         XCTAssertTrue(app.staticTexts["Context"].waitForExistence(timeout: 20),
                       "the expanded transcript does not show Context")
-        XCTAssertTrue(app.staticTexts["5/5 images"].exists, "the context image counter is missing")
+        XCTAssertTrue(app.staticTexts["2 files"].waitForExistence(timeout: 10), "the file count is missing")
         attach(app, "07-expanded-context")
 
         app.buttons["Collapse live transcript"].tap()
         XCTAssertTrue(app.buttons["Expand live transcript"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Context"].exists)
 
-        // Re-expanding shows the same note and the same five thumbnails: collapsing is a view
-        // change, not a discard.
+        // Re-expanding shows the same files: collapsing is a view change, not a discard.
         app.buttons["Expand live transcript"].tap()
-        XCTAssertTrue(app.staticTexts["5/5 images"].waitForExistence(timeout: 5),
+        XCTAssertTrue(app.staticTexts["2 files"].waitForExistence(timeout: 5),
                       "collapsing the transcript lost the attached context")
     }
 

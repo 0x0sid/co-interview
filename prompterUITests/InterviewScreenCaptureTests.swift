@@ -106,17 +106,101 @@ final class InterviewScreenCaptureTests: XCTestCase {
         }
     }
 
-    /// The expanded transcript with a full Context panel — note plus five thumbnails.
+    /// Session history, the interrupted-session notice, the language selector, and a reopened
+    /// interrupted session: content restored, microphone off, Resume offered, nothing re-sent.
+    @MainActor
+    func testCaptureSessionHistoryAndLanguageSelector() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion", "-UITestsSeedHistory"]
+        app.launch()
+        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
+        XCTAssertTrue(entry.waitForExistence(timeout: 20))
+        let startDemo = app.buttons["Start demo, DEMO mode"]
+        for _ in 0..<3 where !startDemo.exists {
+            entry.tap()
+            _ = startDemo.waitForExistence(timeout: 8)
+        }
+        XCTAssertTrue(app.staticTexts["An interview was interrupted"].waitForExistence(timeout: 10), "no interrupted-session notice")
+        XCTAssertTrue(app.staticTexts["Recent interviews"].exists)
+        save(app, "10-start-recent-and-language")
+
+        // History is inline: "All interviews" expands the list in place.
+        let row = { (title: String) in app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch }
+        XCTAssertFalse(row("Behavioural round").exists, "more than three rows before expanding")
+        let expand = app.buttons["All interviews (4)"]
+        if !expand.waitForExistence(timeout: 3) { app.swipeUp() }
+        XCTAssertTrue(expand.waitForExistence(timeout: 5), "no All interviews control")
+        expand.tap()
+        XCTAssertTrue(row("Behavioural round").waitForExistence(timeout: 10), "history did not expand")
+        save(app, "12-all-interviews")
+        app.swipeDown()
+
+        let picker = app.buttons["interview-language"].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 5), "no interview language selector")
+        picker.tap()
+        XCTAssertTrue(app.buttons["Français"].waitForExistence(timeout: 5), "the selector does not offer French")
+        save(app, "11-language-selector")
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'System language ('")).firstMatch.tap()
+
+        // Open the interrupted interview: content restored, microphone off, Resume offered.
+        row("Backend platform interview").tap()
+        XCTAssertTrue(app.buttons["Resume interrupted interview"].waitForExistence(timeout: 15), "no explicit Resume on a reopened session")
+        XCTAssertTrue(app.descendants(matching: .any)["answer-interrupted"].waitForExistence(timeout: 5), "the partial answer is not labelled interrupted")
+        save(app, "13-restored-interrupted-session")
+
+        // Return, then open another one.
+        app.buttons["Close interview"].tap()
+        XCTAssertTrue(row("System design practice").waitForExistence(timeout: 10), "did not return to the start screen")
+        row("System design practice").tap()
+        XCTAssertTrue(app.buttons["Resume interview"].waitForExistence(timeout: 15), "reopening a second interview failed")
+        app.buttons["Close interview"].tap()
+        XCTAssertTrue(row("Entretien architecte cloud").waitForExistence(timeout: 10))
+
+        // Rename.
+        let renameTarget = app.buttons["More actions for Demo · Entretien architecte cloud"]
+        if !renameTarget.waitForExistence(timeout: 3) { app.swipeUp() }
+        renameTarget.tap()
+        app.buttons["Rename"].tap()
+        let field = app.alerts.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "no rename field")
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
+        field.clearAndType("Renamed interview")
+        app.alerts.buttons["Save"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Renamed interview,")).firstMatch.waitForExistence(timeout: 10), "rename did not apply exactly")
+
+        // Delete.
+        let more = app.buttons["More actions for Renamed interview"]
+        if !more.waitForExistence(timeout: 3) { app.swipeUp() }
+        XCTAssertTrue(more.waitForExistence(timeout: 5), "the renamed row has no actions")
+        more.tap()
+        app.buttons["Delete"].tap()
+        app.buttons["Delete interview and its files"].tap()
+        let deleted = NSPredicate(format: "exists == false")
+        wait(for: [expectation(for: deleted, evaluatedWith: row("Renamed interview"))], timeout: 10)
+        save(app, "14-after-rename-and-delete")
+    }
+
+
+    /// The expanded transcript with the Context panel: the note, and "2 files" in place of the old
+    /// image counter. Tapping it opens the file list with each file's extraction status.
     @MainActor
     func testCaptureExpandedContext() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticContextImages", "5"]
+        app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticFiles"]
         app.launch()
         openDemo(app)
 
-        XCTAssertTrue(app.staticTexts["5/5 images"].waitForExistence(timeout: 30),
-                      "the context panel did not show five images")
-        save(app, "05-expanded-context")
+        XCTAssertTrue(app.staticTexts["2 files"].waitForExistence(timeout: 30),
+                      "the context panel did not show the file count")
+        XCTAssertFalse(app.staticTexts["0/5 images"].exists)
+        save(app, "05-expanded-context-2-files")
+
+        app.buttons["2 files attached. Show files"].tap()
+        XCTAssertTrue(app.staticTexts["demo-notes.txt"].waitForExistence(timeout: 10), "the file list did not open")
+        let ready = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Ready'")).firstMatch
+        XCTAssertTrue(ready.waitForExistence(timeout: 20), "no file reached Ready")
+        XCTAssertTrue(app.staticTexts[AttachmentsCopy.privacyNote].exists, "the privacy explanation is missing")
+        save(app, "05b-files-sheet-extraction-status")
     }
 
     /// The transcript expanded on its own — **without** Context opening with it.
@@ -146,7 +230,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
 
         // Context must still be shut: expanding the transcript is not a request to open it.
         XCTAssertTrue(app.buttons["Collapse live transcript"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["5/5 images"].exists, "Context opened itself with the transcript")
+        XCTAssertFalse(app.staticTexts["Anything the answers should know"].exists, "Context opened itself with the transcript")
         save(app, "07-expanded-transcript")
     }
 
@@ -276,5 +360,20 @@ final class InterviewScreenCaptureTests: XCTestCase {
             "the end of the answer stays trapped under the floating toolbar"
         )
         save(app, "08-answer-end-clears-toolbar")
+    }
+}
+
+/// The UI tests cannot import the app; the copy they check is repeated here, verbatim.
+enum AttachmentsCopy {
+    static let privacyNote = "Files are stored on this device. Relevant text may be sent to the AI service to answer your questions."
+}
+
+extension XCUIElement {
+    /// Replaces a text field's contents.
+    func clearAndType(_ text: String) {
+        if let current = value as? String, !current.isEmpty {
+            typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 4))
+        }
+        typeText(text)
     }
 }

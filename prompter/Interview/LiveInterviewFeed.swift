@@ -190,6 +190,19 @@ final class LiveInterviewFeed: InterviewFeed {
     /// it has already suggested, and the model resolves the request.
 
 
+    /// What the request carried from the session's files, and the subset the model cited — the
+    /// backend validates citations against the passages it was sent, so an id here was really sent.
+    private func emitProvenance(of version: AnswerVersion, requestID: UUID) {
+        guard !version.includedPassages.isEmpty else { return }
+        let provenance = AnswerProvenance(
+            included: version.includedPassages.map {
+                .init(passageID: $0.id, fileID: $0.documentID, filename: $0.documentTitle, locator: $0.locator)
+            },
+            citedPassageIDs: version.sources.map(\.id)
+        )
+        continuation.yield(.answerProvenance(requestID: requestID, provenance: provenance))
+    }
+
     func cancelAnswer(requestID: UUID) {
         guard let versionID = versionByRequest[requestID] else { return }
         coordinator.cancelGeneration(versionID: versionID)
@@ -288,6 +301,7 @@ final class LiveInterviewFeed: InterviewFeed {
         case .streaming, .queued:
             break
         case .complete:
+            emitProvenance(of: version, requestID: requestID)
             continuation.yield(.answerCompleted(
                 requestID: requestID,
                 blocks: AnswerBlock.parsed(from: visible),
@@ -295,6 +309,7 @@ final class LiveInterviewFeed: InterviewFeed {
             ))
             finish(requestID: requestID, cardID: cardID)
         case .failed(let message):
+            emitProvenance(of: version, requestID: requestID)
             // Whatever arrived stays on screen; the message says what stopped.
             continuation.yield(.answerFailed(requestID: requestID, message: message))
             finish(requestID: requestID, cardID: cardID)

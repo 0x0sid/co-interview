@@ -52,11 +52,27 @@ final class InterviewScreenModel {
     private(set) var generationFailure: String?
     /// What the backend said about this request — for example that attachments were not sent.
     private(set) var generationNotice: String?
-    /// Attachments and their real states.
-    private(set) var attachments: [ContextAttachment] = []
-    private var preparationTasks: [Task<Void, Never>] = []
+    /// The session's files. Their text reaches requests as selected excerpts, through the session's
+    /// project context — never as uploaded originals.
+    var files: SessionFiles? {
+        didSet {
+            // A restored session's files were part of what it already asked about.
+            if isAwaitingResume, queuedRequestIDs.isEmpty, activeRequestID == nil {
+                lastRequestedContextFingerprint = contextFingerprint
+            }
+        }
+    }
+    /// Something worth saving changed. `.now` for state transitions (a question, an answer finishing),
+    /// `.soon` for the stream of small changes (transcript revisions, streamed text), which the
+    /// recorder debounces.
+    var onPersist: ((PersistUrgency) -> Void)?
+    enum PersistUrgency { case soon, now }
+    /// A restored session that has not been resumed: its content is on screen, the microphone is off,
+    /// and nothing listens until Resume interview is tapped.
+    private(set) var isAwaitingResume = false
+    /// The restored session had been interrupted (the app stopped without closing it).
+    private(set) var wasInterrupted = false
     /// Whether the configured answer model accepts images, as reported by the backend.
-    private(set) var modelAcceptsImages = false
     var isFollowUpsSheetPresented = false
 
     // MARK: Generation
@@ -101,6 +117,8 @@ final class InterviewScreenModel {
     ///
     /// Live takes it from the session's project; Demo is scripted in English.
     var interviewLanguage: InterviewLanguage { liveFeed?.coordinator.project.language ?? .english }
+    /// The live session's current language; nil in Demo.
+    var liveLanguage: InterviewLanguage? { liveFeed?.coordinator.project.language }
 
     /// What to offer next on the page being looked at, or nothing while it is still writing.
     var followUpActions: [FollowUpActions.Action] {
@@ -153,16 +171,28 @@ final class InterviewScreenModel {
     /// animation — so "listening" on screen means the microphone is genuinely open.
     var listeningState: ListeningState? { liveFeed?.coordinator.audio.state }
 
-    init(mode: InterviewMode, feed: any InterviewFeed) {
+    init(mode: InterviewMode, feed: any InterviewFeed, restored: RestoredInterview? = nil) {
         self.mode = mode
         self.feed = feed
         self.isSimulatedReadingEnabled = mode == .demo
+        if let restored {
+            transcript = restored.transcript
+            questions = restored.questions
+            coveredLines = restored.coveredLines
+            retainedSnapshots = restored.retainedSnapshots
+            context.note = restored.note
+            currentIndex = max(0, questions.count - 1)
+            wasInterrupted = restored.wasInterrupted
+            isAwaitingResume = true
+            recording = .off
+            // What was restored had already been asked about: the note as it stands is not new input.
+            lastRequestedContextFingerprint = contextFingerprint
+        }
         #if DEBUG
         // Screenshot support: a full context panel, filled with obviously-synthetic placeholders.
         let arguments = ProcessInfo.processInfo.arguments
-        if mode == .demo, let flag = arguments.firstIndex(of: "-InterviewSyntheticContextImages"),
-           flag + 1 < arguments.count, let count = Int(arguments[flag + 1]), count > 0 {
-            context = .synthetic(imageCount: count, note: "Focus on Java 17")
+        if mode == .demo, arguments.contains("-InterviewSyntheticFiles") {
+            context.note = "Focus on Java 17"
             isTranscriptExpanded = true
             // Context is closed by default now, so the screenshot fixture opens it deliberately —
             // which is also what a person has to do.
@@ -201,7 +231,8 @@ final class InterviewScreenModel {
                 self?.recordDecisionCall(snapshot: snapshot, result: result, elapsed: elapsed)
             }
         }
-        feed.start()
+        // A restored session shows its content and waits: the microphone starts only on Resume.
+        if !isAwaitingResume { feed.start() }
         feedTask = Task { [weak self] in
             guard let events = self?.feed.events else { return }
             for await event in events {
@@ -210,6 +241,27 @@ final class InterviewScreenModel {
             }
         }
     }
+
+    /// Resumes a restored session: listening starts now, on an explicit tap, and new speech is added
+    /// after what was already there. Nothing earlier is re-sent.
+    func resumeInterview() {
+        guard isAwaitingResume else { return }
+        isAwaitingResume = false
+        recording = .live
+        feed.start()
+        onPersist?(.now)
+    }
+
+    /// Changes the interview language during a session. History stays exactly as it is; recognition
+    /// restarts in the new language if it was running.
+    func changeLanguage(_ language: InterviewLanguage) {
+        liveFeed?.coordinator.changeLanguage(language)
+        onPersist?(.now)
+    }
+
+    /// For the recorder: the wording each transcript line was covered at, and each page's snapshot.
+    var coveredWordingByLine: [UUID: String] { coveredLines }
+    func retainedSnapshot(for questionID: UUID) -> DiscussionSnapshot? { retainedSnapshots[questionID] }
 
     /// Ends the session: every in-flight generation is abandoned, and anything that arrives for one
     /// afterwards is ignored because its request is no longer known.
@@ -229,6 +281,12 @@ final class InterviewScreenModel {
     /// Applies one feed event. Not private: the tests drive the model through this directly, which
     /// keeps them free of timers.
     func handle(_ event: InterviewFeedEvent) {
+        defer {
+            switch event {
+            case .transcriptLine, .answerChunk: onPersist?(.soon)
+            default: onPersist?(.now)
+            }
+        }
         switch event {
         case .transcriptLine(let line):
             upsert(line)
@@ -265,6 +323,13 @@ final class InterviewScreenModel {
             // It usually arrives with the title, before the answer exists; held until it does.
             pendingNeeds[requestID] = need
             applyPendingNeed(requestID: requestID)
+
+        case .answerProvenance(let requestID, let provenance):
+            if let generation = generations[requestID], let answerID = generation.answerID,
+               let index = questions.firstIndex(where: { $0.id == generation.questionID }),
+               let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) {
+                questions[index].answers[answerIndex].provenance = provenance
+            }
 
         case .answerFailed(let requestID, let message):
             diagnostics.recordFailure(
@@ -374,7 +439,7 @@ final class InterviewScreenModel {
     var hasAnythingToAnswer: Bool {
         !transcript.isEmpty
             || !context.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || !attachments.isEmpty
+            || !(files?.readyAttachmentIDs.isEmpty ?? true)
     }
 
     /// Transcript lines not yet covered by an accepted request.
@@ -401,8 +466,8 @@ final class InterviewScreenModel {
 
     private var contextFingerprint: String {
         let note = context.note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let images = attachments.map(\.id.uuidString).sorted().joined(separator: ",")
-        return "\(note)|\(images)"
+        let files = (files?.readyAttachmentIDs ?? []).map(\.uuidString).sorted().joined(separator: ",")
+        return "\(note)|\(files)"
     }
 
     /// Said when Generate is tapped with nothing to work from.
@@ -543,6 +608,7 @@ final class InterviewScreenModel {
         noteDecisionStateChanged()
 
         queuedRequestIDs.append(requestID)
+        onPersist?(.now)
         diagnostics.recordQueued(requestID: requestID, at: now)
         startNextQueuedRequestIfIdle()
     }
@@ -568,8 +634,8 @@ final class InterviewScreenModel {
             transcriptCharacters: transcript.reduce(0) { $0 + $1.text.count },
             snapshot: snapshot,
             utterances: utterances,
-            attachmentCount: attachments.count,
-            preparedAttachmentCount: attachments.filter(\.state.isSendable).count
+            attachmentCount: files?.items.count ?? 0,
+            preparedAttachmentCount: files?.readyAttachmentIDs.count ?? 0
         )
     }
 
@@ -613,7 +679,7 @@ final class InterviewScreenModel {
             provisional: openLine.map(\.text),
             priorSuggestions: priorSuggestionTexts(),
             note: context.note.trimmingCharacters(in: .whitespacesAndNewlines),
-            attachmentIDs: attachments.map(\.id.uuidString)
+            attachmentIDs: (files?.readyAttachmentIDs ?? []).map(\.uuidString)
         )
     }
 
@@ -684,18 +750,6 @@ final class InterviewScreenModel {
 
     /// In Live, the truth about listening lives in the audio session; this mirrors it so the mark
     /// cannot claim the microphone is open when it is not.
-    /// Records what the backend says it can do, so the panel tells the truth about attachments.
-    func applyBackendCapability(acceptsImages: Bool) {
-        modelAcceptsImages = acceptsImages
-        for index in attachments.indices {
-            if !acceptsImages {
-                attachments[index].state = .notSupported
-            } else if attachments[index].state == .notSupported {
-                attachments[index].state = attachments[index].preparedJPEG.map { .ready(bytes: $0.count) } ?? .preparing
-            }
-        }
-    }
-
     func refreshRecordingFromCapture() {
         guard mode == .live, let state = listeningState else { return }
         switch state {
@@ -719,104 +773,27 @@ final class InterviewScreenModel {
     }
 
     func toggleRecordingPause() {
+        // On a restored session, the play button is Resume interview.
+        if isAwaitingResume { resumeInterview(); return }
         setRecording(recording == .live ? .paused : .live)
     }
 
     // MARK: - Context
 
-    /// Returns false when the limit is already reached, so the view can say so instead of dropping
-    /// the image silently.
-    @discardableResult
-    func addContextImage(_ image: ContextImage) -> Bool {
-        context.addImage(image)
-    }
-
-    func removeContextImage(id: UUID) {
-        context.removeImage(id: id)
-    }
-
-    /// Collapsing the strip is a view state change only — the note and the images stay.
+    /// Collapsing the strip is a view state change only — the note and the files stay.
     func collapseTranscript() {
         isTranscriptExpanded = false
     }
 
-    /// Hands the typed note and the prepared attachments to the pipeline, where they are
-    /// snapshotted into the next request.
+    /// Hands the typed note to the pipeline, where it is snapshotted into the next request.
+    ///
+    /// **No image uploads.** Attached files — photos included — reach a request only as excerpts of
+    /// the text read from them on this device, chosen per request by the session's file context.
+    /// The pictures themselves are never sent.
     func syncSessionNote() {
         liveFeed?.coordinator.sessionNote = context.note
-        liveFeed?.coordinator.sessionImages = sendableAttachments
-    }
-
-    /// Attachments that are genuinely ready to travel. Anything still preparing, failed, or
-    /// unsupported is left out **and says so on screen**.
-    var sendableAttachments: [AnswerRequest.ImageAttachment] {
-        guard modelAcceptsImages else { return [] }
-        return attachments.compactMap { attachment in
-            guard attachment.state.isSendable, let jpeg = attachment.preparedJPEG else { return nil }
-            return AnswerRequest.ImageAttachment(mime: "image/jpeg", data: jpeg.base64EncodedString())
-        }
-    }
-
-    /// Adds an image and prepares it in the background, showing each state as it happens.
-    @discardableResult
-    func attachImage(_ data: Data) -> Bool {
-        guard attachments.count < ContextState.imageLimit else { return false }
-        let attachment = ContextAttachment(originalData: data)
-        attachments.append(attachment)
-        _ = context.addImage(ContextImage(id: attachment.id, data: data))
-        let task = Task { [weak self] in
-            let (state, jpeg) = await ContextAttachment.prepare(data)
-            guard let self, let index = attachments.firstIndex(where: { $0.id == attachment.id }) else { return }
-            attachments[index].state = modelAcceptsImages ? state : .notSupported
-            attachments[index].preparedJPEG = jpeg
-            syncSessionNote()
-        }
-        preparationTasks.append(task)
-        return true
-    }
-
-    /// Waits for every in-flight preparation to settle.
-    ///
-    /// The view never needs this — it watches the states change — but a test does, and waiting on
-    /// the actual work is honest where sleeping for an arbitrary interval is a race that passes on a
-    /// quiet machine and fails on a busy one.
-    func awaitAttachmentPreparation() async {
-        let pending = preparationTasks
-        preparationTasks = []
-        for task in pending { _ = await task.value }
-    }
-
-    /// One short label per attachment, in order, for the panel to show under the thumbnails.
-    var attachmentLabels: [UUID: String] {
-        Dictionary(uniqueKeysWithValues: attachments.map { ($0.id, $0.state.label) })
-    }
-
-    func removeAttachment(id: UUID) {
-        attachments.removeAll { $0.id == id }
-        context.removeImage(id: id)
-        syncSessionNote()
-    }
-
-    /// Said before anything is generated, when part of the attached context cannot be used.
-    ///
-    /// The capability is **asked of the backend**, never assumed: the speed profile's model is
-    /// text-only while the balanced and smart ones read images, so a hardcoded answer would be wrong
-    /// half the time.
-    var contextLimitationMessage: String? {
-        guard mode == .live, !attachments.isEmpty else { return nil }
-        if !modelAcceptsImages {
-            let count = attachments.count
-            return count == 1
-                ? "The attached image is not sent — the configured model reads text only. Your note is sent."
-                : "The \(count) attached images are not sent — the configured model reads text only. Your note is sent."
-        }
-        let failed = attachments.filter { if case .failed = $0.state { true } else { false } }.count
-        if failed > 0 {
-            return failed == 1 ? "1 image could not be prepared and will not be sent."
-                               : "\(failed) images could not be prepared and will not be sent."
-        }
-        let preparing = attachments.filter { $0.state == .preparing }.count
-        return preparing > 0 ? "Preparing \(preparing) image\(preparing == 1 ? "" : "s")…" : nil
+        liveFeed?.coordinator.sessionImages = []
+        onPersist?(.soon)
     }
 
     // MARK: - Reading
@@ -1171,6 +1148,7 @@ final class InterviewScreenModel {
            let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) {
             questions[index].answers[answerIndex].isComplete = true
             questions[index].answers[answerIndex].isIncomplete = true
+            questions[index].answers[answerIndex].failureMessage = message
         }
         generations[requestID] = nil
         requestByQuestion[generation.questionID] = nil
@@ -1194,6 +1172,7 @@ final class InterviewScreenModel {
         generationFailure = nil
         currentIndex = index
         queuedRequestIDs.append(requestID)
+        onPersist?(.now)
         startNextQueuedRequestIfIdle()
     }
 

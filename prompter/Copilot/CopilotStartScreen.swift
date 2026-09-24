@@ -1,5 +1,6 @@
 #if DEBUG
 import SwiftUI
+import SwiftData
 import AVFoundation
 
 /// The copilot's entry point in a development build: choose **Demo** or **Live**, see honestly what
@@ -21,8 +22,19 @@ struct CopilotStartScreen: View {
         var badge: String { self == .demo ? "DEMO" : "LIVE" }
     }
 
-    @State private var language: InterviewLanguage = .english
-    @State private var startedMode: Mode?
+    @Environment(\.modelContext) private var modelContext
+    @Query private var settingsQuery: [AppSettings]
+    @Query(filter: #Predicate<InterviewSessionRecord> { $0.modeRaw == "live" },
+           sort: \InterviewSessionRecord.lastActivityAt, order: .reverse)
+    private var savedSessions: [InterviewSessionRecord]
+    /// The interview on screen, with its record, files and recorder.
+    @State private var launch: InterviewLaunch?
+    /// Every saved interview is listed, not only the latest three.
+    @State private var isShowingAllInterviews = false
+    @State private var renaming: InterviewSessionRecord?
+    @State private var newTitle = ""
+    @State private var deleting: InterviewSessionRecord?
+
     /// The previous pipeline screen, kept reachable so the provider work it exercises is not stranded.
     @State private var startedPipelineMode: Mode?
     @State private var microphonePermission = AVAudioApplication.shared.recordPermission
@@ -32,6 +44,13 @@ struct CopilotStartScreen: View {
     @State private var readiness = LiveReadiness(isChecking: true)
 
     private var providerConfiguration: ProviderConfiguration { ProviderConfiguration.resolve() }
+
+    /// The stored preference — System language unless the user picked one.
+    private var languagePreference: InterviewLanguagePreference {
+        InterviewLanguagePreference.from(stored: settingsQuery.first?.interviewLanguageRaw)
+    }
+    /// What a session started now would use.
+    private var language: InterviewLanguage { languagePreference.resolved() }
     private var project: SyntheticProject {
         language == .french ? SyntheticProjectFixture.hospitalReview : SyntheticProjectFixture.transportProgramme
     }
@@ -41,6 +60,7 @@ struct CopilotStartScreen: View {
             VStack(alignment: .leading, spacing: 20) {
                 intro
                 languagePicker
+                recentInterviews
                 demoCard
                 liveCard
                 pipelinePrototypeNote
@@ -52,25 +72,47 @@ struct CopilotStartScreen: View {
             .padding(20)
         }
         .background(Theme.Color.paper)
+        .alert("Rename interview", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Title", text: $newTitle)
+            Button("Save") {
+                if let renaming { InterviewSessionStore.rename(renaming, to: newTitle, in: modelContext) }
+                renaming = nil
+            }
+            Button("Cancel", role: .cancel) { renaming = nil }
+        }
+        .confirmationDialog("Delete this interview?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete interview and its files", role: .destructive) {
+                if let deleting { InterviewSessionStore.delete(deleting, in: modelContext) }
+                deleting = nil
+            }
+        } message: {
+            Text("The transcript, answers and attached files are removed from this device. This can't be undone.")
+        }
         .navigationTitle("Interview Copilot")
         .navigationBarTitleDisplayMode(.inline)
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
-        .fullScreenCover(item: $startedMode) { mode in
+        .fullScreenCover(item: $launch) { launch in
             NavigationStack {
-                switch mode {
+                switch launch.mode {
                 case .demo:
-                    InterviewScreen(mode: .demo, title: "Technical interview")
+                    InterviewScreen(mode: .demo, title: "Technical interview", files: launch.files)
                 case .live:
-                    if readiness.canListen {
+                    // A reopened session always opens, whatever the readiness: its content is local.
+                    // Resume and Generate then say for themselves whether they can work.
+                    if readiness.canListen || launch.restored != nil {
                         InterviewScreen(
                             mode: .live,
-                            title: "Live interview",
-                            feed: makeLiveFeed(),
+                            title: launch.restored == nil ? "Live interview" : launch.session.title,
+                            feed: makeLiveFeed(project: launch.fileContext),
                             readiness: readiness,
                             recheckReadiness: {
-                                await LiveReadiness.check(configuration: ProviderConfiguration.resolve(), language: language)
-                            }
+                                await LiveReadiness.check(configuration: ProviderConfiguration.resolve(), language: launch.language)
+                            },
+                            files: launch.files,
+                            recorder: launch.recorder,
+                            restored: launch.restored
                         )
                     } else {
                         InterviewLiveUnavailableView(readiness: readiness)
@@ -106,15 +148,100 @@ struct CopilotStartScreen: View {
         }
     }
 
+    /// The interview language: System language by default, showing what it resolves to.
     private var languagePicker: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Interview language").font(Typography.body(12, weight: .medium)).foregroundStyle(Theme.Color.secondary)
-            Picker("Interview language", selection: $language) {
-                ForEach(InterviewLanguage.allCases, id: \.self) { language in
-                    Text(language.displayName).tag(language)
+            Picker("Interview language", selection: Binding(
+                get: { languagePreference },
+                set: { newValue in
+                    let settings = AppSettings.fetchOrCreate(in: modelContext)
+                    settings.interviewLanguageRaw = newValue.rawValue
+                    try? modelContext.save()
+                    Task { await refreshReadiness() }
+                }
+            )) {
+                ForEach(InterviewLanguagePreference.allCases) { option in
+                    Text(option.label()).tag(option)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("interview-language")
+            Text(InterviewLanguagePreference.explanation + " Saved interviews keep the language they used.")
+                .font(Typography.body(12))
+                .foregroundStyle(Theme.Color.secondary)
+            if languagePreference == .system, let note = InterviewLanguagePreference.resolveSystem().fallbackNote {
+                Text(note)
+                    .font(Typography.body(12))
+                    .foregroundStyle(Theme.Color.warm)
+            }
+        }
+    }
+
+    // MARK: History
+
+    /// The last few saved interviews, and an interrupted one called out first.
+    @ViewBuilder
+    private var recentInterviews: some View {
+        if !savedSessions.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                if let interrupted = savedSessions.first(where: { $0.state == .interrupted }) {
+                    Button {
+                        launch = .reopen(interrupted, context: modelContext)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("An interview was interrupted")
+                                .font(Typography.body(13, weight: .semibold))
+                                .foregroundStyle(Theme.Color.ink)
+                            Text("“\(interrupted.title)” — open it to see what was saved. Nothing is sent again unless you choose Retry, and the microphone starts only when you resume.")
+                                .font(Typography.body(12))
+                                .foregroundStyle(Theme.Color.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.warm, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+                HStack {
+                    Text(isShowingAllInterviews ? "All interviews" : "Recent interviews")
+                        .font(Typography.body(13, weight: .semibold))
+                        .foregroundStyle(Theme.Color.ink)
+                    Spacer()
+                    if savedSessions.count > 3 || isShowingAllInterviews {
+                        Button(isShowingAllInterviews ? "Show recent" : "All interviews (\(savedSessions.count))") {
+                            isShowingAllInterviews.toggle()
+                        }
+                        .font(Typography.body(12, weight: .medium))
+                    }
+                }
+                // Rows read summary fields only (title, dates, counts); nothing here loads a
+                // transcript, an answer or a file.
+                ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
+                    HStack(alignment: .top, spacing: 8) {
+                        Button { launch = .reopen(session, context: modelContext) } label: { SessionRow(session: session) }
+                            .buttonStyle(.plain)
+                        Menu {
+                            Button("Rename", systemImage: "pencil") {
+                                newTitle = session.title
+                                renaming = session
+                            }
+                            Button("Delete", systemImage: "trash", role: .destructive) { deleting = session }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.system(size: 17))
+                                .foregroundStyle(Theme.Color.secondary)
+                                .frame(width: 32, height: 32)
+                        }
+                        .accessibilityLabel("More actions for \(session.title)")
+                    }
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
         }
     }
 
@@ -129,7 +256,7 @@ struct CopilotStartScreen: View {
             footnote: "Works with no setup.",
             actionTitle: "Start demo",
             isEnabled: true,
-            action: { startedMode = .demo }
+            action: { launch = .demo() }
         )
     }
 
@@ -144,7 +271,7 @@ struct CopilotStartScreen: View {
             footnote: readiness.summary,
             actionTitle: readiness.isListenOnly ? "Start live (listening only)" : "Start live",
             isEnabled: readiness.canListen && !readiness.isChecking,
-            action: { startedMode = .live }
+            action: { launch = .newLive(context: modelContext, preference: languagePreference) }
         )
     }
 
@@ -221,11 +348,11 @@ struct CopilotStartScreen: View {
 
     /// Builds the live session from the components that already exist: one audio input, the
     /// configured provider, the sample project, and the coordinator in **manual** generation mode.
-    private func makeLiveFeed() -> LiveInterviewFeed {
+    private func makeLiveFeed(project: SessionFileContext) -> LiveInterviewFeed {
         let coordinator = CopilotSessionCoordinator(
             // **Never the sample project.** A live session carries no fabricated instructions and no
-            // fictional passages; the sample stays in Demo and in the pipeline prototype below.
-            project: LiveSessionContext(language: language),
+            // fictional passages — only the files the user attached to *this* session, as excerpts.
+            project: project,
             provider: providerConfiguration.makeProvider(),
             audio: InterviewAudioInput(makeService: {
                 if let script = InterviewTestingFlags.scriptedLiveSpeech {
@@ -262,7 +389,7 @@ struct CopilotStartScreen: View {
             Text("Sample project — Demo only")
                 .font(Typography.body(13, weight: .semibold))
                 .foregroundStyle(Theme.Color.ink)
-            Text("\(project.projectName) · \(project.allPassages.count) fictional passages, used by Demo and the pipeline prototype. Live carries none of it: document import is not built yet, so a live session answers general questions from the model's knowledge and asks you for any personal detail it does not have.")
+            Text("\(project.projectName) · \(project.allPassages.count) fictional passages, used by Demo and the pipeline prototype. Live carries none of it: a live session uses only the files you attach to it, and answers general questions from the model's knowledge.")
                 .font(Typography.body(12))
                 .foregroundStyle(Theme.Color.secondary)
             NavigationLink("Provider diagnostics") { CopilotDebugScreen() }

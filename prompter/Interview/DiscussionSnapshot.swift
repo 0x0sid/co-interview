@@ -17,7 +17,7 @@ import Foundation
 ///
 /// **Already answered means "do not request it twice", not "forget it".** Background is sent in
 /// full. It is what makes "and Java 7" a third item in a comparison rather than a topic of its own.
-struct DiscussionSnapshot: Sendable, Equatable {
+struct DiscussionSnapshot: Sendable, Equatable, Codable {
     /// Lines already covered by an earlier request, oldest first. Context only.
     var background: [String] = []
     /// Lines not yet covered by any request, oldest first. What this request resolves.

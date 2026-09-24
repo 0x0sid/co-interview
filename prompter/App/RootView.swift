@@ -57,6 +57,11 @@ struct RootView: View {
         .task {
             // Configure once, honouring any cached entitlement so a premium reader opening offline
             // is not downgraded while the network call is in flight.
+            // A session still marked open was not closed: the app stopped with it on screen.
+            InterviewSessionStore.markInterruptedSessions(in: modelContext)
+            #if DEBUG
+            InterviewSessionStore.seedForScreenshotsIfRequested(in: modelContext)
+            #endif
             let settings = AppSettings.fetchOrCreate(in: modelContext)
             entitlements.onVerifiedEntitlementChange = { active, at in
                 settings.premiumCachedActive = active

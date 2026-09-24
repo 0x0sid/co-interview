@@ -153,6 +153,15 @@ final class CopilotSessionCoordinator {
         audio.start(language: project.language, contextualStrings: projectVocabulary())
     }
 
+    /// Switches the interview language mid-session. The transcript and every answer stay as they
+    /// are — nothing is translated — and recognition restarts in the new language only if it was
+    /// running; a paused session picks it up when it resumes.
+    func changeLanguage(_ language: InterviewLanguage) {
+        guard let files = project as? SessionFileContext, files.language != language else { return }
+        files.setLanguage(language)
+        audio.setLanguage(language, contextualStrings: projectVocabulary())
+    }
+
     /// Ends the session. Everything later is rejected — a late provider response can never reopen it (§8).
     func endSession() {
         state = .ended
@@ -594,7 +603,10 @@ final class CopilotSessionCoordinator {
            Self.isRelated(prefetched.text, question) {
             passages = prefetched.passages
         } else {
-            passages = project.passages(forQuestion: question, limit: 3)
+            // A tapped follow-up has no new speech; its page's question is what the files are
+            // searched for. With no files this returns nothing, exactly as before.
+            let query = [question, discussion?.actionParentQuestion].compactMap { $0 }.joined(separator: " ")
+            passages = project.passages(forQuestion: query, limit: 3)
         }
         let retrievalSeconds = clock().timeIntervalSince(retrievalStart)
 
@@ -607,7 +619,9 @@ final class CopilotSessionCoordinator {
             isDevelopmentFake: provider.isDevelopmentFake,
             createdAt: clock()
         )
-        cards[index].versions.append(version)
+        var includedVersion = version
+        includedVersion.includedPassages = passages
+        cards[index].versions.append(includedVersion)
         if cards[index].selectedVersionID == nil {
             cards[index].selectedVersionID = version.id
         }
