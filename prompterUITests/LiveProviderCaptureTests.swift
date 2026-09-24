@@ -112,6 +112,28 @@ final class LiveProviderCaptureTests: XCTestCase {
         save(app, "live-5-short-transcript-expanded")
     }
 
+    /// A streamed Java example lands in the code card — monospaced, indented, with its copy button —
+    /// and the explanation around it stays prose.
+    func testAStreamedJavaExampleRendersAsACodeCard() throws {
+        let app = launchLive(speech: ["Show me a Java example of a lambda that sorts a list of strings."])
+        waitForTranscript(app, containing: "lambda")
+        app.buttons["Generate an answer"].tap()
+        XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 45), "no answer arrived")
+        save(app, "live-8-java-code-card")
+        let copy = app.buttons["Copy code"].firstMatch
+        XCTAssertTrue(copy.waitForExistence(timeout: 5), "the example did not become a code card")
+        // Code text may exist — inside the card. What must not exist is code *in the answer's prose*:
+        // prose paragraphs are the answer's other text elements, and none may contain a Java statement.
+        let codeLike = NSPredicate(format: "label CONTAINS 'import java' OR label CONTAINS 'public static void'")
+        let codeTexts = app.staticTexts.matching(codeLike).allElementsBoundByIndex
+        let report = codeTexts.map { "\($0.label.prefix(40)) @ \($0.frame)" }.joined(separator: "\n") + "\ncopy button @ \(copy.frame)"
+        let attachment = XCTAttachment(string: report)
+        attachment.name = "code-text-positions"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertLessThanOrEqual(codeTexts.count, 1, "code appears in more than one text element — some of it is prose")
+    }
+
     /// With no note, the answer asks for the detail and the page offers Add context, not elaboration.
     func testAMissingDetailOffersAddContext() throws {
         let app = launchLive(speech: ["Could you tell me your secret, in fact?"])

@@ -1,0 +1,15 @@
+{
+ "captured": "2026-09-24T00:22:16.355Z",
+ "backend": "fly-481e385",
+ "model": "google/gemini-2.5-flash-lite",
+ "request": [
+  "Show me a Java example of a lambda that sorts a list of strings."
+ ],
+ "deltas": [
+  "Here is a Java example of a lambda expression that sorts a list of ",
+  "strings.\n\n```java\nimport java.util.Arrays;\nimport java.util.List;\n\npublic class SortStrings {\n    public static void main(String[] args) {\n        List<String> names = Arrays.asList(\"",
+  "Charlie\", \"Alice\", \"Bob\", \"David\");\n\n        // Using a lambda expression to sort the list alphabetically\n        names.sort((s1, s2) -> s1.compareTo(s2));\n\n        System.out.pr",
+  "intln(\"Sorted names: \" + names);\n    }\n}\n```\n\nThis code defines a list of strings and then uses the `sort` method with a lambda expression. The lambda `(s1, s2) -> s1.compa",
+  "reTo(s2)` compares two strings `s1` and `s2` alphabetically.\n"
+ ]
+}

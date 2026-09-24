@@ -122,6 +122,17 @@ worse and was reverted. Not fixed by switching models silently: that is a separa
 Real-provider UI capture (opt-in, billed): `TEST_RUNNER_COINTERVIEW_LIVE_UI=1 xcodebuild test …
 -only-testing:prompterUITests/LiveProviderCaptureTests`. It drives Live with `-LiveScriptedSpeech`.
 
+## Code cards and the wrong clone (2026-09-24, afternoon)
+
+- **Code rendered as prose** was the app's streaming assembler: it re-joined committed sentences with a
+  single space, so `logic.\n\n```java` lost its line break, the parser missed the opening fence, and
+  code showed as prose (the text after the closing fence as code). Committed text is now the stream
+  itself, cut at sentence boundaries (`CodeFenceStreamingTests`, from a real captured stream). App-only.
+- **Build from the right checkout.** At 08:07 Xcode on the `sid` account built and installed from
+  `/Users/sid/Desktop/co-interview-public` (still at `ae0eef0`, named Co-Interview) over Neverblank. Open
+  `/Users/sidousan/Desktop/co-interview-public/co-interview.xcodeproj` — the other clone has none of
+  this work. That old build had no decision tracker, which is why its session made no /decide calls.
+
 ## Continuation contract (2026-09-24, midday)
 
 Backend-only: an addition is answered first, with its parent as context (pipeline §18, last part).

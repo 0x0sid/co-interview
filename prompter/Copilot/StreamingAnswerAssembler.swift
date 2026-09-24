@@ -15,6 +15,9 @@ struct StreamingAnswerAssembler: Equatable, Sendable {
     private(set) var committedText: String = ""
     /// The tail still being written. Shown as a muted preview; never given to the reader.
     private(set) var pendingText: String = ""
+    /// The whitespace that followed the last committed sentence, exactly as the model wrote it. It is
+    /// committed in front of the next sentence, so line breaks and blank lines survive.
+    private var gap: String = ""
 
     /// Appends a model delta.
     /// - Returns: `true` when `committedText` grew, i.e. there is new readable material.
@@ -28,23 +31,32 @@ struct StreamingAnswerAssembler: Equatable, Sendable {
     /// The stream ended: everything left becomes committed, whether or not it ends a sentence.
     @discardableResult
     mutating func finish() -> Bool {
-        let tail = pendingText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tail = String(pendingText.reversed().drop { $0.isWhitespace }.reversed())
         pendingText = ""
-        guard !tail.isEmpty else { return false }
+        guard !tail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         appendToCommitted(tail)
         return true
     }
 
+    /// **Committed text is the stream itself, cut at a sentence boundary — never re-joined.** It used
+    /// to trim each sentence and join them with a single space, which turned `logic.\n\n```java` into
+    /// `logic. ```java`: the opening fence was no longer at the start of a line, the parser missed it,
+    /// the code rendered as prose and the prose after the closing fence as code. Blank lines between
+    /// paragraphs were lost the same way. Keeping the original whitespace keeps both, and the text is
+    /// still append-only, so nothing the reader is following ever changes.
     private mutating func commitCompleteSentences() -> Bool {
         var didCommit = false
         while let boundary = Self.firstSentenceBoundary(in: pendingText) {
             let sentence = String(pendingText[pendingText.startIndex..<boundary])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            // Drop the whitespace that closed the sentence: committed sentences are re-joined with a
-            // single space, and a preview that starts with a stray space reads as a rendering bug.
-            pendingText = String(pendingText[boundary...].drop { $0.isWhitespace })
-            guard !sentence.isEmpty else { continue }
+            let rest = pendingText[boundary...]
+            let whitespace = rest.prefix { $0.isWhitespace }
+            pendingText = String(rest.dropFirst(whitespace.count))
+            guard !sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                gap += sentence + whitespace
+                continue
+            }
             appendToCommitted(sentence)
+            gap = String(whitespace)
             didCommit = true
         }
         return didCommit
@@ -52,10 +64,12 @@ struct StreamingAnswerAssembler: Equatable, Sendable {
 
     private mutating func appendToCommitted(_ sentence: String) {
         if committedText.isEmpty {
-            committedText = sentence
+            // Only the very start is trimmed: a preview that opens with blank space reads as a bug.
+            committedText = String(sentence.drop { $0.isWhitespace })
         } else {
-            committedText += " " + sentence
+            committedText += gap + sentence
         }
+        gap = ""
     }
 
     /// Index just past the end of the first complete sentence in `text`, or `nil`.
