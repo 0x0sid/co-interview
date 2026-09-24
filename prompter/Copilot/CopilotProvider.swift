@@ -105,6 +105,8 @@ struct AnswerRequest: Sendable, Encodable {
     /// An accepted decision about the new speech, attached only when the backend said this session
     /// may apply it. Omitted otherwise — the request is then exactly what it is with decisions off.
     var interpretation: RequestInterpretation?
+    /// Metadata only: whether and why a decision shaped this request. Never content.
+    var decisionStatus: String?
     let passages: [Passage]
     let language: String
     let targetWordRange: [Int]
@@ -224,6 +226,13 @@ struct CopilotBackendConfiguration: Sendable, Equatable, Decodable {
     /// Whether the configured answer model accepts images, from the backend's verified registry.
     /// Asked, never assumed: the speed profile's model is text-only while balanced and smart are not.
     var answer_accepts_images: Bool = false
+    /// The backend's decision settings, as it reports them. Nil from a backend that predates them.
+    struct Decisions: Sendable, Equatable, Decodable {
+        var mode: String = ""
+        var session_opt_in: Bool? = nil
+        var prompt_version: String? = nil
+    }
+    var decisions: Decisions? = nil
 
     var summary: String {
         let route = answer_provider_order.isEmpty ? "" : " via \(answer_provider_order.joined(separator: " → "))"

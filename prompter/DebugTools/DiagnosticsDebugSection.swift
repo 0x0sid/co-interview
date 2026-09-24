@@ -13,8 +13,45 @@ struct DiagnosticsDebugSection: View {
     // would imply this view owns the singleton's lifetime, which it does not.
     @Bindable private var diagnostics = GenerateDiagnostics.shared
     @State private var share: SharePayload?
+    @State private var backend: CopilotBackendConfiguration?
+    @State private var backendChecked = false
+
+    private let info = Bundle.main.infoDictionary ?? [:]
+    private let configuration = ProviderConfiguration.resolve()
+
+    /// What is actually running, so a device test can be checked before it starts: the commit and
+    /// checkout this build came from, and the backend it talks to with that backend's decision mode.
+    private var buildSection: some View {
+        Section("Build & backend") {
+            LabeledContent("App commit", value: info["GitCommitHash"] as? String ?? "unknown")
+            LabeledContent("Built", value: info["BuildDate"] as? String ?? "unknown")
+            LabeledContent("From checkout", value: info["BuildSource"] as? String ?? "unknown")
+            LabeledContent("Backend", value: endpoint)
+            LabeledContent("Jev decisions", value: jevSummary)
+        }
+    }
+
+    private var endpoint: String {
+        switch configuration.availability {
+        case .backend(let url): "\(url.absoluteString) (\(configuration.source.rawValue))"
+        case .developmentFake: "development fake"
+        case .unavailable(let reason): "none — \(reason)"
+        }
+    }
+
+    private var jevSummary: String {
+        guard backendChecked else { return "checking…" }
+        guard let decisions = backend?.decisions else { return backend == nil ? "backend not reachable" : "not reported" }
+        let optIn = decisions.session_opt_in == true ? "per-session opt-in allowed" : "no per-session opt-in"
+        return "\(decisions.mode) · \(optIn)"
+    }
 
     var body: some View {
+        buildSection
+            .task {
+                backend = await configuration.makeProvider().configuration()
+                backendChecked = true
+            }
         Section("Generate diagnostics") {
             Toggle("Capture test content", isOn: $diagnostics.isContentCaptureEnabled)
             Text("Off by default. When on, reports also include **what was said in the interview and the answers written for it** — the transcript, the exact snapshot, the request, the provider messages and the answer. Credentials and image data are never included.\n\nIt applies to taps made **from now on** in this session, and returns to off when the next session starts.")

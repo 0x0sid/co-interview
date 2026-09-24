@@ -56,6 +56,9 @@ struct DiscussionSnapshot: Sendable, Equatable {
     /// An accepted, applicable decision about `newInput`, taken from the tracker **at the tap** and
     /// fixed with the rest of the snapshot. Nil means the request is built as with decisions off.
     var interpretation: RequestInterpretation?
+    /// Why a decision did or did not shape this request ("applied: …", "shadow: …", "stale: …"). Metadata
+    /// only; it travels so the backend can log it beside the request.
+    var decisionStatus: String?
 
     /// The whole conversation, oldest first — speech only, in the order it was said.
     var allLines: [String] { background + newInput + (provisional.map { [$0] } ?? []) }

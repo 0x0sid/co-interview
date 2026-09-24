@@ -78,7 +78,7 @@ struct GenerateTrace: Identifiable, Sendable {
     // Identity of the software under test.
     var appBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
     var appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
-    var commit = Bundle.main.infoDictionary?["CoInterviewCommit"] as? String ?? "unknown"
+    var commit = Bundle.main.infoDictionary?["GitCommitHash"] as? String ?? "unknown"
     var backendVersion: String?
 
     // The tap.

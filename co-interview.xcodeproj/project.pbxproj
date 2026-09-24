@@ -282,7 +282,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "GIT_HASH=$(git -C \"${SRCROOT}\" rev-parse --short HEAD 2>/dev/null || echo unknown)\nBUILD_DATE=$(date \"+%Y-%m-%d %H:%M\")\nPLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Add :GitCommitHash string ${GIT_HASH}\" \"${PLIST}\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Set :GitCommitHash ${GIT_HASH}\" \"${PLIST}\"\n/usr/libexec/PlistBuddy -c \"Add :BuildDate string ${BUILD_DATE}\" \"${PLIST}\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Set :BuildDate ${BUILD_DATE}\" \"${PLIST}\"\n";
+			shellScript = "GIT=\"git -c safe.directory=* -C ${SRCROOT}\"\nGIT_HASH=$($GIT rev-parse --short HEAD 2>/dev/null || echo unknown)\n$GIT diff --quiet HEAD -- 2>/dev/null || GIT_HASH=\"${GIT_HASH}-dirty\"\nBUILD_DATE=$(date \"+%Y-%m-%d %H:%M\")\nPLIST=\"${BUILT_PRODUCTS_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Add :BuildSource string ${SRCROOT}\" \"${PLIST}\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Set :BuildSource ${SRCROOT}\" \"${PLIST}\"\n/usr/libexec/PlistBuddy -c \"Add :GitCommitHash string ${GIT_HASH}\" \"${PLIST}\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Set :GitCommitHash ${GIT_HASH}\" \"${PLIST}\"\n/usr/libexec/PlistBuddy -c \"Add :BuildDate string ${BUILD_DATE}\" \"${PLIST}\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Set :BuildDate ${BUILD_DATE}\" \"${PLIST}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

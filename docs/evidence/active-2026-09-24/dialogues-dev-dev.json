@@ -1,0 +1,4635 @@
+{
+ "summary": {
+  "split": "dev",
+  "label": "dev",
+  "thresholds": {
+   "relation": 0.5,
+   "parent": 0.5,
+   "withdraws": 0.7
+  },
+  "generatedAt": "2026-09-24T11:25:59.847Z",
+  "conversations": 12,
+  "taps": 23,
+  "chips": 0,
+  "decisionRepeat": 3,
+  "answerRepeat": 2,
+  "lostSpeechTaps": [],
+  "focused": {
+   "calls": 69,
+   "failed": 0,
+   "timeouts": 0,
+   "relationAccuracy": "100.0% (69/69)",
+   "parentAccuracy": "100.0% (69/69)",
+   "parentAccuracyWhereAParentExists": "100.0% (30/30)",
+   "accepted": "98.6% (68/69)",
+   "acceptedCorrect": "100.0% (68/68)",
+   "latencyP50": 368,
+   "latencyP95": 577,
+   "readyAtTapIfTapComes1500msAfterSpeech": "98.6% (68/69)",
+   "readyAtTapIfTapComes3000msAfterSpeech": "100.0% (69/69)",
+   "costUSD": 0.002704
+  },
+  "legacy": {
+   "calls": 69,
+   "failed": 0,
+   "relationAccuracy": "95.7% (66/69)",
+   "parentAccuracy": "100.0% (69/69)",
+   "parentAccuracyWhereAParentExists": "100.0% (30/30)",
+   "latencyP50": 380,
+   "latencyP95": 510
+  },
+  "answers": {
+   "A_correctCurrentRequest": "95.7% (44/46)",
+   "C_correctCurrentRequest": "95.7% (44/46)",
+   "C_answersActuallyShapedByADecision": 45,
+   "topicSwitchTaps": {
+    "A": "83.3% (10/12)",
+    "C": "83.3% (10/12)"
+   },
+   "attachTaps": {
+    "A": "100.0% (8/8)",
+    "C": "100.0% (8/8)"
+   },
+   "chips": "—",
+   "firstSentenceRelevantTaps": "—"
+  },
+  "tuning": null
+ },
+ "rows": [
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/block/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How do blocks work in Ruby?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 559,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 353,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 279,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 557,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 308,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 330,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1150,
+     "title": "How Ruby blocks work",
+     "text": "Blocks are a fundamental part of Ruby's syntax, providing a way to group statements and pass them to methods. They are defined using `do...end` or curly braces `{}`. Blocks can accept arguments and can be yielded to from within a method. They are often used for iteration, callbacks, and creating DSLs.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 933,
+     "title": "How Ruby blocks work",
+     "text": "In Ruby, blocks are anonymous code fragments that can be passed to methods. They are defined using `do...end` or curly braces `{}`. Blocks are often used for iteration, callbacks, and creating DSLs. When a method is called with a block, the block's code is executed within the method's context.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1054,
+     "title": "How Ruby blocks work",
+     "text": "Blocks in Ruby are anonymous code fragments that can be passed to methods. They are defined using either `do...end` or curly braces `{}`. Methods that accept blocks typically use the `yield` keyword to execute the block's code. Blocks are fundamental to Ruby's functional programming features, enabling powerful constructs like iterators and callbacks.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 942,
+     "title": "How Ruby blocks work",
+     "text": "Blocks are a fundamental feature in Ruby, allowing you to pass chunks of code to methods. They are defined using `do...end` or curly braces `{}`. When a method is called with a block, the code within the block is executed. Blocks are often used for iteration, callbacks, and creating DSLs. They can also accept arguments and return values.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-01",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/optional/i"
+    ],
+    "mustNot": [
+     "/Ruby block/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "We're done with Ruby.",
+    "What are optionals in Swift?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 577,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.33,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1",
+      "3C2B1E8D-4BD7-4E05-8586-BE701ED149CF": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.33,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 370,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.45,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1",
+      "3C2B1E8D-4BD7-4E05-8586-BE701ED149CF": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.45,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 382,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 0.35,
+     "labels": {
+      "1F07EFEA-6E18-4EB0-83B1-0F779F81FBF4": "req1",
+      "3C2B1E8D-4BD7-4E05-8586-BE701ED149CF": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 0.35,
+      "problems": [],
+      "withdraws": 0.94,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 336,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 342,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 357,
+     "usage": {
+      "input_tokens": 1222,
+      "output_tokens": 185,
+      "cost": 0.000051324
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 981,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are used to handle the absence of a value. They are represented by a type followed by a question mark, like `String?`. This indicates that the variable can either hold a value of that type, or it can be `nil`, meaning it has no value. You typically unwrap an optional to access its value safely, often using `if let` or `guard let` statements to check if a value exists before using it.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 953,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are used to handle the absence of a value. They are represented by a type followed by a question mark, like `String?`. This indicates that the variable can either hold a value of that type, or it can be `nil`, meaning it has no value. You typically unwrap an optional to access its value, often using `if let` or `guard let` statements to safely check if a value exists before using it.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1035,
+     "title": "Swift optionals explained",
+     "text": "Optionals in Swift are a way to handle the absence of a value. They are represented by a type name followed by a question mark, like `String?` or `Int?`. This indicates that the variable can either hold a value of that type, or it can hold `nil`, which signifies no value. You must safely unwrap an optional before you can use its value, typically using `if let` or `guard let` statements to check if it contains a value.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1008,
+     "title": "Swift optionals explained",
+     "text": "Swift optionals are a way to handle the absence of a value. They are declared using a question mark after the type, like `String?` or `Int?`. This means the variable can either hold a value of that type, or it can hold `nil`, which represents no value. To safely access the value inside an optional, you typically use optional binding with `if let` or `guard let` statements, or optional chaining.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-02",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/\\b11\\b/",
+     "/\\b17\\b/",
+     "/\\b21\\b/"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What's new in Java 11 compared to Java 8?",
+    "And Java 17.",
+    "Plus Java 21."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 316,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.5,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "97379C22-48DD-4781-886E-26E5F87EDD41": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.5,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 349,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.45,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "97379C22-48DD-4781-886E-26E5F87EDD41": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.45,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "accepted": false,
+      "reason": "relation confidence 0.45 below 0.5",
+      "interpretation": null
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 368,
+     "cost": 0.000033642,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.61,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "97379C22-48DD-4781-886E-26E5F87EDD41": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.61,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 423,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 273,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 425,
+     "usage": {
+      "input_tokens": 1040,
+      "output_tokens": 149,
+      "cost": 0.00004368
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1183,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference, new String methods, and HTTP/2 client. Java 17 brought pattern matching for switch, sealed classes, and a new `never()` method. Java 21, the latest LTS, includes virtual threads, structured concurrency, and enhanced pattern matching. Each version builds upon the last with significant performance and language enhancements.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 1049,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference and new HTTP client APIs. Java 17 brought LTS status, sealed classes, and pattern matching for `instanceof`. Java 21, the latest LTS, includes virtual threads, structured concurrency, and pattern matching for switch. Each version builds upon the last, offering performance improvements and new language constructs.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1050,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "The most significant updates in Java 11 over Java 8 include the introduction of the `var` keyword for local variable type inference and the HTTP Client API. Java 17 brought LTS features like Sealed Classes and Pattern Matching for `instanceof`. Java 21, the latest LTS release, further enhances pattern matching, introduces Virtual Threads for improved concurrency, and adds String Templates.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1049,
+     "title": "Compare Java 8, 11, 17, and 21",
+     "text": "Java 11 introduced features like local-variable type inference and new HTTP client APIs. Java 17 brought LTS status, sealed classes, and pattern matching for `instanceof`. Java 21, the latest LTS, includes virtual threads, structured concurrency, and pattern matching for switch. Each version builds upon the last, offering performance improvements and new language constructs.",
+     "met": true,
+     "failures": [],
+     "interpretation": null,
+     "reusedA": true
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Compare AWS Lambda, Azure Functions and Google Cloud Functions."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 347,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 345,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 347,
+     "cost": 0.00003276,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 375,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 298,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 344,
+     "usage": {
+      "input_tokens": 1025,
+      "output_tokens": 149,
+      "cost": 0.00004305
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 850,
+     "title": "Compare serverless functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless computing platforms. They allow you to run code without provisioning or managing servers, abstracting away infrastructure concerns. Key differences often lie in their pricing models, integration with their respective cloud ecosystems, supported programming languages, and specific features like cold start times or execution limits.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 978,
+     "title": "Compare serverless functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless computing platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their ecosystems, pricing models, and integration capabilities. AWS Lambda is known for its maturity and extensive AWS integration. Azure Functions offers strong integration with Microsoft's ecosystem and flexible hosting options. Google Cloud Functions excels in its integration with Google Cloud services and its use of open-source technologies.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 853,
+     "title": "Compare serverless cloud functions",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all managed services that allow you to run code without provisioning or managing servers. They differ in their pricing models, integration with other cloud services, and supported languages. AWS Lambda is known for its extensive integrations and mature ecosystem. Azure Functions offers strong integration with Microsoft's ecosystem and a flexible hosting model. Google Cloud Functions excels in its simplicity and integration with Google Cloud services.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 940,
+     "title": "Compare serverless compute platforms",
+     "text": "AWS Lambda, Azure Functions, and Google Cloud Functions are all leading serverless compute platforms. They allow you to run code without provisioning or managing servers. Key differences lie in their pricing models, integration with their respective cloud ecosystems, supported languages, and execution environments. Lambda is known for its maturity and extensive integrations within AWS. Azure Functions offers strong integration with Microsoft services and a flexible programming model. Google Cloud Functions excels in its integration with Google Cloud services and its use of Knative for containerized functions.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-03",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Lambda/i",
+     "/Azure/i"
+    ],
+    "mustNot": [
+     "/Google Cloud Functions/i"
+    ],
+    "parent": "req1",
+    "relation": "correction"
+   },
+   "newInput": [
+    "Just Lambda and Azure Functions, actually."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 542,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.99,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "19135CDF-C808-4D67-A353-F78EF00BBDA6": "req2",
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.99,
+      "parent": "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.86,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 305,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.99,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "19135CDF-C808-4D67-A353-F78EF00BBDA6": "req2",
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.99,
+      "parent": "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.87,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 364,
+     "cost": 0.000046158,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "correction",
+     "relationConfidence": 0.98,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "19135CDF-C808-4D67-A353-F78EF00BBDA6": "req2",
+      "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6": "req1"
+     },
+     "combined": {
+      "relation": "correction",
+      "relationConfidence": 0.98,
+      "parent": "B35F9B7C-6AE3-4584-A043-8F3B5D4ACBB6",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.86,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "correction",
+       "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 389,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 431,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 456,
+     "usage": {
+      "input_tokens": 1228,
+      "output_tokens": 187,
+      "cost": 0.000051576
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 982,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its pay-per-execution model. Azure Functions offers similar capabilities, with strong integration into the Azure ecosystem and flexible hosting options, including consumption, premium, and dedicated plans. Both support various programming languages and event triggers.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 983,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is AWS's offering, known for its tight integration with other AWS services and a wide range of triggers. Azure Functions, Microsoft's equivalent, offers similar event-driven capabilities and integrates well with the Azure ecosystem. Both support multiple programming languages and have pay-as-you-go pricing models. The choice often depends on your existing cloud provider and specific integration needs.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1073,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its deep integration with other AWS services and its event-driven architecture. Azure Functions offers strong integration with Microsoft's ecosystem and a variety of language support, including C#, JavaScript, and Python. Both services offer pay-as-you-go pricing, scaling automatically based on demand.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 846,
+     "title": "Compare AWS Lambda and Azure Functions",
+     "text": "AWS Lambda and Azure Functions are both serverless compute services that allow you to run code without provisioning or managing servers. Lambda is known for its tight integration with other AWS services and its event-driven architecture. Azure Functions offers similar capabilities, with strong integration into the Azure ecosystem and flexible hosting options. Both support various programming languages and offer pay-as-you-go pricing.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "correction",
+      "parentWords": "Compare AWS Lambda, Azure Functions and Google Cloud Functions.",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/cach/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How does caching work in Redis?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 414,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 478,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 486,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 447,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 362,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 493,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1033,
+     "title": "How caching works in Redis",
+     "text": "Caching in Redis works by storing frequently accessed data in memory, which allows for much faster retrieval than disk-based storage. When a request comes in, Redis first checks its in-memory cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis fetches the data from the primary data store, returns it to the client, and also stores a copy in its cache for future requests. This significantly speeds up read operations for popular data.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 960,
+     "title": "How caching works in Redis",
+     "text": "Caching in Redis works by storing frequently accessed data in memory for fast retrieval. When a request comes in, Redis first checks its in-memory cache. If the data is found (a cache hit), it's returned immediately. If not (a cache miss), Redis retrieves the data from the primary data store, serves it to the client, and then stores a copy in its cache for future requests. This significantly reduces latency and database load.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1065,
+     "title": "How caching works in Redis",
+     "text": "How does caching work in Redis? Redis is an in-memory data structure store, often used as a cache. It stores data in key-value pairs. When an application needs data, it first checks Redis. If the data is present (a cache hit), it's returned quickly. If not (a cache miss), the application retrieves it from the primary data source, then stores it in Redis for future requests. Redis supports various eviction policies to manage cache size when it fills up.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 839,
+     "title": "How caching works in Redis",
+     "text": "How does caching work in Redis? Redis can be used as a cache by storing frequently accessed data in memory. When a request comes in, the application first checks Redis. If the data is found (a cache hit), it's returned quickly. If not (a cache miss), the application fetches the data from the primary data source, returns it to the user, and also stores it in Redis for future requests. This reduces load on the primary data source and speeds up response times.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-04",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/evict/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "And eviction policies."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 383,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.95,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1",
+      "E4E0E529-EC5B-4E77-A54C-936F89AA5E3A": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.95,
+      "parent": "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A",
+      "parentConfidence": 0.95,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 489,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.94,
+     "parent": "req1",
+     "parentConfidence": 0.96,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1",
+      "E4E0E529-EC5B-4E77-A54C-936F89AA5E3A": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.94,
+      "parent": "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A",
+      "parentConfidence": 0.96,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 410,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 0.95,
+     "labels": {
+      "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A": "req1",
+      "E4E0E529-EC5B-4E77-A54C-936F89AA5E3A": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.96,
+      "parent": "14B99AD5-2D74-42D9-952D-AEE4C6E2C58A",
+      "parentConfidence": 0.95,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "How does caching work in Redis?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 332,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 510,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 416,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 862,
+     "title": "Redis eviction policies",
+     "text": "Caching in Redis works by storing frequently accessed data in memory for quick retrieval. When the memory limit is reached, Redis needs to remove some data to make space for new data. This is where eviction policies come in. These policies define which keys are removed first. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 925,
+     "title": "Redis eviction policies",
+     "text": "Caching in Redis works by storing frequently accessed data in memory for quick retrieval. When Redis needs to make space for new data and its memory is full, it uses eviction policies to decide which keys to remove. Common policies include Least Recently Used (LRU), which removes the least recently accessed keys, and Least Frequently Used (LFU), which removes the least frequently accessed keys. Other options include removing keys based on their time to live (TTL) or randomly.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 879,
+     "title": "Redis eviction policies",
+     "text": "In Redis, eviction policies determine which keys are removed from the cache when it reaches its memory limit. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), and random eviction. Redis also supports volatile-only policies, which only evict keys with an expire set. The choice of policy depends on the access patterns of your data.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 911,
+     "title": "Redis eviction policies",
+     "text": "Redis eviction policies determine which keys are removed from the cache when it reaches its capacity and new data needs to be added. Common policies include LRU (Least Recently Used), LFU (Least Frequently Used), TTL (Time To Live), and random eviction. Each policy prioritizes different criteria for removing data to maintain cache performance.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "How does caching work in Redis?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/hash/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "What is a hash table?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 511,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 321,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 410,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 406,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 396,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 393,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 727,
+     "title": "What is a hash table?",
+     "text": "A hash table, also known as a hash map, is a data structure that implements an associative array abstract data type. It uses a hash function to compute an index into an array of buckets or slots, from which the desired value can be found. This allows for very fast average-case insertion, deletion, and lookup operations, often close to O(1) time complexity.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 746,
+     "title": "What is a hash table?",
+     "text": "A hash table, also known as a hash map, is a data structure that implements an associative array abstract data type. It uses a hash function to compute an index into an array of buckets or slots, from which the desired value can be found. This allows for very fast average-case insertion, deletion, and lookup operations, typically O(1).",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 778,
+     "title": "What is a hash table?",
+     "text": "A hash table, also known as a hash map, is a data structure that implements an associative array abstract data type. It uses a hash function to compute an index into an array of buckets or slots, from which the desired value can be found. This allows for very fast average-case time complexity for lookups, insertions, and deletions.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 762,
+     "title": "What is a hash table?",
+     "text": "A hash table, also known as a hash map, is a data structure that implements an associative array abstract data type. It uses a hash function to compute an index into an array of buckets or slots, from which the desired value can be found. This allows for very fast average-case time complexity for lookup, insertion, and deletion operations, often O(1).",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/revers/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "How would you reverse a linked list?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 379,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 390,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 429,
+     "cost": 0.000045528,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 297,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 316,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 412,
+     "usage": {
+      "input_tokens": 1213,
+      "output_tokens": 185,
+      "cost": 0.000050946
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 789,
+     "title": "Reverse a linked list",
+     "text": "A linked list can be reversed iteratively or recursively. Iteratively, you traverse the list, changing each node's next pointer to point to its previous node. This requires keeping track of the previous, current, and next nodes. Recursively, you reverse the rest of the list and then append the current node to the end.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 947,
+     "title": "Reverse a linked list",
+     "text": "A linked list can be reversed iteratively or recursively. Iteratively, you traverse the list, changing each node's next pointer to point to the previous node. You'll need three pointers: one for the current node, one for the previous node, and one to temporarily store the next node before overwriting the current node's pointer. Recursively, you reverse the rest of the list and then append the current node to the end.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1097,
+     "title": "Reverse a linked list",
+     "text": "To reverse a linked list, you can iterate through the list, changing the `next` pointer of each node to point to its previous node. You'll need three pointers: one for the previous node, one for the current node, and one for the next node. Start with `previous` as null, `current` as the head, and `next` as null. In a loop, set `next` to `current.next`, then set `current.next` to `previous`. Update `previous` to `current` and `current` to `next`. Repeat until `current` is null. The new head of the reversed list will be `previous`.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 963,
+     "title": "Reverse a linked list",
+     "text": "To reverse a linked list, you can iterate through the list, changing the `next` pointer of each node to point to its previous node. You'll need three pointers: one for the current node, one for the previous node, and one for the next node. Start with the current node as the head, the previous node as null, and then iterate. In each step, store the next node, update the current node's next pointer to the previous node, and then move the previous and current pointers forward.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-05",
+   "language": "en",
+   "index": 2,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/collision/i"
+    ],
+    "mustNot": [
+     "/linked list/i"
+    ],
+    "parent": "req1",
+    "relation": "new_request",
+    "withdrawn": false
+   },
+   "newInput": [
+    "Back to hash tables, how do you handle collisions?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 400,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "98C7E8B9-3FFC-4ED8-97FF-E1AEE4A8843C": "req3",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "3AA95CF1-D757-4DD9-B07B-5B5A13043277",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 424,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "98C7E8B9-3FFC-4ED8-97FF-E1AEE4A8843C": "req3",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.96,
+      "parent": "3AA95CF1-D757-4DD9-B07B-5B5A13043277",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 820,
+     "cost": 0.000049728,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 1,
+     "labels": {
+      "3AA95CF1-D757-4DD9-B07B-5B5A13043277": "req1",
+      "98C7E8B9-3FFC-4ED8-97FF-E1AEE4A8843C": "req3",
+      "55392A51-315B-4BD9-9635-7464D6D00087": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "3AA95CF1-D757-4DD9-B07B-5B5A13043277",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": 0.04,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "What is a hash table?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 396,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 510,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 408,
+     "usage": {
+      "input_tokens": 1301,
+      "output_tokens": 194,
+      "cost": 0.000054642
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 847,
+     "title": "Hash table collision handling",
+     "text": "A hash table collision occurs when two different keys hash to the same index. Common methods to handle this include separate chaining and open addressing. Separate chaining stores colliding elements in a linked list at that index. Open addressing probes for the next available slot in the table itself, using strategies like linear probing, quadratic probing, or double hashing.",
+     "met": false,
+     "failures": [
+      "has /linked list/i"
+     ]
+    },
+    {
+     "status": 200,
+     "ms": 825,
+     "title": "Hash table collision handling",
+     "text": "Hash tables handle collisions using several methods. One common approach is separate chaining, where each bucket in the hash table points to a linked list of all elements that hash to that bucket. Another is open addressing, where if a collision occurs, the algorithm probes for the next available slot in the table itself, using strategies like linear probing, quadratic probing, or double hashing.",
+     "met": false,
+     "failures": [
+      "has /linked list/i"
+     ]
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1006,
+     "title": "Hash table collision handling",
+     "text": "In hash tables, collisions occur when two different keys hash to the same index. Common methods to handle this include separate chaining, where each index points to a linked list of elements, and open addressing, where elements are stored directly in the table itself. With open addressing, techniques like linear probing, quadratic probing, or double hashing are used to find an alternative slot for the colliding element.",
+     "met": false,
+     "failures": [
+      "has /linked list/i"
+     ],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "What is a hash table?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 796,
+     "title": "Hash table collision handling",
+     "text": "A hash table collision occurs when two different keys hash to the same index in the underlying array. Common strategies to handle this include open addressing, where you probe for the next available slot, and separate chaining, where each slot holds a linked list of elements that hash to that index.",
+     "met": false,
+     "failures": [
+      "has /linked list/i"
+     ],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "What is a hash table?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-06",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/state/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Explain Terraform state files."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 286,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 408,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 514,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 274,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 365,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 351,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1134,
+     "title": "Explain Terraform state files",
+     "text": "Terraform state files are crucial for managing infrastructure as code. They act as a database, mapping the resources defined in your Terraform configuration to the real-world infrastructure they represent. This file keeps track of the current state of your managed infrastructure, allowing Terraform to determine what actions are needed to reach the desired state. It's essential to manage these files securely and often use remote backends for collaboration and safety.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 1014,
+     "title": "Explain Terraform state files",
+     "text": "Terraform state files are JSON files that store information about the infrastructure Terraform manages. They map the resources defined in your configuration to the real-world infrastructure objects. This state allows Terraform to know what it has already created, to update existing resources, and to plan future changes. It's crucial for Terraform's operation, but should be managed carefully, especially in team environments.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 934,
+     "title": "Explain Terraform state files",
+     "text": "Terraform state files are crucial for managing infrastructure as code. They act as a database, mapping the real-world resources your Terraform configuration manages to the configuration itself. This allows Terraform to track the current state of your infrastructure, enabling it to plan and apply changes accurately. Without a state file, Terraform wouldn't know what resources it's responsible for, leading to potential conflicts or unintended resource creation/deletion.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 846,
+     "title": "Explain Terraform state files",
+     "text": "Terraform state files are essential for managing infrastructure as code. They act as a map, recording the real-world resources that Terraform has created and is currently managing. This state allows Terraform to track changes, update resources, and know what to destroy when you run `terraform destroy`. Without a state file, Terraform would not know what infrastructure it controls.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-06",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Ansible/i"
+    ],
+    "mustNot": [
+     "/state file/i"
+    ],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "Forget Terraform. How does Ansible work?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 356,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.4,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1",
+      "765B6D46-299C-48FF-98CB-851191561F5E": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "0DD896A5-F471-4DE2-B419-905CD28BE51F",
+      "parentConfidence": 0.4,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 339,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.42,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1",
+      "765B6D46-299C-48FF-98CB-851191561F5E": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "0DD896A5-F471-4DE2-B419-905CD28BE51F",
+      "parentConfidence": 0.42,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 470,
+     "cost": 0.000045738,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.48,
+     "labels": {
+      "0DD896A5-F471-4DE2-B419-905CD28BE51F": "req1",
+      "765B6D46-299C-48FF-98CB-851191561F5E": "req2"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "0DD896A5-F471-4DE2-B419-905CD28BE51F",
+      "parentConfidence": 0.48,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 380,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 314,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 411,
+     "usage": {
+      "input_tokens": 1218,
+      "output_tokens": 185,
+      "cost": 0.000051156
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1000,
+     "title": "How Ansible works",
+     "text": "Ansible is an open-source automation tool that simplifies configuration management, application deployment, and task automation. It works by connecting to nodes over SSH or WinRM and executing modules. These modules perform tasks like installing packages, managing services, or copying files. Ansible uses YAML-formatted playbooks to define the desired state of systems, making automation repeatable and understandable.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 951,
+     "title": "How Ansible works",
+     "text": "Ansible is an open-source automation tool that simplifies configuration management, application deployment, and task automation. It uses a declarative language, typically YAML, to define desired states or tasks. Ansible operates without agents, connecting to managed nodes via SSH or WinRM. It's known for its simplicity, flexibility, and agentless architecture, making it a popular choice for IT automation.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 926,
+     "title": "How does Ansible work?",
+     "text": "Ansible is an open-source automation tool that simplifies configuration management, application deployment, and task automation. It works by connecting to nodes – typically servers – and executing tasks on them. Ansible uses SSH for communication, meaning there's no need to install agents on the managed nodes. Playbooks, written in YAML, define the desired state of the system and the tasks to be performed.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 842,
+     "title": "How does Ansible work?",
+     "text": "Ansible is an open-source automation tool that simplifies configuration management, application deployment, and task automation. It uses a declarative language, typically YAML, to describe the desired state of systems. Ansible operates without agents, connecting to managed nodes via SSH or WinRM. Playbooks, which are sets of tasks, define the automation workflows.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-07",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Why do you want to leave your current job?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 331,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 335,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 470,
+     "cost": 0.000032718,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 450,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 322,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 410,
+     "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 149,
+      "cost": 0.000043008
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 834,
+     "title": "Leaving current job",
+     "text": "I'm looking for new challenges and opportunities to grow my skills. I'm eager to contribute to a company with a strong focus on innovation and a collaborative team environment. I believe my experience aligns well with the goals of this role and I'm excited about the prospect of making a significant impact here.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 960,
+     "title": "Leaving current job",
+     "text": "I'm looking for new challenges and opportunities to grow my skills. I'm eager to contribute to a company with a strong focus on innovation and collaboration, and I believe this role offers exactly that. I'm excited about the prospect of working on [mention a specific project or technology from the job description] and further developing my expertise in [mention a relevant skill].",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 805,
+     "title": "Reason for leaving current job",
+     "text": "I am looking for new challenges and opportunities to grow my skills. I am eager to contribute to a dynamic team and take on more responsibility.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 801,
+     "title": "Why leave current job",
+     "text": "The primary reason I'm looking to leave my current role is to seek new challenges and opportunities for growth that align better with my long-term career aspirations. I am eager to apply my skills in a different environment and contribute to a company with a strong vision for the future.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-07",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [
+     "/as an AI/i"
+    ],
+    "parent": [
+     "req1",
+     "none"
+    ],
+    "relation": [
+     "continuation",
+     "new_request"
+    ]
+   },
+   "newInput": [
+    "And what are you looking for next?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 324,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.89,
+     "parent": "req1",
+     "parentConfidence": 0.39,
+     "labels": {
+      "8B3FA272-6264-48FE-9E31-3D7540722654": "req2",
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.89,
+      "parent": "F4AACCF4-78E9-4972-887E-4B6810CC95C0",
+      "parentConfidence": 0.39,
+      "problems": [],
+      "withdraws": 0.09,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 363,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.87,
+     "parent": "req1",
+     "parentConfidence": 0.46,
+     "labels": {
+      "8B3FA272-6264-48FE-9E31-3D7540722654": "req2",
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.87,
+      "parent": "F4AACCF4-78E9-4972-887E-4B6810CC95C0",
+      "parentConfidence": 0.46,
+      "problems": [],
+      "withdraws": 0.08,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 327,
+     "cost": 0.000046032,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 0.95,
+     "parent": "req1",
+     "parentConfidence": 0.39,
+     "labels": {
+      "8B3FA272-6264-48FE-9E31-3D7540722654": "req2",
+      "F4AACCF4-78E9-4972-887E-4B6810CC95C0": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 0.95,
+      "parent": "F4AACCF4-78E9-4972-887E-4B6810CC95C0",
+      "parentConfidence": 0.39,
+      "problems": [],
+      "withdraws": 0.09,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 348,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 321,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "req1",
+     "latencyMs": 403,
+     "usage": {
+      "input_tokens": 1225,
+      "output_tokens": 186,
+      "cost": 0.00005145
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 908,
+     "title": "What you are looking for next",
+     "text": "I'm looking for a role where I can continue to grow my skills in [specific area of interest, e.g., backend development, cloud architecture, data science]. I'm particularly interested in opportunities that involve [mention a type of project or technology, e.g., building scalable systems, working with large datasets, contributing to open-source projects]. Ultimately, I want to find a position where I can make a meaningful contribution and continue to learn and develop professionally.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 798,
+     "title": "What you are looking for next",
+     "text": "I'm looking for a role where I can continue to grow my skills in [specific technology or area]. I'm particularly interested in opportunities that involve [type of project or responsibility], and I'm eager to contribute to a team that values [team value, e.g., collaboration, innovation]. Ultimately, I want to find a position where I can make a meaningful impact and continue to develop professionally.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 764,
+     "title": "What you are looking for next",
+     "text": "I am looking for a role where I can continue to grow my skills in [specific skill or technology]. I am also seeking an environment that fosters collaboration and innovation, and where I can contribute to impactful projects.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 913,
+     "title": "What you are looking for next",
+     "text": "The next role I'm seeking should offer opportunities for growth and allow me to contribute to innovative projects. I'm particularly interested in environments where I can leverage my skills in [speaker needs to provide a skill here] and collaborate with a talented team. I'm also looking for a company culture that values continuous learning and professional development.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-08",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/rate|limit|token bucket/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Mm-hmm.",
+    "Sure.",
+    "How would you rate-limit an API?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 323,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DFEECBF6-9184-490E-9B55-DC539ABB8CA4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 341,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DFEECBF6-9184-490E-9B55-DC539ABB8CA4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 356,
+     "cost": 0.000033138,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DFEECBF6-9184-490E-9B55-DC539ABB8CA4": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 301,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 355,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 288,
+     "usage": {
+      "input_tokens": 1028,
+      "output_tokens": 149,
+      "cost": 0.000043176
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 914,
+     "title": "Rate-limit an API",
+     "text": "Rate limiting an API is crucial for protecting it from abuse and ensuring fair usage. Common methods include token bucket, leaky bucket, and fixed/sliding window counters. The token bucket algorithm, for instance, allows requests up to a certain rate by consuming tokens from a bucket that refills over time. This approach helps manage traffic and prevent overload.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 907,
+     "title": "Rate-limit an API",
+     "text": "Rate limiting an API is crucial for protecting it from abuse and ensuring fair usage. Common methods include token bucket, leaky bucket, and fixed/sliding window counters. The token bucket algorithm, for instance, allows requests up to a certain rate by consuming tokens from a bucket that refills over time. This approach helps manage traffic and prevent overload.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 959,
+     "title": "Rate-limit an API",
+     "text": "Rate-limiting an API is crucial for protecting it from abuse and ensuring fair usage. Common methods include token bucket and leaky bucket algorithms. Token bucket allows bursts of requests by refilling tokens at a steady rate, while leaky bucket smooths out traffic by processing requests at a fixed rate. Other approaches involve fixed windows, sliding windows, or using request queues. The choice depends on the desired behavior and the API's characteristics.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1106,
+     "title": "Rate-limit an API",
+     "text": "Rate-limiting an API is crucial for protecting it from abuse and ensuring fair usage. Common methods include token bucket and leaky bucket algorithms. The token bucket algorithm allows requests to be served as long as there are tokens available, refilling at a constant rate. The leaky bucket algorithm smooths out traffic by processing requests at a fixed rate, queuing excess requests. Other approaches involve fixed windows, sliding windows, or using distributed systems with a shared rate limiter.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-09",
+   "language": "en",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/event/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Tell me about event sourcing."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 342,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 325,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 334,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 286,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 311,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 312,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 890,
+     "title": "Explain event sourcing",
+     "text": "Event sourcing is an architectural pattern where all changes to application state are stored as a sequence of immutable events. Instead of storing the current state of an entity, you store the history of events that led to that state. To get the current state, you replay these events. This provides a full audit log and allows for temporal queries.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 862,
+     "title": "Explain event sourcing",
+     "text": "Event sourcing is an architectural pattern where all changes to application state are stored as a sequence of immutable events. Instead of storing the current state of data, you store the history of events that led to that state. To get the current state, you replay these events. This provides a full audit log and allows for temporal queries.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 876,
+     "title": "Explain event sourcing",
+     "text": "Event sourcing is an architectural pattern where all changes to application state are stored as a sequence of immutable events. Instead of storing the current state of data directly, you store the history of everything that happened. To get the current state, you replay these events. This provides a full audit log and allows for temporal queries.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 819,
+     "title": "Explain event sourcing",
+     "text": "Event sourcing is an architectural pattern where all changes to application state are stored as a sequence of immutable events. Instead of storing the current state directly, you store the history of events that led to that state. To get the current state, you replay these events. This provides a full audit log and allows for rebuilding state at any point in time.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-en-09",
+   "language": "en",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "abandonment"
+   },
+   "newInput": [
+    "Actually, skip that one."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 489,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1",
+      "9E2B4915-57C4-477C-BDB1-50865EFB995F": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.96,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 308,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1",
+      "9E2B4915-57C4-477C-BDB1-50865EFB995F": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.95,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 334,
+     "cost": 0.000045444,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "abandonment",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.98,
+     "labels": {
+      "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB": "req1",
+      "9E2B4915-57C4-477C-BDB1-50865EFB995F": "req2"
+     },
+     "combined": {
+      "relation": "abandonment",
+      "relationConfidence": 1,
+      "parent": "6B73EED1-A0B8-4AA7-9DD7-C551F5605DEB",
+      "parentConfidence": 0.98,
+      "problems": [],
+      "withdraws": 0.95,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "abandonment",
+       "parentWords": "Tell me about event sourcing.",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 385,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 477,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "correction",
+     "parent": "req1",
+     "latencyMs": 314,
+     "usage": {
+      "input_tokens": 1211,
+      "output_tokens": 190,
+      "cost": 0.000050862
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 905,
+     "title": "Event sourcing",
+     "text": "",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 818,
+     "title": "Skip current topic",
+     "text": "I can skip that topic for you.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 757,
+     "title": "Skip event sourcing",
+     "text": "I'm not sure what you'd like me to discuss. Could you please clarify your request?",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "abandonment",
+      "parentWords": "Tell me about event sourcing.",
+      "parentStatus": "answered",
+      "withdrawn": true
+     }
+    },
+    {
+     "status": 200,
+     "ms": 663,
+     "title": "Skip previous topic",
+     "text": "I will skip the previous topic.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "abandonment",
+      "parentWords": "Tell me about event sourcing.",
+      "parentStatus": "answered",
+      "withdrawn": true
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-01",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/charge|balanc|répartit/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Comment fonctionne un load balancer ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 357,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 325,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 608,
+     "cost": 0.000032592,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 413,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 393,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 314,
+     "usage": {
+      "input_tokens": 1021,
+      "output_tokens": 149,
+      "cost": 0.000042882
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 874,
+     "title": "Comment fonctionne un load balancer",
+     "text": "Un load balancer distribue le trafic réseau entrant sur plusieurs serveurs. Il agit comme un point de contact unique, recevant les requêtes des clients et les acheminant vers le serveur le plus approprié en fonction de divers algorithmes (par exemple, round-robin, le moins de connexions). Cela permet d'améliorer la disponibilité, la fiabilité et les performances des applications en évitant la surcharge d'un serveur unique.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 962,
+     "title": "Comment fonctionne un load balancer",
+     "text": "Un répartiteur de charge, ou load balancer, distribue le trafic réseau entrant sur plusieurs serveurs. Cela permet d'optimiser l'utilisation des ressources, d'améliorer la réactivité et d'assurer la disponibilité des applications. Il agit comme un point de contact unique, redirigeant les requêtes vers les serveurs les plus disponibles ou les moins chargés, selon des algorithmes prédéfinis.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 805,
+     "title": "Comment fonctionne un load balancer",
+     "text": "Un load balancer distribue le trafic réseau entrant sur plusieurs serveurs. Cela permet d'améliorer la performance, la fiabilité et la disponibilité des applications en évitant qu'un seul serveur ne soit surchargé. Il existe différentes méthodes de distribution, comme le round-robin ou le moins connecté, pour optimiser l'utilisation des ressources.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1120,
+     "title": "Comment fonctionne un load balancer",
+     "text": "Un répartiteur de charge, ou load balancer, distribue le trafic réseau entrant sur plusieurs serveurs. Cela permet d'optimiser l'utilisation des ressources, d'améliorer la réactivité et d'assurer la disponibilité des applications. Il agit comme un point de contact unique pour les clients, acheminant leurs requêtes vers les serveurs disponibles selon divers algorithmes (comme le round-robin ou le moindre connexions). Si un serveur tombe en panne, le répartiteur de charge cesse de lui envoyer du trafic, garantissant ainsi la continuité du service.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-01",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/HTTPS|TLS|SSL/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "Et en HTTPS."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 320,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.94,
+     "parent": "req1",
+     "parentConfidence": 0.97,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1",
+      "519E400D-71E6-4B72-B30E-CCA373938416": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.94,
+      "parent": "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27",
+      "parentConfidence": 0.97,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 377,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.94,
+     "parent": "req1",
+     "parentConfidence": 0.97,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1",
+      "519E400D-71E6-4B72-B30E-CCA373938416": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.94,
+      "parent": "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27",
+      "parentConfidence": 0.97,
+      "problems": [],
+      "withdraws": 0.06,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 445,
+     "cost": 0.000045486,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.96,
+     "parent": "req1",
+     "parentConfidence": 0.97,
+     "labels": {
+      "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27": "req1",
+      "519E400D-71E6-4B72-B30E-CCA373938416": "req2"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.96,
+      "parent": "46F74077-DFFF-4CFE-9E9B-23F2C0D1FB27",
+      "parentConfidence": 0.97,
+      "problems": [],
+      "withdraws": 0.05,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment fonctionne un load balancer ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 413,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 306,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 290,
+     "usage": {
+      "input_tokens": 1212,
+      "output_tokens": 187,
+      "cost": 0.000050904
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1080,
+     "title": "Load balancer en HTTPS",
+     "text": "Un load balancer peut gérer le trafic HTTPS en terminant les connexions SSL/TLS au niveau du load balancer lui-même. Il déchiffre ensuite la requête et la transmet en clair aux serveurs backend. Alternativement, il peut re-chiffrer le trafic avant de l'envoyer aux serveurs si une sécurité de bout en bout est requise. Cela décharge les serveurs backend du traitement gourmand en CPU du chiffrement/déchiffrement SSL/TLS.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 912,
+     "title": "Load balancer HTTPS",
+     "text": "Un load balancer peut gérer le trafic HTTPS en terminant les connexions SSL/TLS au niveau du load balancer lui-même. Cela signifie que le load balancer déchiffre les requêtes entrantes, les traite, puis les renvoie aux serveurs backend en clair, ou les chiffre à nouveau si le chiffrement de bout en bout est requis. Cette approche décharge les serveurs backend de la charge de calcul liée au chiffrement et au déchiffrement SSL/TLS.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 893,
+     "title": "Load balancer HTTPS",
+     "text": "- Et en HTTPS.\n\nUn load balancer peut gérer le trafic HTTPS en terminant les connexions SSL/TLS au niveau du load balancer lui-même. Cela signifie que le load balancer déchiffre le trafic entrant, puis le re-chiffre avant de l'envoyer aux serveurs backend. Cette approche permet de décharger les serveurs backend de la tâche gourmande en ressources du chiffrement/déchiffrement SSL/TLS. Le load balancer gère également les certificats SSL/TLS.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Comment fonctionne un load balancer ?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1006,
+     "title": "Load balancer en HTTPS",
+     "text": "Un load balancer peut fonctionner avec HTTPS en terminant les connexions SSL/TLS au niveau du load balancer lui-même. Cela signifie que le load balancer déchiffre le trafic entrant, puis le chiffre à nouveau avant de l'envoyer aux serveurs backend. Cette approche permet au load balancer de lire les informations de trafic nécessaires pour une répartition de charge efficace, tout en assurant la sécurité du trafic entre le client et le load balancer. Les serveurs backend peuvent alors recevoir du trafic en clair ou être configurés pour leur propre terminaison SSL si une sécurité de bout en bout est requise.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Comment fonctionne un load balancer ?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-02",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/Kafka/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Qu'est-ce que Kafka ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 277,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 407,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 354,
+     "cost": 0.00003255,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 455,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 411,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 320,
+     "usage": {
+      "input_tokens": 1020,
+      "output_tokens": 149,
+      "cost": 0.00004284
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1164,
+     "title": "Qu'est-ce que Kafka ?",
+     "text": "Apache Kafka est une plateforme de streaming d'événements distribuée. Elle est conçue pour gérer des flux de données en temps réel à grande échelle. Kafka est utilisé pour construire des pipelines de données en temps réel et des applications de streaming. Il permet de publier et de s'abonner à des flux de messages, de stocker des messages de manière durable et de les traiter au fur et à mesure qu'ils arrivent.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 880,
+     "title": "Qu'est-ce que Kafka ?",
+     "text": "Kafka est une plateforme de streaming distribuée, open-source, conçue pour gérer des flux de données en temps réel. Elle est souvent utilisée pour construire des pipelines de données en temps réel et des applications de streaming. Ses principales caractéristiques incluent la haute disponibilité, l'évolutivité et la durabilité des données.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 935,
+     "title": "Qu'est-ce que Kafka ?",
+     "text": "Kafka est une plateforme de streaming distribuée, open source, conçue pour gérer des flux de données en temps réel. Elle est souvent utilisée pour construire des pipelines de données en temps réel et des applications de streaming. Ses principales caractéristiques incluent une haute disponibilité, une tolérance aux pannes et une évolutivité. Elle permet de publier et de s'abonner à des flux de messages, de les stocker de manière durable et de les traiter en temps réel.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 980,
+     "title": "Qu'est-ce que Kafka ?",
+     "text": "Kafka est une plateforme de streaming distribuée, open-source, utilisée pour construire des pipelines de données en temps réel et des applications de streaming. Elle permet de publier et de s'abonner à des flux de messages, de stocker des flux de manière durable et de les traiter à mesure qu'ils arrivent. Ses principaux cas d'utilisation incluent la messagerie, le suivi d'activité et la consolidation de données.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-02",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/RabbitMQ/i"
+    ],
+    "mustNot": [],
+    "parent": [
+     "none",
+     "req1"
+    ],
+    "relation": "new_request",
+    "withdrawn": true
+   },
+   "newInput": [
+    "Laissons Kafka de côté. Parlez-moi de RabbitMQ."
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 382,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.91,
+     "labels": {
+      "3C9CB614-E937-41CB-939E-F754AFCAD7C7": "req2",
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "37E10F17-BAB1-4AB5-A4C6-408A2B253A85",
+      "parentConfidence": 0.91,
+      "problems": [],
+      "withdraws": 0.98,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 299,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.91,
+     "labels": {
+      "3C9CB614-E937-41CB-939E-F754AFCAD7C7": "req2",
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "37E10F17-BAB1-4AB5-A4C6-408A2B253A85",
+      "parentConfidence": 0.91,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 410,
+     "cost": 0.000045864,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "req1",
+     "parentConfidence": 0.9,
+     "labels": {
+      "3C9CB614-E937-41CB-939E-F754AFCAD7C7": "req2",
+      "37E10F17-BAB1-4AB5-A4C6-408A2B253A85": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "37E10F17-BAB1-4AB5-A4C6-408A2B253A85",
+      "parentConfidence": 0.9,
+      "problems": [],
+      "withdraws": 0.97,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": "Qu'est-ce que Kafka ?",
+       "parentStatus": "answered",
+       "withdrawn": true
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 414,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 410,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 366,
+     "usage": {
+      "input_tokens": 1221,
+      "output_tokens": 185,
+      "cost": 0.000051282
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 923,
+     "title": "RabbitMQ explanation",
+     "text": "RabbitMQ est un courtier de messages open-source qui implémente le protocole AMQP. Il permet aux applications de communiquer entre elles en envoyant et recevant des messages de manière asynchrone. Il est utilisé pour découpler les composants d'une application, gérer les flux de données et distribuer les tâches.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 1018,
+     "title": "RabbitMQ explained",
+     "text": "RabbitMQ est un courtier de messages open-source qui implémente le protocole AMQP. Il permet aux applications de communiquer entre elles en envoyant et recevant des messages de manière asynchrone. Il est souvent utilisé pour découpler les services, gérer les flux de données et distribuer les tâches.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 914,
+     "title": "Qu'est-ce que RabbitMQ ?",
+     "text": "RabbitMQ est un courtier de messages open source qui implémente le protocole AMQP (Advanced Message Queuing Protocol). Il permet aux applications de communiquer entre elles en envoyant et recevant des messages. Il est couramment utilisé pour découpler les composants d'une application, gérer les tâches asynchrones et assurer la fiabilité de la livraison des messages.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "Qu'est-ce que Kafka ?",
+      "parentStatus": "answered",
+      "withdrawn": true
+     }
+    },
+    {
+     "status": 200,
+     "ms": 945,
+     "title": "Qu'est-ce que RabbitMQ ?",
+     "text": "RabbitMQ est un courtier de messages open source. Il implémente le protocole AMQP, mais prend également en charge d'autres protocoles comme STOMP et MQTT. Il permet aux applications de communiquer entre elles de manière asynchrone en envoyant et en recevant des messages via des files d'attente. C'est un outil utile pour découpler les systèmes et gérer les flux de données.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": "Qu'est-ce que Kafka ?",
+      "parentStatus": "answered",
+      "withdrawn": true
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-03",
+   "language": "fr",
+   "index": 0,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/client|produit|valeur/i"
+    ],
+    "mustNot": [],
+    "parent": "none",
+    "relation": "new_request"
+   },
+   "newInput": [
+    "Comment présenteriez-vous notre produit à un client hésitant ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 354,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 380,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 562,
+     "cost": 0.000032928,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "new_request",
+     "relationConfidence": 1,
+     "parent": "none",
+     "parentConfidence": 1,
+     "labels": {
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "new_request",
+      "relationConfidence": 1,
+      "parent": "none",
+      "parentConfidence": 1,
+      "problems": [],
+      "withdraws": null,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "new_request",
+       "parentWords": null,
+       "parentStatus": null,
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 417,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 564,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "new_request",
+     "parent": "none",
+     "latencyMs": 379,
+     "usage": {
+      "input_tokens": 1029,
+      "output_tokens": 149,
+      "cost": 0.000043218
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 938,
+     "title": "Présenter le produit à un client hésitant",
+     "text": "Pour présenter notre produit à un client hésitant, je commencerais par écouter attentivement ses préoccupations et ses doutes. Ensuite, je mettrais en avant les bénéfices spécifiques du produit qui répondent directement à ses besoins, en utilisant des exemples concrets ou des témoignages si possible. L'objectif est de bâtir la confiance en montrant comment le produit peut résoudre ses problèmes et améliorer sa situation.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 969,
+     "title": "Présenter un produit à un client hésitant",
+     "text": "Pour présenter notre produit à un client hésitant, je commencerais par écouter attentivement ses préoccupations et ses doutes. Ensuite, je mettrais en avant les bénéfices spécifiques de notre produit qui répondent directement à ses besoins, en utilisant des exemples concrets ou des témoignages si possible. L'objectif est de bâtir la confiance en montrant comment notre solution peut résoudre ses problèmes ou améliorer sa situation, plutôt que de simplement lister des fonctionnalités. Je m'assurerais de répondre à toutes ses questions de manière transparente et honnête.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 865,
+     "title": "Présenter un produit à un client hésitant",
+     "text": "Comment présenteriez-vous notre produit à un client hésitant ?\n\nPour présenter notre produit à un client hésitant, je commencerais par écouter attentivement ses préoccupations et ses besoins spécifiques. Ensuite, je mettrais en avant les bénéfices concrets du produit qui répondent directement à ces points, en utilisant des exemples pertinents et des témoignages si possible. L'objectif est de bâtir la confiance en montrant comment notre solution peut résoudre ses problèmes ou améliorer sa situation.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 926,
+     "title": "Présenter un produit à un client hésitant",
+     "text": "Comment présenteriez-vous notre produit à un client hésitant ?\n\nPour présenter notre produit à un client hésitant, je commencerais par écouter attentivement ses préoccupations et ses besoins. Ensuite, je mettrais l'accent sur les bénéfices spécifiques de notre produit qui répondent directement à ces points, en utilisant des exemples concrets ou des témoignages si possible. Je chercherais à établir une relation de confiance en étant transparent sur les capacités du produit et en proposant des solutions adaptées à ses doutes, plutôt qu'en essayant de le convaincre à tout prix.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "new_request",
+      "parentWords": null,
+      "parentStatus": null,
+      "withdrawn": false
+     }
+    }
+   ]
+  },
+  {
+   "dialogue": "dv-fr-03",
+   "language": "fr",
+   "index": 1,
+   "kind": "tap",
+   "expect": {
+    "must": [
+     "/concurrent|prix|valeur/i"
+    ],
+    "mustNot": [],
+    "parent": "req1",
+    "relation": "continuation"
+   },
+   "newInput": [
+    "Et s'il compare avec un concurrent moins cher ?"
+   ],
+   "lostSpeech": [],
+   "focused": [
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 401,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.61,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "735D087C-A082-4B69-BE7F-D2BCC2797A01": "req2",
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.61,
+      "parent": "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 277,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.61,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "735D087C-A082-4B69-BE7F-D2BCC2797A01": "req2",
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.61,
+      "parent": "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    },
+    {
+     "ok": true,
+     "reason": null,
+     "latencyMs": 581,
+     "cost": 0.000046746,
+     "model": "typesafe/jev-1.13-20260917",
+     "relation": "continuation",
+     "relationConfidence": 0.63,
+     "parent": "req1",
+     "parentConfidence": 0.99,
+     "labels": {
+      "735D087C-A082-4B69-BE7F-D2BCC2797A01": "req2",
+      "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD": "req1"
+     },
+     "combined": {
+      "relation": "continuation",
+      "relationConfidence": 0.63,
+      "parent": "DCDFE6A1-6E79-47F1-907C-4D4FEE4734DD",
+      "parentConfidence": 0.99,
+      "problems": [],
+      "withdraws": 0.03,
+      "accepted": true,
+      "reason": null,
+      "interpretation": {
+       "relation": "continuation",
+       "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+       "parentStatus": "answered",
+       "withdrawn": false
+      }
+     }
+    }
+   ],
+   "legacy": [
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 537,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 303,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    },
+    {
+     "ok": true,
+     "relation": "continuation",
+     "parent": "req1",
+     "latencyMs": 398,
+     "usage": {
+      "input_tokens": 1242,
+      "output_tokens": 187,
+      "cost": 0.000052164
+     },
+     "model": "typesafe/jev-1.13-20260917"
+    }
+   ],
+   "answersA": [
+    {
+     "status": 200,
+     "ms": 1124,
+     "title": "Répondre à la concurrence moins chère",
+     "text": "Quand un client hésite et compare votre produit à un concurrent moins cher, il est important de mettre en avant la valeur ajoutée et le retour sur investissement. Expliquez que le prix initial n'est qu'une partie de l'équation. Concentrez-vous sur les bénéfices à long terme, la qualité supérieure, la fiabilité, le support client exceptionnel, et les fonctionnalités uniques qui justifient le coût. Demandez-lui ce qui est le plus important pour lui dans son choix, afin de mieux aligner votre offre sur ses priorités.",
+     "met": true,
+     "failures": []
+    },
+    {
+     "status": 200,
+     "ms": 907,
+     "title": "Répondre à la concurrence moins chère",
+     "text": "En cas de comparaison avec un concurrent moins cher, il est essentiel de mettre en avant la valeur ajoutée de notre produit. Concentrez-vous sur les bénéfices à long terme, la qualité supérieure, le support client exceptionnel, ou les fonctionnalités uniques qui justifient le prix. Il s'agit de démontrer que notre offre représente un meilleur investissement global, plutôt qu'une simple dépense.",
+     "met": true,
+     "failures": []
+    }
+   ],
+   "answersC": [
+    {
+     "status": 200,
+     "ms": 1046,
+     "title": "Répondre à la comparaison de prix",
+     "text": "Si un client hésitant compare notre produit à un concurrent moins cher, je mettrais l'accent sur la valeur globale et les avantages à long terme que notre produit offre. Je soulignerais la qualité supérieure, la durabilité, le support client exceptionnel, et les fonctionnalités uniques qui justifient le coût plus élevé. L'objectif est de démontrer que notre offre représente un meilleur investissement, même si le prix initial est plus élevé.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    },
+    {
+     "status": 200,
+     "ms": 1064,
+     "title": "Répondre à la concurrence moins chère",
+     "text": "- Et s'il compare avec un concurrent moins cher ?\n\nWhen a client compares your product to a cheaper competitor, it's important to focus on value rather than just price. Highlight the unique benefits and superior quality of your product that justify the higher cost. Emphasize long-term savings, better performance, or enhanced customer support that the cheaper option might not offer. Frame the discussion around the total cost of ownership and the return on investment, demonstrating that your product provides greater overall value.",
+     "met": true,
+     "failures": [],
+     "interpretation": {
+      "relation": "continuation",
+      "parentWords": "Comment présenteriez-vous notre produit à un client hésitant ?",
+      "parentStatus": "answered",
+      "withdrawn": false
+     }
+    }
+   ]
+  }
+ ]
+}

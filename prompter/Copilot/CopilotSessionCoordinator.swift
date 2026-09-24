@@ -645,6 +645,7 @@ final class CopilotSessionCoordinator {
             actionParentAnswer: discussion?.actionParentAnswer,
             actionParentAnswerVersion: discussion?.actionParentAnswerVersion,
             interpretation: discussion?.requestedAction == nil ? discussion?.interpretation : nil,
+            decisionStatus: discussion?.decisionStatus,
             passages: passages.map {
                 .init(id: $0.id, documentTitle: $0.documentTitle, documentVersion: $0.documentVersion,
                       locator: $0.locator, text: $0.text)

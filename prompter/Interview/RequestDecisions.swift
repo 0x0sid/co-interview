@@ -55,6 +55,10 @@ struct RequestInterpretation: Sendable, Codable, Equatable {
     let relation: String
     let parentWords: String?
     let parentStatus: String?
+    var withdrawn: Bool? = nil
+    /// The decision snapshot this came from, so the answer request and the decision record can be
+    /// matched in the backend's log. Set by the app when it applies the decision.
+    var decisionID: String? = nil
 }
 
 /// What the backend decided. `apply` is its verdict on whether this session may use it at all.
@@ -197,7 +201,9 @@ final class RequestDecisionTracker {
             return (nil, nil, "fallback: \(outcome.fallbackReason ?? "not accepted")")
         }
         guard outcome.apply else { return (nil, nil, "shadow: \(interpretation.relation) not applied") }
-        return (interpretation, outcome.combinedParentID, "applied: \(interpretation.relation)")
+        var applied = interpretation
+        applied.decisionID = latest.snapshotID
+        return (applied, outcome.combinedParentID, "applied: \(interpretation.relation)")
     }
 
     /// Session end or restart: in-flight and cached results are dropped, and late ones are ignored.

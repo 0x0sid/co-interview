@@ -77,7 +77,17 @@ async function legacyDecision(snapshotBody, config, apiKey) {
 
 // --- Answers ---------------------------------------------------------------------------------------
 
+/** The dev backend token from the app's local config, so it never has to be typed or printed. */
+function devToken() {
+  try {
+    const line = readFileSync(join(HERE, "..", "..", "prompter", "Config", "Local-Debug.xcconfig"), "utf8")
+      .split("\n").find((l) => /^\s*COPILOT_DEV_BACKEND_TOKEN\s*=/.test(l));
+    return line ? line.slice(line.indexOf("=") + 1).trim() : "";
+  } catch { return ""; }
+}
+
 async function answer(body, { answers, token }) {
+  token ||= devToken();
   const started = Date.now();
   const response = await fetch(`${answers}/v1/copilot/answer`, {
     method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` },

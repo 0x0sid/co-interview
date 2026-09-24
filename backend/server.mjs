@@ -1088,6 +1088,13 @@ async function handleAnswer(request, response) {
       ? `only the first ${MAX_IMAGES} images were sent`
       : null;
   const messages = buildAnswerMessages(modelAcceptsImages ? body : { ...body, images: [] }, words);
+  // Which decision, if any, shaped this request — metadata only, so a device test can match the
+  // request to its decision record. No speech, no answer text.
+  if (typeof body.decisionStatus === "string") {
+    const applied = body.interpretation && !body.requestedAction && typeof body.interpretation.relation === "string";
+    console.log(`[answer-decision] session=${clip(body.diagnosticsSessionID ?? "", 8) || "-"} request=${clip(body.diagnosticsRequestID ?? "", 8) || "-"} ` +
+      `status="${clip(body.decisionStatus, 80)}" ${applied ? `applied=${clip(body.interpretation.relation, 20)} decision=${clip(body.interpretation.decisionID ?? "", 8) || "-"}` : "applied=none"}`);
+  }
 
   // **Too long is said out loud.** The conversation is no longer trimmed to fit, so a session that
   // genuinely does not fit is refused here, before anything is sent, with the numbers that made the

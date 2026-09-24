@@ -181,6 +181,8 @@ struct RequestDecisionTests {
         H.tap(model, at: 5)
         let second = try #require(feed.discussionRequests.last)
         #expect(second.discussion.interpretation?.relation == "continuation")
+        #expect(second.discussion.decisionStatus == "applied: continuation")
+        #expect(second.discussion.interpretation?.decisionID?.isEmpty == false, "the request cannot be matched to its decision")
         #expect(second.discussion.newInput == ["And Java 7."], "the decision changed what the request carries")
         #expect(second.discussion.allLines == ["Compare Java 8 and Java 9.", "And Java 7."], "the decision narrowed the conversation")
     }
@@ -202,8 +204,13 @@ struct RequestDecisionTests {
             H.tap(model, at: 5)
             return feed.discussionRequests.last?.discussion
         }
-        let off = await run(withDecisions: false)
-        let shadow = await run(withDecisions: true)
+        var off = await run(withDecisions: false)
+        var shadow = await run(withDecisions: true)
+        #expect(off?.decisionStatus == "no decision service")
+        #expect(shadow?.decisionStatus == "shadow: continuation not applied")
+        // The status is metadata for the log; everything the answer is built from must be identical.
+        off?.decisionStatus = nil
+        shadow?.decisionStatus = nil
         #expect(off != nil && off == shadow, "shadow changed the request")
     }
 

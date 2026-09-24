@@ -184,7 +184,7 @@ final class InterviewScreenModel {
         // content capture starts off, whatever it was left as.
         diagnostics.startSession(
             appBuild: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
-            commit: Bundle.main.infoDictionary?["CoInterviewCommit"] as? String ?? "unknown"
+            commit: Bundle.main.infoDictionary?["GitCommitHash"] as? String ?? "unknown"
         )
         #endif
         // Live: real transcription drives reading, and the capture session drives the header mark.
@@ -486,6 +486,7 @@ final class InterviewScreenModel {
                 decisionStatus = "no new speech"
             }
         }
+        snapshot.decisionStatus = decisionStatus
         if let action {
             snapshot.requestedAction = action.instruction
             // **An action answers a page, not the newest speech.** Everything said so far is context
