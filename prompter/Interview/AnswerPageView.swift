@@ -363,7 +363,10 @@ struct AnswerPageView: View {
     private func provenanceLink(_ provenance: AnswerProvenance) -> some View {
         let included = provenance.included.count
         let cited = provenance.included.filter(provenance.isCited).count
-        let label = "\(included) file excerpt\(included == 1 ? "" : "s") included" + (cited > 0 ? " · \(cited) cited" : "")
+        let pending = provenance.filesStillProcessing?.count ?? 0
+        let label = (included == 0 ? "No file excerpts included" : "\(included) file excerpt\(included == 1 ? "" : "s") included")
+            + (cited > 0 ? " · \(cited) cited" : "")
+            + (pending > 0 ? " · \(pending) still being read" : "")
         return Button(action: onShowProvenance) {
             HStack(spacing: 5) {
                 Image(systemName: "paperclip")

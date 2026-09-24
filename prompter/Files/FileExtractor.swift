@@ -92,8 +92,12 @@ enum FileExtractor {
             throw Failure.noText("No text was found in this image. Only text in images can be used — the picture itself is not sent.")
         }
         let (kept, note) = capped(text)
-        return Result(chunks: chunk(sections: [("image", kept)]), pageCount: 1, method: "ocr", note: note)
+        return Result(chunks: chunk(sections: [("image", kept)]), pageCount: 1, method: "ocr",
+                      note: [imageTextOnlyNote, note].compactMap { $0 }.joined(separator: " "))
     }
+
+    /// Said with every image: text recognition reads words, not pictures.
+    static let imageTextOnlyNote = "Only the text in this image is used. Diagrams, charts and layout aren't understood."
 
     // MARK: PDF
 
@@ -107,8 +111,10 @@ enum FileExtractor {
         let total = document.pageCount
         let readable = min(total, AttachmentLimits.maximumPDFPages)
         var sections: [(String, String)] = []
-        var ocrPages = 0
+        var ocrPages = 0          // pages whose recognised text was used
+        var ocrAttempts = 0       // pages rendered and recognised (the budget)
         var skippedScans = 0
+        var emptyPages: [Int] = []
         var characters = 0
         for index in 0..<readable {
             if flag.isCancelled { throw CancellationError() }
@@ -116,37 +122,56 @@ enum FileExtractor {
             let text: String = try autoreleasepool {
                 guard let page = document.page(at: index) else { return "" }
                 let embedded = (page.string ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                if embedded.count >= 25 { return embedded }
-                // No usable text layer: a scanned page. Render it and read it, within the OCR budget.
-                guard ocrPages < AttachmentLimits.maximumOCRPages else {
-                    skippedScans += 1
+                // A full text layer is the page. A thin one may be a heading over a scanned body (a
+                // mixed page), and none at all is a scan: those are rendered and read too, within the
+                // OCR budget, and the fuller reading is kept — so a scanned section under a typed
+                // title is not silently dropped.
+                if embedded.count >= Self.fullTextLayer { return embedded }
+                guard ocrAttempts < AttachmentLimits.maximumOCRPages else {
+                    if embedded.count < 25 { skippedScans += 1 }
                     return embedded
                 }
-                ocrPages += 1
+                ocrAttempts += 1
                 let bounds = page.bounds(for: .mediaBox)
                 let scale = min(2200 / max(bounds.width, bounds.height, 1), 3)
                 let rendered = page.thumbnail(of: CGSize(width: bounds.width * scale, height: bounds.height * scale), for: .mediaBox)
                 guard let cgImage = rendered.cgImage else { return embedded }
                 let recognised = try recognizeText(in: cgImage)
-                return recognised.isEmpty ? embedded : recognised
+                // New words mean the page holds text the layer lacks (a scanned section); the same
+                // words mean it was typed and the text layer is the better reading.
+                let typedWords = Set(Tokenizer.normalize(embedded))
+                let newWords = Set(Tokenizer.normalize(recognised)).subtracting(typedWords)
+                let useRecognised = newWords.count >= 3 || (embedded.isEmpty && !recognised.isEmpty)
+                if useRecognised { ocrPages += 1 }
+                return useRecognised ? recognised : embedded
             }
             if !text.isEmpty {
                 sections.append(("p. \(index + 1)", text))
                 characters += text.count
+            } else {
+                emptyPages.append(index + 1)
             }
             progress(Double(index + 1) / Double(readable))
         }
         var notes: [String] = []
         if total > readable { notes.append("Pages \(readable + 1)–\(total) were not read (limit \(AttachmentLimits.maximumPDFPages) pages).") }
         if skippedScans > 0 { notes.append("\(skippedScans) scanned page\(skippedScans == 1 ? " was" : "s were") not read (text recognition limit \(AttachmentLimits.maximumOCRPages) pages).") }
+        if ocrPages > 0 { notes.append("\(ocrPages) page\(ocrPages == 1 ? " was" : "s were") read with text recognition; diagrams and charts on them aren't understood.") }
+        if !emptyPages.isEmpty {
+            let list = emptyPages.prefix(8).map(String.init).joined(separator: ", ") + (emptyPages.count > 8 ? "…" : "")
+            notes.append("No readable text on page\(emptyPages.count == 1 ? "" : "s") \(list) (images or diagrams only).")
+        }
         if characters >= AttachmentLimits.maximumCharacters { notes.append("Only the first \(AttachmentLimits.maximumCharacters / 1000)k characters were kept.") }
         guard !sections.isEmpty else {
             throw Failure.noText("No text was found in this PDF.")
         }
-        let method = ocrPages == 0 ? "pdf-text" : (ocrPages == sections.count ? "pdf-ocr" : "pdf-text+ocr")
+        let method = ocrPages == 0 ? "pdf-text" : (ocrPages >= sections.count ? "pdf-ocr" : "pdf-text+ocr")
         return Result(chunks: chunk(sections: sections), pageCount: total, method: method,
                       note: notes.isEmpty ? nil : notes.joined(separator: " "))
     }
+
+    /// Characters of embedded text above which a page is taken as fully typed.
+    static let fullTextLayer = 400
 
     // MARK: Text formats
 
@@ -172,7 +197,9 @@ enum FileExtractor {
         } catch {
             throw Failure.unreadable("The Word document could not be read: \(error.localizedDescription)")
         }
-        return try textResult(text, method: "docx")
+        let result = try textResult(text, method: "docx")
+        return Result(chunks: result.chunks, pageCount: 0, method: "docx",
+                      note: [DocxReader.coverageNote, result.note].compactMap { $0 }.joined(separator: " "))
     }
 
     /// Paragraph-located chunks ("¶ 4–9") for formats with no pages.

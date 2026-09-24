@@ -328,7 +328,13 @@ final class InterviewScreenModel {
             if let generation = generations[requestID], let answerID = generation.answerID,
                let index = questions.firstIndex(where: { $0.id == generation.questionID }),
                let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) {
-                questions[index].answers[answerIndex].provenance = provenance
+                // The included set was frozen at acceptance; the feed adds only what was cited.
+                if var existing = questions[index].answers[answerIndex].provenance {
+                    existing.citedPassageIDs = provenance.citedPassageIDs
+                    questions[index].answers[answerIndex].provenance = existing
+                } else {
+                    questions[index].answers[answerIndex].provenance = provenance
+                }
             }
 
         case .answerFailed(let requestID, let message):
@@ -472,6 +478,10 @@ final class InterviewScreenModel {
 
     /// Said when Generate is tapped with nothing to work from.
     private(set) var emptyInputNotice: String?
+    /// Said when Generate is tapped while a file is still being read.
+    private(set) var filesNotice: String?
+    private var filesProcessingConfirmedAt: Date?
+    static let filesConfirmWindow: TimeInterval = 10
 
     /// Requests accepted but not yet started, oldest first. One runs at a time.
     private(set) var queuedRequestIDs: [UUID] = []
@@ -529,6 +539,19 @@ final class InterviewScreenModel {
             diagnostics.recordTap(requestID: nil, outcome: .rejectedQueueFull, reason: emptyInputNotice)
             return
         }
+        // Files still being read: say so, and let the user choose. A second tap within the window
+        // answers with the ready files only, and the answer records which were left out.
+        if let files, files.isWorking {
+            let reading = files.items.filter { $0.status.isWorking }.map(\.filename)
+            if filesProcessingConfirmedAt.map({ now.timeIntervalSince($0) > Self.filesConfirmWindow }) ?? true {
+                filesProcessingConfirmedAt = now
+                filesNotice = (reading.count == 1 ? "“\(reading[0])” is" : "\(reading.count) files are")
+                    + " still being read. Tap Generate again to answer with the ready files only, or wait."
+                return
+            }
+        }
+        filesNotice = nil
+        filesProcessingConfirmedAt = nil
         lastGenerateTapAt = now
         emptyInputNotice = nil
         syncSessionNote()
@@ -566,6 +589,14 @@ final class InterviewScreenModel {
                 snapshot.actionParentAnswer = parent.selectedAnswer?.proseText
                 snapshot.actionParentAnswerVersion = parent.selectedAnswer?.version
             }
+        }
+        // Freeze the file context now, with the request: the excerpts chosen for exactly what this tap
+        // asks, and the names of any files not yet ready.
+        if let files {
+            let asked = [snapshot.newLines.joined(separator: " "), action?.instruction, parent?.text]
+                .compactMap { $0 }.joined(separator: " ")
+            snapshot.fileExcerpts = files.fileContext.passages(forQuestion: asked, limit: 3).map(FileExcerpt.init)
+            snapshot.filesStillProcessing = files.items.filter { $0.status.isWorking }.map(\.filename)
         }
         let requestID = UUID()
         let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
@@ -1047,7 +1078,15 @@ final class InterviewScreenModel {
               let index = questions.firstIndex(where: { $0.id == questionID }) else { return }
         var question = questions[index]
         let version = (question.answers.map(\.version).max() ?? 0) + 1
-        let answer = InterviewAnswer(version: version)
+        var answer = InterviewAnswer(version: version)
+        // What the request carries from the files is known from the moment it was accepted, so it is
+        // on the answer — and saved — before any text arrives, even if generation then fails.
+        if let snapshot = pendingSnapshots[requestID] ?? retainedSnapshots[questionID],
+           snapshot.fileExcerpts != nil || !snapshot.filesStillProcessing.isEmpty {
+            answer.provenance = AnswerProvenance(
+                included: (snapshot.fileExcerpts ?? []).map(\.provenanceExcerpt),
+                filesStillProcessing: snapshot.filesStillProcessing.isEmpty ? nil : snapshot.filesStillProcessing)
+        }
         question.answers.append(answer)          // append-only: earlier versions are kept
         question.selectedAnswerID = answer.id
         questions[index] = question

@@ -244,7 +244,9 @@ struct AnswerProvenance: Codable, Equatable, Sendable {
 
     var included: [Excerpt] = []
     var citedPassageIDs: [String] = []
+    /// Files that were still being read when the request was accepted, and so were not included.
+    var filesStillProcessing: [String]? = nil
 
-    var isEmpty: Bool { included.isEmpty }
+    var isEmpty: Bool { included.isEmpty && (filesStillProcessing ?? []).isEmpty }
     func isCited(_ excerpt: Excerpt) -> Bool { citedPassageIDs.contains(excerpt.passageID) }
 }

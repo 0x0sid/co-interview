@@ -59,6 +59,13 @@ struct DiscussionSnapshot: Sendable, Equatable, Codable {
     /// Why a decision did or did not shape this request ("applied: …", "shadow: …", "stale: …"). Metadata
     /// only; it travels so the backend can log it beside the request.
     var decisionStatus: String?
+    /// The file excerpts chosen **when Generate was accepted**, exactly as the request will carry
+    /// them. Nil when the session has no files. Frozen here so a file removed, or finishing
+    /// extraction, afterwards can never change a request already accepted — and so Retry re-sends
+    /// the same context.
+    var fileExcerpts: [FileExcerpt]?
+    /// Files still being read at that moment, and therefore not included.
+    var filesStillProcessing: [String] = []
 
     /// The whole conversation, oldest first — speech only, in the order it was said.
     var allLines: [String] { background + newInput + (provisional.map { [$0] } ?? []) }
@@ -95,5 +102,32 @@ struct DiscussionSnapshot: Sendable, Equatable, Codable {
     /// Everything as new input. Convenience for callers with no coverage information.
     init(_ lines: [String]) {
         self.init(background: [], newInput: lines)
+    }
+}
+
+/// One excerpt of a session file, as frozen into a request.
+struct FileExcerpt: Codable, Equatable, Sendable {
+    let passageID: String
+    let fileID: String
+    let filename: String
+    let version: String
+    let locator: String
+    let text: String
+
+    init(_ passage: ProjectPassage) {
+        passageID = passage.id
+        fileID = passage.documentID
+        filename = passage.documentTitle
+        version = passage.documentVersion
+        locator = passage.locator
+        text = passage.text
+    }
+
+    var passage: ProjectPassage {
+        ProjectPassage(id: passageID, documentID: fileID, documentTitle: filename, documentVersion: version, locator: locator, text: text)
+    }
+
+    var provenanceExcerpt: AnswerProvenance.Excerpt {
+        AnswerProvenance.Excerpt(passageID: passageID, fileID: fileID, filename: filename, locator: locator)
     }
 }

@@ -40,7 +40,53 @@ final class SessionFileContext: ProjectContextProviding, @unchecked Sendable {
 
     var passageCount: Int { lock.withLock { currentPassages.count } }
 
+    /// The best keyword matches — and, for a personal or broad question, the opening excerpts of
+    /// each file to fill the remaining places.
+    ///
+    /// "Tell me about yourself" or "Why am I a good fit?" share almost no words with a CV or a job
+    /// description, so keyword scoring alone sends nothing. For questions about the candidate, the
+    /// start of each file (a CV's summary, a job description's role) is added, one file at a time
+    /// in turn, never more than `limit` in all. A general question ("How does a HashMap work?")
+    /// does not trigger it, so personal files are not sent where nothing asks for them. The model is
+    /// still told never to invent experience the excerpts do not support.
     func passages(forQuestion question: String, limit: Int) -> [ProjectPassage] {
-        lock.withLock { retriever }.topPassages(for: question, limit: limit)
+        lock.lock()
+        let retriever = self.retriever
+        let all = currentPassages
+        lock.unlock()
+        var picked = retriever.topPassages(for: question, limit: limit)
+        guard picked.count < limit, Self.isAboutTheCandidate(question) else { return picked }
+        var byFile: [String: [ProjectPassage]] = [:]
+        var order: [String] = []
+        for passage in all {
+            if byFile[passage.documentID] == nil { order.append(passage.documentID) }
+            byFile[passage.documentID, default: []].append(passage)
+        }
+        var depth = 0
+        while picked.count < limit, depth < Self.openingDepth {
+            for file in order where picked.count < limit {
+                guard let openings = byFile[file], depth < openings.count else { continue }
+                let candidate = openings[depth]
+                if !picked.contains(where: { $0.id == candidate.id }) { picked.append(candidate) }
+            }
+            depth += 1
+        }
+        return picked
     }
+
+    /// How many opening excerpts per file the fallback may use.
+    static let openingDepth = 2
+
+    /// Questions about the candidate, in English and French (accents folded by the tokenizer).
+    static func isAboutTheCandidate(_ question: String) -> Bool {
+        !Set(Tokenizer.normalize(question)).isDisjoint(with: candidateWords)
+    }
+
+    private static let candidateWords: Set<String> = [
+        "you", "your", "yourself", "yours", "i", "me", "my", "myself", "background", "experience", "experiences",
+        "cv", "resume", "fit", "role", "position", "job", "strength", "strengths", "weakness", "weaknesses",
+        "hire", "motivation", "motivated", "career", "projects", "achievement", "achievements",
+        "vous", "votre", "vos", "parcours", "experience", "poste", "candidature", "moi", "mon", "ma", "mes", "je",
+        "profil", "competences", "forces", "faiblesses",
+    ]
 }

@@ -152,6 +152,34 @@ struct SessionPersistenceTests {
         #expect(settings.interviewLanguageRaw == "system")
     }
 
+    /// Upgrades a **copy** of a real device store (opt-in: `TEST_RUNNER_COINTERVIEW_REAL_STORE=<dir>` holding
+    /// CoInterview.store and its -wal/-shm). Every existing row survives; nothing is reset.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["COINTERVIEW_REAL_STORE"] != nil))
+    func aRealDeviceStoreUpgradesWithEveryRowIntact() throws {
+        let source = URL(fileURLWithPath: ProcessInfo.processInfo.environment["COINTERVIEW_REAL_STORE"]!)
+        func copy() throws -> URL {
+            let folder = S.temporaryDirectory()
+            for suffix in ["", "-wal", "-shm"] {
+                let from = source.appending(path: "CoInterview.store" + suffix)
+                if FileManager.default.fileExists(atPath: from.path) {
+                    try FileManager.default.copyItem(at: from, to: folder.appending(path: "CoInterview.store" + suffix))
+                }
+            }
+            return folder.appending(path: "CoInterview.store")
+        }
+        func counts(_ context: ModelContext) throws -> [Int] {
+            [try context.fetchCount(FetchDescriptor<Script>()), try context.fetchCount(FetchDescriptor<PromptSession>()),
+             try context.fetchCount(FetchDescriptor<UsageLedger>()), try context.fetchCount(FetchDescriptor<AppSettings>())]
+        }
+        let oldSchema = Schema([Script.self, PromptSession.self, UsageLedger.self, AppSettings.self])
+        let before = try counts(ModelContext(try ModelContainer(for: oldSchema, configurations: [ModelConfiguration(schema: oldSchema, url: try copy())])))
+        let upgraded = ModelContext(try S.container(at: try copy()))
+        let after = try counts(upgraded)
+        print("REAL STORE rows before \(before) after \(after)")
+        #expect(before == after, "rows changed in the upgrade")
+        #expect(try upgraded.fetchCount(FetchDescriptor<InterviewSessionRecord>()) == 0)
+    }
+
     @Test
     func renameAndDelete() throws {
         let container = try S.container()
@@ -209,9 +237,9 @@ struct SessionPersistenceTests {
         let model = InterviewScreenModel(mode: .live, feed: LiveInterviewFeed(coordinator: coordinator))
         model.start()
         coordinator.ingest(CopilotTestSupport.finalDelta("Tell me about your last project.", at: 1))
-        try await CopilotTestSupport.waitUntil("the line") { !model.transcript.isEmpty }
+        try await CopilotTestSupport.waitUntil("the line", timeout: .seconds(15)) { !model.transcript.isEmpty }
         model.generate(now: Date(timeIntervalSince1970: 1_000))
-        try await CopilotTestSupport.waitUntil("the answer") { model.questions.last?.selectedAnswer?.isComplete == true }
+        try await CopilotTestSupport.waitUntil("the answer", timeout: .seconds(15)) { model.questions.last?.selectedAnswer?.isComplete == true }
         let before = (model.transcript, model.questions.map(\.selectedAnswer?.proseText))
         #expect(provider.lastAnswerRequest?.language == "en")
 
@@ -221,9 +249,9 @@ struct SessionPersistenceTests {
         #expect(model.liveLanguage == .french)
 
         coordinator.ingest(CopilotTestSupport.finalDelta("Et votre rôle exact ?", at: 5))
-        try await CopilotTestSupport.waitUntil("the second line") { model.transcript.count == 2 }
+        try await CopilotTestSupport.waitUntil("the second line", timeout: .seconds(15)) { model.transcript.count == 2 }
         model.generate(now: Date(timeIntervalSince1970: 1_010))
-        try await CopilotTestSupport.waitUntil("the second request") { provider.generateCallCount == 2 }
+        try await CopilotTestSupport.waitUntil("the second request", timeout: .seconds(15)) { provider.generateCallCount == 2 }
         #expect(provider.lastAnswerRequest?.language == "fr")
         model.stop()
     }

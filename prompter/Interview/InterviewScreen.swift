@@ -264,6 +264,18 @@ struct InterviewScreen: View {
             if model.isAwaitingResume {
                 resumeButton
             }
+            if let notice = model.filesNotice {
+                Text(notice)
+                    .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
+                    .foregroundStyle(InterviewTheme.Color.ink)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(InterviewTheme.Color.surface, in: Capsule())
+                    .overlay(Capsule().stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+                    .padding(.horizontal, 24)
+                    .accessibilityIdentifier("files-processing-notice")
+            }
             if model.mode == .demo {
                 demoBadge
             } else if !readiness.canGenerate {

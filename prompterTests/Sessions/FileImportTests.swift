@@ -49,7 +49,7 @@ struct FileImportTests {
 
     @Test
     func aScannedPDFIsRecognisedPageByPage() async throws {
-        let pdf = S.scannedPDF([["SCANNED PAGE ONE", "Kubernetes"], ["SCANNED PAGE TWO", "Terraform"]])
+        let pdf = await S.offMain { S.scannedPDF([["SCANNED PAGE ONE", "Kubernetes"], ["SCANNED PAGE TWO", "Terraform"]]) }
         let (_, item, context) = try await imported(pdf, "scan.pdf", .pdf)
         #expect(item.status == .ready, "\(item.detail ?? "")")
         let hash = item.contentHash
@@ -58,6 +58,24 @@ struct FileImportTests {
         let extracted = record.chunks.map(\.text).joined(separator: " ").uppercased()
         #expect(extracted.contains("KUBERNETES") && extracted.contains("TERRAFORM"), "OCR read: \(extracted)")
         #expect(record.chunks.first?.locator == "p. 1")
+    }
+
+    /// A typed heading over a scanned body: both halves are read, and the note says OCR was used.
+    @Test
+    func aMixedPDFPageKeepsItsScannedSection() async throws {
+        let pdf = await S.offMain { S.mixedPDF(heading: "Quarterly report", scannedLines: ["SCANNED SECTION", "Revenue grew in Lisbon"]) }
+        let (_, item, context) = try await imported(pdf, "mixed.pdf", .pdf)
+        #expect(item.status == .ready)
+        let extracted = text(context, item).uppercased()
+        #expect(extracted.contains("LISBON"), "the scanned body was dropped: \(extracted)")
+        #expect(item.detail?.contains("text recognition") == true)
+    }
+
+    @Test
+    func anImageSaysOnlyItsTextIsUsed() async throws {
+        let (_, item, _) = try await imported(S.textImage(["ARCHITECTURE DIAGRAM", "API gateway"]), "diagram.png", .png)
+        #expect(item.status == .ready)
+        #expect(item.detail?.contains("Diagrams, charts and layout aren't understood") == true)
     }
 
     @Test
@@ -77,6 +95,63 @@ struct FileImportTests {
         let extracted = text(context, item)
         #expect(extracted.contains("Kafka migration in 2023"))
         #expect(extracted.contains("virtual threads"))
+        #expect(item.detail?.contains("headers, footers") == true, "the omitted sections are not stated")
+    }
+
+    /// The Word reader's bounds: malformed, encrypted/old-format, missing body, and oversized.
+    @Test
+    func wordDocumentsOutsideTheSupportedShapeAreRejectedClearly() async throws {
+        let docx = UTType(filenameExtension: "docx")
+        let (_, garbage, _) = try await imported(Data((0..<500).map { UInt8($0 % 251) }), "garbage.docx", docx)
+        #expect(garbage.status == .failed)
+        #expect(garbage.detail?.contains("not a valid .docx") == true, "\(garbage.detail ?? "")")
+
+        let (_, ole, _) = try await imported(Data([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1] + [UInt8](repeating: 0, count: 600)), "locked.docx", docx)
+        #expect(ole.status == .failed)
+        #expect(ole.detail?.contains("password-protected") == true, "\(ole.detail ?? "")")
+
+        let (_, empty, _) = try await imported(Self.zip(entries: [("word/other.xml", Data("<x/>".utf8))]), "nobody.docx", docx)
+        #expect(empty.detail?.contains("no document body") == true, "\(empty.detail ?? "")")
+
+        // A stored entry that claims a decompressed size over the limit is refused before inflating.
+        var huge = Self.zip(entries: [("word/document.xml", Data("<w:document/>".utf8))])
+        Self.patchUncompressedSize(&huge, to: UInt32(DocxReader.maximumUnpackedBytes + 1))
+        let (_, bomb, _) = try await imported(huge, "bomb.docx", docx)
+        #expect(bomb.status == .failed)
+        #expect(bomb.detail?.contains("larger than") == true, "\(bomb.detail ?? "")")
+    }
+
+    /// A minimal stored (uncompressed) ZIP, enough to exercise the reader's parsing.
+    static func zip(entries: [(String, Data)]) -> Data {
+        var local = Data(), central = Data()
+        func u16(_ v: Int) -> [UInt8] { [UInt8(v & 0xFF), UInt8((v >> 8) & 0xFF)] }
+        func u32(_ v: Int) -> [UInt8] { u16(v & 0xFFFF) + u16((v >> 16) & 0xFFFF) }
+        for (name, body) in entries {
+            let offset = local.count
+            let nameBytes = [UInt8](name.utf8)
+            local.append(contentsOf: u32(0x04034b50) + u16(20) + u16(0) + u16(0) + u16(0) + u16(0) + u32(0) + u32(body.count) + u32(body.count) + u16(nameBytes.count) + u16(0))
+            local.append(contentsOf: nameBytes); local.append(body)
+            central.append(contentsOf: u32(0x02014b50) + u16(20) + u16(20) + u16(0) + u16(0) + u16(0) + u16(0) + u32(0) + u32(body.count) + u32(body.count) + u16(nameBytes.count) + u16(0) + u16(0) + u16(0) + u16(0) + u32(0) + u32(offset))
+            central.append(contentsOf: nameBytes)
+        }
+        var data = local
+        let centralOffset = data.count
+        data.append(central)
+        data.append(contentsOf: u32(0x06054b50) + u16(0) + u16(0) + u16(entries.count) + u16(entries.count) + u32(central.count) + u32(centralOffset) + u16(0))
+        return data
+    }
+
+    /// Rewrites every central-directory entry's declared uncompressed size.
+    static func patchUncompressedSize(_ data: inout Data, to size: UInt32) {
+        let bytes = [UInt8](data)
+        var index = 0
+        while index + 28 < bytes.count {
+            if bytes[index] == 0x50, bytes[index + 1] == 0x4B, bytes[index + 2] == 0x01, bytes[index + 3] == 0x02 {
+                let le = withUnsafeBytes(of: size.littleEndian, Array.init)
+                data.replaceSubrange((index + 24)..<(index + 28), with: le)
+            }
+            index += 1
+        }
     }
 
     // MARK: Failures, stated
@@ -144,6 +219,11 @@ struct FileImportTests {
         let storedFile = store.url(forStoredName: "\(hash).pdf")
         InterviewSessionStore.delete(firstSession, in: context, store: store)
         #expect(FileManager.default.fileExists(atPath: storedFile.path), "a file still in use was deleted")
+        // The other session is intact: its file reopens ready, and its text is still retrievable.
+        let survivorContext = SessionFileContext(language: .english)
+        let survivor = SessionFiles(context: context, session: secondSession, store: store, fileContext: survivorContext)
+        #expect(survivor.items.first?.status == .ready)
+        #expect(!survivorContext.passages(forQuestion: "Elixir", limit: 3).isEmpty, "deleting one session broke the other")
         InterviewSessionStore.delete(secondSession, in: context, store: store)
         #expect(!FileManager.default.fileExists(atPath: storedFile.path), "an unreferenced file was kept")
         #expect(try context.fetchCount(FetchDescriptor<FileExtractionRecord>()) == 0)
@@ -170,7 +250,8 @@ struct FileImportTests {
     func aQueuedImportCanBeCancelled() async throws {
         let context = ModelContext(try S.container())
         let (files, _, _, _) = S.files(context: context)
-        files.importData(S.scannedPDF(Array(repeating: ["SLOW PAGE"], count: 6)), filename: "slow.pdf", type: .pdf)
+        let slow = await S.offMain { S.scannedPDF(Array(repeating: ["SLOW PAGE"], count: 6)) }
+        files.importData(slow, filename: "slow.pdf", type: .pdf)
         files.importData(Data("Queued behind it.".utf8), filename: "queued.txt", type: .plainText)
         try await CopilotTestSupport.waitUntil("both extracting") { files.items.allSatisfy { $0.status == .extracting } }
         let queued = try #require(files.items.last)
@@ -253,10 +334,13 @@ struct FileImportTests {
     func importTimeMemoryAndResponsiveness() async throws {
         let context = ModelContext(try S.container())
         let (files, _, _, _) = S.files(context: context)
+        let textPDF = await S.offMain { S.textPDF((1...120).map { "Page \($0). " + String(repeating: "Distributed systems interview notes. ", count: 40) }) }
+        let scanned = await S.offMain { S.scannedPDF((1...5).map { ["SCANNED PAGE \($0)", "Event sourcing and CQRS"] }) }
+        let photo = await S.offMain { S.textImage(["WHITEBOARD PHOTO", "Consistent hashing"], size: CGSize(width: 4000, height: 3000)) }
         let samples: [(String, Data, UTType)] = [
-            ("text-120-pages.pdf", S.textPDF((1...120).map { "Page \($0). " + String(repeating: "Distributed systems interview notes. ", count: 40) }), .pdf),
-            ("scanned-5-pages.pdf", S.scannedPDF((1...5).map { ["SCANNED PAGE \($0)", "Event sourcing and CQRS"] }), .pdf),
-            ("photo-12mp.png", S.textImage(["WHITEBOARD PHOTO", "Consistent hashing"], size: CGSize(width: 4000, height: 3000)), .png),
+            ("text-120-pages.pdf", textPDF, .pdf),
+            ("scanned-5-pages.pdf", scanned, .pdf),
+            ("photo-12mp.png", photo, .png),
             ("sample.docx", try Data(contentsOf: S.docxFixture), UTType(filenameExtension: "docx")!),
         ]
 

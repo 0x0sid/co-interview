@@ -239,6 +239,12 @@ struct AnswerProvenanceSheet: View {
                         .foregroundStyle(InterviewTheme.Color.muted)
                 }
                 .listRowBackground(InterviewTheme.Color.surface)
+                if let pending = provenance.filesStillProcessing, !pending.isEmpty {
+                    Section("Not included — still being read") {
+                        ForEach(pending, id: \.self) { Text($0).font(InterviewTheme.Font.ui(14, relativeTo: .subheadline)) }
+                    }
+                    .listRowBackground(InterviewTheme.Color.surface)
+                }
                 Section("Included in the request") {
                     ForEach(provenance.included) { excerpt in
                         HStack(alignment: .firstTextBaseline) {

@@ -13,18 +13,31 @@ enum DocxReader {
         case notAZip
         case missingDocument
         case unsupported(String)
+        case tooLarge
 
         var errorDescription: String? {
             switch self {
             case .notAZip: "it is not a valid .docx container"
             case .missingDocument: "it contains no document body"
             case .unsupported(let reason): reason
+            case .tooLarge: "its text is larger than \(DocxReader.maximumUnpackedBytes / 1_048_576) MB when unpacked"
             }
         }
     }
 
+    /// Largest `word/document.xml` accepted once decompressed, so a small archive can never expand
+    /// into an unbounded amount of memory.
+    static let maximumUnpackedBytes = 20 * 1024 * 1024
+
+    /// What is and is not read, shown with every Word file.
+    static let coverageNote = "Body text only: headers, footers, footnotes, comments, text boxes and images are not included."
+
     static func text(from url: URL) throws -> String {
         let data = try Data(contentsOf: url, options: .mappedIfSafe)
+        // An encrypted .docx, and the old binary .doc, are OLE compound files rather than ZIP.
+        if data.starts(with: [0xD0, 0xCF, 0x11, 0xE0]) {
+            throw Failure.unsupported("password-protected Word files and old .doc files aren't supported — save it as an unprotected .docx or PDF")
+        }
         let xml = try entry(named: "word/document.xml", in: data)
         return try paragraphs(fromDocumentXML: xml)
     }
@@ -69,7 +82,8 @@ enum DocxReader {
             guard flags & 1 == 0 else { throw Failure.unsupported("password-protected documents aren't supported") }
             guard u32(localOffset) == 0x0403_4b50 else { throw Failure.notAZip }
             let dataStart = localOffset + 30 + u16(localOffset + 26) + u16(localOffset + 28)
-            guard dataStart + compressedSize <= bytes.count, uncompressedSize < 64 * 1024 * 1024 else { throw Failure.notAZip }
+            guard dataStart + compressedSize <= bytes.count else { throw Failure.notAZip }
+            guard uncompressedSize <= maximumUnpackedBytes else { throw Failure.tooLarge }
             let payload = data.subdata(in: dataStart..<dataStart + compressedSize)
             switch method {
             case 0:
@@ -104,6 +118,7 @@ enum DocxReader {
         let collector = TextCollector()
         let parser = XMLParser(data: xml)
         parser.delegate = collector
+        parser.shouldResolveExternalEntities = false
         guard parser.parse() else { throw Failure.notAZip }
         return collector.paragraphs.joined(separator: "\n")
     }

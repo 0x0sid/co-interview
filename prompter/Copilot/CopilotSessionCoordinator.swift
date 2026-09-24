@@ -599,7 +599,10 @@ final class CopilotSessionCoordinator {
         let retrievalStart = clock()
         let question = cards[index].questionText
         let passages: [ProjectPassage]
-        if let prefetched = prefetchedPassages, !prefetched.passages.isEmpty,
+        if let frozen = discussion?.fileExcerpts {
+            // Chosen when Generate was accepted; never re-retrieved.
+            passages = frozen.map(\.passage)
+        } else if let prefetched = prefetchedPassages, !prefetched.passages.isEmpty,
            Self.isRelated(prefetched.text, question) {
             passages = prefetched.passages
         } else {

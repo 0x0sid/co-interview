@@ -33,6 +33,12 @@ enum SessionTestSupport {
 
     // MARK: Generated files
 
+    /// Builds a heavy fixture away from the main actor. Rendering a 12-megapixel image or a PDF of
+    /// full-page pictures on the main actor froze every other @MainActor test's wait at once.
+    static func offMain<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
+        await Task.detached(priority: .userInitiated) { work() }.value
+    }
+
     /// Black text on white, large enough for OCR to be unambiguous.
     static func textImage(_ lines: [String], size: CGSize = CGSize(width: 1600, height: 900)) -> Data {
         let format = UIGraphicsImageRendererFormat()
@@ -75,6 +81,17 @@ enum SessionTestSupport {
                 let image = UIImage(data: textImage(lines, size: CGSize(width: 1600, height: 2070)))!
                 image.draw(in: bounds)
             }
+        }
+    }
+
+    /// A mixed page: a real typed heading over a scanned (picture-only) body.
+    static func mixedPDF(heading: String, scannedLines: [String]) -> Data {
+        let bounds = CGRect(x: 0, y: 0, width: 612, height: 792)
+        return UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in
+            context.beginPage()
+            (heading as NSString).draw(at: CGPoint(x: 54, y: 40), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 18)])
+            let image = UIImage(data: textImage(scannedLines, size: CGSize(width: 1600, height: 1800)))!
+            image.draw(in: CGRect(x: 0, y: 100, width: 612, height: 690))
         }
     }
 
