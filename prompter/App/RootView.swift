@@ -44,7 +44,8 @@ struct RootView: View {
                 ScriptListScreen()
             }
             #else
-            ScriptListScreen()
+            // Release is Neverblank only: no Prompter home, no demo or development screens.
+            CopilotStartScreen()
             #endif
         }
         .preferredColorScheme(preferredScheme)

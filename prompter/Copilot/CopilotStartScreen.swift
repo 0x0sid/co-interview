@@ -1,10 +1,10 @@
-#if DEBUG
 import SwiftUI
 import SwiftData
 import AVFoundation
 
-/// The copilot's entry point in a development build: choose **Demo** or **Live**, see honestly what
-/// each will do, and start it with a tap.
+/// Neverblank's home: the interview language, saved interviews and **Live**. A Release build opens
+/// here directly (`RootView`); Demo, the pipeline prototype, the sample project and provider
+/// diagnostics are development tools and are compiled into Debug builds only.
 ///
 /// It exists because the copilot was previously reachable only through the `-copilotReplay` launch
 /// argument and the debug menu, so a normal launch showed only the inherited teleprompter. Launch
@@ -61,11 +61,15 @@ struct CopilotStartScreen: View {
                 intro
                 languagePicker
                 recentInterviews
+                #if DEBUG
                 demoCard
+                #endif
                 liveCard
+                #if DEBUG
                 pipelinePrototypeNote
                 sampleProjectNote
-                Text(BuildInfo.footer)
+                #endif
+                Text(footer)
                     .font(Typography.mono(11))
                     .foregroundStyle(Theme.Color.secondary)
             }
@@ -89,7 +93,7 @@ struct CopilotStartScreen: View {
         } message: {
             Text("The transcript, answers and attached files are removed from this device. This can't be undone.")
         }
-        .navigationTitle("Interview Copilot")
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
@@ -120,6 +124,7 @@ struct CopilotStartScreen: View {
                 }
             }
         }
+        #if DEBUG
         .fullScreenCover(item: $startedPipelineMode) { mode in
             NavigationStack {
                 CopilotScreen(
@@ -130,11 +135,34 @@ struct CopilotStartScreen: View {
                 )
             }
         }
+        #endif
         .task {
             microphonePermission = AVAudioApplication.shared.recordPermission
+            #if DEBUG
             await refreshBackend()
+            #endif
             await refreshReadiness()
         }
+    }
+
+    /// Debug keeps the development title the UI tests navigate by; Release shows the product name.
+    private var navigationTitle: String {
+        #if DEBUG
+        "Interview Copilot"
+        #else
+        "Neverblank"
+        #endif
+    }
+
+    private var footer: String {
+        #if DEBUG
+        BuildInfo.footer
+        #else
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "Version \(version) (\(build))"
+        #endif
     }
 
     private var intro: some View {
@@ -142,7 +170,7 @@ struct CopilotStartScreen: View {
             Text("Listen to an interview, suggest answers, read them aloud")
                 .font(Typography.display(20))
                 .foregroundStyle(Theme.Color.ink)
-            Text("Detected questions become cards. Swipe between them; the text follows your voice as you read, exactly as a script does.")
+            Text("Detected questions become cards. Swipe between them; the text follows your voice as you read it aloud.")
                 .font(Typography.body(14))
                 .foregroundStyle(Theme.Color.secondary)
         }
@@ -247,6 +275,7 @@ struct CopilotStartScreen: View {
 
     // MARK: Demo
 
+    #if DEBUG
     private var demoCard: some View {
         card(
             badge: Mode.demo.badge,
@@ -259,6 +288,7 @@ struct CopilotStartScreen: View {
             action: { launch = .demo() }
         )
     }
+    #endif
 
     // MARK: Live
 
@@ -275,6 +305,7 @@ struct CopilotStartScreen: View {
         )
     }
 
+    #if DEBUG
     /// The previous copilot screen — the one the OpenRouter/OpenAI pipeline work runs through. It is
     /// superseded by `InterviewScreen` for the interface, but it is still the only path that talks to
     /// a provider, so it stays reachable and honest about what it needs.
@@ -346,6 +377,8 @@ struct CopilotStartScreen: View {
         }
     }
 
+    #endif
+
     /// Builds the live session from the components that already exist: one audio input, the
     /// configured provider, the sample project, and the coordinator in **manual** generation mode.
     private func makeLiveFeed(project: SessionFileContext) -> LiveInterviewFeed {
@@ -372,6 +405,7 @@ struct CopilotStartScreen: View {
         microphonePermission = AVAudioApplication.shared.recordPermission
     }
 
+    #if DEBUG
     private func refreshBackend() async {
         guard case .backend = providerConfiguration.availability else {
             backendConfiguration = nil
@@ -400,6 +434,8 @@ struct CopilotStartScreen: View {
         .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
     }
+
+    #endif
 
     // MARK: Shared card
 
@@ -442,4 +478,3 @@ struct CopilotStartScreen: View {
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.Color.hairline, lineWidth: 0.5))
     }
 }
-#endif
