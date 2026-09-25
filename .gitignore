@@ -32,3 +32,6 @@ backend/*.local.env
 # Local development defaults for Debug builds (backend host + client token).
 # The committed template is prompter/Config/Local-Debug.example.xcconfig.
 prompter/Config/Local-Debug.xcconfig
+
+# Local access database (installations, preview counters). Never committed.
+backend/data/

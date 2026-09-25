@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test/config-test.mjs && node test/contract-test.mjs && node test/openrouter-test.mjs && node test/diagnostics-test.mjs && node test/decisions-test.mjs",
+    "test": "node test/config-test.mjs && node test/contract-test.mjs && node test/openrouter-test.mjs && node test/diagnostics-test.mjs && node test/decisions-test.mjs && node --no-warnings test/access-test.mjs",
     "verify-routes": "node tools/verify-routes.mjs",
     "eval": "node eval/run-eval.mjs",
     "eval:decisions": "node eval/decisions/run-decision-eval.mjs"

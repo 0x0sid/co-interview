@@ -35,6 +35,7 @@ import {
   focusedSnapshotFromBody, decideFocused, FOCUSED_PROMPT_VERSION,
 } from "./decisions.mjs";
 import { costUSD } from "./providers/typesafe.mjs";
+import { AccessStore, AccessControl, accessLimitsFromEnv, makeRevenueCatVerifier, sanitizeEvent } from "./access.mjs";
 
 /**
  * Loads `backend/.env` into `process.env` if it exists.
@@ -197,6 +198,51 @@ const providerMode = FAKE ? "fake" : keyFor(baseConfig.text_provider) ? "configu
 const decisionConfig = FAKE ? { ...decisionConfigFromEnv({}), modeReason: "development fake" } : decisionConfigFromEnv();
 const decisionRecorder = new DecisionRecorder();
 const decisionApiKeyValue = FAKE ? "" : decisionApiKey(decisionConfig);
+
+// ---------------------------------------------------------------------------------------------
+// Access (access.mjs): installations, the free preview, and the `pro` entitlement.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Where installation credentials and preview counters live. **Must be on durable storage in
+ * production** — on Fly, the `/data` volume (fly.toml `[mounts]`). A path inside the image would be
+ * wiped by every deploy, which would hand every installation a fresh preview and lock every
+ * installed app out of its credential.
+ */
+const ACCESS_DB_PATH = process.env.ACCESS_DB_PATH ?? join(dirname(fileURLToPath(import.meta.url)), "data", "access.sqlite");
+const accessLimits = accessLimitsFromEnv();
+const accessStore = new AccessStore(ACCESS_DB_PATH);
+// The Neverblank project's server key. Server-side only: never in the app, a response or a log.
+const revenueCatVerifier = makeRevenueCatVerifier({ secretKey: process.env.REVENUECAT_SECRET_KEY ?? "", baseURL: process.env.REVENUECAT_API_BASE || undefined });
+const access = new AccessControl({ store: accessStore, verify: revenueCatVerifier, limits: accessLimits });
+
+/** The address a client connected from, for the installation throttle only. Never stored. */
+function clientAddress(request) {
+  return String(request.headers["fly-client-ip"] ?? request.socket.remoteAddress ?? "unknown");
+}
+
+/**
+ * Who is calling: an operator (development/evaluation bearer token, never shipped in the app) or an
+ * installation. Null when neither credential is valid.
+ */
+function callerFor(request) {
+  if (isAuthorized(request)) return { operator: true };
+  const installation = access.authenticate(request);
+  return installation ? { installation } : null;
+}
+
+/**
+ * The paid-request gate: operator, or installation AND (pro OR preview allowance). Sends 402 and
+ * returns false when refused. Called after the request body is validated, so a malformed request
+ * never spends preview allowance.
+ */
+async function admit(caller, kind, response) {
+  if (caller?.operator) return true;
+  const decision = await access.authorize(caller.installation, kind);
+  if (decision.allowed) return true;
+  send(response, 402, { error: "pro_required", entitlement: "pro" });
+  return false;
+}
 /**
  * Limited-active for one session at a time: with this on, a session that asks (`requestActive`, a
  * Debug toggle in the app) gets `apply: true` on accepted decisions while every other session stays
@@ -932,11 +978,12 @@ function isRecoverable(status, message = "") {
 // Routes
 // ---------------------------------------------------------------------------------------------
 
-async function handleClassify(request, response) {
+async function handleClassify(request, response, caller) {
   const body = await readBody(request);
   if (!body.newSpeech || typeof body.newSpeech !== "string") {
     return send(response, 400, { error: "newSpeech is required" });
   }
+  if (!(await admit(caller, "detection", response))) return;
   if (FAKE) return send(response, 200, fakeClassification(body));
 
   let config;
@@ -1003,11 +1050,12 @@ async function handleClassify(request, response) {
  * the operator allows that, **and** the decision was accepted in code. Otherwise the app keeps the
  * result for diagnostics and builds its request exactly as it would with decisions off.
  */
-async function handleDecide(request, response) {
+async function handleDecide(request, response, caller) {
   const body = await readBody(request);
   if (decisionConfig.mode === "off") return send(response, 200, { mode: "off", apply: false, eligible: false });
   const snapshot = focusedSnapshotFromBody(body);
   if (!snapshot.newSpeech.length) return send(response, 400, { error: "newSpeech is required" });
+  if (!(await admit(caller, "detection", response))) return;
 
   const outcome = await decideFocused({ snapshot, config: decisionConfig, apiKey: decisionApiKeyValue, timeoutMs: decisionConfig.shadowTimeoutMs });
   const combined = outcome.combined ?? null;
@@ -1048,7 +1096,7 @@ async function handleDecide(request, response) {
   send(response, 200, payload);
 }
 
-async function handleAnswer(request, response) {
+async function handleAnswer(request, response, caller) {
   const body = await readBody(request, MAX_ANSWER_BODY_BYTES);
   // A tapped follow-up action is a request in its own right and carries no spoken question, so
   // either one satisfies this. Requiring `question` rejected every action the moment nothing had
@@ -1058,6 +1106,7 @@ async function handleAnswer(request, response) {
   if (!hasQuestion && !hasAction) {
     return send(response, 400, { error: "question is required" });
   }
+  if (!(await admit(caller, "answer", response))) return;
   if (FAKE) {
     startSSE(response);
     return streamFakeAnswer(response, body);
@@ -1301,6 +1350,8 @@ const server = createServer(async (request, response) => {
         status: shuttingDown ? "shutting_down" : "ok",
         provider: providerMode,
         auth: TOKENS.length ? "configured" : "unconfigured",
+        // Whether entitlement can be verified; never the key.
+        access: { installations: "enabled", entitlement_verification: revenueCatVerifier ? "configured" : "unconfigured", durable_path: ACCESS_DB_PATH.startsWith("/data/") },
         text_provider: baseConfig.text_provider,
         profile: baseConfig.profile,
         detectionModel: FAKE ? "fake" : baseConfig.detection_model_id,
@@ -1314,9 +1365,34 @@ const server = createServer(async (request, response) => {
       });
     }
 
-    // Refusing to serve without configured tokens is the whole point: never an open proxy.
-    if (!TOKENS.length) return send(response, 503, { error: "auth_unconfigured" });
-    if (!isAuthorized(request)) return send(response, 401, { error: "unauthorized" });
+    // A new installation: the only unauthenticated write, throttled per address. It grants nothing
+    // but a credential and an unused preview.
+    if (url.pathname === "/v1/installations" && request.method === "POST") {
+      const created = access.register(clientAddress(request));
+      if (!created) return send(response, 429, { error: "too_many_installations" });
+      return send(response, 201, created);
+    }
+
+    // Never an open proxy: every other route needs an operator token or an installation credential.
+    const caller = callerFor(request);
+    if (!caller) return send(response, 401, { error: "unauthorized" });
+
+    if (caller.installation && url.pathname === "/v1/access" && request.method === "GET") {
+      return send(response, 200, await access.describe(caller.installation, { refresh: url.searchParams.get("refresh") === "1" }));
+    }
+    if (caller.installation && url.pathname === "/v1/preview/end" && request.method === "POST") {
+      accessStore.endPreview(caller.installation.id);
+      return send(response, 200, await access.describe(caller.installation));
+    }
+    // Product events: enumerated names and values only. The line carries no installation id, no
+    // address and no content (the request log line above carries only a random request id).
+    if (caller.installation && url.pathname === "/v1/events" && request.method === "POST") {
+      const event = sanitizeEvent(await readBody(request));
+      if (!event) return send(response, 400, { error: "unknown_event" });
+      console.log(`[event] ${Object.entries(event).map(([k, v]) => `${k}=${v}`).join(" ")}`);
+      response.writeHead(204);
+      return response.end();
+    }
 
     // The non-secret view of the active configuration, so the app can show the active route.
     // **No credential is ever included here.**
@@ -1334,6 +1410,7 @@ const server = createServer(async (request, response) => {
     // Served whenever decisions are not off, because a record holds identities, labels,
     // probabilities, timings and usage — not conversation. Text appears in a record only when
     // content diagnostics are enabled and that request opted in, exactly as for provider messages.
+    if (url.pathname.startsWith("/v1/copilot/diagnostics/") && !caller.operator) return send(response, 403, { error: "operator_only" });
     if (url.pathname === "/v1/copilot/diagnostics/decisions" && request.method === "GET") {
       if (decisionConfig.mode === "off") return send(response, 404, { error: "decisions_off", decisions: publicDecisionConfig(decisionConfig) });
       const session = url.searchParams.get("session") ?? "";
@@ -1366,9 +1443,9 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method !== "POST") return send(response, 405, { error: "method_not_allowed" });
-    if (url.pathname === "/v1/copilot/classify") return await handleClassify(request, response);
-    if (url.pathname === "/v1/copilot/decide") return await handleDecide(request, response);
-    if (url.pathname === "/v1/copilot/answer") return await handleAnswer(request, response);
+    if (url.pathname === "/v1/copilot/classify") return await handleClassify(request, response, caller);
+    if (url.pathname === "/v1/copilot/decide") return await handleDecide(request, response, caller);
+    if (url.pathname === "/v1/copilot/answer") return await handleAnswer(request, response, caller);
     send(response, 404, { error: "not_found" });
   } catch (error) {
     const statusCode = error?.statusCode ?? 500;
@@ -1422,7 +1499,8 @@ server.listen(PORT, HOST, () => {
   if (localEnv) console.log(`  env file: ${localEnv.path} (${localEnv.loaded} value(s) loaded)`);
   console.log(`  gateway:  ${baseConfig.text_provider}  profile: ${baseConfig.profile}${FAKE ? "  (DEVELOPMENT FAKE — answers are canned text)" : ""}`);
   console.log(`  provider: ${providerMode}`);
-  console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} token(s) configured` : "NOT CONFIGURED — every request will be refused"}`);
+  console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} operator token(s)` : "no operator tokens"}; installations enabled`);
+  console.log(`  access:   db=${ACCESS_DB_PATH} entitlement=${revenueCatVerifier ? "verified with RevenueCat" : "UNVERIFIED — no REVENUECAT_SECRET_KEY, nobody is Pro"}`);
   console.log(`  decisions: ${decisionConfig.mode} (${decisionConfig.modeReason})${decisionConfig.mode === "off" ? "" : `  via=${decisionConfig.transport}  model=${decisionConfig.model}${decisionConfig.activeDecisions.length ? `  active=[${decisionConfig.activeDecisions}]` : ""}`}`);
   if (!FAKE && providerMode === "configured") {
     console.log(`  models:   detection=${baseConfig.detection_model_id} answer=${baseConfig.answer_model_id} reasoning_enabled=${baseConfig.reasoning_enabled}`);
