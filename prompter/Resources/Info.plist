@@ -20,12 +20,20 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>RevenueCatPublicKey</key>
+	<string>$(REVENUECAT_PUBLIC_KEY)</string>
+	<key>NeverblankTermsURL</key>
+	<string>$(NEVERBLANK_TERMS_URL)</string>
+	<key>NeverblankPrivacyURL</key>
+	<string>$(NEVERBLANK_PRIVACY_URL)</string>
+	<key>CopilotBackendURL</key>
+	<string>https://backend--d7y3w.fly.dev</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Neverblank listens to your voice so the script can follow you as you speak. Audio is processed entirely on your iPhone and is never recorded or sent anywhere.</string>
+	<string>Neverblank listens only while Live is on, to transcribe your interview on your iPhone. Audio is never recorded or uploaded.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Neverblank turns your speech into on-screen tracking, entirely on your iPhone, so the script keeps pace with you instead of a timer.</string>
+	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, the text (not the audio) is sent to Neverblank’s AI service.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SpaceGrotesk-Variable.ttf</string>

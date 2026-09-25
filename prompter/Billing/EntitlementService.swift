@@ -48,6 +48,24 @@ final class EntitlementService {
     private(set) var localizedPrice: String?
     private(set) var localizedPeriod: String?
     private(set) var isPurchasing = false
+    /// Neverblank's plans from the current offering, with the store's localized prices. Empty until
+    /// loaded, and whenever the store has none — the paywall then says subscriptions are unavailable.
+    private(set) var plans: [PlanOffer] = []
+    private(set) var offeringsError: String?
+
+    /// One plan as the store sells it. The price text is the store's own string, in the user's App
+    /// Store currency; `price` and `currencyCode` exist only for the savings calculation.
+    struct PlanOffer: Identifiable, Equatable {
+        let kind: PlanKind
+        let productIdentifier: String
+        let localizedPrice: String
+        let price: Decimal
+        let currencyCode: String?
+        var id: PlanKind { kind }
+    }
+    #if canImport(RevenueCat)
+    private var packagesByPlan: [PlanKind: Package] = [:]
+    #endif
 
     /// Last verified entitlement, persisted by the caller for offline continuity.
     var onVerifiedEntitlementChange: ((Bool, Date?) -> Void)?
@@ -57,14 +75,23 @@ final class EntitlementService {
     init() {}
 
     /// Configures the SDK once. Safe to call when unconfigured — it simply stays `.unconfigured`.
-    func configure(cachedPremium: Bool, cachedAt: Date?) {
+    ///
+    /// `appUserID` is the identity the **backend** issued to this installation. When it is not known
+    /// yet (the very first launch, before registration answers), the SDK starts anonymous and
+    /// `identify(appUserID:)` moves it — and anything bought meanwhile — onto the issued id.
+    func configure(appUserID: String? = nil, cachedPremium: Bool, cachedAt: Date?) {
         #if canImport(RevenueCat)
         guard let key = BillingConfiguration.publicAPIKey else {
             status = .unconfigured
             return
         }
-        // Anonymous by design: no account requirement anywhere in the product.
-        Purchases.configure(withAPIKey: key)
+        guard !Purchases.isConfigured else { return }
+        // No account screen anywhere: the identity is the server-issued installation's.
+        if let appUserID {
+            Purchases.configure(withAPIKey: key, appUserID: appUserID)
+        } else {
+            Purchases.configure(withAPIKey: key)
+        }
         // Honour the cached entitlement immediately so a premium reader opening the app offline is
         // not downgraded while the network call is in flight.
         status = cachedPremium ? .unavailable(cachedPremium: true) : .loading
@@ -74,6 +101,22 @@ final class EntitlementService {
         status = .unconfigured
         #endif
     }
+
+    /// Moves RevenueCat onto the identity the backend bound to this installation, so a purchase
+    /// lands on the customer the server checks. A no-op when already there or unconfigured.
+    func identify(appUserID: String) async {
+        #if canImport(RevenueCat)
+        guard BillingConfiguration.isConfigured, Purchases.isConfigured,
+              Purchases.shared.appUserID != appUserID else { return }
+        if let result = try? await Purchases.shared.logIn(appUserID) {
+            apply(result.customerInfo)
+        }
+        #endif
+    }
+
+    /// True while RevenueCat says the entitlement is active — or, offline, while the last verified
+    /// state was. The backend verifies again for every paid request; this only decides what to offer.
+    var hasActivePro: Bool { status.allowsUnlimitedReading }
 
     #if canImport(RevenueCat)
     /// Reacts to entitlement changes pushed by the SDK. **Never interrupts a take** — this only
@@ -116,13 +159,27 @@ final class EntitlementService {
         #endif
     }
 
-    /// Loads the current offering so the paywall can show a real, localized price.
+    /// Loads the current offering so the paywall can show real, localized prices.
     func loadOffering() async {
         #if canImport(RevenueCat)
         guard BillingConfiguration.isConfigured else { return }
         do {
             let offerings = try await Purchases.shared.offerings()
-            guard let package = offerings.current?.availablePackages.first else {
+            offeringsError = nil
+            let current = offerings.current
+            // The weekly and monthly packages, found by RevenueCat's standard package types.
+            var found: [PlanKind: Package] = [:]
+            if let weekly = current?.weekly { found[.weekly] = weekly }
+            if let monthly = current?.monthly { found[.monthly] = monthly }
+            packagesByPlan = found
+            plans = PlanKind.allCases.compactMap { kind in
+                guard let package = found[kind] else { return nil }
+                let product = package.storeProduct
+                return PlanOffer(kind: kind, productIdentifier: product.productIdentifier,
+                                 localizedPrice: product.localizedPriceString,
+                                 price: product.price, currencyCode: product.currencyCode)
+            }
+            guard let package = current?.availablePackages.first else {
                 localizedPrice = nil
                 localizedPeriod = nil
                 return
@@ -130,9 +187,40 @@ final class EntitlementService {
             localizedPrice = package.storeProduct.localizedPriceString
             localizedPeriod = package.storeProduct.subscriptionPeriod.map(Self.describe)
         } catch {
+            plans = []
+            packagesByPlan = [:]
+            offeringsError = "Plans could not be loaded. Check your connection and try again."
             localizedPrice = nil
             localizedPeriod = nil
         }
+        #endif
+    }
+
+    /// Buys one Neverblank plan. Unlocks only on a verified active entitlement in the result.
+    func purchase(plan: PlanKind) async -> PurchaseOutcome {
+        #if canImport(RevenueCat)
+        guard BillingConfiguration.isConfigured else { return .notConfigured }
+        if packagesByPlan[plan] == nil { await loadOffering() }
+        guard let package = packagesByPlan[plan] else {
+            return .failed("This plan is unavailable right now. Please try again later.")
+        }
+        isPurchasing = true
+        defer { isPurchasing = false }
+        do {
+            let result = try await Purchases.shared.purchase(package: package)
+            if result.userCancelled { return .cancelled }
+            if result.customerInfo.entitlements[BillingConfiguration.entitlementIdentifier]?.isActive == true {
+                apply(result.customerInfo)
+                return .purchased
+            }
+            return .pending
+        } catch {
+            if let code = error as? ErrorCode, code == .purchaseCancelledError { return .cancelled }
+            if let code = error as? ErrorCode, code == .paymentPendingError { return .pending }
+            return .failed(error.localizedDescription)
+        }
+        #else
+        return .notConfigured
         #endif
     }
 

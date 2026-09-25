@@ -15,6 +15,9 @@ struct ProviderConfiguration: Equatable, Sendable {
     static let backendURLDefaultsKey = "CopilotBackendURL"
     static let backendTokenDefaultsKey = "CopilotBackendToken"
     static let useFakeProviderDefaultsKey = "CopilotUseFakeProvider"
+    /// Debug: authenticate as this installation (free preview and `pro`) instead of with the
+    /// developer's bearer token. Also `-CopilotInstallationAuth`. Release always does.
+    static let useInstallationAuthDefaultsKey = "CopilotUseInstallationAuth"
 
     /// Documented in docs/CO_INTERVIEW_AI_PIPELINE.md §2 and verified against OpenAI documentation on
     /// 2026-09-16. The app only *labels* these; the backend decides what it actually calls.
@@ -29,6 +32,12 @@ struct ProviderConfiguration: Equatable, Sendable {
 
     var availability: Availability
     var token: String
+    /// Set when requests authenticate as this installation — always in Release. Access (the free
+    /// preview and `pro`) is then enforced by the backend, and the app gates what it offers.
+    var installation: InstallationCredential?
+    var usesInstallationAuth: Bool { installation != nil }
+    /// The `Authorization` value every backend request carries.
+    var authorizationHeader: String { installation?.authorizationHeader ?? "Bearer \(token)" }
     /// Where the base URL came from. Shown in the debug screen so there is never a question about
     /// which of the three possible sources is actually in effect.
     var source: Source = .none
@@ -67,8 +76,25 @@ struct ProviderConfiguration: Equatable, Sendable {
     static func resolve(
         bundle: Bundle = .main,
         defaults: UserDefaults = .standard,
-        isDebugBuild: Bool = ProviderConfiguration.isDebug
+        isDebugBuild: Bool = ProviderConfiguration.isDebug,
+        installation: @autoclosure () -> InstallationCredential? = InstallationCredentialStore.keychain.load(),
+        arguments: [String] = ProcessInfo.processInfo.arguments
     ) -> ProviderConfiguration {
+        // **Release: the backend URL from the build, authenticated as this installation, and nothing
+        // else.** No saved override, no development default and no bearer token can apply to a
+        // shipping build, so no shared secret is ever needed in the app.
+        if !isDebugBuild {
+            let raw = (bundle.object(forInfoDictionaryKey: backendURLPlistKey) as? String ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let url = URL(string: raw), url.scheme == "https" else {
+                return ProviderConfiguration(availability: .unavailable(reason: "No backend is configured — answer suggestions are unavailable"), token: "")
+            }
+            guard let credential = installation() else {
+                return ProviderConfiguration(availability: .unavailable(reason: "Connecting to Neverblank…"), token: "", source: .buildConfiguration)
+            }
+            return ProviderConfiguration(availability: .backend(url: url), token: "", installation: credential, source: .buildConfiguration)
+        }
+        let wantsInstallation = arguments.contains("-CopilotInstallationAuth") || defaults.bool(forKey: useInstallationAuthDefaultsKey)
         // Precedence, highest first: what the developer explicitly saved in the debug screen, then
         // the build's own configuration, then the local development defaults. Saving a value in the
         // app therefore wins over the checked-out configuration, which is what makes a stale
@@ -107,6 +133,12 @@ struct ProviderConfiguration: Equatable, Sendable {
         }
 
         if !urlString.isEmpty, let url = URL(string: urlString), url.scheme != nil {
+            if wantsInstallation {
+                guard let credential = installation() else {
+                    return ProviderConfiguration(availability: .unavailable(reason: "Connecting to Neverblank…"), token: "", source: source)
+                }
+                return ProviderConfiguration(availability: .backend(url: url), token: "", installation: credential, source: source)
+            }
             guard !token.isEmpty else {
                 return ProviderConfiguration(
                     availability: .unavailable(reason: "A backend URL is set but no access token — suggestions are unavailable"),
@@ -169,13 +201,29 @@ struct ProviderConfiguration: Equatable, Sendable {
         #endif
     }
 
+    /// The backend this build registers an installation with, or nil when it does not use
+    /// installation access: Release always does; Debug only with `-CopilotInstallationAuth` (or the
+    /// saved setting), so ordinary development runs and the test host never register.
+    static func installationBackendURL(
+        bundle: Bundle = .main,
+        defaults: UserDefaults = .standard,
+        isDebugBuild: Bool = ProviderConfiguration.isDebug,
+        arguments: [String] = ProcessInfo.processInfo.arguments
+    ) -> URL? {
+        let placeholder = InstallationCredential(installationID: "-", secret: "-", appUserID: "-")
+        let resolved = resolve(bundle: bundle, defaults: defaults, isDebugBuild: isDebugBuild,
+                               installation: placeholder, arguments: arguments)
+        guard resolved.usesInstallationAuth, case .backend(let url) = resolved.availability else { return nil }
+        return url
+    }
+
     /// Builds the provider this configuration describes.
     func makeProvider() -> CopilotProviding {
         switch availability {
         case .backend(let url):
             return BackendCopilotProvider(
                 baseURL: url,
-                token: token,
+                authorization: authorizationHeader,
                 detectionModelLabel: Self.detectionModel,
                 answerModelLabel: Self.answerModel
             )

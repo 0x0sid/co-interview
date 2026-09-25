@@ -29,7 +29,7 @@ cd ~/Desktop/co-interview-public
 rsync -a \
   --exclude='.env' --exclude='.env.*' --exclude='node_modules' --exclude='*.log' \
   --exclude='README.md' --exclude='DEPLOYMENT.md' --exclude='.gitignore' \
-  --exclude='fly.toml' --exclude='Dockerfile' --exclude='.dockerignore' \
+  --exclude='fly.toml' --exclude='Dockerfile' --exclude='.dockerignore' --exclude='data' \
   backend/ ~/Desktop/prompter-backend/
 cp docs/CO_INTERVIEW_AI_PIPELINE.md ~/Desktop/prompter-backend/docs/
 cd ~/Desktop/prompter-backend && npm test && git add -A && git commit && git push

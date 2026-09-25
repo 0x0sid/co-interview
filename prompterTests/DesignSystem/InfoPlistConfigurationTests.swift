@@ -22,6 +22,10 @@ struct InfoPlistConfigurationTests {
         "CopilotDevBackendToken",
     ]
 
+    /// The production backend. Release-only on purpose: in Debug a plist URL would outrank the
+    /// developer's own backend (`ProviderConfiguration.resolve`).
+    static let releaseOnlyKeys: Set<String> = ["CopilotBackendURL"]
+
     static func plist(named name: String) throws -> [String: Any] {
         // Walk up from this file to the repository root, so the test reads the checked-in sources
         // rather than whatever was copied into a build product.
@@ -106,10 +110,10 @@ struct InfoPlistConfigurationTests {
         let extraInDebug = Set(debug.keys).subtracting(release.keys)
         #expect(extraInDebug == Self.developmentOnlyKeys,
                 "unexpected difference: \(extraInDebug.symmetricDifference(Self.developmentOnlyKeys))")
-        #expect(Set(release.keys).subtracting(debug.keys).isEmpty,
+        #expect(Set(release.keys).subtracting(debug.keys) == Self.releaseOnlyKeys,
                 "the debug plist is missing keys the release plist has")
 
-        for key in release.keys {
+        for key in release.keys where !Self.releaseOnlyKeys.contains(key) {
             // Deep equality, not string description: a dictionary or array prints in whatever order
             // it happens to enumerate, which made this compare unequal values that were identical.
             let releaseValue = release[key] as? NSObject

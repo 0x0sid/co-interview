@@ -19,6 +19,8 @@ struct AnswerPageView: View {
     let isGenerating: Bool
     /// Accepted but waiting behind another request.
     var isQueued: Bool = false
+    /// Queued and held until Neverblank Pro is confirmed: its request is kept, not sent.
+    var isWaitingForAccess: Bool = false
     /// This entry failed and still has the snapshot needed to try again.
     var canRetry: Bool = false
     var onRetry: () -> Void = {}
@@ -285,7 +287,8 @@ struct AnswerPageView: View {
             if !InterviewTestingFlags.quietMotion, !isQueued {
                 ProgressView().controlSize(.small)
             }
-            Text(isQueued ? "Queued" : "Writing an answer…")
+            Text(isWaitingForAccess ? "Waiting for Neverblank Pro — this answer is kept and sent once you unlock"
+                 : isQueued ? "Queued" : "Writing an answer…")
                 .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.muted)
         }

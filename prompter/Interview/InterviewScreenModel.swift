@@ -132,6 +132,66 @@ final class InterviewScreenModel {
         )
     }
 
+    // MARK: Access (Neverblank Pro and the free preview)
+
+    /// Asked before any paid request. Nil in Demo and tests: everything is allowed.
+    weak var accessGate: (any InterviewAccessGate)?
+    /// Requests accepted while access was unavailable. Each keeps the exact snapshot taken at its tap,
+    /// waits at the head of the queue, and is sent **once** by `releaseHeldRequests` after the backend
+    /// has confirmed access — never re-built from later speech.
+    private(set) var heldRequestIDs: Set<UUID> = []
+    /// Shown on an entry abandoned because the paywall was closed. Retry re-sends its own snapshot.
+    static let heldAbandonedMessage = CopilotProviderError.proRequiredMessage
+
+    /// Whether a request may go out now.
+    private var hasPaidAccess: Bool { accessGate?.allowsPaidRequests ?? true }
+
+    /// Puts a freshly accepted request in the queue — held, with the paywall opened, if there is no
+    /// access right now.
+    private func enqueue(_ requestID: UUID, trigger: PaywallTrigger) {
+        queuedRequestIDs.append(requestID)
+        if !hasPaidAccess {
+            heldRequestIDs.insert(requestID)
+            accessGate?.requestPaywall(trigger)
+        }
+    }
+
+    /// Connects a Live session to Neverblank access: paid requests and question detection ask the
+    /// gate first. Transcription is never gated.
+    func attachAccess(_ gate: any InterviewAccessGate) {
+        accessGate = gate
+        liveFeed?.coordinator.allowsPaidDetection = { [weak gate] in gate?.allowsPaidRequests ?? false }
+    }
+
+    /// Access was verified: send the held requests, in order, each exactly once.
+    func releaseHeldRequests() {
+        guard !heldRequestIDs.isEmpty else { return }
+        heldRequestIDs = []
+        startNextQueuedRequestIfIdle()
+    }
+
+    /// The paywall closed without access. Each held entry stays, marked as needing Pro, with its
+    /// snapshot kept for Retry; nothing is sent and nothing is discarded.
+    func abandonHeldRequests() {
+        let held = queuedRequestIDs.filter { heldRequestIDs.contains($0) }
+        guard !held.isEmpty else { return }
+        heldRequestIDs = []
+        queuedRequestIDs.removeAll { held.contains($0) }
+        heldAbandoning = true
+        defer { heldAbandoning = false }
+        for requestID in held {
+            guard let generation = generations[requestID] else { continue }
+            startAnswer(requestID: requestID, questionID: generation.questionID)
+            failAnswer(requestID: requestID, message: Self.heldAbandonedMessage)
+        }
+        onPersist?(.now)
+    }
+
+    func isWaitingForAccess(questionID: UUID) -> Bool {
+        guard let requestID = requestByQuestion[questionID] else { return false }
+        return heldRequestIDs.contains(requestID)
+    }
+
     /// The one request currently running. Queued requests wait behind it.
     private(set) var activeRequestID: UUID?
     /// questionID → the request currently running for it, so a second tap cannot start a second one.
@@ -226,7 +286,11 @@ final class InterviewScreenModel {
         }
         if let coordinator = liveFeed?.coordinator {
             decisions.decide = coordinator.decisionService()
-            decisions.makeSnapshot = { [weak self] in self?.makeDecisionSnapshot() }
+            decisions.makeSnapshot = { [weak self] in
+                // Focused decisions are paid backend calls: none without access.
+                guard let self, self.hasPaidAccess else { return nil }
+                return self.makeDecisionSnapshot()
+            }
             decisions.onFinished = { [weak self] snapshot, result, elapsed in
                 self?.recordDecisionCall(snapshot: snapshot, result: result, elapsed: elapsed)
             }
@@ -270,6 +334,7 @@ final class InterviewScreenModel {
         generations = [:]
         requestByQuestion = [:]
         queuedRequestIDs = []
+        heldRequestIDs = []
         pendingSnapshots = [:]
         activeRequestID = nil
         stopSimulatedReading()
@@ -638,7 +703,7 @@ final class InterviewScreenModel {
         diagnostics.recordDecisionUse(requestID: requestID, status: decisionStatus)
         noteDecisionStateChanged()
 
-        queuedRequestIDs.append(requestID)
+        enqueue(requestID, trigger: .generate)
         onPersist?(.now)
         diagnostics.recordQueued(requestID: requestID, at: now)
         startNextQueuedRequestIfIdle()
@@ -735,6 +800,8 @@ final class InterviewScreenModel {
     /// Starts the oldest queued request, if nothing is running.
     private func startNextQueuedRequestIfIdle() {
         guard activeRequestID == nil, let next = queuedRequestIDs.first else { return }
+        // A held request waits for verified access; everything behind it waits too, in order.
+        guard !heldRequestIDs.contains(next) else { return }
         guard let generation = generations[next], let snapshot = pendingSnapshots[next] else {
             queuedRequestIDs.removeFirst()
             return
@@ -760,6 +827,12 @@ final class InterviewScreenModel {
 
     private func requestAnswer(for question: InterviewQuestion, isRegeneration: Bool) {
         guard requestByQuestion[question.id] == nil else { return }   // no duplicate requests
+        // Another version of a page is a paid request too. Nothing is held: the page is still there
+        // to ask again from once access is back.
+        guard hasPaidAccess else {
+            accessGate?.requestPaywall(.generate)
+            return
+        }
         syncSessionNote()
         let requestID = UUID()
         generations[requestID] = Generation(questionID: question.id, answerID: nil, isRegeneration: isRegeneration)
@@ -1193,7 +1266,14 @@ final class InterviewScreenModel {
         requestByQuestion[generation.questionID] = nil
         generationFailure = message
         finishRequest(requestID)
+        // The backend refused this request for access (its own counters ended the preview before
+        // this device's did). The answer keeps its snapshot for Retry; the paywall is offered once.
+        if message == CopilotProviderError.proRequiredMessage, !heldAbandoning {
+            accessGate?.requestPaywall(.generate)
+        }
     }
+    /// True while `abandonHeldRequests` marks entries, so closing the paywall cannot reopen it.
+    private var heldAbandoning = false
 
     /// Re-sends a failed request's own snapshot.
     ///
@@ -1210,7 +1290,7 @@ final class InterviewScreenModel {
         pendingSnapshots[requestID] = snapshot
         generationFailure = nil
         currentIndex = index
-        queuedRequestIDs.append(requestID)
+        enqueue(requestID, trigger: .retry)
         onPersist?(.now)
         startNextQueuedRequestIfIdle()
     }

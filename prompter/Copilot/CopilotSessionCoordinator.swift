@@ -57,6 +57,12 @@ final class CopilotSessionCoordinator {
     /// for a generation. Nil in Release and whenever diagnostics are off.
     var diagnosticsCorrelation: (sessionID: String, requestID: String, captureProviderMessages: Bool)?
 
+    /// Whether question detection may call the backend now (Neverblank: Pro, or free preview left).
+    /// Nil means always — Demo, the pipeline screen, tests. **Transcription is on-device and never
+    /// gated**; while this says no, speech keeps arriving and is simply not classified, and the lines
+    /// stay pending so detection picks them up if access returns.
+    var allowsPaidDetection: (() -> Bool)?
+
     /// Observation hooks, in the same idiom `InterviewAudioInput` already uses for `onDelta`.
     /// They exist so `LiveInterviewFeed` can translate this coordinator into `InterviewFeedEvent`s
     /// without polling and without owning any pipeline state of its own.
@@ -346,6 +352,7 @@ final class CopilotSessionCoordinator {
     // MARK: - Detection
 
     private func classify(text: String, trigger: DetectionPolicy.Trigger, transcriptNow: TimeInterval) {
+        if let allowsPaidDetection, !allowsPaidDetection() { return }
         isClassifying = true
         lastClassificationTime = transcriptNow
         lastClassifiedText = text

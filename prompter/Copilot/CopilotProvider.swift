@@ -194,6 +194,12 @@ enum CopilotProviderError: Error, Sendable, Equatable {
     case cancelled
     case transport(String)
     case provider(String)
+    /// The backend requires Neverblank Pro for this request.
+    case proRequired
+
+    /// Shown on an answer the backend refused for access. `InterviewScreenModel` recognises it to
+    /// offer the paywall rather than a plain retry.
+    static let proRequiredMessage = "Neverblank Pro is needed to write this answer."
 
     var userMessage: String {
         switch self {
@@ -204,6 +210,7 @@ enum CopilotProviderError: Error, Sendable, Equatable {
         case .cancelled: "Cancelled"
         case .transport(let detail): "Network problem: \(detail)"
         case .provider(let detail): "Provider error: \(detail)"
+        case .proRequired: Self.proRequiredMessage
         }
     }
 }
@@ -301,15 +308,22 @@ struct UnconfiguredCopilotProvider: CopilotProviding {
 /// permanent provider credential is ever compiled into the app.**
 final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
     private let baseURL: URL
-    private let token: String
+    /// The whole `Authorization` value: `Installation <id>.<secret>` in Release, `Bearer <token>`
+    /// for a developer's own backend token.
+    private let authorization: String
     private let session: URLSession
     let detectionModelLabel: String
     let answerModelLabel: String
     let isDevelopmentFake = false
 
-    init(baseURL: URL, token: String, detectionModelLabel: String, answerModelLabel: String, session: URLSession? = nil) {
+    convenience init(baseURL: URL, token: String, detectionModelLabel: String, answerModelLabel: String, session: URLSession? = nil) {
+        self.init(baseURL: baseURL, authorization: "Bearer \(token)", detectionModelLabel: detectionModelLabel,
+                  answerModelLabel: answerModelLabel, session: session)
+    }
+
+    init(baseURL: URL, authorization: String, detectionModelLabel: String, answerModelLabel: String, session: URLSession? = nil) {
         self.baseURL = baseURL
-        self.token = token
+        self.authorization = authorization
         self.detectionModelLabel = detectionModelLabel
         self.answerModelLabel = answerModelLabel
         let configuration = URLSessionConfiguration.ephemeral
@@ -327,7 +341,7 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         guard let encoded = requestID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
         var request = URLRequest(url: baseURL.appending(path: "/v1/copilot/diagnostics/\(encoded)"))
         request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(authorization, forHTTPHeaderField: "Authorization")
         guard let (data, response) = try? await session.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200,
               let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
@@ -344,7 +358,7 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         guard let url = components?.url else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(authorization, forHTTPHeaderField: "Authorization")
         guard let (data, response) = try? await session.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return String(data: data, encoding: .utf8)
@@ -361,7 +375,7 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(authorization, forHTTPHeaderField: "Authorization")
         request.httpBody = body
         return request
     }
@@ -369,7 +383,7 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
     /// Reads the backend's non-secret configuration so the app can show which route is active.
     func configuration() async -> CopilotBackendConfiguration? {
         var request = URLRequest(url: baseURL.appending(path: "v1/copilot/config"))
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(authorization, forHTTPHeaderField: "Authorization")
         guard let (data, response) = try? await session.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return try? JSONDecoder().decode(CopilotBackendConfiguration.self, from: data)
@@ -493,6 +507,8 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
         switch http.statusCode {
         case 200..<300: return
         case 401, 403: throw CopilotProviderError.unauthorized
+        // The free preview is used and this installation is not Pro (backend/access.mjs).
+        case 402: throw CopilotProviderError.proRequired
         case 408, 504: throw CopilotProviderError.timedOut
         case 429: throw CopilotProviderError.rateLimited
         case 503:

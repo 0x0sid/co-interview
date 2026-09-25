@@ -35,6 +35,11 @@ struct InterviewScreen: View {
     /// Re-runs the readiness check. Nil in Demo, which has nothing to check.
     private let recheckReadiness: (() async -> LiveReadiness)?
     @State private var isRechecking = false
+    /// True when this Live session authenticates as the installation, so the free preview and Pro
+    /// apply (always in Release). False in Demo and for a developer's own backend token.
+    private let enforcesAccess: Bool
+    @Environment(AccessController.self) private var access: AccessController?
+    @Environment(EntitlementService.self) private var entitlements: EntitlementService?
     #if DEBUG
     @State private var isMarkingProblem = false
     @State private var problemNote = ""
@@ -49,9 +54,11 @@ struct InterviewScreen: View {
         recheckReadiness: (() async -> LiveReadiness)? = nil,
         files: SessionFiles? = nil,
         recorder: SessionRecorder? = nil,
-        restored: RestoredInterview? = nil
+        restored: RestoredInterview? = nil,
+        enforcesAccess: Bool = false
     ) {
         self.title = title
+        self.enforcesAccess = enforcesAccess && mode == .live
         self.files = files
         self.recorder = recorder
         _readiness = State(wrappedValue: readiness)
@@ -71,10 +78,45 @@ struct InterviewScreen: View {
     /// Stops the session and hands the idle timer back to the system at once — not on the next
     /// render, which may never come once the screen is gone.
     private func endSession() {
+        access?.setPreviewConditions(false)
         model.stop()
         recorder?.end()
         isSessionActive = false
         screenAwake.apply(sessionActive: false, sceneActive: scenePhase == .active)
+    }
+
+    /// Listening for real, in the foreground, with answers configured and no paywall on screen.
+    /// Consent was given before this screen could open. Setup, permission prompts, the paywall and
+    /// background time are therefore never charged to the preview.
+    private var previewConditionsMet: Bool {
+        enforcesAccess && model.listeningState == .listening && scenePhase == .active
+            && readiness.canGenerate && access?.paywall == nil
+    }
+
+    private var paywallBinding: Binding<AccessController.PaywallRequest?> {
+        Binding(
+            get: { enforcesAccess ? access?.paywall : nil },
+            set: { if $0 == nil { access?.paywall = nil } }
+        )
+    }
+
+    /// The preview's countdown, or — once it has ended — what still works and how to unlock the rest.
+    @ViewBuilder
+    private var accessStatus: some View {
+        if enforcesAccess, let access, !access.isPro {
+            HStack(spacing: 10) {
+                Text(access.isPreviewExhausted ? AccessCopy.previewEnded : AccessCopy.previewRemaining(access.previewRemainingSeconds))
+                    .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
+                    .foregroundStyle(InterviewTheme.Color.muted)
+                    .accessibilityIdentifier("preview-status")
+                Spacer(minLength: 4)
+                if access.isPreviewExhausted {
+                    Button("Unlock Pro") { access.requestPaywall(.settings) }
+                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
+                        .accessibilityIdentifier("preview-unlock")
+                }
+            }
+        }
     }
 
     var body: some View {
@@ -96,6 +138,7 @@ struct InterviewScreen: View {
                 )
 
                 VStack(spacing: 12) {
+                    accessStatus
                     TranscriptStripView(
                         lines: model.transcript,
                         isExpanded: $model.isTranscriptExpanded,
@@ -118,6 +161,7 @@ struct InterviewScreen: View {
         .background(InterviewTheme.Color.background)
         .toolbar(.hidden, for: .navigationBar)
         .task {
+            if enforcesAccess, let access { model.attachAccess(access) }
             model.files = files
             recorder?.attach(to: model)
             recorder?.setRunning(scenePhase == .active)
@@ -147,6 +191,20 @@ struct InterviewScreen: View {
                                   currentFileIDs: Set((files?.items ?? []).map(\.id.uuidString)))
         }
         .onDisappear { endSession() }
+        // The free preview is charged only while every condition holds; see `previewConditionsMet`.
+        .onChange(of: previewConditionsMet, initial: true) { _, met in
+            access?.setPreviewConditions(met)
+        }
+        .sheet(item: paywallBinding) { request in
+            if let access, let entitlements {
+                NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { unlocked in
+                    access.paywall = nil
+                    // Verified access: the request that opened the paywall goes out once, with the
+                    // snapshot taken at its tap. Closed: it stays on its page, marked, for Retry.
+                    if unlocked { model.releaseHeldRequests() } else { model.abandonHeldRequests() }
+                }
+            }
+        }
         .onChange(of: ScreenAwake.shouldKeepAwake(sessionActive: isSessionActive, sceneActive: scenePhase == .active), initial: true) { _, _ in
             screenAwake.apply(sessionActive: isSessionActive, sceneActive: scenePhase == .active)
         }
@@ -200,6 +258,7 @@ struct InterviewScreen: View {
                         isAutoScrolling: model.isAutoScrolling(question),
                         isGenerating: model.isGenerating(questionID: question.id),
                         isQueued: model.isQueued(questionID: question.id),
+                        isWaitingForAccess: model.isWaitingForAccess(questionID: question.id),
                         canRetry: model.canRetry(questionID: question.id),
                         onRetry: { model.retry(questionID: question.id) },
                         failureMessage: index == model.currentIndex ? model.generationFailure : nil,
@@ -232,7 +291,9 @@ struct InterviewScreen: View {
             Text(model.mode == .demo ? "Playing the demo interview…" : "Listening…")
                 .font(InterviewTheme.Font.ui(15, weight: .medium, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.muted)
-            Text("Questions appear here as they are detected. Answers are written only when you tap Generate.")
+            Text(enforcesAccess && access?.allowsPaidRequests == false
+                 ? "The transcript keeps going. With Pro, questions appear here and Generate writes answers."
+                 : "Questions appear here as they are detected. Answers are written only when you tap Generate.")
                 .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
                 .foregroundStyle(InterviewTheme.Color.muted.opacity(ultraContrast ? 1 : 0.8))
                 .multilineTextAlignment(.center)

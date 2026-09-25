@@ -9,6 +9,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settingsQuery: [AppSettings]
     @Environment(EntitlementService.self) private var entitlements
+    @Environment(AccessController.self) private var access
 
     /// Applied once at the root so every screen — including sheets and the reader — follows the
     /// stored preference. `nil` means "follow the system", which is the default (M5.10).
@@ -69,7 +70,11 @@ struct RootView: View {
                 settings.premiumCachedAt = at
                 try? modelContext.save()
             }
-            entitlements.configure(cachedPremium: settings.premiumCachedActive, cachedAt: settings.premiumCachedAt)
+            // RevenueCat starts on the identity the backend issued to this installation when it is
+            // already known; on the very first launch `bootstrap` moves it there once issued.
+            entitlements.configure(appUserID: access.credential?.appUserID,
+                                   cachedPremium: settings.premiumCachedActive, cachedAt: settings.premiumCachedAt)
+            await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL())
         }
     }
 }

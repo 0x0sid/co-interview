@@ -52,10 +52,10 @@ struct EntitlementStateTests {
                 "pending approval must not be treated as a completed purchase")
     }
 
-    /// The entitlement identifier is the one the spec and dashboard agree on.
+    /// Neverblank's one entitlement, the same identifier the backend checks (`backend/access.mjs`).
     @Test
-    func entitlementIdentifierMatchesTheSpec() {
-        #expect(BillingConfiguration.entitlementIdentifier == "premium")
+    func entitlementIdentifierMatchesTheBackend() {
+        #expect(BillingConfiguration.entitlementIdentifier == "pro")
     }
 
     /// Placeholder or empty keys count as unconfigured rather than as a broken key.

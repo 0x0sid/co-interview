@@ -197,7 +197,7 @@ struct LiveReadiness: Equatable, Sendable {
         }
         var request = URLRequest(url: url.appending(path: "v1/copilot/config"))
         request.timeoutInterval = probeTimeout
-        request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
+        request.setValue(configuration.authorizationHeader, forHTTPHeaderField: "Authorization")
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else {

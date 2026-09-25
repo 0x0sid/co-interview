@@ -13,9 +13,12 @@ import Foundation
 /// app runs fully: scripts, editing, the demo and the free daily allowance all work, and Premium is
 /// simply unpurchasable. That is what makes it safe to ship this code before the dashboard exists.
 enum BillingConfiguration {
-    /// Entitlement identifier agreed in `BUILD_SPEC.md`. Reconciled against the dashboard before
-    /// sandbox validation — see `docs/RELEASE_READINESS.md`.
-    static let entitlementIdentifier = "premium"
+    /// Neverblank's one entitlement. The backend checks the same identifier (`backend/access.mjs`).
+    static let entitlementIdentifier = "pro"
+
+    /// RevenueCat Test Store keys start with this. They simulate purchases without Apple, so a
+    /// **Release build refuses them**: it may only ever use the real App Store SDK key.
+    static let testStoreKeyPrefix = "test_"
 
     static var publicAPIKey: String? {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "RevenueCatPublicKey") as? String else {
@@ -25,7 +28,14 @@ enum BillingConfiguration {
         // An unsubstituted build setting (`$(REVENUECAT_PUBLIC_KEY)`) or an empty string both mean
         // "not configured" rather than a key that happens to be invalid.
         guard !trimmed.isEmpty, !trimmed.hasPrefix("$(") else { return nil }
-        return trimmed
+        return acceptedKey(trimmed, isDebugBuild: ProviderConfiguration.isDebug)
+    }
+
+    /// The key a build may use: Debug takes a Test Store or App Store key; Release takes only an
+    /// App Store key, so a Test Store configuration can never ship.
+    static func acceptedKey(_ key: String, isDebugBuild: Bool) -> String? {
+        if !isDebugBuild, key.hasPrefix(testStoreKeyPrefix) { return nil }
+        return key
     }
 
     static var isConfigured: Bool { publicAPIKey != nil }
