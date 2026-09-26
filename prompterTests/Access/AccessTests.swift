@@ -344,6 +344,36 @@ struct AccessControllerTests {
     }
 
     @Test
+    func noPurchaseUntilRevenueCatIsOnTheIssuedIdentity() async {
+        let backend = FakeAccessBackend()
+        let rcUser = LockedBox<String?>("$RCAnonymousID:abc")
+        let controller = AccessController(
+            credentials: .inMemory(), ledger: .inMemory(), makeClient: { _ in backend },
+            entitlementActive: { false },
+            identify: { _ in },                                   // a login that did not happen
+            currentAppUserID: { rcUser.value },
+            monotonicNow: { 0 }, sleep: { _ in await Task.yield() })
+        #expect(!(await controller.prepareForPurchase()), "no server access: no purchase")
+        await controller.bootstrap(backendURL: Self.url)
+        #expect(!(await controller.prepareForPurchase()), "still anonymous: a purchase would not reach the checked customer")
+        rcUser.value = "nb_inst-1"
+        #expect(await controller.prepareForPurchase())
+    }
+
+    @Test
+    func aRecognisedSubscriptionIsNotProUntilTheServerVerifiesIt() async {
+        let backend = FakeAccessBackend()
+        let storeSaysActive = LockedBox(true)
+        let h = Self.make(backend: backend, pro: storeSaysActive)
+        await h.controller.bootstrap(backendURL: Self.url)
+        #expect(h.controller.needsVerification, "store-active but unverified is its own state")
+        backend.snapshots = [.success(.make(pro: true))]
+        #expect(await h.controller.verifyProAfterPurchase(attempts: 1))
+        #expect(h.controller.purchaseVerification == .verified)
+        #expect(!h.controller.needsVerification)
+    }
+
+    @Test
     func eventsCarryOnlyEnumeratedValues() throws {
         let data = try JSONEncoder().encode(ProductEvent(name: .purchaseFailed, plan: .monthly, trigger: .generate, reason: .cancelled))
         let object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: String])

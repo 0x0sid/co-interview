@@ -128,6 +128,19 @@ final class EntitlementService {
         #endif
     }
 
+    /// RevenueCat's current App User ID; nil before the SDK is configured.
+    var currentAppUserID: String? {
+        #if canImport(RevenueCat)
+        guard Purchases.isConfigured else { return nil }
+        return Purchases.shared.appUserID
+        #else
+        return nil
+        #endif
+    }
+
+    /// The RevenueCat **Test Store**: simulated purchases, never billed or managed by Apple.
+    var isTestStore: Bool { BillingConfiguration.publicAPIKey?.hasPrefix(BillingConfiguration.testStoreKeyPrefix) == true }
+
     /// True while RevenueCat says the entitlement is active — or, offline, while the last verified
     /// state was. The backend verifies again for every paid request; this only decides what to offer.
     var hasActivePro: Bool { status.allowsUnlimitedReading }

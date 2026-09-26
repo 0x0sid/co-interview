@@ -212,8 +212,16 @@ const decisionApiKeyValue = FAKE ? "" : decisionApiKey(decisionConfig);
 const ACCESS_DB_PATH = process.env.ACCESS_DB_PATH ?? join(dirname(fileURLToPath(import.meta.url)), "data", "access.sqlite");
 const accessLimits = accessLimitsFromEnv();
 const accessStore = new AccessStore(ACCESS_DB_PATH);
-// The Neverblank project's server key. Server-side only: never in the app, a response or a log.
-const revenueCatVerifier = makeRevenueCatVerifier({ secretKey: process.env.REVENUECAT_SECRET_KEY ?? "", baseURL: process.env.REVENUECAT_API_BASE || undefined });
+// The key used to read a customer's entitlements from RevenueCat. Server-side only: never in a
+// response or a log. Production uses the Neverblank project's **secret** key (REVENUECAT_SECRET_KEY).
+// REVENUECAT_VERIFY_KEY is an interim alternative: RevenueCat's customer read also accepts the
+// project's public SDK key, which lets verification work before the secret key is issued. Either way
+// the server alone chooses whose entitlements are read.
+const REVENUECAT_KEY_SOURCE = process.env.REVENUECAT_SECRET_KEY ? "secret key" : process.env.REVENUECAT_VERIFY_KEY ? "public key (interim)" : "none";
+const revenueCatVerifier = makeRevenueCatVerifier({
+  secretKey: process.env.REVENUECAT_SECRET_KEY || process.env.REVENUECAT_VERIFY_KEY || "",
+  baseURL: process.env.REVENUECAT_API_BASE || undefined,
+});
 const access = new AccessControl({ store: accessStore, verify: revenueCatVerifier, limits: accessLimits });
 
 /** The address a client connected from, for the installation throttle only. Never stored. */
@@ -1351,7 +1359,7 @@ const server = createServer(async (request, response) => {
         provider: providerMode,
         auth: TOKENS.length ? "configured" : "unconfigured",
         // Whether entitlement can be verified; never the key.
-        access: { installations: "enabled", entitlement_verification: revenueCatVerifier ? "configured" : "unconfigured", durable_path: ACCESS_DB_PATH.startsWith("/data/") },
+        access: { installations: "enabled", entitlement_verification: revenueCatVerifier ? "configured" : "unconfigured", entitlement_key: REVENUECAT_KEY_SOURCE, entitlement: ENTITLEMENT, durable_path: ACCESS_DB_PATH.startsWith("/data/") },
         text_provider: baseConfig.text_provider,
         profile: baseConfig.profile,
         detectionModel: FAKE ? "fake" : baseConfig.detection_model_id,
@@ -1500,7 +1508,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  gateway:  ${baseConfig.text_provider}  profile: ${baseConfig.profile}${FAKE ? "  (DEVELOPMENT FAKE — answers are canned text)" : ""}`);
   console.log(`  provider: ${providerMode}`);
   console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} operator token(s)` : "no operator tokens"}; installations enabled`);
-  console.log(`  access:   db=${ACCESS_DB_PATH} entitlement=${revenueCatVerifier ? "verified with RevenueCat" : "UNVERIFIED — no REVENUECAT_SECRET_KEY, nobody is Pro"}`);
+  console.log(`  access:   db=${ACCESS_DB_PATH} entitlement=${ENTITLEMENT} ${revenueCatVerifier ? `verified with RevenueCat (${REVENUECAT_KEY_SOURCE})` : "UNVERIFIED — no RevenueCat key, nobody is Pro"}`);
   console.log(`  decisions: ${decisionConfig.mode} (${decisionConfig.modeReason})${decisionConfig.mode === "off" ? "" : `  via=${decisionConfig.transport}  model=${decisionConfig.model}${decisionConfig.activeDecisions.length ? `  active=[${decisionConfig.activeDecisions}]` : ""}`}`);
   if (!FAKE && providerMode === "configured") {
     console.log(`  models:   detection=${baseConfig.detection_model_id} answer=${baseConfig.answer_model_id} reasoning_enabled=${baseConfig.reasoning_enabled}`);

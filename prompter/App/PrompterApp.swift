@@ -19,12 +19,18 @@ struct PrompterApp: App {
             AccessKeychain.remove("free-preview")
             UserDefaults.standard.removeObject(forKey: AIConsent.defaultsKey)
         }
+        // `-CopilotInstallationAuth` once switches a Debug build to installation access for good (it is
+        // remembered), so a phone build keeps its server identity when relaunched from the home screen.
+        if ProcessInfo.processInfo.arguments.contains("-CopilotInstallationAuth") {
+            UserDefaults.standard.set(true, forKey: ProviderConfiguration.useInstallationAuthDefaultsKey)
+        }
         #endif
         let entitlements = EntitlementService()
         _entitlements = State(initialValue: entitlements)
         _access = State(initialValue: AccessController(
             entitlementActive: { entitlements.hasActivePro },
-            identify: { await entitlements.identify(appUserID: $0) }
+            identify: { await entitlements.identify(appUserID: $0) },
+            currentAppUserID: { entitlements.currentAppUserID }
         ))
     }
 

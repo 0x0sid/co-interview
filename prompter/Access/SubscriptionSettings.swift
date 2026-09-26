@@ -12,10 +12,35 @@ struct SubscriptionSettingsView: View {
     /// True when this build's Live sessions use the free preview (installation access).
     let previewApplies: Bool
     let onViewPlans: () -> Void
+    @State private var isVerifying = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if case .premium(let expiration, let willRenew) = entitlements.status {
+            if entitlements.isTestStore {
+                Text("RevenueCat Test Store · simulated purchases, not billed or managed by Apple")
+                    .font(Typography.body(12, weight: .medium))
+                    .foregroundStyle(Theme.Color.warm)
+            }
+            if let access, access.needsVerification {
+                // Recognised by the store, not yet authorised by the backend: two different things.
+                Text(entitlements.activePlanName.map { "Subscription recognised · \($0)" } ?? "Subscription recognised")
+                    .font(Typography.body(15, weight: .semibold))
+                    .foregroundStyle(Theme.Color.ink)
+                    .accessibilityIdentifier("subscription-plan")
+                Text("Neverblank is still verifying access for this device. Answers unlock once it confirms.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Theme.Color.secondary)
+                Button(isVerifying ? "Verifying…" : "Retry verification") {
+                    Task {
+                        isVerifying = true
+                        _ = await access.verifyProAfterPurchase()
+                        isVerifying = false
+                    }
+                }
+                .disabled(isVerifying)
+                .font(Typography.body(14, weight: .semibold))
+                .accessibilityIdentifier("retry-verification")
+            } else if case .premium(let expiration, let willRenew) = entitlements.status {
                 Text(entitlements.activePlanName.map { "Neverblank Pro · \($0)" } ?? "Neverblank Pro")
                     .font(Typography.body(15, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
@@ -23,9 +48,15 @@ struct SubscriptionSettingsView: View {
                 Text(Self.renewalLine(expiration: expiration, willRenew: willRenew))
                     .font(Typography.body(13))
                     .foregroundStyle(Theme.Color.secondary)
-                Button("Manage subscription") { Task { await entitlements.showManageSubscriptions() } }
-                    .font(Typography.body(14, weight: .medium))
-                    .accessibilityIdentifier("manage-subscription")
+                if entitlements.isTestStore {
+                    Text("Simulated in the Test Store: there is nothing to manage in Apple's Subscriptions.")
+                        .font(Typography.body(12))
+                        .foregroundStyle(Theme.Color.secondary)
+                } else {
+                    Button("Manage subscription") { Task { await entitlements.showManageSubscriptions() } }
+                        .font(Typography.body(14, weight: .medium))
+                        .accessibilityIdentifier("manage-subscription")
+                }
             } else {
                 Text("Free")
                     .font(Typography.body(15, weight: .semibold))

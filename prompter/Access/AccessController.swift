@@ -36,6 +36,15 @@ final class AccessController {
     /// The paywall a Live session should present. Set by `requestPaywall`; cleared by the paywall.
     var paywall: PaywallRequest?
 
+    /// After a store purchase: has the **backend** confirmed Pro for this installation yet?
+    enum PurchaseVerification: Equatable {
+        case none
+        /// The store accepted the purchase; the backend has not confirmed access. Retry, not re-buy.
+        case pending
+        case verified
+    }
+    private(set) var purchaseVerification: PurchaseVerification = .none
+
     private var record: FreePreviewRecord
     private let credentials: InstallationCredentialStore
     private let ledger: FreePreviewLedger
@@ -43,6 +52,8 @@ final class AccessController {
     private var client: (any BackendAccessProviding)?
     private let entitlementActive: @MainActor () -> Bool
     private let identify: @MainActor (String) async -> Void
+    /// RevenueCat's current App User ID, so a purchase is allowed only once it is this installation's.
+    private let currentAppUserID: @MainActor () -> String?
     private let monotonicNow: () -> TimeInterval
     private let sleep: (Duration) async throws -> Void
     private var ticker: Task<Void, Never>?
@@ -56,6 +67,7 @@ final class AccessController {
         makeClient: @escaping (URL) -> any BackendAccessProviding = { BackendAccessClient(baseURL: $0) },
         entitlementActive: @escaping @MainActor () -> Bool,
         identify: @escaping @MainActor (String) async -> Void = { _ in },
+        currentAppUserID: @escaping @MainActor () -> String? = { nil },
         monotonicNow: @escaping () -> TimeInterval = AccessController.processClock,
         sleep: @escaping (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
@@ -64,6 +76,7 @@ final class AccessController {
         self.makeClient = makeClient
         self.entitlementActive = entitlementActive
         self.identify = identify
+        self.currentAppUserID = currentAppUserID
         self.monotonicNow = monotonicNow
         self.sleep = sleep
         let record = ledger.load()
@@ -81,6 +94,19 @@ final class AccessController {
     nonisolated private static let processEpoch = ContinuousClock.now
 
     // MARK: - The rule
+
+    /// True when this build's access is decided by the backend (installation credentials): always in
+    /// Release; in Debug only with installation access switched on.
+    var usesServerAccess: Bool { client != nil }
+
+    /// The backend has verified an active `neverblank_pro` for this installation.
+    var isServerVerifiedPro: Bool { server?.pro.active == true && server?.pro.verified == true }
+
+    /// The store recognises a subscription that the backend has not verified for this installation —
+    /// retry verification, never sell again.
+    var needsVerification: Bool {
+        usesServerAccess && (purchaseVerification == .pending || entitlementActive()) && !isServerVerifiedPro
+    }
 
     /// RevenueCat reports `pro` active, or the backend verified it.
     var isPro: Bool { entitlementActive() || server?.pro.active == true }
@@ -216,18 +242,33 @@ final class AccessController {
         paywall = PaywallRequest(trigger: trigger)
     }
 
+    /// Makes sure a purchase will belong to the customer the backend checks: the installation is
+    /// registered and RevenueCat is on the App User ID the server issued. Returns false — and the
+    /// purchase must not start — when either is not so.
+    func prepareForPurchase() async -> Bool {
+        guard usesServerAccess else { return false }
+        if credential == nil { await bootstrap(backendURL: ProviderConfiguration.installationBackendURL()) }
+        guard let credential else { return false }
+        if currentAppUserID() != credential.appUserID { await identify(credential.appUserID) }
+        return currentAppUserID() == credential.appUserID
+    }
+
     /// Asks the backend, which asks RevenueCat, whether this installation is now Pro. A few quick
     /// attempts, because the store's receipt can take a moment to reach RevenueCat. Returns true only
     /// on a verified active entitlement.
     func verifyProAfterPurchase(attempts: Int = 4) async -> Bool {
-        guard let client, let credential else { return false }
+        guard let client, let credential else { purchaseVerification = .pending; return false }
         for attempt in 0..<attempts {
             if attempt > 0 { try? await sleep(.seconds(Double(attempt) * 1.5)) }
             if let snapshot = try? await client.access(credential, refresh: true) {
                 server = snapshot
-                if snapshot.pro.active && snapshot.pro.verified { return true }
+                if snapshot.pro.active && snapshot.pro.verified {
+                    purchaseVerification = .verified
+                    return true
+                }
             }
         }
+        purchaseVerification = .pending
         return false
     }
 

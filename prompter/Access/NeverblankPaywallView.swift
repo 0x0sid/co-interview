@@ -25,6 +25,10 @@ struct NeverblankPaywallView: View {
 
     enum Phase: Equatable { case choosing, purchasing, confirming, restoring }
 
+    /// The store took the payment but the backend has not confirmed Pro: offer Retry verification,
+    /// never a second purchase.
+    private var isVerificationPending: Bool { access.needsVerification }
+
     private var plans: [EntitlementService.PlanOffer] { entitlements.plans }
     private func plan(_ kind: PlanKind) -> EntitlementService.PlanOffer? { plans.first { $0.kind == kind } }
 
@@ -58,9 +62,14 @@ struct NeverblankPaywallView: View {
                         .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
                 }
                 benefits
-                planPicker
-                // No plans, no purchase button: a control that cannot work is not offered.
-                if !plans.isEmpty { continueButton }
+                if entitlements.isTestStore { testStoreNotice }
+                if isVerificationPending {
+                    verificationPendingBlock
+                } else {
+                    planPicker
+                    // No plans, no purchase button: a control that cannot work is not offered.
+                    if !plans.isEmpty { continueButton }
+                }
                 if let message {
                     Text(message)
                         .font(Typography.body(13))
@@ -292,12 +301,57 @@ struct NeverblankPaywallView: View {
         selected = bestValue ?? (plan(.monthly) != nil ? .monthly : Self.order.first { plan($0) != nil } ?? .monthly)
     }
 
+    private var testStoreNotice: some View {
+        Text("RevenueCat Test Store — purchases here are simulated and never billed or managed by Apple.")
+            .font(Typography.body(12, weight: .medium))
+            .foregroundStyle(Theme.Color.warm)
+            .accessibilityIdentifier("paywall-test-store")
+    }
+
+    /// Purchase succeeded, access not yet confirmed. Nothing here can buy again.
+    private var verificationPendingBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Purchase complete — confirming access")
+                .font(Typography.body(15, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+            Text("Your purchase went through. Neverblank has not confirmed Pro for this device yet, so answers stay locked until it does. You won't be charged again.")
+                .font(Typography.body(13))
+                .foregroundStyle(Theme.Color.secondary)
+            Button {
+                Task { await confirm(event: .purchaseCompleted) }
+            } label: {
+                HStack(spacing: 8) {
+                    if phase == .confirming { ProgressView().tint(Theme.Color.onDark) }
+                    Text(phase == .confirming ? "Confirming…" : "Retry verification")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.prompterPrimary)
+            .disabled(phase != .choosing)
+            .accessibilityIdentifier("paywall-retry-verification")
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 14))
+    }
+
     // MARK: Actions
 
     private func purchase() async {
         guard phase == .choosing else { return }
         message = nil
+        // A purchase must land on the customer the backend checks. Not registered, or RevenueCat not
+        // yet on the server-issued id: do not take the payment.
+        guard access.usesServerAccess else {
+            message = "Purchases are off in this development build: it is not registered with the Neverblank server, so a purchase could not be linked to your access."
+            return
+        }
         phase = .purchasing
+        guard await access.prepareForPurchase() else {
+            message = "Neverblank is still setting up this device. Check your connection and try again in a moment."
+            phase = .choosing
+            return
+        }
         access.log(.init(name: .purchaseStarted, plan: selected, trigger: trigger))
         let outcome = await entitlements.purchase(plan: selected)
         switch outcome {
@@ -327,6 +381,9 @@ struct NeverblankPaywallView: View {
         phase = .restoring
         switch await entitlements.restore() {
         case .purchased:
+            if entitlements.isTestStore {
+                message = "Test Store restore: this reflects RevenueCat's simulated purchases, not an Apple restore."
+            }
             await confirm(event: .purchaseRestored)
         case .failed(let detail):
             access.log(.init(name: .purchaseFailed, trigger: trigger, reason: .notEntitled))
@@ -348,8 +405,8 @@ struct NeverblankPaywallView: View {
             access.log(.init(name: event, plan: event == .purchaseCompleted ? selected : nil, trigger: trigger))
             finish(true)
         } else {
+            // Not a failure of the purchase: the pending block offers Retry verification.
             access.log(.init(name: .purchaseFailed, plan: selected, trigger: trigger, reason: .network))
-            message = "Your purchase went through, but Neverblank could not confirm it yet. Check your connection and tap Restore Purchases."
             phase = .choosing
         }
     }
