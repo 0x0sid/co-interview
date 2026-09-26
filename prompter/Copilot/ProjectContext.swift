@@ -29,29 +29,83 @@ protocol ProjectContextProviding: Sendable {
     func passages(forQuestion question: String, limit: Int) -> [ProjectPassage]
 }
 
-enum InterviewLanguage: String, CaseIterable, Sendable {
-    case english
-    case french
+/// The language of an interview: the locale speech is recognised in and answers are written in.
+///
+/// Any locale the on-device `SpeechTranscriber` supports (`SpeechLocales`). **Stored values are
+/// stable:** English and French keep their original raw values `"english"` and `"french"`, so every
+/// saved interview and setting from before this type became locale-based decodes unchanged; any
+/// other language is stored as its locale identifier ("de-DE", "es-MX").
+struct InterviewLanguage: RawRepresentable, Hashable, Sendable, Identifiable {
+    /// The transcriber locale, e.g. "en-US", "fr-FR", "zh-TW".
+    let identifier: String
 
+    static let english = InterviewLanguage(identifier: "en-US")
+    static let french = InterviewLanguage(identifier: "fr-FR")
+
+    init(identifier: String) { self.identifier = identifier }
+
+    init?(rawValue: String) {
+        switch rawValue {
+        case "english": self = .english
+        case "french": self = .french
+        default:
+            let locale = Locale(identifier: rawValue)
+            guard !rawValue.isEmpty, locale.language.languageCode != nil else { return nil }
+            self.init(identifier: rawValue)
+        }
+    }
+
+    var rawValue: String {
+        // Compared by identifier, never `self == …`: for a RawRepresentable type the default `==`
+        // compares raw values, which would recurse back into this getter.
+        switch identifier {
+        case Self.english.identifier: "english"
+        case Self.french.identifier: "french"
+        default: identifier
+        }
+    }
+
+    static func == (lhs: InterviewLanguage, rhs: InterviewLanguage) -> Bool { lhs.identifier == rhs.identifier }
+    func hash(into hasher: inout Hasher) { hasher.combine(identifier) }
+
+    var id: String { identifier }
+    var locale: Locale { Locale(identifier: identifier) }
+    var languageCode: String { locale.language.languageCode?.identifier ?? identifier }
+    var isFrench: Bool { languageCode == "fr" }
+
+    /// The locale handed to the transcriber.
+    var transcriberLocale: Locale { locale }
+
+    /// Sent as the request's `language`. English and French keep their original short codes.
     var bcp47: String {
-        switch self {
-        case .english: "en"
-        case .french: "fr"
+        switch identifier {
+        case Self.english.identifier: "en"
+        case Self.french.identifier: "fr"
+        default: identifier
         }
     }
 
+    /// The reading engine's tokenization family (answer-following), by script.
     var readingLanguage: ReadingLanguage {
-        switch self {
-        case .english: .english
-        case .french: .french
+        switch languageCode {
+        case "fr": .french
+        case "zh": .traditionalChinese
+        default: .english
         }
     }
 
-    var displayName: String {
-        switch self {
-        case .english: "English"
-        case .french: "Français"
-        }
+    /// The language's own name, with its region: "Deutsch (Deutschland)", "English (United Kingdom)".
+    var displayName: String { Self.nativeName(for: identifier) }
+
+    /// The name in the app's interface language, for search and a second line: "German (Germany)".
+    func localizedName(in interfaceLocale: Locale = .current) -> String {
+        interfaceLocale.localizedString(forIdentifier: identifier) ?? identifier
+    }
+
+    static func nativeName(for identifier: String) -> String {
+        let locale = Locale(identifier: identifier)
+        let name = locale.localizedString(forIdentifier: identifier) ?? identifier
+        return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
 }
 

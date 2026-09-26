@@ -41,6 +41,7 @@ struct CopilotStartScreen: View {
     @State private var isAskingConsent = false
     /// The paywall opened from here. Buying here never generates anything: no interview is open.
     @State private var settingsPaywall: AccessController.PaywallRequest?
+    @State private var isChoosingLanguage = false
 
     /// The previous pipeline screen, kept reachable so the provider work it exercises is not stranded.
     @State private var startedPipelineMode: Mode?
@@ -59,19 +60,22 @@ struct CopilotStartScreen: View {
     /// What a session started now would use.
     private var language: InterviewLanguage { languagePreference.resolved() }
     private var project: SyntheticProject {
-        language == .french ? SyntheticProjectFixture.hospitalReview : SyntheticProjectFixture.transportProgramme
+        language.isFrench ? SyntheticProjectFixture.hospitalReview : SyntheticProjectFixture.transportProgramme
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                intro
-                liveCard
+                header
+                AccessStatusBadge(entitlements: entitlements, access: access,
+                                  onOpenPlans: { settingsPaywall = .init(trigger: .settings) })
+                languageRow
+                startInterview
                 permissionHelp
                 recentInterviews
                 settingsSection
                 #if DEBUG
-                developerSection
+                if Self.showsDeveloperTools { developerSection }
                 #endif
                 Text(footer)
                     .font(Typography.mono(11))
@@ -98,7 +102,15 @@ struct CopilotStartScreen: View {
             Text("The transcript, answers and attached files are removed from this device. This can't be undone.")
         }
         .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isChoosingLanguage) {
+            InterviewLanguagePicker(selection: languagePreference) { choice in
+                let settings = AppSettings.fetchOrCreate(in: modelContext)
+                settings.interviewLanguageRaw = choice.rawValue
+                try? modelContext.save()
+                Task { await refreshReadiness() }
+            }
+        }
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
         .fullScreenCover(item: $launch) { launch in
@@ -183,39 +195,57 @@ struct CopilotStartScreen: View {
         #endif
     }
 
-    private var intro: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Listen to an interview, suggest answers, read them aloud")
-                .font(Typography.display(20))
-                .foregroundStyle(Theme.Color.ink)
-            Text("Detected questions become cards. Swipe between them; the text follows your voice as you read it aloud.")
-                .font(Typography.body(14))
-                .foregroundStyle(Theme.Color.secondary)
+    /// The mark and the name.
+    private var header: some View {
+        HStack(spacing: 12) {
+            Image("NeverblankMark")
+                .resizable()
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Neverblank")
+                    .font(Typography.display(26))
+                    .foregroundStyle(Theme.Color.ink)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Real-time answers when the questions start.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Theme.Color.secondary)
+            }
         }
     }
 
-    /// The interview language: System language by default, showing what it resolves to.
-    private var languagePicker: some View {
+    #if DEBUG
+    /// Development tools stay out of normal navigation in every build, including Debug builds on a
+    /// phone. A Debug build launched with `-NeverblankDeveloperTools` (UI tests) shows them.
+    static var showsDeveloperTools: Bool { ProcessInfo.processInfo.arguments.contains("-NeverblankDeveloperTools") }
+    #endif
+
+    /// The interview language: System language by default, showing what it resolves to. Opens the
+    /// searchable language sheet.
+    private var languageRow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Interview language").font(Typography.body(12, weight: .medium)).foregroundStyle(Theme.Color.secondary)
-            Picker("Interview language", selection: Binding(
-                get: { languagePreference },
-                set: { newValue in
-                    let settings = AppSettings.fetchOrCreate(in: modelContext)
-                    settings.interviewLanguageRaw = newValue.rawValue
-                    try? modelContext.save()
-                    Task { await refreshReadiness() }
+            Button { isChoosingLanguage = true } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Interview language")
+                            .font(Typography.body(12, weight: .medium))
+                            .foregroundStyle(Theme.Color.secondary)
+                        Text(languagePreference.label())
+                            .font(Typography.body(16, weight: .semibold))
+                            .foregroundStyle(Theme.Color.ink)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Theme.Color.secondary)
                 }
-            )) {
-                ForEach(InterviewLanguagePreference.allCases) { option in
-                    Text(option.label()).tag(option)
-                }
+                .padding(14)
+                .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
             }
-            .pickerStyle(.menu)
+            .buttonStyle(.plain)
             .accessibilityIdentifier("interview-language")
-            Text(InterviewLanguagePreference.explanation + " Saved interviews keep the language they used.")
-                .font(Typography.body(12))
-                .foregroundStyle(Theme.Color.secondary)
             if languagePreference == .system, let note = InterviewLanguagePreference.resolveSystem().fallbackNote {
                 Text(note)
                     .font(Typography.body(12))
@@ -310,23 +340,33 @@ struct CopilotStartScreen: View {
 
     // MARK: Live
 
-    private var liveCard: some View {
-        card(
-            badge: Mode.live.badge,
-            badgeColor: Theme.Color.warm,
-            title: "Start interview",
-            body: "Neverblank listens while your interview runs, spots the questions as they are asked, and writes an answer when you tap Generate.",
-            footnote: readiness.summary,
-            actionTitle: readiness.isListenOnly ? "Start interview (listening only)" : "Start interview",
-            isEnabled: readiness.canListen && !readiness.isChecking,
-            action: {
+    /// The one primary action on the screen, with what Live can do right now under it.
+    private var startInterview: some View {
+        let title = readiness.isListenOnly ? "Start interview (listening only)" : "Start interview"
+        let enabled = readiness.canListen && !readiness.isChecking
+        return VStack(alignment: .leading, spacing: 8) {
+            Button {
                 if AIConsent.isGiven() {
                     launch = .newLive(context: modelContext, preference: languagePreference)
                 } else {
                     isAskingConsent = true
                 }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "waveform")
+                    Text(title)
+                }
+                .font(Typography.body(18, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 56)
             }
-        )
+            .buttonStyle(.prompterPrimary)
+            .disabled(!enabled)
+            .accessibilityLabel(title)
+            .accessibilityIdentifier("start-interview")
+            Text(readiness.summary)
+                .font(Typography.body(12))
+                .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
+        }
     }
 
     // MARK: Help and settings
@@ -358,7 +398,6 @@ struct CopilotStartScreen: View {
                 .font(Typography.body(15, weight: .semibold))
                 .foregroundStyle(Theme.Color.ink)
                 .accessibilityAddTraits(.isHeader)
-            languagePicker
             subscriptionCard
             HStack(spacing: 16) {
                 if let support = LegalLinks.support { Link("Support", destination: support) }

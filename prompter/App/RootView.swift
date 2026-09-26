@@ -85,6 +85,8 @@ struct RootView: View {
                                        cachedPremium: settings.premiumCachedActive, cachedAt: settings.premiumCachedAt)
             }
             await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL())
+            // The languages the on-device transcriber supports, for "System language" and the picker.
+            await SpeechLocales.load()
         }
     }
 }

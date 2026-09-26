@@ -87,6 +87,20 @@ final class EntitlementService {
         let price: Decimal
         let currencyCode: String?
         var id: PlanKind { kind }
+
+        /// A yearly plan's price per month, from the store's own price and currency ("US$19.99"). Nil
+        /// for other plans or without a currency. Shown beside the annual total, never instead of it.
+        var monthlyEquivalent: String? {
+            guard kind == .yearly, let currencyCode, price > 0 else { return nil }
+            return Self.format(price / 12, currencyCode: currencyCode)
+        }
+
+        static func format(_ amount: Decimal, currencyCode: String, locale: Locale = .current) -> String {
+            var rounded = Decimal()
+            var value = amount
+            NSDecimalRound(&rounded, &value, 2, .plain)
+            return rounded.formatted(.currency(code: currencyCode).locale(locale))
+        }
     }
     #if canImport(RevenueCat)
     private var packagesByPlan: [PlanKind: Package] = [:]
@@ -219,8 +233,9 @@ final class EntitlementService {
                 let product = package.storeProduct
                 Self.log.info("[Plans] package=\(package.identifier, privacy: .public) product=\(product.productIdentifier, privacy: .public) category=\(String(describing: product.productCategory), privacy: .public) type=\(String(describing: product.productType), privacy: .public) period=\(product.subscriptionPeriod.map { "\($0.value) \($0.unit)" } ?? "none", privacy: .public) → \(kind?.rawValue ?? "not sold", privacy: .public)")
                 #endif
-                // Offered only when the product's name and its store definition agree.
-                if let kind, kind.agrees(withProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
+                // Offered only when the product's name and its store definition agree. Lifetime is not
+                // sold to new customers; an existing lifetime entitlement is unaffected.
+                if let kind, kind != .lifetime, kind.agrees(withProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
                     found[kind] = package
                 }
             }

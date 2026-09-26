@@ -97,16 +97,21 @@ struct InterviewScreen: View {
     private var accessStatus: some View {
         if enforcesAccess, let access, !access.isPro {
             HStack(spacing: 10) {
+                Button { access.requestPaywall(.freeAnswersExhausted) } label: {
+                    Text(access.areFreeAnswersUsed ? "Trial used · Subscribe" : "Trial period")
+                        .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption1))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(AccessStatusBadge.orange, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("trial-badge")
                 Text(access.areFreeAnswersUsed ? AccessCopy.freeAnswersUsed : AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining))
                     .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
                     .foregroundStyle(InterviewTheme.Color.muted)
                     .accessibilityIdentifier("free-answers-status")
-                Spacer(minLength: 4)
-                if access.areFreeAnswersUsed {
-                    Button("Unlock Pro") { access.requestPaywall(.freeAnswersExhausted) }
-                        .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
-                        .accessibilityIdentifier("unlock-pro")
-                }
+                Spacer(minLength: 0)
             }
         }
     }
@@ -532,6 +537,7 @@ struct InterviewSettingsSheet: View {
     @Environment(AccessController.self) private var access: AccessController?
     /// The paywall opened from Settings. It never resumes or sends a request.
     @State private var plansPaywall: AccessController.PaywallRequest?
+    @State private var isChoosingLanguage = false
 
     init(isLive: Bool, previewApplies: Bool = false, language: InterviewLanguage, onLanguageChange: @escaping (InterviewLanguage) -> Void) {
         self.isLive = isLive
@@ -545,10 +551,15 @@ struct InterviewSettingsSheet: View {
             Form {
                 if isLive {
                     Section {
-                        Picker("Interview language", selection: $language) {
-                            ForEach(InterviewLanguage.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                        Button { isChoosingLanguage = true } label: {
+                            HStack {
+                                Text("Interview language").foregroundStyle(Theme.Color.ink)
+                                Spacer()
+                                Text(language.displayName).foregroundStyle(Theme.Color.secondary)
+                                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.Color.secondary)
+                            }
                         }
-                        .onChange(of: language) { _, newValue in onLanguageChange(newValue) }
+                        .accessibilityIdentifier("interview-language")
                     } footer: {
                         Text(InterviewLanguagePreference.explanation + " Changing it restarts recognition; the transcript and answers so far stay as they are and are not translated.")
                     }
@@ -567,6 +578,15 @@ struct InterviewSettingsSheet: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
+        .sheet(isPresented: $isChoosingLanguage) {
+            // A running interview needs a concrete language; history, answers and files are kept.
+            InterviewLanguagePicker(selection: .language(language), allowsSystem: false) { choice in
+                if case .language(let chosen) = choice, chosen != language {
+                    language = chosen
+                    onLanguageChange(chosen)
+                }
+            }
+        }
         .sheet(item: $plansPaywall) { request in
             if let entitlements, let access {
                 NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { _ in

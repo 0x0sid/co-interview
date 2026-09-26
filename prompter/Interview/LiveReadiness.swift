@@ -135,7 +135,7 @@ struct LiveReadiness: Equatable, Sendable {
         // On-device recognition is a per-locale capability, not a global one. If the model for the
         // chosen language is missing, say so instead of silently transcribing nothing — and never
         // substitute a cloud transcriber for it.
-        let locale = language.readingLanguage.requestedLocale
+        let locale = language.transcriberLocale
         if SFSpeechRecognizer(locale: locale)?.isAvailable != true {
             readiness.blockers.append(.speechModelUnavailable(locale: locale.identifier))
         }

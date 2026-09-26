@@ -63,6 +63,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureInterviewStates() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 
@@ -107,6 +108,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureSessionHistoryAndLanguageSelector() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion", "-UITestsSeedHistory"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
         XCTAssertTrue(app.staticTexts["An interview was interrupted"].waitForExistence(timeout: 10), "no interrupted-session notice")
@@ -176,6 +178,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureExpandedContext() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticFiles"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 
@@ -201,6 +204,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureExpandedTranscriptKeepsTheAnswer() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 
@@ -229,6 +233,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testUltraContrastIsSelectableInSettings() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         let gear = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Settings'")).firstMatch
         XCTAssertTrue(gear.waitForExistence(timeout: 20))
@@ -249,6 +254,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureUltraContrastReading() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion", "-UITestsAppearance", "ultraContrast"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
         let question = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Question 1'")).firstMatch
@@ -271,6 +277,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testCaptureAnswerKeywordsAndFollowUpActions() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 
@@ -316,6 +323,7 @@ final class InterviewScreenCaptureTests: XCTestCase {
     func testAnswerEndClearsTheFloatingToolbar() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 

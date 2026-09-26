@@ -46,7 +46,7 @@ struct NeverblankPaywallView: View {
     }
 
     /// Shown order: the longest commitment first, lifetime last.
-    private static let order: [PlanKind] = [.yearly, .monthly, .weekly, .lifetime]
+    private static let order: [PlanKind] = [.yearly, .monthly, .weekly]
 
     var body: some View {
         ScrollView {
@@ -282,11 +282,13 @@ struct NeverblankPaywallView: View {
     }
 
     private func subtitle(for offer: EntitlementService.PlanOffer) -> String? {
-        if offer.kind == .lifetime { return "One-time purchase · never renews" }
+        var parts: [String] = []
+        if let perMonth = offer.monthlyEquivalent { parts.append("\(perMonth)/month · Billed annually") }
         if let saving = saving(offer), let baseline {
-            return "Save \(saving)% compared with paying \(baseline.kind.title.lowercased())"
+            parts.append("Save \(saving)% compared with paying \(baseline.kind.title.lowercased())")
         }
-        return offer.kind == .weekly ? "Low commitment" : nil
+        if parts.isEmpty, offer.kind == .weekly { parts.append("Low commitment") }
+        return parts.isEmpty ? nil : parts.joined(separator: "\n")
     }
 
     private func termsLine(for offer: EntitlementService.PlanOffer) -> String {

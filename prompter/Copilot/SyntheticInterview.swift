@@ -56,10 +56,7 @@ struct SyntheticInterview: Sendable {
     }
 
     static func forLanguage(_ language: InterviewLanguage) -> SyntheticInterview {
-        switch language {
-        case .english: english
-        case .french: french
-        }
+        language.isFrench ? french : english
     }
 
     static let all: [SyntheticInterview] = [english, french]

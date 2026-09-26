@@ -85,7 +85,7 @@ final class FreeAnswersFlowUITests: XCTestCase {
         XCTAssertTrue(element(app, "free-answers-disclosure").label.contains("2 free AI answers"))
         save(app, "free-1-home")
 
-        let start = app.buttons["Start interview, LIVE mode"]
+        let start = app.buttons["start-interview"]
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         wait(for: [enabled], timeout: 30)
@@ -103,10 +103,10 @@ final class FreeAnswersFlowUITests: XCTestCase {
         generateAndWait(app, expectStatus: "1 free answer remaining")
         save(app, "free-3-one-remaining")
 
-        generateAndWait(app, expectStatus: "Free answers used")
+        generateAndWait(app, expectStatus: "Pro is needed")
         let headline = app.staticTexts["Never interview alone again."]
         XCTAssertFalse(headline.exists, "the second answer was covered by the paywall")
-        XCTAssertTrue(app.buttons["unlock-pro"].exists, "no inline Unlock Pro after the second answer")
+        XCTAssertEqual(app.buttons["trial-badge"].label, "Trial used · Subscribe", "no inline Subscribe after the second answer")
         save(app, "free-4-used-inline-unlock")
 
         // The third Generate asks for Pro before anything is sent, and keeps the request.

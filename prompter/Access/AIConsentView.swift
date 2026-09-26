@@ -78,5 +78,5 @@ enum AccessCopy {
         count == 1 ? "1 free answer remaining" : "\(count) free answers remaining"
     }
 
-    static let freeAnswersUsed = "Free answers used · Pro is needed for more AI answers. The transcript keeps going."
+    static let freeAnswersUsed = "Pro is needed for more AI answers. The transcript keeps going."
 }

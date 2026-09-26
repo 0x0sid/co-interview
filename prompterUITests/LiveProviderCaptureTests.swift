@@ -31,7 +31,7 @@ final class LiveProviderCaptureTests: XCTestCase {
                                 "-LiveScriptedSpeechInterval", String(interval)]
         app.launch()
         XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
-        let startLive = app.buttons["Start interview, LIVE mode"]
+        let startLive = app.buttons["start-interview"]
         XCTAssertTrue(startLive.waitForExistence(timeout: 15), "Live is not offered — is the backend configured and reachable?")
         // Readiness is checked asynchronously; Live becomes tappable once it passes.
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: startLive)

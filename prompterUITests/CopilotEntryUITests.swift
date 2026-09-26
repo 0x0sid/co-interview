@@ -23,6 +23,7 @@ final class CopilotEntryUITests: XCTestCase {
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         return app
     }
@@ -289,6 +290,7 @@ final class CopilotEntryUITests: XCTestCase {
     func testTranscriptExpandsToShowContextAndKeepsItOnCollapse() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion", "-InterviewSyntheticFiles"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
         openDemo(app)
 
@@ -337,6 +339,7 @@ final class CopilotEntryUITests: XCTestCase {
         // `Local-Debug.xcconfig`.
         app.launchArguments += ["-UITestsQuietMotion", "-CopilotBackendURL", "", "-CopilotBackendToken", "",
                                 "-CopilotIgnoreDevelopmentDefaults"]
+        app.launchArguments += ["-NeverblankDeveloperTools"]
         app.launch()
 
         openCopilot(app)
@@ -346,8 +349,9 @@ final class CopilotEntryUITests: XCTestCase {
         // offer the full, answer-generating Live. Which of the two states appears depends on whether
         // this machine can listen (microphone and speech permission, on-device model), so both are
         // asserted, and neither lets an unqualified "Start live" through.
-        let listenOnly = app.buttons["Start interview (listening only), LIVE mode"]
-        let full = app.buttons["Start interview, LIVE mode"]
+        let start = app.buttons["start-interview"]
+        let listenOnly = app.buttons["Start interview (listening only)"]
+        let full = app.buttons["Start interview"]
         XCTAssertTrue(listenOnly.waitForExistence(timeout: 5) || full.waitForExistence(timeout: 1),
                       "no Live action on the start screen")
         if listenOnly.exists {

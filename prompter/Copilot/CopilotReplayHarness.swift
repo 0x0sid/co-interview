@@ -21,7 +21,7 @@ enum CopilotReplayHarness {
 
     @MainActor
     static var screen: some View {
-        let project = language == .french
+        let project = language.isFrench
             ? SyntheticProjectFixture.hospitalReview
             : SyntheticProjectFixture.transportProgramme
         let interview = SyntheticInterview.forLanguage(language)

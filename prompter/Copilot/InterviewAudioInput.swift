@@ -101,7 +101,7 @@ final class InterviewAudioInput {
         }
         registerInterruptionObserverIfNeeded()
 
-        let locale = language.readingLanguage.requestedLocale
+        let locale = language.transcriberLocale
         let strings = contextualStrings
 
         consumeTask = Task { [weak self] in

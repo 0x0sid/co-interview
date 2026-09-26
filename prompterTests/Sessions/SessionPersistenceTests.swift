@@ -221,17 +221,18 @@ struct SessionPersistenceTests {
 
     @Test
     func systemLanguageResolvesAndExplainsItsFallback() {
-        let french = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["fr-FR", "en-GB"])
+        let enFr = ["en-US", "fr-FR"]
+        let french = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["fr-FR", "en-GB"], supported: enFr)
         #expect(french.language == .french && french.fallbackNote == nil)
 
-        let japanese = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["ja-JP", "fr-CA"])
+        let japanese = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["ja-JP", "fr-CA"], supported: enFr)
         #expect(japanese.language == .french, "a supported second language was skipped")
         #expect(japanese.fallbackNote?.contains("Français") == true)
 
-        let unsupported = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["de-DE"])
+        let unsupported = InterviewLanguagePreference.resolveSystem(preferredLanguages: ["de-DE"], supported: enFr)
         #expect(unsupported.language == .english)
         #expect(unsupported.fallbackNote != nil, "a fallback happened silently")
-        #expect(InterviewLanguagePreference.system.label(preferredLanguages: ["en-US"]) == "System language (English)")
+        #expect(InterviewLanguagePreference.system.label(preferredLanguages: ["en-US"]).hasPrefix("System language (English"))
     }
 
     /// An old session opens in the language it used, whatever the preference is now.

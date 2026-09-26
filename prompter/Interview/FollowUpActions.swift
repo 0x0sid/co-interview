@@ -55,7 +55,7 @@ enum FollowUpActions {
         // "which detail do you mean?" helps nobody. What helps is supplying what was missing, so that
         // is the one thing offered — reported by the model, never guessed from the wording.
         if let need {
-            let french = language == .french
+            let french = language.isFrench
             return [Action(
                 id: need == .context ? "add-context" : "clarify",
                 title: need == .context
@@ -73,7 +73,7 @@ enum FollowUpActions {
         }.joined(separator: " ")
         let hasCode = blocks.contains { if case .code = $0 { return true } else { return false } }
         let wordCount = prose.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
-        let french = language == .french
+        let french = language.isFrench
 
         var actions: [Action] = []
 
