@@ -60,6 +60,49 @@ struct PlanSavingsTests {
     }
 }
 
+// MARK: - Four plans
+
+struct PlanLineupTests {
+    @Test
+    func plansAreRecognisedFromTheProductNotThePackageSlot() {
+        #expect(PlanKind.classify(isSubscription: false, periodUnit: nil, periodValue: 0) == .lifetime,
+                "a one-time product is lifetime even when it sits in the $rc_annual slot")
+        #expect(PlanKind.classify(isSubscription: true, periodUnit: "week", periodValue: 1) == .weekly)
+        #expect(PlanKind.classify(isSubscription: true, periodUnit: "day", periodValue: 7) == .weekly)
+        #expect(PlanKind.classify(isSubscription: true, periodUnit: "month", periodValue: 1) == .monthly)
+        #expect(PlanKind.classify(isSubscription: true, periodUnit: "year", periodValue: 1) == .yearly)
+        #expect(PlanKind.classify(isSubscription: true, periodUnit: "month", periodValue: 3) == nil,
+                "a plan this app does not sell is not shown as one it does")
+    }
+
+    private func price(_ kind: PlanKind, _ amount: String, _ currency: String = "USD") -> PlanSavings.Price {
+        .init(kind: kind, amount: Decimal(string: amount)!, currency: currency)
+    }
+
+    @Test
+    func savingsAreMeasuredPerWeekAgainstThePriciestPlan() {
+        let prices = [price(.weekly, "5.99"), price(.monthly, "12.99"), price(.yearly, "79.99"), price(.lifetime, "149.99")]
+        let baseline = PlanSavings.baseline(prices)
+        #expect(baseline?.kind == .weekly)
+        #expect(PlanSavings.savingPercent(prices[1], comparedWith: baseline!) == 49)
+        // 79.99 / 52 = 1.538 per week against 5.99 → 74.3% → 74.
+        #expect(PlanSavings.savingPercent(prices[2], comparedWith: baseline!) == 74)
+        #expect(PlanSavings.savingPercent(prices[3], comparedWith: baseline!) == nil, "lifetime is never given a percentage")
+        #expect(PlanSavings.bestValue(prices) == .yearly)
+    }
+
+    @Test
+    func noBestValueWhenNothingSaves() {
+        // The same price per week (5 × 52/12 ≈ 21.67): nothing is cheaper, so nothing is "best".
+        #expect(PlanSavings.bestValue([price(.weekly, "5"), price(.monthly, "21.67")]) == nil)
+        // A dear monthly makes weekly the real saving — the badge follows the arithmetic, not the name.
+        #expect(PlanSavings.bestValue([price(.weekly, "5"), price(.monthly, "40")]) == .weekly)
+        #expect(PlanSavings.bestValue([price(.lifetime, "99")]) == nil)
+        #expect(PlanSavings.bestValue([price(.weekly, "5.99", "USD"), price(.yearly, "79.99", "EUR")]) == nil,
+                "different currencies are never compared")
+    }
+}
+
 // MARK: - Configuration
 
 struct AccessConfigurationTests {
@@ -150,7 +193,7 @@ final class FakeAccessBackend: BackendAccessProviding, @unchecked Sendable {
 
 extension AccessSnapshot {
     static func make(pro: Bool = false, verified: Bool = true, preview: String = "available") -> AccessSnapshot {
-        AccessSnapshot(entitlement: "pro", app_user_id: "nb_x",
+        AccessSnapshot(entitlement: "neverblank_pro", app_user_id: "nb_x",
                        pro: .init(active: pro, expires_at: nil, verified: verified),
                        preview: .init(state: preview, answers_left: preview == "ended" ? 0 : 5))
     }

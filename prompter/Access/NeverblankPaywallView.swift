@@ -17,6 +17,8 @@ struct NeverblankPaywallView: View {
     let onFinish: (Bool) -> Void
 
     @State private var selected: PlanKind = .monthly
+    /// Set once the reader picks a plan; nothing chooses for them after that.
+    @State private var userChose = false
     @State private var phase: Phase = .choosing
     @State private var message: String?
     @State private var finished = false
@@ -26,11 +28,21 @@ struct NeverblankPaywallView: View {
     private var plans: [EntitlementService.PlanOffer] { entitlements.plans }
     private func plan(_ kind: PlanKind) -> EntitlementService.PlanOffer? { plans.first { $0.kind == kind } }
 
-    private var monthlySaving: Int? {
-        guard let weekly = plan(.weekly), let monthly = plan(.monthly) else { return nil }
-        return PlanSavings.monthlySavingPercent(weekly: weekly.price, monthly: monthly.price,
-                                                weeklyCurrency: weekly.currencyCode, monthlyCurrency: monthly.currencyCode)
+    private var prices: [PlanSavings.Price] {
+        plans.map { PlanSavings.Price(kind: $0.kind, amount: $0.price, currency: $0.currencyCode) }
     }
+    /// What savings are measured against: the subscription that costs most per week.
+    private var baseline: PlanSavings.Price? { PlanSavings.baseline(prices) }
+    /// "Best value" goes only to the plan the store's prices make cheapest per week — if any saves.
+    private var bestValue: PlanKind? { PlanSavings.bestValue(prices) }
+
+    private func saving(_ offer: EntitlementService.PlanOffer) -> Int? {
+        guard let baseline, baseline.kind != offer.kind else { return nil }
+        return PlanSavings.savingPercent(.init(kind: offer.kind, amount: offer.price, currency: offer.currencyCode), comparedWith: baseline)
+    }
+
+    /// Shown order: the longest commitment first, lifetime last.
+    private static let order: [PlanKind] = [.yearly, .monthly, .weekly, .lifetime]
 
     var body: some View {
         ScrollView {
@@ -64,10 +76,9 @@ struct NeverblankPaywallView: View {
         .task {
             access.log(.init(name: .paywallViewed, trigger: trigger))
             if plans.isEmpty { await entitlements.loadOffering() }
-            // Monthly is recommended only when it really is the better value; otherwise nothing is
-            // pre-chosen for the reader beyond the first plan offered.
-            if monthlySaving == nil, plan(.monthly) == nil, plan(.weekly) != nil { selected = .weekly }
+            preselect()
         }
+        .onChange(of: plans) { _, _ in preselect() }
         .onDisappear {
             if !finished { finish(false) }
         }
@@ -165,8 +176,7 @@ struct NeverblankPaywallView: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.Color.hairline, lineWidth: 0.5))
         } else {
             VStack(spacing: 10) {
-                // Monthly first: it is the one recommended, when the prices say it should be.
-                ForEach([PlanKind.monthly, .weekly], id: \.self) { kind in
+                ForEach(Self.order, id: \.self) { kind in
                     if let offer = plan(kind) { planRow(offer) }
                 }
             }
@@ -175,10 +185,12 @@ struct NeverblankPaywallView: View {
 
     private func planRow(_ offer: EntitlementService.PlanOffer) -> some View {
         let isSelected = selected == offer.kind
-        let isRecommended = offer.kind == .monthly && monthlySaving != nil
+        let isRecommended = offer.kind == bestValue
         return Button {
+            userChose = true
             guard selected != offer.kind else { return }
             selected = offer.kind
+            // The funnel's events name the two original plans; the plan field carries the rest.
             access.log(.init(name: offer.kind == .weekly ? .weeklySelected : .monthlySelected, plan: offer.kind, trigger: trigger))
         } label: {
             HStack(alignment: .center, spacing: 12) {
@@ -187,7 +199,7 @@ struct NeverblankPaywallView: View {
                     .foregroundStyle(isSelected ? Theme.Color.action : Theme.Color.secondary)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
-                        Text(offer.kind == .monthly ? "Monthly" : "Weekly")
+                        Text(offer.kind.title)
                             .font(Typography.body(16, weight: .semibold))
                             .foregroundStyle(Theme.Color.ink)
                         if isRecommended {
@@ -199,18 +211,14 @@ struct NeverblankPaywallView: View {
                                 .background(Theme.Color.action, in: Capsule())
                         }
                     }
-                    if offer.kind == .monthly, let saving = monthlySaving {
-                        Text("Save \(saving)% compared with paying weekly")
-                            .font(Typography.body(12))
-                            .foregroundStyle(Theme.Color.secondary)
-                    } else if offer.kind == .weekly {
-                        Text("Low commitment")
+                    if let subtitle = subtitle(for: offer) {
+                        Text(subtitle)
                             .font(Typography.body(12))
                             .foregroundStyle(Theme.Color.secondary)
                     }
                 }
                 Spacer()
-                Text("\(offer.localizedPrice) / \(offer.kind == .monthly ? "month" : "week")")
+                Text(offer.kind.periodNoun.map { "\(offer.localizedPrice) / \($0)" } ?? offer.localizedPrice)
                     .font(Typography.body(15, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
             }
@@ -238,7 +246,7 @@ struct NeverblankPaywallView: View {
             .buttonStyle(.prompterPrimary)
             .disabled(plan(selected) == nil || phase != .choosing)
             .accessibilityIdentifier("paywall-continue")
-            Text("Cancel anytime.")
+            Text(selected == .lifetime ? "One-time purchase." : "Cancel anytime.")
                 .font(Typography.body(13, weight: .medium))
                 .foregroundStyle(Theme.Color.secondary)
                 .frame(maxWidth: .infinity)
@@ -248,7 +256,7 @@ struct NeverblankPaywallView: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let offer = plan(selected) {
-                Text("Neverblank Pro \(offer.kind == .monthly ? "Monthly" : "Weekly") renews automatically at \(offer.localizedPrice) per \(offer.kind == .monthly ? "month" : "week") until you cancel. Payment is charged to your Apple Account. Cancel at least 24 hours before renewal in Settings › Apple Account › Subscriptions.")
+                Text(termsLine(for: offer))
                     .font(Typography.body(11))
                     .foregroundStyle(Theme.Color.secondary)
             }
@@ -261,6 +269,27 @@ struct NeverblankPaywallView: View {
             }
             .font(Typography.body(12, weight: .medium))
         }
+    }
+
+    private func subtitle(for offer: EntitlementService.PlanOffer) -> String? {
+        if offer.kind == .lifetime { return "One-time purchase · never renews" }
+        if let saving = saving(offer), let baseline {
+            return "Save \(saving)% compared with paying \(baseline.kind.title.lowercased())"
+        }
+        return offer.kind == .weekly ? "Low commitment" : nil
+    }
+
+    private func termsLine(for offer: EntitlementService.PlanOffer) -> String {
+        guard let noun = offer.kind.periodNoun else {
+            return "Neverblank Pro Lifetime is a one-time purchase of \(offer.localizedPrice), charged to your Apple Account. It does not renew."
+        }
+        return "Neverblank Pro \(offer.kind.title) renews automatically at \(offer.localizedPrice) per \(noun) until you cancel. Payment is charged to your Apple Account. Cancel at least 24 hours before renewal in Settings › Apple Account › Subscriptions."
+    }
+
+    /// Starts on the best value when the prices show one, otherwise Monthly, otherwise the first plan.
+    private func preselect() {
+        guard phase == .choosing, !(userChose && plan(selected) != nil) else { return }
+        selected = bestValue ?? (plan(.monthly) != nil ? .monthly : Self.order.first { plan($0) != nil } ?? .monthly)
     }
 
     // MARK: Actions

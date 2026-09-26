@@ -24,7 +24,9 @@ import { randomBytes, randomUUID, createHash, timingSafeEqual } from "node:crypt
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-export const ENTITLEMENT = "pro";
+// The RevenueCat entitlement that unlocks Neverblank Pro. The app checks the same identifier
+// (`BillingConfiguration.entitlementIdentifier`).
+export const ENTITLEMENT = "neverblank_pro";
 
 /** Operator-tunable limits. The client's 30-second meter is the experience; these bound the cost. */
 export function accessLimitsFromEnv(env = process.env) {

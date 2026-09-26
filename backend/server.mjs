@@ -35,7 +35,7 @@ import {
   focusedSnapshotFromBody, decideFocused, FOCUSED_PROMPT_VERSION,
 } from "./decisions.mjs";
 import { costUSD } from "./providers/typesafe.mjs";
-import { AccessStore, AccessControl, accessLimitsFromEnv, makeRevenueCatVerifier, sanitizeEvent } from "./access.mjs";
+import { AccessStore, AccessControl, accessLimitsFromEnv, makeRevenueCatVerifier, sanitizeEvent, ENTITLEMENT } from "./access.mjs";
 
 /**
  * Loads `backend/.env` into `process.env` if it exists.
@@ -240,7 +240,7 @@ async function admit(caller, kind, response) {
   if (caller?.operator) return true;
   const decision = await access.authorize(caller.installation, kind);
   if (decision.allowed) return true;
-  send(response, 402, { error: "pro_required", entitlement: "pro" });
+  send(response, 402, { error: "pro_required", entitlement: ENTITLEMENT });
   return false;
 }
 /**

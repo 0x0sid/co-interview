@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 #if canImport(RevenueCat)
 import RevenueCat
 #endif
@@ -59,11 +60,10 @@ final class EntitlementService {
     /// "Weekly" or "Monthly" for the active subscription, from its product id; nil when unknown.
     var activePlanName: String? {
         guard let id = activeProductIdentifier?.lowercased() else { return nil }
-        if let offer = plans.first(where: { $0.productIdentifier.lowercased() == id }) {
-            return offer.kind == .monthly ? "Monthly" : "Weekly"
+        if let offer = plans.first(where: { $0.productIdentifier.lowercased() == id }) { return offer.kind.title }
+        for kind in [PlanKind.lifetime, .yearly, .monthly, .weekly] where id.contains(kind.rawValue) || id.contains(kind.periodNoun ?? kind.rawValue) {
+            return kind.title
         }
-        if id.contains("month") { return "Monthly" }
-        if id.contains("week") { return "Weekly" }
         return nil
     }
 
@@ -185,10 +185,18 @@ final class EntitlementService {
             let offerings = try await Purchases.shared.offerings()
             offeringsError = nil
             let current = offerings.current
-            // The weekly and monthly packages, found by RevenueCat's standard package types.
+            // Each package is classified by its store product (period, or one-time), not by its
+            // package slot, so a mis-slotted product is still shown as what it is.
             var found: [PlanKind: Package] = [:]
-            if let weekly = current?.weekly { found[.weekly] = weekly }
-            if let monthly = current?.monthly { found[.monthly] = monthly }
+            for package in current?.availablePackages ?? [] {
+                let kind = Self.planKind(of: package.storeProduct)
+                #if DEBUG
+                // What the store says each package is — metadata only, for diagnosing the dashboard.
+                let product = package.storeProduct
+                Self.log.info("[Plans] package=\(package.identifier, privacy: .public) product=\(product.productIdentifier, privacy: .public) category=\(String(describing: product.productCategory), privacy: .public) type=\(String(describing: product.productType), privacy: .public) period=\(product.subscriptionPeriod.map { "\($0.value) \($0.unit)" } ?? "none", privacy: .public) → \(kind?.rawValue ?? "not sold", privacy: .public)")
+                #endif
+                if let kind, found[kind] == nil { found[kind] = package }
+            }
             packagesByPlan = found
             plans = PlanKind.allCases.compactMap { kind in
                 guard let package = found[kind] else { return nil }
@@ -198,7 +206,7 @@ final class EntitlementService {
                                  price: product.price, currencyCode: product.currencyCode)
             }
             if plans.isEmpty {
-                // Loaded, but the offering has no weekly or monthly package: say so, never spin.
+                // Loaded, but the offering has no plan this app sells: say so, never spin.
                 offeringsError = "No subscription plans are available right now."
             }
             guard let package = current?.availablePackages.first else {
@@ -298,7 +306,25 @@ final class EntitlementService {
         #endif
     }
 
+    #if DEBUG
+    private static let log = Logger(subsystem: "talk.cointerview", category: "billing")
+    #endif
+
     #if canImport(RevenueCat)
+    static func planKind(of product: StoreProduct) -> PlanKind? {
+        let unit: String? = product.subscriptionPeriod.map { period in
+            switch period.unit {
+            case .day: "day"
+            case .week: "week"
+            case .month: "month"
+            case .year: "year"
+            @unknown default: "unknown"
+            }
+        }
+        return PlanKind.classify(isSubscription: product.productCategory == .subscription,
+                                 periodUnit: unit, periodValue: product.subscriptionPeriod?.value ?? 0)
+    }
+
     private static func describe(_ period: SubscriptionPeriod) -> String {
         let n = period.value
         switch period.unit {

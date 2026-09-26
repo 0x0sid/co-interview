@@ -72,8 +72,17 @@ struct RootView: View {
             }
             // RevenueCat starts on the identity the backend issued to this installation when it is
             // already known; on the very first launch `bootstrap` moves it there once issued.
-            entitlements.configure(appUserID: access.credential?.appUserID,
-                                   cachedPremium: settings.premiumCachedActive, cachedAt: settings.premiumCachedAt)
+            #if DEBUG
+            // The unit-test host never talks to RevenueCat: tests drive billing through their own
+            // doubles, and SDK start-up network traffic only competes with their timing.
+            let isUnitTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            #else
+            let isUnitTestHost = false
+            #endif
+            if !isUnitTestHost {
+                entitlements.configure(appUserID: access.credential?.appUserID,
+                                       cachedPremium: settings.premiumCachedActive, cachedAt: settings.premiumCachedAt)
+            }
             await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL())
         }
     }

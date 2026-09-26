@@ -109,6 +109,18 @@ is stored against the same id that holds the purchase. Declare *User Content* (t
 notes, file excerpts) as collected for app functionality, sent to third-party AI processors, not
 linked beyond the request and not stored by the backend. Confirm against the final privacy policy.
 
+## Plans and entitlement (decided 2026-09-26)
+
+Weekly, Monthly, Yearly and Lifetime; entitlement **`neverblank_pro`** (app and backend). Plans are
+recognised from the store product itself — a one-time product is Lifetime, a subscription by its
+billing period — never from its package slot. "Best value" goes to the subscription the store's
+prices make cheapest per week; savings are measured per week against the priciest subscription.
+
+Test Store check (2026-09-26, Debug key `test_IazA…`): offering `default` loads, but its products
+are misdefined — `yearly` is a **1-month** subscription and `lifetime` is a **1-year**
+auto-renewing subscription; `weekly` does not exist. The paywall therefore shows Monthly $9.99 and,
+truthfully, the `lifetime` product as a Yearly plan at $79.99.
+
 ## Account setup still needed (one list)
 
 1. **RevenueCat — project "Neverblank"** (separate from cine; nothing in cine is used or changed).

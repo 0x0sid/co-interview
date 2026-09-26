@@ -124,12 +124,14 @@ console.log("rules");
   const at = Date.parse("2026-10-01T00:00:00Z");
   const reply = (status, body) => async () => ({ ok: status === 200, status, json: async () => body });
   const make = (fetchImpl) => makeRevenueCatVerifier({ secretKey: "sk_test", fetchImpl, now: () => at });
-  const active = await make(reply(200, { subscriber: { entitlements: { pro: { expires_date: "2026-10-05T00:00:00Z" } } } }))("nb_x");
+  const active = await make(reply(200, { subscriber: { entitlements: { neverblank_pro: { expires_date: "2026-10-05T00:00:00Z" } } } }))("nb_x");
   check("RevenueCat: a future expiry is active", active.active && active.expiresAt === Date.parse("2026-10-05T00:00:00Z"));
-  const lapsed = await make(reply(200, { subscriber: { entitlements: { pro: { expires_date: "2026-09-01T00:00:00Z" } } } }))("nb_x");
+  const lapsed = await make(reply(200, { subscriber: { entitlements: { neverblank_pro: { expires_date: "2026-09-01T00:00:00Z" } } } }))("nb_x");
   check("RevenueCat: a past expiry is inactive", !lapsed.active);
-  const other = await make(reply(200, { subscriber: { entitlements: { premium: { expires_date: null } } } }))("nb_x");
-  check("RevenueCat: another entitlement is not pro", !other.active);
+  const other = await make(reply(200, { subscriber: { entitlements: { pro: { expires_date: null } } } }))("nb_x");
+  check("RevenueCat: another entitlement (the old `pro`) does not unlock", !other.active);
+  const lifetime = await make(reply(200, { subscriber: { entitlements: { neverblank_pro: { expires_date: null } } } }))("nb_x");
+  check("RevenueCat: a lifetime purchase (no expiry) is active", lifetime.active && lifetime.expiresAt === null);
   let threw = false;
   try { await make(reply(500, {}))("nb_x"); } catch { threw = true; }
   check("RevenueCat: an HTTP error throws rather than answering", threw);
@@ -149,7 +151,7 @@ const revenueCat = createServer((request, response) => {
   const id = decodeURIComponent(request.url.split("/").pop());
   const ok = request.headers.authorization === "Bearer sk_stub";
   response.writeHead(ok ? 200 : 401, { "content-type": "application/json" });
-  response.end(JSON.stringify(ok ? { subscriber: { entitlements: proUsers.has(id) ? { pro: { expires_date: new Date(Date.now() + 86_400_000).toISOString() } } : {} } } : {}));
+  response.end(JSON.stringify(ok ? { subscriber: { entitlements: proUsers.has(id) ? { neverblank_pro: { expires_date: new Date(Date.now() + 86_400_000).toISOString() } } : {} } } : {}));
 });
 await new Promise((resolve) => revenueCat.listen(9931, "127.0.0.1", resolve));
 

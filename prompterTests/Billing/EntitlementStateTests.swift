@@ -55,14 +55,18 @@ struct EntitlementStateTests {
     /// Neverblank's one entitlement, the same identifier the backend checks (`backend/access.mjs`).
     @Test
     func entitlementIdentifierMatchesTheBackend() {
-        #expect(BillingConfiguration.entitlementIdentifier == "pro")
+        #expect(BillingConfiguration.entitlementIdentifier == "neverblank_pro")
     }
 
     /// Placeholder or empty keys count as unconfigured rather than as a broken key.
     @Test
     func unsubstitutedOrEmptyKeysAreTreatedAsUnconfigured() {
-        // `publicAPIKey` reads Info.plist; in tests no key is present, so it must be nil.
-        #expect(BillingConfiguration.publicAPIKey == nil)
-        #expect(BillingConfiguration.isConfigured == false)
+        // Checked on explicit values: the host app's own key depends on a git-ignored local file.
+        for raw in [nil, "", "   ", "$(REVENUECAT_PUBLIC_KEY)"] as [String?] {
+            #expect(BillingConfiguration.key(fromPlistValue: raw, isDebugBuild: true) == nil, "\(raw ?? "nil")")
+            #expect(BillingConfiguration.key(fromPlistValue: raw, isDebugBuild: false) == nil, "\(raw ?? "nil")")
+        }
+        #expect(BillingConfiguration.key(fromPlistValue: " appl_abc ", isDebugBuild: false) == "appl_abc")
+        #expect(BillingConfiguration.key(fromPlistValue: "test_abc", isDebugBuild: false) == nil, "Release refuses a Test Store key")
     }
 }

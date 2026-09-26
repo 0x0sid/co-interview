@@ -14,21 +14,25 @@ import Foundation
 /// simply unpurchasable. That is what makes it safe to ship this code before the dashboard exists.
 enum BillingConfiguration {
     /// Neverblank's one entitlement. The backend checks the same identifier (`backend/access.mjs`).
-    static let entitlementIdentifier = "pro"
+    static let entitlementIdentifier = "neverblank_pro"
 
     /// RevenueCat Test Store keys start with this. They simulate purchases without Apple, so a
     /// **Release build refuses them**: it may only ever use the real App Store SDK key.
     static let testStoreKeyPrefix = "test_"
 
     static var publicAPIKey: String? {
-        guard let raw = Bundle.main.object(forInfoDictionaryKey: "RevenueCatPublicKey") as? String else {
-            return nil
-        }
+        key(fromPlistValue: Bundle.main.object(forInfoDictionaryKey: "RevenueCatPublicKey") as? String,
+            isDebugBuild: ProviderConfiguration.isDebug)
+    }
+
+    /// The key a build uses from its raw Info.plist value, or nil when there is none it may use.
+    static func key(fromPlistValue raw: String?, isDebugBuild: Bool) -> String? {
+        guard let raw else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         // An unsubstituted build setting (`$(REVENUECAT_PUBLIC_KEY)`) or an empty string both mean
         // "not configured" rather than a key that happens to be invalid.
         guard !trimmed.isEmpty, !trimmed.hasPrefix("$(") else { return nil }
-        return acceptedKey(trimmed, isDebugBuild: ProviderConfiguration.isDebug)
+        return acceptedKey(trimmed, isDebugBuild: isDebugBuild)
     }
 
     /// The key a build may use: Debug takes a Test Store or App Store key; Release takes only an
