@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SQLite3
 import Testing
 @testable import prompter
 
@@ -177,7 +178,30 @@ struct SessionPersistenceTests {
         let after = try counts(upgraded)
         print("REAL STORE rows before \(before) after \(after)")
         #expect(before == after, "rows changed in the upgrade")
-        #expect(try upgraded.fetchCount(FetchDescriptor<InterviewSessionRecord>()) == 0)
+        // Saved interviews, read straight from the untouched copy with SQLite, must all be there after
+        // the current app opens it: sessions, transcript lines, questions, answers and files.
+        let raw = Self.sqliteRowCounts(at: try copy(), tables: ["ZINTERVIEWSESSIONRECORD", "ZSESSIONUTTERANCERECORD",
+                                                               "ZSESSIONQUESTIONRECORD", "ZSESSIONANSWERRECORD", "ZSESSIONATTACHMENTRECORD"])
+        let kept = [try upgraded.fetchCount(FetchDescriptor<InterviewSessionRecord>()),
+                    try upgraded.fetchCount(FetchDescriptor<SessionUtteranceRecord>()),
+                    try upgraded.fetchCount(FetchDescriptor<SessionQuestionRecord>()),
+                    try upgraded.fetchCount(FetchDescriptor<SessionAnswerRecord>()),
+                    try upgraded.fetchCount(FetchDescriptor<SessionAttachmentRecord>())]
+        print("REAL STORE interviews/lines/questions/answers/files before \(raw) after \(kept)")
+        #expect(raw == kept, "saved interviews changed in the upgrade")
+    }
+
+    /// Row counts read with SQLite directly, without SwiftData; 0 for a table the store does not have.
+    static func sqliteRowCounts(at url: URL, tables: [String]) -> [Int] {
+        var db: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return tables.map { _ in -1 } }
+        defer { sqlite3_close(db) }
+        return tables.map { table in
+            var statement: OpaquePointer?
+            guard sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM \(table)", -1, &statement, nil) == SQLITE_OK else { return 0 }
+            defer { sqlite3_finalize(statement) }
+            return sqlite3_step(statement) == SQLITE_ROW ? Int(sqlite3_column_int64(statement, 0)) : 0
+        }
     }
 
     @Test
