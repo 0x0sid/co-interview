@@ -458,14 +458,14 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "prompter/Resources/Info-Debug.plist";
-				NEVERBLANK_PRIVACY_URL = "";
-				NEVERBLANK_TERMS_URL = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NEVERBLANK_PRIVACY_URL = "";
+				NEVERBLANK_TERMS_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = talk.cointerview;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -489,17 +489,17 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = prompter/Resources/Info.plist;
-				NEVERBLANK_PRIVACY_URL = "";
-				NEVERBLANK_TERMS_URL = "";
-				REVENUECAT_PUBLIC_KEY = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NEVERBLANK_PRIVACY_URL = "";
+				NEVERBLANK_TERMS_URL = "";
 				PRODUCT_BUNDLE_IDENTIFIER = talk.cointerview;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVENUECAT_PUBLIC_KEY = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
