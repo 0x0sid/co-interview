@@ -75,6 +75,20 @@ struct PlanLineupTests {
                 "a plan this app does not sell is not shown as one it does")
     }
 
+    @Test
+    func misconfiguredProductsAreNotOffered() {
+        // The Test Store as found on 2026-09-26.
+        #expect(PlanKind.monthly.agrees(withProductIdentifier: "monthly"))
+        #expect(!PlanKind.monthly.agrees(withProductIdentifier: "yearly"), "`yearly` defined as 1 month")
+        #expect(!PlanKind.yearly.agrees(withProductIdentifier: "lifetime"), "`lifetime` defined as a 1-year subscription")
+        // Correct definitions, including the App Store ids.
+        #expect(PlanKind.yearly.agrees(withProductIdentifier: "yearly"))
+        #expect(PlanKind.lifetime.agrees(withProductIdentifier: "lifetime"))
+        #expect(PlanKind.weekly.agrees(withProductIdentifier: "talk.cointerview.pro.weekly"))
+        #expect(PlanKind.monthly.agrees(withProductIdentifier: "talk.cointerview.pro.monthly"))
+        #expect(PlanKind.yearly.agrees(withProductIdentifier: "talk.cointerview.pro.yearly"))
+    }
+
     private func price(_ kind: PlanKind, _ amount: String, _ currency: String = "USD") -> PlanSavings.Price {
         .init(kind: kind, amount: Decimal(string: amount)!, currency: currency)
     }
@@ -149,6 +163,20 @@ struct AccessConfigurationTests {
         #expect(BillingConfiguration.acceptedKey("test_abc", isDebugBuild: false) == nil)
         #expect(BillingConfiguration.acceptedKey("appl_abc", isDebugBuild: false) == "appl_abc")
         #expect(BillingConfiguration.acceptedKey("test_abc", isDebugBuild: true) == "test_abc")
+    }
+
+    @Test
+    func aBillingTestBuildUsesInstallationAccessFromItsPlist() throws {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "billing-\(UUID().uuidString).bundle")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let info: [String: Any] = ["CFBundleIdentifier": "test.billing.\(UUID().uuidString)",
+                                   ProviderConfiguration.installationAccessPlistKey: "YES"]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: dir.appending(path: "Info.plist"))
+        let bundle = try #require(Bundle(url: dir))
+        let defaults = try #require(UserDefaults(suiteName: "billing-\(UUID().uuidString)"))
+        defaults.set("https://dev.example", forKey: ProviderConfiguration.backendURLDefaultsKey)
+        #expect(ProviderConfiguration.installationBackendURL(bundle: bundle, defaults: defaults, isDebugBuild: true, arguments: [])
+                == URL(string: "https://dev.example"), "no launch argument needed: an ordinary home-screen launch")
     }
 
     @Test

@@ -133,6 +133,19 @@ enum PlanKind: String, Codable, Sendable, CaseIterable {
     }
 }
 
+extension PlanKind {
+    /// Whether a product's **name** agrees with what the store says it is. A product named "yearly"
+    /// that the store sells as a monthly subscription, or "lifetime" sold as a yearly subscription, is
+    /// misconfigured on the dashboard and is not offered until it is corrected.
+    func agrees(withProductIdentifier identifier: String) -> Bool {
+        let id = identifier.lowercased()
+        let names = [rawValue, periodNoun].compactMap { $0 }
+        let others = PlanKind.allCases.filter { $0 != self }.flatMap { [$0.rawValue, $0.periodNoun].compactMap { $0 } }
+        // Named for this plan, and not also named for another one.
+        return names.contains { id.contains($0) } && !others.contains { other in id.contains(other) && !names.contains { $0.contains(other) } }
+    }
+}
+
 /// Savings computed from the **store's** prices, per week of access.
 ///
 /// A saving is shown only when it is real: same currency, positive prices, and genuinely cheaper per

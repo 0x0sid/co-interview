@@ -94,7 +94,9 @@ struct ProviderConfiguration: Equatable, Sendable {
             }
             return ProviderConfiguration(availability: .backend(url: url), token: "", installation: credential, source: .buildConfiguration)
         }
-        let wantsInstallation = arguments.contains("-CopilotInstallationAuth") || defaults.bool(forKey: useInstallationAuthDefaultsKey)
+        let wantsInstallation = arguments.contains("-CopilotInstallationAuth")
+            || defaults.bool(forKey: useInstallationAuthDefaultsKey)
+            || buildRequestsInstallationAccess(bundle)
         // Precedence, highest first: what the developer explicitly saved in the debug screen, then
         // the build's own configuration, then the local development defaults. Saving a value in the
         // app therefore wins over the checked-out configuration, which is what makes a stale
@@ -199,6 +201,16 @@ struct ProviderConfiguration: Equatable, Sendable {
         #else
         false
         #endif
+    }
+
+    /// A Debug build made for billing tests (`NEVERBLANK_INSTALLATION_ACCESS=YES` at build time) uses
+    /// installation access from its Info.plist, so it survives an ordinary launch from the home screen.
+    /// Ordinary Debug, unit-test and UI-test builds leave it empty and keep the developer token.
+    static let installationAccessPlistKey = "NeverblankInstallationAccess"
+
+    static func buildRequestsInstallationAccess(_ bundle: Bundle) -> Bool {
+        (bundle.object(forInfoDictionaryKey: installationAccessPlistKey) as? String)?
+            .trimmingCharacters(in: .whitespaces).uppercased() == "YES"
     }
 
     /// The backend this build registers an installation with, or nil when it does not use

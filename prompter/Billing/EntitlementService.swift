@@ -208,7 +208,10 @@ final class EntitlementService {
                 let product = package.storeProduct
                 Self.log.info("[Plans] package=\(package.identifier, privacy: .public) product=\(product.productIdentifier, privacy: .public) category=\(String(describing: product.productCategory), privacy: .public) type=\(String(describing: product.productType), privacy: .public) period=\(product.subscriptionPeriod.map { "\($0.value) \($0.unit)" } ?? "none", privacy: .public) → \(kind?.rawValue ?? "not sold", privacy: .public)")
                 #endif
-                if let kind, found[kind] == nil { found[kind] = package }
+                // Offered only when the product's name and its store definition agree.
+                if let kind, kind.agrees(withProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
+                    found[kind] = package
+                }
             }
             packagesByPlan = found
             plans = PlanKind.allCases.compactMap { kind in

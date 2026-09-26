@@ -20,6 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NeverblankInstallationAccess</key>
+	<string>$(NEVERBLANK_INSTALLATION_ACCESS)</string>
 	<key>RevenueCatPublicKey</key>
 	<string>$(REVENUECAT_PUBLIC_KEY)</string>
 	<key>NeverblankTermsURL</key>

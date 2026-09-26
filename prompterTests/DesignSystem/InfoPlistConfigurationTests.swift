@@ -20,6 +20,8 @@ struct InfoPlistConfigurationTests {
         // Backend host and client token injected from the git-ignored Local-Debug.xcconfig.
         "CopilotDevBackendHost",
         "CopilotDevBackendToken",
+        // Billing-test builds only (set on the xcodebuild command line); Release always uses it.
+        "NeverblankInstallationAccess",
     ]
 
     /// The production backend. Release-only on purpose: in Debug a plist URL would outrank the
