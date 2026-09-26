@@ -79,7 +79,8 @@ struct InterviewReviewSheet: View {
                         Text("Nothing was transcribed in this interview, so there is nothing to review.")
                             .foregroundStyle(Theme.Color.secondary)
                     } else if !mayGenerate {
-                        Button("Unlock Pro to generate summary & feedback") { plansPaywall = .init(trigger: .settings) }
+                        Button(entitlements?.expiredAt == nil ? "Unlock Pro to generate summary & feedback"
+                                                              : "Pro expired — renew to generate summary & feedback") { plansPaywall = .init(trigger: .settings) }
                             .accessibilityIdentifier("review-unlock")
                         Text("Viewing and exporting the transcript stay free.")
                             .font(Typography.body(12))
@@ -141,10 +142,16 @@ struct InterviewReviewSheet: View {
             saved = record
             isMarking = false
         } catch InterviewReviewClient.Failure.proRequired {
-            failure = "Summary & feedback needs Neverblank Pro."
+            if let expired = entitlements?.expiredAt {
+                failure = "Your Neverblank Pro subscription expired on \(expired.formatted(date: .abbreviated, time: .shortened)). Renew to generate summaries; the transcript stays free to view and export."
+            } else {
+                failure = "Summary & feedback needs Neverblank Pro."
+            }
             plansPaywall = .init(trigger: .settings)
-        } catch InterviewReviewClient.Failure.unavailable(let message) {
-            failure = message
+        } catch InterviewReviewClient.Failure.backendUnavailable {
+            failure = "Neverblank's service isn't reachable right now, so the review can't be generated. Check your connection and try again later."
+        } catch InterviewReviewClient.Failure.generationFailed {
+            failure = "The review couldn't be generated this time. Nothing was saved or changed — tap Retry."
         } catch {
             failure = "The review could not be saved on this iPhone."
         }

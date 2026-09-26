@@ -71,9 +71,14 @@ struct InterviewReviewStore: Sendable {
 
 /// Asks the backend for a review. Pro only; authenticated like every other request.
 enum InterviewReviewClient {
+    /// Three different situations, each with its own message and remedy.
     enum Failure: Error, Equatable {
+        /// The server says this needs Pro (none, or it has expired).
         case proRequired
-        case unavailable(String)
+        /// Neverblank's service could not be reached, or does not offer reviews yet.
+        case backendUnavailable
+        /// The service answered but the review could not be produced; Retry may work.
+        case generationFailed
     }
 
     struct Line: Encodable { let text: String; let candidate: Bool }
@@ -81,9 +86,7 @@ enum InterviewReviewClient {
 
     static func request(_ body: Body, configuration: ProviderConfiguration = .resolve(),
                         session: URLSession = .shared) async throws -> InterviewReviewReport {
-        guard case .backend(let url) = configuration.availability else {
-            throw Failure.unavailable("Neverblank isn't connected. Check your connection and try again.")
-        }
+        guard case .backend(let url) = configuration.availability else { throw Failure.backendUnavailable }
         var request = URLRequest(url: url.appending(path: "v1/copilot/review"))
         request.httpMethod = "POST"
         request.timeoutInterval = 75
@@ -95,13 +98,17 @@ enum InterviewReviewClient {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw Failure.unavailable("The review could not be generated. Check your connection and try again.")
+            throw Failure.backendUnavailable
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        if status == 402 { throw Failure.proRequired }
-        guard status == 200, let report = try? JSONDecoder().decode(InterviewReviewReport.self, from: data) else {
-            throw Failure.unavailable("The review could not be generated right now. Try again in a moment.")
+        switch status {
+        case 200:
+            guard let report = try? JSONDecoder().decode(InterviewReviewReport.self, from: data) else { throw Failure.generationFailed }
+            return report
+        case 402: throw Failure.proRequired
+        // Not reachable, no such route (an older service), or reviews not configured there.
+        case 0, 404, 503: throw Failure.backendUnavailable
+        default: throw Failure.generationFailed
         }
-        return report
     }
 }
