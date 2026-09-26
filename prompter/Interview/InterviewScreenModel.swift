@@ -1127,6 +1127,7 @@ final class InterviewScreenModel {
         let trimmed = topic.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         questions[index].text = trimmed
+        modelTitles[requestID] = trimmed
     }
 
     /// Frees the slot and starts whatever is waiting. Called on every terminal outcome, so a failure
@@ -1235,11 +1236,13 @@ final class InterviewScreenModel {
         // **A finished stream with no text is never a complete answer.** When the model asked its
         // clarifying question in the title line instead of the body, that question is the answer and
         // is shown and saved; otherwise the entry fails with Retry, keeping its snapshot.
+        let modelTitle = modelTitles.removeValue(forKey: requestID)
         if !Self.hasVisibleText(blocks) {
+            // Only when this response itself is marked as a clarification, and only the model's own
+            // title for it, phrased as a question. Anything else would be an invented answer.
             let need = answer.need ?? pendingNeeds[requestID]
-            let label = question.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if need == .clarification, label.hasSuffix("?"), label != Self.pendingQuestionLabel {
-                blocks = [.prose(label)]
+            if need == .clarification, let modelTitle, modelTitle.hasSuffix("?") {
+                blocks = [.prose(modelTitle)]
             } else {
                 failAnswer(requestID: requestID, message: Self.emptyAnswerMessage)
                 return
@@ -1267,6 +1270,10 @@ final class InterviewScreenModel {
 
     static let emptyAnswerMessage = "No answer came back. Tap Retry to ask again."
 
+    /// The title the **model** sent for each request (never a detected or spoken question), for the
+    /// one case where it is the answer: an explicitly marked clarification with no body text.
+    private var modelTitles: [UUID: String] = [:]
+
     static func hasVisibleText(_ blocks: [AnswerBlock]) -> Bool {
         blocks.contains { block in
             switch block {
@@ -1278,6 +1285,7 @@ final class InterviewScreenModel {
     /// A failure keeps everything that arrived. Whatever text was streamed stays readable and the
     /// entry is marked incomplete, so Retry adds to history rather than replacing it.
     private func failAnswer(requestID: UUID, message: String) {
+        modelTitles[requestID] = nil
         guard let generation = generations[requestID] else { return }
         if let answerID = generation.answerID,
            let index = questions.firstIndex(where: { $0.id == generation.questionID }),

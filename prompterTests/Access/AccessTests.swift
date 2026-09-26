@@ -554,8 +554,36 @@ struct EmptyAnswerTests {
         #expect(answer.isIncomplete, "a blank answer is not complete")
         #expect(answer.failureMessage == InterviewScreenModel.emptyAnswerMessage)
         #expect(model.canRetry(questionID: questionID))
+        let original = feed.discussionRequests[0].discussion
+        Support.speak("Something said later.", in: model)
         model.retry(questionID: questionID)
-        #expect(feed.discussionRequests.count == 2, "Retry re-sends the kept snapshot")
+        #expect(feed.discussionRequests.count == 2)
+        #expect(feed.discussionRequests[1].discussion == original, "Retry re-sends the original snapshot, not later speech")
+    }
+
+    @Test
+    func anOrdinaryTitleNeverBecomesAnAnswer() throws {
+        let (model, feed) = Support.make()
+        let (requestID, questionID) = try start(model, feed)
+        // A normal response (no clarification marker) whose title is phrased as a question.
+        model.handle(.answerTopicResolved(requestID: requestID, topic: "What is the basis?"))
+        model.handle(.answerCompleted(requestID: requestID, blocks: [], highlight: nil))
+        let answer = try #require(model.questions.first { $0.id == questionID }?.selectedAnswer)
+        #expect(answer.isIncomplete && answer.blocks.isEmpty, "no fabricated answer from an ordinary title")
+    }
+
+    @Test
+    func aDetectedQuestionIsNeverEchoedAsAClarification() throws {
+        let (model, feed) = Support.make()
+        let question = InterviewQuestion(text: "Why did you leave your last job?")
+        model.handle(.questionDetected(question))
+        model.generate(for: question)
+        let request = try #require(feed.questionRequests.last)
+        model.handle(.answerStarted(requestID: request.requestID, questionID: request.questionID))
+        model.handle(.answerNeedsInput(requestID: request.requestID, need: .clarification))
+        model.handle(.answerCompleted(requestID: request.requestID, blocks: [], highlight: nil))
+        let answer = try #require(model.questions.first { $0.id == question.id }?.selectedAnswer)
+        #expect(answer.isIncomplete, "the speaker's own question is not the model's clarification")
     }
 
     @Test

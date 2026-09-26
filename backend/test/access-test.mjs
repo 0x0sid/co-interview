@@ -188,6 +188,15 @@ async function waitForHealth() {
   }
   throw new Error("server did not start");
 }
+/** Waits for the current server to log a line matching `pattern`, for at most `timeoutMs`. */
+async function logged(pattern, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (pattern.test(server.output)) return true;
+    await delay(25);
+  }
+  return false;
+}
 async function stop(child) {
   child.kill("SIGTERM");
   await new Promise((resolve) => child.once("exit", resolve));
@@ -215,12 +224,12 @@ try {
   const described = await (await fetch(`${base}/v1/access`, { headers: auth(created) })).json();
   check("GET /v1/access reports the preview ended and no Pro", described.preview.state === "ended" && !described.pro.active && described.app_user_id === created.app_user_id);
   check("installations cannot read operator diagnostics", (await fetch(`${base}/v1/copilot/diagnostics/decisions?session=x`, { headers: auth(created) })).status === 403);
-  // The log line is written when the stream ends, well after fetch resolves on its headers.
-  await delay(800);
+  // The log line is written when the stream ends, after fetch has resolved on its headers: wait for
+  // the line itself, bounded.
   check("request log: installation auth, preview basis, completed stream — and no ids or content",
-    /POST \/v1\/copilot\/answer -> 200 \d+ms auth=installation basis=preview outcome=done/.test(server.output)
+    await logged(/POST \/v1\/copilot\/answer -> 200 \d+ms auth=installation basis=preview outcome=done/)
       && !server.output.includes(created.installation_id) && !server.output.includes(created.secret));
-  check("request log: a refusal says so", /POST \/v1\/copilot\/answer -> 402 \d+ms auth=installation basis=refused/.test(server.output));
+  check("request log: a refusal says so", await logged(/POST \/v1\/copilot\/answer -> 402 \d+ms auth=installation basis=refused/));
   check("the operator token still works (development and evaluation)",
     (await answer({ authorization: "Bearer operator-token", "content-type": "application/json" })).status === 200);
 
@@ -243,9 +252,7 @@ try {
   const afterPurchase = await (await fetch(`${base}/v1/access?refresh=1`, { headers: auth(created) })).json();
   check("after purchase /v1/access?refresh=1 reports Pro", afterPurchase.pro.active && afterPurchase.pro.verified);
   check("Pro answers are served beyond the preview", (await answer(auth(created))).status === 200);
-  // The log line is written when the stream ends, well after fetch resolves on its headers.
-  await delay(800);
-  check("request log: a Pro answer is logged with basis=pro", /auth=installation basis=pro outcome=done/.test(server.output));
+  check("request log: a Pro answer is logged with basis=pro", await logged(/auth=installation basis=pro outcome=done/));
   const stranger = await (await post("/v1/installations", {}, {})).json();
   check("a second installation is not Pro because another customer is", (await answer({ ...auth(stranger), "x-revenuecat-app-user-id": created.app_user_id })).status === 200
     && (await answer(auth(stranger))).status === 200 && (await answer(auth(stranger))).status === 402);

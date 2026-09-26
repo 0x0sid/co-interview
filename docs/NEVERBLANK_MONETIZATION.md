@@ -129,7 +129,10 @@ truthfully, the `lifetime` product as a Yearly plan at $79.99.
    - Entitlement `pro`; products attached to it.
    - Offering `default` (current) with packages `$rc_weekly` and `$rc_monthly`.
    - Project settings → Restore behaviour: **Transfer to new App User ID**.
-2. **App Store Connect** — subscription group "Neverblank Pro":
+2. **App Store Connect** — auto-renewable subscription group "Neverblank Pro" (Weekly, Monthly,
+   Yearly); **Lifetime is a separate non-consumable In-App Purchase, outside the group**. First
+   milestone: Monthly only, end to end (sandbox purchase → backend Pro → Generate), same-device
+   Restore; new-identity Restore on a second device stays a separate open check. Earlier wording:
    `talk.cointerview.pro.weekly` (1 week) and `talk.cointerview.pro.monthly` (1 month), unless other
    ids are already registered. **Prices to be confirmed by the owner before creation** (proposed
    $5.99/week and $12.99/month). No introductory offer. Paid Applications agreement active.
