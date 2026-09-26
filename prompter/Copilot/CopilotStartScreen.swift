@@ -42,6 +42,10 @@ struct CopilotStartScreen: View {
     /// The paywall opened from here. Buying here never generates anything: no interview is open.
     @State private var settingsPaywall: AccessController.PaywallRequest?
     @State private var isChoosingLanguage = false
+    /// The live interview's feed, made **once** when the interview opens. Built inside the cover it
+    /// was rebuilt — with a new coordinator — every time this screen re-rendered, including on every
+    /// purchase and entitlement change.
+    @State private var liveFeed: LiveInterviewFeed?
 
     /// The previous pipeline screen, kept reachable so the provider work it exercises is not stranded.
     @State private var startedPipelineMode: Mode?
@@ -125,7 +129,7 @@ struct CopilotStartScreen: View {
                         InterviewScreen(
                             mode: .live,
                             title: launch.restored == nil ? "Live interview" : launch.session.title,
-                            feed: makeLiveFeed(project: launch.fileContext),
+                            feed: liveFeed ?? makeLiveFeed(project: launch.fileContext),
                             readiness: readiness,
                             recheckReadiness: {
                                 await LiveReadiness.check(configuration: ProviderConfiguration.resolve(), language: launch.language)
@@ -158,7 +162,7 @@ struct CopilotStartScreen: View {
                 onAgree: {
                     AIConsent.record()
                     isAskingConsent = false
-                    launch = .newLive(context: modelContext, preference: languagePreference)
+                    open(.newLive(context: modelContext, preference: languagePreference))
                 },
                 onCancel: { isAskingConsent = false }
             )
@@ -263,7 +267,7 @@ struct CopilotStartScreen: View {
             VStack(alignment: .leading, spacing: 8) {
                 if let interrupted = savedSessions.first(where: { $0.state == .interrupted }) {
                     Button {
-                        launch = .reopen(interrupted, context: modelContext)
+                        open(.reopen(interrupted, context: modelContext))
                     } label: {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("An interview was interrupted")
@@ -296,7 +300,7 @@ struct CopilotStartScreen: View {
                 // transcript, an answer or a file.
                 ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
                     HStack(alignment: .top, spacing: 8) {
-                        Button { launch = .reopen(session, context: modelContext) } label: { SessionRow(session: session) }
+                        Button { open(.reopen(session, context: modelContext)) } label: { SessionRow(session: session) }
                             .buttonStyle(.plain)
                         Menu {
                             Button("Rename", systemImage: "pencil") {
@@ -347,7 +351,7 @@ struct CopilotStartScreen: View {
         return VStack(alignment: .leading, spacing: 8) {
             Button {
                 if AIConsent.isGiven() {
-                    launch = .newLive(context: modelContext, preference: languagePreference)
+                    open(.newLive(context: modelContext, preference: languagePreference))
                 } else {
                     isAskingConsent = true
                 }
@@ -522,6 +526,12 @@ struct CopilotStartScreen: View {
     }
 
     #endif
+
+    /// Opens an interview; a live one gets its feed here, once.
+    private func open(_ newLaunch: InterviewLaunch) {
+        liveFeed = newLaunch.mode == .live ? makeLiveFeed(project: newLaunch.fileContext) : nil
+        launch = newLaunch
+    }
 
     /// Builds the live session from the components that already exist: one audio input, the
     /// configured provider, the sample project, and the coordinator in **manual** generation mode.

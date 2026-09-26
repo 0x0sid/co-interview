@@ -827,13 +827,68 @@ final class InterviewScreenModel {
     /// about what it means, so it does not go through the target rule at all.
     func generate(for question: InterviewQuestion) {
         explicitlySelectedQuestionID = question.id
-        requestAnswer(for: question, isRegeneration: !question.answers.isEmpty)
+        answerPage(question, isRegeneration: !question.answers.isEmpty)
     }
 
     /// Produces a new version of the current answer. The previous version is kept, not replaced.
     func regenerate() {
         guard let question = currentQuestion else { return }
-        requestAnswer(for: question, isRegeneration: true)
+        answerPage(question, isRegeneration: true)
+    }
+
+    /// A page's own Generate or Regenerate.
+    ///
+    /// **A saved question is answered from its saved context**, never through the live feed's
+    /// in-memory card map: that map only knows questions this feed instance detected, so every question
+    /// of a reopened interview used to fail with "no longer part of this session" while its button
+    /// stayed enabled. The card path is used only when the card exists and access is available; any
+    /// other page request goes through the queue with a snapshot — held behind the paywall when there
+    /// is no access, and sent at most once, in this session, after access is verified.
+    private func answerPage(_ question: InterviewQuestion, isRegeneration: Bool) {
+        if let liveFeed, !liveFeed.canAnswerFromCard(questionID: question.id) || !canAcceptAnotherAnswer {
+            requestFromSavedQuestion(question, isRegeneration: isRegeneration)
+        } else {
+            requestAnswer(for: question, isRegeneration: isRegeneration)
+        }
+    }
+
+    /// Queues an answer for an existing page from its retained snapshot (Retry keeps its generation
+    /// key) or, when it has none, a snapshot built from the saved transcript and that question. Needs
+    /// no microphone.
+    private func requestFromSavedQuestion(_ question: InterviewQuestion, isRegeneration: Bool) {
+        guard requestByQuestion[question.id] == nil,
+              let index = questions.firstIndex(where: { $0.id == question.id }) else { return }
+        syncSessionNote()
+        var snapshot = retainedSnapshots[question.id] ?? savedQuestionSnapshot(question)
+        // Another version is another generation; a first answer from a retained snapshot keeps its key.
+        if isRegeneration || snapshot.generationKey == nil { snapshot.generationKey = UUID().uuidString }
+        let requestID = UUID()
+        generations[requestID] = Generation(questionID: question.id, answerID: nil, isRegeneration: isRegeneration)
+        requestByQuestion[question.id] = requestID
+        pendingSnapshots[requestID] = snapshot
+        retainedSnapshots[question.id] = snapshot
+        generationFailure = nil
+        currentIndex = index
+        enqueue(requestID, trigger: .generate)
+        onPersist?(.now)
+        startNextQueuedRequestIfIdle()
+    }
+
+    /// The saved transcript as context and the page's question as what is asked.
+    private func savedQuestionSnapshot(_ question: InterviewQuestion) -> DiscussionSnapshot {
+        var snapshot = DiscussionSnapshot(
+            background: transcript.filter(\.isFinal).map(\.text),
+            newInput: [question.text],
+            provisional: nil,
+            priorSuggestions: priorSuggestionTexts(),
+            note: context.note.trimmingCharacters(in: .whitespacesAndNewlines),
+            attachmentIDs: (files?.readyAttachmentIDs ?? []).map(\.uuidString)
+        )
+        if let files {
+            snapshot.fileExcerpts = files.fileContext.passages(forQuestion: question.text, limit: 3).map(FileExcerpt.init)
+            snapshot.filesStillProcessing = files.items.filter { $0.status.isWorking }.map(\.filename)
+        }
+        return snapshot
     }
 
     private func requestAnswer(for question: InterviewQuestion, isRegeneration: Bool) {
@@ -1137,8 +1192,10 @@ final class InterviewScreenModel {
               let index = questions.firstIndex(where: { $0.id == generation.questionID }) else { return }
         let trimmed = topic.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        questions[index].text = trimmed
         modelTitles[requestID] = trimmed
+        // Only a new entry takes the model's title; a saved or detected question keeps its own words.
+        guard questions[index].text == Self.pendingQuestionLabel else { return }
+        questions[index].text = trimmed
     }
 
     /// Frees the slot and starts whatever is waiting. Called on every terminal outcome, so a failure

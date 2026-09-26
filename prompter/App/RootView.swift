@@ -86,7 +86,9 @@ struct RootView: View {
             }
             await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL())
             // The languages the on-device transcriber supports, for "System language" and the picker.
-            await SpeechLocales.load()
+            // Not in the unit-test host: querying the recognizer at launch competes with the tests'
+            // main-actor timing, and tests pass the supported list explicitly.
+            if !isUnitTestHost { await SpeechLocales.load() }
         }
     }
 }

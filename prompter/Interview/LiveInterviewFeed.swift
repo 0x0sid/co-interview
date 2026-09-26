@@ -103,6 +103,11 @@ final class LiveInterviewFeed: InterviewFeed {
 
     // MARK: - Generation, only when asked
 
+    /// Whether this feed detected `questionID` itself and can answer it from its card. A question
+    /// restored from a saved session, or from another feed instance, cannot — the screen then answers
+    /// it from its saved snapshot (`requestAnswerForDiscussion`).
+    func canAnswerFromCard(questionID: UUID) -> Bool { cardIDByQuestion[questionID] != nil }
+
     func requestAnswer(requestID: UUID, question: InterviewQuestion, isRegeneration: Bool) {
         guard let cardID = cardIDByQuestion[question.id] else {
             continuation.yield(.answerFailed(
