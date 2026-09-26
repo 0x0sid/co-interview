@@ -361,6 +361,8 @@ struct CopilotStartScreen: View {
             }
             .buttonStyle(.prompterPrimary)
             .disabled(!enabled)
+            // The shared button style does not dim; a button that cannot start must look it.
+            .opacity(enabled ? 1 : 0.45)
             .accessibilityLabel(title)
             .accessibilityIdentifier("start-interview")
             Text(readiness.summary)
