@@ -76,6 +76,14 @@ struct PlanLineupTests {
     }
 
     @Test
+    func purchasedPlansAreNamedFromTheirIdentifier() {
+        #expect(EntitlementService.planName(forProductIdentifier: "monthly") == "Monthly")
+        #expect(EntitlementService.planName(forProductIdentifier: "talk.cointerview.pro.weekly") == "Weekly")
+        #expect(EntitlementService.planName(forProductIdentifier: "lifetime") == "Lifetime")
+        #expect(EntitlementService.planName(forProductIdentifier: "yearly") == "Yearly")
+    }
+
+    @Test
     func misconfiguredProductsAreNotOffered() {
         // The Test Store as found on 2026-09-26.
         #expect(PlanKind.monthly.agrees(withProductIdentifier: "monthly"))

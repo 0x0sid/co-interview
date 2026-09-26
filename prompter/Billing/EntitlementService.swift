@@ -57,10 +57,21 @@ final class EntitlementService {
     /// The store product behind the active entitlement, for "Neverblank Pro · Monthly".
     private(set) var activeProductIdentifier: String?
 
-    /// "Weekly" or "Monthly" for the active subscription, from its product id; nil when unknown.
+    /// How the active purchase is described. The product's name is used only when it agrees with what
+    /// the entitlement actually does: a "lifetime" product that expires and renews is shown as the
+    /// renewing subscription it is, under its real product id, not as Lifetime.
     var activePlanName: String? {
-        guard let id = activeProductIdentifier?.lowercased() else { return nil }
-        if let offer = plans.first(where: { $0.productIdentifier.lowercased() == id }) { return offer.kind.title }
+        guard let id = activeProductIdentifier else { return nil }
+        let expires: Bool
+        if case .premium(let expiration, _) = status { expires = expiration != nil } else { expires = false }
+        guard let named = Self.planName(forProductIdentifier: id) else { return nil }
+        let namedLifetime = named == PlanKind.lifetime.title
+        if namedLifetime == expires { return "“\(id)” (renewing subscription — misconfigured product)" }
+        return named
+    }
+
+    nonisolated static func planName(forProductIdentifier identifier: String) -> String? {
+        let id = identifier.lowercased()
         for kind in [PlanKind.lifetime, .yearly, .monthly, .weekly] where id.contains(kind.rawValue) || id.contains(kind.periodNoun ?? kind.rawValue) {
             return kind.title
         }

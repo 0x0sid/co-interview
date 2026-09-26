@@ -92,7 +92,10 @@ struct SubscriptionSettingsView: View {
     /// A cancelled plan keeps access until it actually ends, and says so.
     static func renewalLine(expiration: Date?, willRenew: Bool) -> String {
         guard let expiration else { return "Active." }
-        let date = expiration.formatted(date: .abbreviated, time: .omitted)
+        // Within a day (Test Store periods are minutes to hours), the time matters as much as the date.
+        let date = expiration.timeIntervalSinceNow < 86_400
+            ? expiration.formatted(date: .abbreviated, time: .shortened)
+            : expiration.formatted(date: .abbreviated, time: .omitted)
         return willRenew ? "Renews on \(date)." : "Active until \(date). It will not renew."
     }
 }
