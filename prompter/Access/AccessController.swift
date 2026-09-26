@@ -3,7 +3,11 @@ import Observation
 
 /// Who may use Neverblank's paid features right now, and when the paywall appears.
 ///
-/// **The rule:** an authenticated installation AND (an active `pro` entitlement OR free preview left).
+/// **The rule:** an authenticated installation AND (an active `neverblank_pro` OR free answers left).
+///
+/// A free installation gets **2 free AI answers** in total (`backend/access.mjs`, "Free answers"). The
+/// backend's ledger is the authority; this type mirrors it so the app can say how many are left and
+/// open the paywall on the third Generate **before** any request is sent.
 /// The backend applies the same rule to every paid request and is the authority; this type decides
 /// what to *offer*, and it never unlocks anything on its own say-so:
 /// - a paywall opened by Generate resumes that request only after the **backend** confirms Pro
@@ -30,9 +34,6 @@ final class AccessController {
     private(set) var connection: Connection = .connecting
     /// The backend's last answer about this installation.
     private(set) var server: AccessSnapshot?
-    private(set) var meter: FreePreviewMeter
-    /// Whole seconds of preview left, for the on-screen countdown.
-    private(set) var previewRemainingSeconds: Int
     /// The paywall a Live session should present. Set by `requestPaywall`; cleared by the paywall.
     var paywall: PaywallRequest?
 
@@ -45,30 +46,24 @@ final class AccessController {
     }
     private(set) var purchaseVerification: PurchaseVerification = .none
 
-    private var record: FreePreviewRecord
+    private var record: FreeAnswersRecord
     private let credentials: InstallationCredentialStore
-    private let ledger: FreePreviewLedger
+    private let ledger: FreeAnswersLedger
     private let makeClient: (URL) -> any BackendAccessProviding
     private var client: (any BackendAccessProviding)?
     private let entitlementActive: @MainActor () -> Bool
     private let identify: @MainActor (String) async -> Void
     /// RevenueCat's current App User ID, so a purchase is allowed only once it is this installation's.
     private let currentAppUserID: @MainActor () -> String?
-    private let monotonicNow: () -> TimeInterval
     private let sleep: (Duration) async throws -> Void
-    private var ticker: Task<Void, Never>?
-    private var isReportingEnd = false
-    /// How often the countdown refreshes while the preview is being charged.
-    static let tickInterval: Duration = .milliseconds(500)
 
     init(
         credentials: InstallationCredentialStore = .keychain,
-        ledger: FreePreviewLedger = .keychain,
+        ledger: FreeAnswersLedger = .keychain,
         makeClient: @escaping (URL) -> any BackendAccessProviding = { BackendAccessClient(baseURL: $0) },
         entitlementActive: @escaping @MainActor () -> Bool,
         identify: @escaping @MainActor (String) async -> Void = { _ in },
         currentAppUserID: @escaping @MainActor () -> String? = { nil },
-        monotonicNow: @escaping () -> TimeInterval = AccessController.processClock,
         sleep: @escaping (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
         self.credentials = credentials
@@ -77,21 +72,10 @@ final class AccessController {
         self.entitlementActive = entitlementActive
         self.identify = identify
         self.currentAppUserID = currentAppUserID
-        self.monotonicNow = monotonicNow
         self.sleep = sleep
-        let record = ledger.load()
-        self.record = record
-        self.meter = FreePreviewMeter(usedSeconds: record.usedSeconds)
-        self.previewRemainingSeconds = Int(FreePreviewMeter(usedSeconds: record.usedSeconds).remaining(at: 0).rounded(.up))
+        self.record = ledger.load()
         self.credential = credentials.load()
     }
-
-    /// Seconds on a monotonic clock since this process started using it.
-    nonisolated static func processClock() -> TimeInterval {
-        let elapsed = ContinuousClock.now - processEpoch
-        return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
-    }
-    nonisolated private static let processEpoch = ContinuousClock.now
 
     // MARK: - The rule
 
@@ -110,9 +94,24 @@ final class AccessController {
 
     /// RevenueCat reports `pro` active, or the backend verified it.
     var isPro: Bool { entitlementActive() || server?.pro.active == true }
-    var isPreviewExhausted: Bool { meter.isExhausted(at: monotonicNow()) }
+    /// Free answers per installation. The backend's figure wins once known.
+    var freeAnswerLimit: Int { server?.free_answers?.limit ?? FreeAnswersRecord.limit }
+    /// Free answers used: the larger of the backend's count and what this device has seen complete,
+    /// so a slow refresh can never offer an answer that was already used.
+    var freeAnswersUsed: Int { max(server?.free_answers?.used ?? 0, record.used) }
+    var freeAnswersRemaining: Int {
+        if let serverRemaining = server?.free_answers?.remaining, serverRemaining == 0 { return 0 }
+        return max(0, freeAnswerLimit - freeAnswersUsed)
+    }
+    var areFreeAnswersUsed: Bool { freeAnswersRemaining == 0 }
     /// May this installation start paid work (detection, a new answer) now?
-    var allowsPaidRequests: Bool { credential != nil && (isPro || !isPreviewExhausted) }
+    var allowsPaidRequests: Bool { credential != nil && (isPro || !areFreeAnswersUsed) }
+
+    /// May one more answer be accepted, with `pending` free answers already queued or running?
+    /// Prevents a quick second tap from queueing more free answers than are left.
+    func allowsNewAnswer(pending: Int) -> Bool {
+        credential != nil && (isPro || freeAnswersRemaining - pending > 0)
+    }
 
     // MARK: - Installation
 
@@ -144,101 +143,34 @@ final class AccessController {
         guard let client, let credential else { return }
         guard let snapshot = try? await client.access(credential, refresh: force) else { return }
         server = snapshot
-        // The backend's record wins over a local one that says otherwise — for example a Keychain
-        // preview record lost while the credential survived.
-        if snapshot.preview.state == "ended", !isPreviewExhausted {
-            meter.stop(at: monotonicNow())
-            meter = FreePreviewMeter(usedSeconds: FreePreviewMeter.allowance)
-            record.usedSeconds = FreePreviewMeter.allowance
-            record.endReported = true
-            ledger.save(record)
-            updateRemaining()
-        }
+        noteExhaustionIfNeeded()
     }
 
-    // MARK: - Free preview
+    // MARK: - Free answers
 
-    /// Called whenever the Live screen's state changes, with true only while **every** condition for
-    /// charging the preview holds: listening, foreground, consent given, answers configured, no paywall.
-    func setPreviewConditions(_ allMet: Bool) {
-        let now = monotonicNow()
-        let shouldCount = allMet && !isPro && credential != nil && paywall == nil
-        if shouldCount, !meter.isCounting {
-            let isFirst = !meter.hasStarted
-            if meter.start(at: now) {
-                if isFirst { log(.init(name: .trialStarted)) }
-                startTicker()
-            }
-        } else if !shouldCount, meter.isCounting {
-            meter.stop(at: now)
-            persist()
-            ticker?.cancel()
-            ticker = nil
-        }
-        updateRemaining()
-    }
-
-    private func startTicker() {
-        ticker?.cancel()
-        ticker = Task { [weak self] in
-            var tick = 0
-            while !Task.isCancelled {
-                try? await self?.sleep(Self.tickInterval)
-                guard let self, !Task.isCancelled, self.meter.isCounting else { return }
-                self.updateRemaining()
-                tick += 1
-                if tick % 10 == 0 { self.persistRunning() }
-                if self.isPreviewExhausted {
-                    await self.previewDidEnd()
-                    return
-                }
-            }
-        }
-    }
-
-    /// The 30 seconds are used: bank them, tell the backend once, and show the paywall **once**.
-    func previewDidEnd() async {
-        meter.stop(at: monotonicNow())
-        ticker = nil
-        persist()
-        updateRemaining()
-        guard !isPro else { return }
-        if !record.endPaywallShown {
-            record.endPaywallShown = true
-            ledger.save(record)
-            log(.init(name: .trial30sConsumed))
-            requestPaywall(.previewEnd)
-        }
-        if !record.endReported, !isReportingEnd, let client, let credential {
-            isReportingEnd = true
-            defer { isReportingEnd = false }
-            if (try? await client.endPreview(credential)) != nil {
-                record.endReported = true
-                ledger.save(record)
-            }
-        }
-    }
-
-    private func persist() {
-        record.usedSeconds = meter.usedSeconds
+    /// An answer finished on screen. `counted` is true for a non-empty answer that was not only a
+    /// request for clarification or context — the same rule the backend settles by. The local count
+    /// moves at once; the backend's is read again straight after.
+    func noteAnswerCompleted(counted: Bool) {
+        guard counted, !isPro, usesServerAccess else { return }
+        record.used = min(freeAnswerLimit, freeAnswersUsed + 1)
+        if record.used == 1 { log(.init(name: .trialStarted)) }
         ledger.save(record)
+        noteExhaustionIfNeeded()
+        Task { await refresh() }
     }
 
-    /// Saves progress mid-stretch, so a crash or a kill loses at most a few seconds of charging.
-    private func persistRunning() {
-        record.usedSeconds = meter.used(at: monotonicNow())
+    /// Recorded once, when the second free answer has been used.
+    private func noteExhaustionIfNeeded() {
+        guard areFreeAnswersUsed, !isPro, !record.exhaustionLogged, credential != nil else { return }
+        record.exhaustionLogged = true
         ledger.save(record)
-    }
-
-    private func updateRemaining() {
-        previewRemainingSeconds = max(0, Int(meter.remaining(at: monotonicNow()).rounded(.up)))
+        log(.init(name: .freeAnswersExhausted))
     }
 
     // MARK: - Paywall and purchase
 
     func requestPaywall(_ trigger: PaywallTrigger) {
-        // Charging stops while the paywall is up.
-        if meter.isCounting { setPreviewConditions(false) }
         paywall = PaywallRequest(trigger: trigger)
     }
 

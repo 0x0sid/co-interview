@@ -35,7 +35,7 @@ struct InterviewScreen: View {
     /// Re-runs the readiness check. Nil in Demo, which has nothing to check.
     private let recheckReadiness: (() async -> LiveReadiness)?
     @State private var isRechecking = false
-    /// True when this Live session authenticates as the installation, so the free preview and Pro
+    /// True when this Live session authenticates as the installation, so the free answers and Pro
     /// apply (always in Release). False in Demo and for a developer's own backend token.
     private let enforcesAccess: Bool
     @Environment(AccessController.self) private var access: AccessController?
@@ -78,19 +78,10 @@ struct InterviewScreen: View {
     /// Stops the session and hands the idle timer back to the system at once — not on the next
     /// render, which may never come once the screen is gone.
     private func endSession() {
-        access?.setPreviewConditions(false)
         model.stop()
         recorder?.end()
         isSessionActive = false
         screenAwake.apply(sessionActive: false, sceneActive: scenePhase == .active)
-    }
-
-    /// Listening for real, in the foreground, with answers configured and no paywall on screen.
-    /// Consent was given before this screen could open. Setup, permission prompts, the paywall and
-    /// background time are therefore never charged to the preview.
-    private var previewConditionsMet: Bool {
-        enforcesAccess && model.listeningState == .listening && scenePhase == .active
-            && readiness.canGenerate && access?.paywall == nil
     }
 
     private var paywallBinding: Binding<AccessController.PaywallRequest?> {
@@ -100,20 +91,21 @@ struct InterviewScreen: View {
         )
     }
 
-    /// The preview's countdown, or — once it has ended — what still works and how to unlock the rest.
+    /// Free answers left, or — once both are used — what still works and an inline way to Pro. Never
+    /// a modal over the answer being read.
     @ViewBuilder
     private var accessStatus: some View {
         if enforcesAccess, let access, !access.isPro {
             HStack(spacing: 10) {
-                Text(access.isPreviewExhausted ? AccessCopy.previewEnded : AccessCopy.previewRemaining(access.previewRemainingSeconds))
+                Text(access.areFreeAnswersUsed ? AccessCopy.freeAnswersUsed : AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining))
                     .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
                     .foregroundStyle(InterviewTheme.Color.muted)
-                    .accessibilityIdentifier("preview-status")
+                    .accessibilityIdentifier("free-answers-status")
                 Spacer(minLength: 4)
-                if access.isPreviewExhausted {
-                    Button("Unlock Pro") { access.requestPaywall(.settings) }
-                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
-                        .accessibilityIdentifier("preview-unlock")
+                if access.areFreeAnswersUsed {
+                    Button("Unlock Pro") { access.requestPaywall(.freeAnswersExhausted) }
+                        .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
+                        .accessibilityIdentifier("unlock-pro")
                 }
             }
         }
@@ -192,10 +184,6 @@ struct InterviewScreen: View {
                                   currentFileIDs: Set((files?.items ?? []).map(\.id.uuidString)))
         }
         .onDisappear { endSession() }
-        // The free preview is charged only while every condition holds; see `previewConditionsMet`.
-        .onChange(of: previewConditionsMet, initial: true) { _, met in
-            access?.setPreviewConditions(met)
-        }
         .sheet(item: paywallBinding) { request in
             if let access, let entitlements {
                 NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { unlocked in

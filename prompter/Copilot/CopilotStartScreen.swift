@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
+import Speech
 
 /// Neverblank's home: the interview language, saved interviews and **Live**. A Release build opens
 /// here directly (`RootView`); Demo, the pipeline prototype, the sample project and provider
@@ -65,16 +66,12 @@ struct CopilotStartScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 intro
-                languagePicker
-                recentInterviews
-                subscriptionCard
-                #if DEBUG
-                demoCard
-                #endif
                 liveCard
+                permissionHelp
+                recentInterviews
+                settingsSection
                 #if DEBUG
-                pipelinePrototypeNote
-                sampleProjectNote
+                developerSection
                 #endif
                 Text(footer)
                     .font(Typography.mono(11))
@@ -173,13 +170,7 @@ struct CopilotStartScreen: View {
     }
 
     /// Debug keeps the development title the UI tests navigate by; Release shows the product name.
-    private var navigationTitle: String {
-        #if DEBUG
-        "Interview Copilot"
-        #else
-        "Neverblank"
-        #endif
-    }
+    private var navigationTitle: String { "Neverblank" }
 
     private var footer: String {
         #if DEBUG
@@ -260,12 +251,12 @@ struct CopilotStartScreen: View {
                     .buttonStyle(.plain)
                 }
                 HStack {
-                    Text(isShowingAllInterviews ? "All interviews" : "Recent interviews")
+                    Text(isShowingAllInterviews ? "All saved interviews" : "Saved interviews")
                         .font(Typography.body(13, weight: .semibold))
                         .foregroundStyle(Theme.Color.ink)
                     Spacer()
                     if savedSessions.count > 3 || isShowingAllInterviews {
-                        Button(isShowingAllInterviews ? "Show recent" : "All interviews (\(savedSessions.count))") {
+                        Button(isShowingAllInterviews ? "Show recent" : "All saved interviews (\(savedSessions.count))") {
                             isShowingAllInterviews.toggle()
                         }
                         .font(Typography.body(12, weight: .medium))
@@ -323,10 +314,10 @@ struct CopilotStartScreen: View {
         card(
             badge: Mode.live.badge,
             badgeColor: Theme.Color.warm,
-            title: Mode.live.title,
-            body: "The microphone listens to the conversation in the room and the configured backend writes the answers. Questions are detected as they are asked; answers are written only when you tap Generate.",
+            title: "Start interview",
+            body: "Neverblank listens while your interview runs, spots the questions as they are asked, and writes an answer when you tap Generate.",
             footnote: readiness.summary,
-            actionTitle: readiness.isListenOnly ? "Start live (listening only)" : "Start live",
+            actionTitle: readiness.isListenOnly ? "Start interview (listening only)" : "Start interview",
             isEnabled: readiness.canListen && !readiness.isChecking,
             action: {
                 if AIConsent.isGiven() {
@@ -337,6 +328,64 @@ struct CopilotStartScreen: View {
             }
         )
     }
+
+    // MARK: Help and settings
+
+    /// When the microphone or speech recognition was refused, the one place to fix it.
+    @ViewBuilder
+    private var permissionHelp: some View {
+        if microphonePermission == .denied || SFSpeechRecognizer.authorizationStatus() == .denied {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Neverblank needs the microphone and speech recognition to listen. You can allow them in iPhone Settings.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Theme.Color.ink)
+                Button("Open iPhone Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                }
+                .font(Typography.body(13, weight: .semibold))
+                .accessibilityIdentifier("open-settings")
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    /// Language, subscription, and the help and legal pages.
+    private var settingsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Settings")
+                .font(Typography.body(15, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+                .accessibilityAddTraits(.isHeader)
+            languagePicker
+            subscriptionCard
+            HStack(spacing: 16) {
+                if let support = LegalLinks.support { Link("Support", destination: support) }
+                if let terms = LegalLinks.terms { Link("Terms of Use", destination: terms) }
+                if let privacy = LegalLinks.privacy { Link("Privacy Policy", destination: privacy) }
+            }
+            .font(Typography.body(12, weight: .medium))
+        }
+    }
+
+    #if DEBUG
+    /// Development tools. Compiled into Debug builds only; a Release build has none of this.
+    private var developerSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Developer · Debug builds only")
+                .font(Typography.body(13, weight: .semibold))
+                .foregroundStyle(Theme.Color.secondary)
+            demoCard
+            pipelinePrototypeNote
+            sampleProjectNote
+            NavigationLink("Prompter teleprompter (development)") { ScriptListScreen() }
+                .font(Typography.body(12, weight: .medium))
+            NavigationLink("Debug menu") { DebugMenuScreen() }
+                .font(Typography.body(12, weight: .medium))
+        }
+    }
+    #endif
 
     // MARK: Subscription
 

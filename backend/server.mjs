@@ -212,6 +212,8 @@ const decisionApiKeyValue = FAKE ? "" : decisionApiKey(decisionConfig);
 const ACCESS_DB_PATH = process.env.ACCESS_DB_PATH ?? join(dirname(fileURLToPath(import.meta.url)), "data", "access.sqlite");
 const accessLimits = accessLimitsFromEnv();
 const accessStore = new AccessStore(ACCESS_DB_PATH);
+// One-time move from the 30-second preview to two free answers (access.mjs, "Migration").
+const migratedPreviews = accessStore.migrate(accessLimits);
 // The key used to read a customer's entitlements from RevenueCat. Server-side only: never in a
 // response or a log. Production uses the Neverblank project's **secret** key (REVENUECAT_SECRET_KEY).
 // REVENUECAT_VERIFY_KEY is an interim alternative: RevenueCat's customer read also accepts the
@@ -249,13 +251,28 @@ function authMode(caller) {
  * returns false when refused. Called after the request body is validated, so a malformed request
  * never spends preview allowance.
  */
-async function admit(caller, kind, response) {
+async function admit(caller, kind, response, { generationKey } = {}) {
   const meta = (response.meta ??= {});
   if (caller?.operator) { meta.basis = "operator"; return true; }
-  const decision = await access.authorize(caller.installation, kind);
+  const decision = await access.authorize(caller.installation, kind, { generationKey });
   meta.basis = decision.allowed ? decision.via : "refused";
+  if (decision.reservation) {
+    // Settled exactly once, when the response is over — finished, failed or abandoned.
+    meta.reservation = decision.reservation;
+    const settle = () => {
+      if (meta.settled) return;
+      meta.settled = true;
+      try {
+        meta.credit = access.settle(meta.reservation, { textDelivered: (meta.textChars ?? 0) > 0, needs: meta.needs });
+      } catch (error) {
+        console.log(`  free-answer settlement failed: ${String(error.message ?? error).slice(0, 120)}`);
+      }
+    };
+    response.on("finish", settle);
+    response.on("close", settle);
+  }
   if (decision.allowed) return true;
-  send(response, 402, { error: "pro_required", entitlement: ENTITLEMENT });
+  send(response, 402, { error: "pro_required", entitlement: ENTITLEMENT, reason: decision.reason ?? "exhausted" });
   return false;
 }
 /**
@@ -874,6 +891,28 @@ async function streamFakeAnswer(response, body) {
       : ["[FAKE] My documents do not cover that, and I would rather say so than guess. "];
 
   writeEvent(response, { type: "attempt", attempt: 1, gateway: "fake", requested_model: "fake", serving_provider: "fake", is_fake: true });
+  // Development fake only (never reachable without COINTERVIEW_FAKE=1): lets tests produce each way an
+  // answer can end, to check how the free-answer ledger settles it.
+  const outcome = body.fakeOutcome;
+  if (outcome === "empty") {
+    writeEvent(response, { type: "done", output_tokens: 0, is_fake: true });
+    return response.end();
+  }
+  if (outcome === "clarification") {
+    writeEvent(response, { type: "needs", value: "clarification" });
+    writeEvent(response, { type: "delta", text: "Which project do you mean? " });
+    writeEvent(response, { type: "done", output_tokens: null, is_fake: true });
+    return response.end();
+  }
+  if (outcome === "error") {
+    writeEvent(response, { type: "error", error: "provider_error", is_fake: true });
+    return response.end();
+  }
+  if (outcome === "code") {
+    writeEvent(response, { type: "delta", text: "```java\nint x = 1;\n```" });
+    writeEvent(response, { type: "done", output_tokens: null, is_fake: true });
+    return response.end();
+  }
   for (const sentence of sentences) {
     for (const word of sentence.split(" ")) {
       if (response.writableEnded) return;
@@ -905,6 +944,7 @@ function writeEvent(response, payload) {
   if (payload.type === "delta" && typeof payload.text === "string") meta.textChars = (meta.textChars ?? 0) + payload.text.trim().length;
   if (payload.type === "done") meta.outcome = (meta.textChars ?? 0) > 0 ? "done" : "done_empty";
   if (payload.type === "error") meta.outcome = "error";
+  if (payload.type === "needs") meta.needs = payload.value;
   response.write(`data: ${JSON.stringify(payload)}\n\n`);
 }
 
@@ -1126,7 +1166,9 @@ async function handleAnswer(request, response, caller) {
   if (!hasQuestion && !hasAction) {
     return send(response, 400, { error: "question is required" });
   }
-  if (!(await admit(caller, "answer", response))) return;
+  // The app keeps this key with the request's snapshot, so a Retry is the same generation.
+  const generationKey = typeof body.generationKey === "string" ? body.generationKey.slice(0, 80) : undefined;
+  if (!(await admit(caller, "answer", response, { generationKey }))) return;
   if (FAKE) {
     startSSE(response);
     return streamFakeAnswer(response, body);
@@ -1368,11 +1410,13 @@ const server = createServer(async (request, response) => {
     if (meta.auth) fields.push(`auth=${meta.auth}`);
     if (meta.basis) fields.push(`basis=${meta.basis}`);
     if (ending ?? meta.outcome) fields.push(`outcome=${ending ?? meta.outcome}`);
+    if (meta.credit) fields.push(`free_credit=${meta.credit}`);
     console.log(`[${requestID}] ${request.method} ${url.pathname} -> ${response.statusCode} ${Date.now() - started}ms${fields.length ? " " + fields.join(" ") : ""}`);
   };
-  response.on("finish", () => logLine());
+  // One tick later, so a free answer's settlement (registered by the gate) is already in `meta`.
+  response.on("finish", () => setImmediate(() => logLine()));
   // A client that goes away mid-stream: the response closes without finishing.
-  response.on("close", () => { if (!response.writableFinished) logLine("client_closed"); });
+  response.on("close", () => { if (!response.writableFinished) setImmediate(() => logLine("client_closed")); });
 
   try {
     if (url.pathname === "/health") {
@@ -1411,8 +1455,9 @@ const server = createServer(async (request, response) => {
     if (caller.installation && url.pathname === "/v1/access" && request.method === "GET") {
       return send(response, 200, await access.describe(caller.installation, { refresh: url.searchParams.get("refresh") === "1" }));
     }
+    // Older app builds report the end of the 30-second preview here. Listening time no longer limits
+    // anything, so this changes nothing and answers with the current allowance.
     if (caller.installation && url.pathname === "/v1/preview/end" && request.method === "POST") {
-      accessStore.endPreview(caller.installation.id);
       return send(response, 200, await access.describe(caller.installation));
     }
     // Product events: enumerated names and values only. The line carries no installation id, no
@@ -1531,6 +1576,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  gateway:  ${baseConfig.text_provider}  profile: ${baseConfig.profile}${FAKE ? "  (DEVELOPMENT FAKE — answers are canned text)" : ""}`);
   console.log(`  provider: ${providerMode}`);
   console.log(`  auth:     ${TOKENS.length ? `${TOKENS.length} operator token(s)` : "no operator tokens"}; installations enabled`);
+  console.log(`  free answers: ${accessLimits.freeAnswers} per installation; ${migratedPreviews} preview record(s) migrated at start-up`);
   console.log(`  access:   db=${ACCESS_DB_PATH} entitlement=${ENTITLEMENT} ${revenueCatVerifier ? `verified with RevenueCat (${REVENUECAT_KEY_SOURCE})` : "UNVERIFIED — no RevenueCat key, nobody is Pro"}`);
   console.log(`  decisions: ${decisionConfig.mode} (${decisionConfig.modeReason})${decisionConfig.mode === "off" ? "" : `  via=${decisionConfig.transport}  model=${decisionConfig.model}${decisionConfig.activeDecisions.length ? `  active=[${decisionConfig.activeDecisions}]` : ""}`}`);
   if (!FAKE && providerMode === "configured") {

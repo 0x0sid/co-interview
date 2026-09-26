@@ -18,14 +18,10 @@ final class PaywallPlansUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion"]
         app.launch()
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 20))
+        XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
         let viewPlans = app.buttons["view-plans"]
-        for _ in 0..<3 where !viewPlans.exists {
-            entry.tap()
-            _ = viewPlans.waitForExistence(timeout: 10)
-        }
-        if !viewPlans.isHittable { app.swipeUp() }
+        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10))
+        app.scrollTo(viewPlans)
         viewPlans.tap()
         XCTAssertTrue(app.staticTexts["Never interview alone again."].waitForExistence(timeout: 10))
 

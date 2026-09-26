@@ -26,6 +26,8 @@
 	<string>$(NEVERBLANK_TERMS_URL)</string>
 	<key>NeverblankPrivacyURL</key>
 	<string>$(NEVERBLANK_PRIVACY_URL)</string>
+	<key>NeverblankSupportURL</key>
+	<string>$(NEVERBLANK_SUPPORT_URL)</string>
 	<key>CopilotBackendURL</key>
 	<string>https://backend--d7y3w.fly.dev</string>
 	<key>LSRequiresIPhoneOS</key>

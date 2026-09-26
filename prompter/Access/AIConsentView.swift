@@ -31,10 +31,10 @@ struct AIConsentView: View {
                 point("lock", "It is used only to answer during your interview — never for advertising, and never sold.")
                 point("person.2", "Let the people you are speaking with know that you use an assistant, where that is expected or required.")
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Free preview")
+                    Text("2 free AI answers")
                         .font(Typography.body(14, weight: .semibold))
                         .foregroundStyle(Theme.Color.ink)
-                    Text(AccessCopy.previewDisclosure)
+                    Text(AccessCopy.freeAnswersDisclosure)
                         .font(Typography.body(13))
                         .foregroundStyle(Theme.Color.secondary)
                 }
@@ -70,17 +70,13 @@ struct AIConsentView: View {
     }
 }
 
-/// Wording used in more than one place, so the preview is described the same way everywhere.
+/// Wording used in more than one place, so the free answers are described the same way everywhere.
 enum AccessCopy {
-    /// The backend's preview answer cap (`PREVIEW_MAX_ANSWERS` in `backend/access.mjs`). Change both
-    /// together; `backend/test/access-test.mjs` checks the backend default is this number.
-    static let previewAnswerLimit = 5
+    static let freeAnswersDisclosure = "Every new install includes 2 free AI answers in total. They don't renew, this isn't an App Store trial, and nothing is charged. After that, listening and the transcript keep working on your iPhone; more AI answers need Neverblank Pro."
 
-    static let previewDisclosure = "Every new install includes one free preview: 30 seconds of Live listening, with question detection and up to \(previewAnswerLimit) answers. Only time spent listening counts. It is not an App Store subscription trial, nothing is charged, and it does not renew. When it ends, the transcript keeps going on your iPhone; questions and answers need Neverblank Pro."
-
-    static func previewRemaining(_ seconds: Int) -> String {
-        "Free preview · \(seconds)s left"
+    static func freeAnswersRemaining(_ count: Int) -> String {
+        count == 1 ? "1 free answer remaining" : "\(count) free answers remaining"
     }
 
-    static let previewEnded = "Free preview ended · The transcript continues. Questions and answers need Pro."
+    static let freeAnswersUsed = "Free answers used · Pro is needed for more AI answers. The transcript keeps going."
 }

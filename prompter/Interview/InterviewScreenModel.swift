@@ -146,11 +146,21 @@ final class InterviewScreenModel {
     /// Whether a request may go out now.
     private var hasPaidAccess: Bool { accessGate?.allowsPaidRequests ?? true }
 
+    /// Answers already accepted and not yet finished — each may still use a free answer.
+    private var answersInProgress: Int {
+        queuedRequestIDs.filter { !heldRequestIDs.contains($0) }.count + (activeRequestID == nil ? 0 : 1)
+    }
+
+    /// Whether one more answer may be accepted now, counting those already in progress.
+    private var canAcceptAnotherAnswer: Bool { accessGate?.allowsNewAnswer(pending: answersInProgress) ?? true }
+
     /// Puts a freshly accepted request in the queue — held, with the paywall opened, if there is no
-    /// access right now.
+    /// access for it. Checked **before** anything is sent: the third free answer never reaches the
+    /// backend.
     private func enqueue(_ requestID: UUID, trigger: PaywallTrigger) {
+        let allowed = canAcceptAnotherAnswer
         queuedRequestIDs.append(requestID)
-        if !hasPaidAccess {
+        if !allowed {
             heldRequestIDs.insert(requestID)
             accessGate?.requestPaywall(trigger)
         }
@@ -663,6 +673,7 @@ final class InterviewScreenModel {
             snapshot.fileExcerpts = files.fileContext.passages(forQuestion: asked, limit: 3).map(FileExcerpt.init)
             snapshot.filesStillProcessing = files.items.filter { $0.status.isWorking }.map(\.filename)
         }
+        snapshot.generationKey = UUID().uuidString
         let requestID = UUID()
         let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
         questions.append(entry)
@@ -829,7 +840,7 @@ final class InterviewScreenModel {
         guard requestByQuestion[question.id] == nil else { return }   // no duplicate requests
         // Another version of a page is a paid request too. Nothing is held: the page is still there
         // to ask again from once access is back.
-        guard hasPaidAccess else {
+        guard canAcceptAnotherAnswer else {
             accessGate?.requestPaywall(.generate)
             return
         }
@@ -1249,6 +1260,9 @@ final class InterviewScreenModel {
             }
         }
         answer.blocks = blocks                   // in the order the feed gave them: prose and code interleaved
+        // Counted exactly as the backend settles it: text arrived and it was not a request for input.
+        let askedForInput = (answer.need ?? pendingNeeds[requestID]) != nil
+        accessGate?.noteAnswerCompleted(counted: Self.hasVisibleText(blocks) && !askedForInput)
         answer.highlight = highlight
         answer.isComplete = true
         question.answers[answerIndex] = answer

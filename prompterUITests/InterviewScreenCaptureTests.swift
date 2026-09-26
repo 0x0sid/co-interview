@@ -38,15 +38,10 @@ final class InterviewScreenCaptureTests: XCTestCase {
     /// captures failed: "Failed to tap Start demo, DEMO mode: No matches found", because the start
     /// screen had not opened yet or the button sat below the fold behind the two mode cards.
     private func openDemo(_ app: XCUIApplication) {
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 20), "the home screen has no Interview Copilot entry")
-
+        XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
         let startDemo = app.buttons["Start demo, DEMO mode"]
-        for _ in 0..<3 where !startDemo.exists {
-            entry.tap()
-            _ = startDemo.waitForExistence(timeout: 8)
-        }
-        XCTAssertTrue(startDemo.waitForExistence(timeout: 10), "the Copilot start screen never opened")
+        XCTAssertTrue(startDemo.waitForExistence(timeout: 10), "no Demo in the Debug developer section")
+        app.scrollTo(startDemo)
 
         // Arrival on the interview screen, not just a tap that was sent.
         //
@@ -113,15 +108,9 @@ final class InterviewScreenCaptureTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += ["-UITestsQuietMotion", "-UITestsSeedHistory"]
         app.launch()
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 20))
-        let startDemo = app.buttons["Start demo, DEMO mode"]
-        for _ in 0..<3 where !startDemo.exists {
-            entry.tap()
-            _ = startDemo.waitForExistence(timeout: 8)
-        }
+        XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
         XCTAssertTrue(app.staticTexts["An interview was interrupted"].waitForExistence(timeout: 10), "no interrupted-session notice")
-        XCTAssertTrue(app.staticTexts["Recent interviews"].exists)
+        XCTAssertTrue(app.staticTexts["Saved interviews"].exists)
         save(app, "10-start-recent-and-language")
 
         // History is inline: "All interviews" expands the list in place.

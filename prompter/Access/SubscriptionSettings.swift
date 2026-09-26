@@ -64,7 +64,7 @@ struct SubscriptionSettingsView: View {
                 Text(previewLine)
                     .font(Typography.body(13))
                     .foregroundStyle(Theme.Color.secondary)
-                    .accessibilityIdentifier("preview-disclosure")
+                    .accessibilityIdentifier("free-answers-disclosure")
                 Button("View plans", action: onViewPlans)
                     .font(Typography.body(14, weight: .semibold))
                     .accessibilityIdentifier("view-plans")
@@ -81,12 +81,12 @@ struct SubscriptionSettingsView: View {
 
     private var previewLine: String {
         guard previewApplies, let access else {
-            return "This build is connected with a developer token, so the free preview and the Pro limit don't apply to Live here."
+            return "This build is connected with a developer token, so the free answers and the Pro limit don't apply to Live here."
         }
-        if access.isPreviewExhausted {
-            return "Your free preview is used. Listening and the transcript stay free; questions and answers need Pro."
+        if access.areFreeAnswersUsed {
+            return "Your 2 free AI answers are used. Listening, the transcript, history and files stay free; more AI answers need Pro."
         }
-        return AccessCopy.previewDisclosure
+        return AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining) + ". " + AccessCopy.freeAnswersDisclosure
     }
 
     /// A cancelled plan keeps access until it actually ends, and says so.

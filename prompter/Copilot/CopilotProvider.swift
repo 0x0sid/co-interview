@@ -107,6 +107,9 @@ struct AnswerRequest: Sendable, Encodable {
     var interpretation: RequestInterpretation?
     /// Metadata only: whether and why a decision shaped this request. Never content.
     var decisionStatus: String?
+    /// Identifies one generation for the free-answer ledger: the same key on a Retry (the snapshot is
+    /// re-sent), a new key for a new Generate, Regenerate or follow-up. Never content.
+    var generationKey: String?
     let passages: [Passage]
     let language: String
     let targetWordRange: [Int]

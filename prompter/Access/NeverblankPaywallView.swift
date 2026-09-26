@@ -126,7 +126,7 @@ struct NeverblankPaywallView: View {
     /// Why the paywall is here, in the reader's terms. The session is never at risk and says so.
     private var contextLine: String? {
         switch trigger {
-        case .previewEnd: "Your free preview has ended. Everything from this interview is saved, and listening continues."
+        case .freeAnswersExhausted: "You've used your 2 free AI answers. Everything from this interview is saved, and listening continues."
         case .generate, .retry: "Your answer is kept. It will be written as soon as you unlock Pro."
         case .settings: nil
         }
@@ -275,6 +275,7 @@ struct NeverblankPaywallView: View {
                     .accessibilityIdentifier("paywall-restore")
                 if let terms = LegalLinks.terms { Link("Terms of Use", destination: terms) }
                 if let privacy = LegalLinks.privacy { Link("Privacy Policy", destination: privacy) }
+                if let support = LegalLinks.support { Link("Support", destination: support) }
             }
             .font(Typography.body(12, weight: .medium))
         }
@@ -424,6 +425,7 @@ struct NeverblankPaywallView: View {
 enum LegalLinks {
     static var terms: URL? { url("NeverblankTermsURL") }
     static var privacy: URL? { url("NeverblankPrivacyURL") }
+    static var support: URL? { url("NeverblankSupportURL") }
 
     private static func url(_ key: String) -> URL? {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: key) as? String,

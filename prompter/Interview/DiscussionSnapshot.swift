@@ -66,6 +66,9 @@ struct DiscussionSnapshot: Sendable, Equatable, Codable {
     var fileExcerpts: [FileExcerpt]?
     /// Files still being read at that moment, and therefore not included.
     var filesStillProcessing: [String] = []
+    /// This request's generation, for the free-answer ledger. Kept with the snapshot, so Retry — which
+    /// re-sends the snapshot — is the same generation and is never charged twice.
+    var generationKey: String?
 
     /// The whole conversation, oldest first — speech only, in the order it was said.
     var allLines: [String] { background + newInput + (provisional.map { [$0] } ?? []) }

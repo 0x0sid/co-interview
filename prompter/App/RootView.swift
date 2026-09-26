@@ -42,7 +42,8 @@ struct RootView: View {
             } else if PromptReplayHarness.isEnabled {
                 PromptReplayHarness.screen
             } else {
-                ScriptListScreen()
+                // Debug opens Neverblank too; development tools sit in its Developer section.
+                CopilotStartScreen()
             }
             #else
             // Release is Neverblank only: no Prompter home, no demo or development screens.

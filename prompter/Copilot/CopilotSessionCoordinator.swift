@@ -645,7 +645,7 @@ final class CopilotSessionCoordinator {
             requestedAt: clock()
         ))
 
-        let request = AnswerRequest(
+        var request = AnswerRequest(
             question: question,
             projectInstructions: project.instructions,
             // Snapshotted here, with the question and the retrieved passages: what the request
@@ -682,6 +682,7 @@ final class CopilotSessionCoordinator {
             captureProviderMessages: diagnosticsCorrelation?.captureProviderMessages ?? false
         )
 
+        request.generationKey = discussion?.generationKey ?? UUID().uuidString
         generationQueue.append(version.id)
         pumpQueue(request: request, versionID: version.id, passages: passages)
     }

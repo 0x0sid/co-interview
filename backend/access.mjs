@@ -1,23 +1,51 @@
-// Who may spend AI money: installation credentials, the free preview, and the `pro` entitlement.
+// Who may spend AI money: installation credentials, two free AI answers, and the `neverblank_pro`
+// entitlement.
 //
 // **The rule, in one line:** a paid request is served when the installation is authenticated AND
-// (its RevenueCat identity has an active `pro` entitlement OR its free preview still has allowance).
+// (its RevenueCat identity has an active `neverblank_pro` entitlement OR it still has free answers).
 //
-// Three properties this module exists to guarantee:
+// Properties this module guarantees:
 //
 // 1. **The client never names its customer.** An installation is created here, with a random secret
-//    the app keeps in its Keychain. Its RevenueCat app user id is derived here, from the installation
-//    id, and returned to the app. Entitlement is always looked up for *that* id — nothing in a request
-//    can point the check at another customer.
+//    the app keeps in its Keychain. Its RevenueCat app user id is derived here, and entitlement is
+//    always looked up for *that* id.
 // 2. **Failure never grants Pro.** A RevenueCat error, timeout or unknown response denies Pro, except
-//    that a previously *verified* expiration date is honoured until it passes. That is continuity for
-//    a network blip, never permanent access.
-// 3. **Preview counters are atomic.** Each allowance is taken with one conditional UPDATE, so two
-//    simultaneous requests can never both take the last unit.
+//    that a previously *verified* expiration date is honoured until it passes.
+// 3. **Two free answers, counted exactly** (see "Free answers" below): capacity is reserved
+//    atomically before a request is sent to the model, and settled once when the stream ends.
 //
-// Stored: installation id, a hash of its secret, timestamps, preview counters and the cached
-// entitlement expiry. **Never interview content** — no transcript, answer, file or note reaches this
-// database.
+// Stored: installation id, a hash of its secret, timestamps, free-answer counters, reservation and
+// generation-key bookkeeping, and the cached entitlement expiry. **Never interview content.**
+//
+// ## Free answers
+//
+// - A free installation gets `FREE_ANSWERS` (2) successful AI answers in total — not per day, not per
+//   session, and not an App Store trial.
+// - Before an answer is generated, one unit of capacity is **reserved** in a single statement that
+//   succeeds only while `used + active reservations < limit`, so simultaneous taps cannot exceed it.
+// - When the stream ends the reservation is **settled once**: a delivered, non-empty answer (prose or
+//   code) that is not only a request for clarification or context **consumes** a credit; a failure,
+//   an empty response or a clarification-only response **releases** it.
+// - **Disconnecting does not help:** if answer text had already been sent when the client went away,
+//   the credit is consumed; with nothing sent, it is released.
+// - **Retries are not charged twice.** Requests carry a generation key (the app keeps it with the
+//   request's snapshot, so Retry sends the same key). A key that already consumed a credit is served
+//   again without charge, at most `FREE_REDELIVERIES` times. Regenerating or a follow-up action is a
+//   new generation with a new key and uses the same allowance.
+// - **Bounded abuse control:** free requests that end without consuming (failures, empty or
+//   clarification-only results) are counted; after `FREE_MAX_UNCOUNTED` of them no more free answers
+//   are served. Reservations older than `FREE_RESERVATION_TTL_MS` (a crashed server mid-stream) stop
+//   holding capacity.
+// - Question detection and focused decisions are served free **only while free answers remain**,
+//   bounded by `FREE_MAX_DETECTIONS`. Pro requests never touch any of these counters.
+//
+// ## Migration from the 30-second preview (schema of 2026-09-25)
+//
+// Existing `previews` rows get `free_used` once, when this version first opens the database:
+// - a preview that had **ended** (its 30 seconds used) counts as the allowance used: `free_used = 2`;
+// - otherwise `free_used = min(answers_used, 2)` — answers it already received are not given back.
+// Nothing is reset silently, paid access is untouched (entitlements are a separate table), and each
+// migrated row is marked `migrated_from = 'preview-30s'`.
 
 import { DatabaseSync } from "node:sqlite";
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from "node:crypto";
@@ -28,18 +56,18 @@ import { dirname } from "node:path";
 // (`BillingConfiguration.entitlementIdentifier`).
 export const ENTITLEMENT = "neverblank_pro";
 
-/** Operator-tunable limits. The client's 30-second meter is the experience; these bound the cost. */
+/** Operator-tunable limits. */
 export function accessLimitsFromEnv(env = process.env) {
   const number = (name, fallback) => {
     const value = Number(env[name]);
     return Number.isFinite(value) && value >= 0 ? value : fallback;
   };
   return {
-    previewAnswers: number("PREVIEW_MAX_ANSWERS", 5),
-    previewDetections: number("PREVIEW_MAX_DETECTIONS", 60),
-    // After the app reports the preview ended, an answer the user had already asked for may still
-    // start (it can be queued behind another). Detection stops at once.
-    previewAnswerGraceMs: number("PREVIEW_ANSWER_GRACE_MS", 60_000),
+    freeAnswers: number("FREE_ANSWERS", 2),
+    freeDetections: number("FREE_MAX_DETECTIONS", 300),
+    freeMaxUncounted: number("FREE_MAX_UNCOUNTED", 10),
+    freeRedeliveries: number("FREE_REDELIVERIES", 3),
+    reservationTtlMs: number("FREE_RESERVATION_TTL_MS", 180_000),
     proCacheMs: number("PRO_CACHE_MS", 60_000),
     negativeCacheMs: number("PRO_NEGATIVE_CACHE_MS", 15_000),
     installsPerHourPerIP: number("INSTALLS_PER_HOUR_PER_IP", 10),
@@ -82,7 +110,34 @@ export class AccessStore {
         expires_at INTEGER,
         verified_at INTEGER NOT NULL
       );
+          CREATE TABLE IF NOT EXISTS reservations (
+        id TEXT PRIMARY KEY,
+        installation_id TEXT NOT NULL REFERENCES installations(id),
+        generation_key TEXT,
+        created_at INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS generations (
+        installation_id TEXT NOT NULL REFERENCES installations(id),
+        generation_key TEXT NOT NULL,
+        consumed_at INTEGER NOT NULL,
+        deliveries INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (installation_id, generation_key)
+      );
     `);
+  }
+
+  /** Adds the free-answer columns and migrates preview rows once (see "Migration" above). */
+  migrate(limits = accessLimitsFromEnv()) {
+    const columns = new Set(this.db.prepare("PRAGMA table_info(previews)").all().map((c) => c.name));
+    if (!columns.has("free_used")) this.db.exec("ALTER TABLE previews ADD COLUMN free_used INTEGER");
+    if (!columns.has("uncounted")) this.db.exec("ALTER TABLE previews ADD COLUMN uncounted INTEGER NOT NULL DEFAULT 0");
+    if (!columns.has("migrated_from")) this.db.exec("ALTER TABLE previews ADD COLUMN migrated_from TEXT");
+    return this.db.prepare(
+      `UPDATE previews SET
+         free_used = CASE WHEN ended_at IS NOT NULL THEN ? ELSE MIN(answers_used, ?) END,
+         migrated_from = 'preview-30s'
+       WHERE free_used IS NULL`
+    ).run(limits.freeAnswers, limits.freeAnswers).changes;
   }
 
   close() { this.db.close(); }
@@ -94,7 +149,7 @@ export class AccessStore {
     const appUserID = appUserIDFor(id);
     this.db.prepare("INSERT INTO installations (id, secret_hash, app_user_id, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)")
       .run(id, hashSecret(secret), appUserID, at, at);
-    this.db.prepare("INSERT INTO previews (installation_id) VALUES (?)").run(id);
+    this.db.prepare("INSERT INTO previews (installation_id, free_used) VALUES (?, 0)").run(id);
     return { installation_id: id, secret, app_user_id: appUserID };
   }
 
@@ -110,34 +165,70 @@ export class AccessStore {
     return { id: row.id, appUserID: row.app_user_id };
   }
 
-  preview(installationID) {
-    return this.db.prepare("SELECT started_at, ended_at, answers_used, detections_used FROM previews WHERE installation_id = ?").get(installationID) ?? null;
+  freeState(installationID, limits) {
+    const row = this.db.prepare("SELECT free_used, uncounted, detections_used FROM previews WHERE installation_id = ?").get(installationID) ?? {};
+    const reserved = this.db.prepare("SELECT COUNT(*) AS n FROM reservations WHERE installation_id = ? AND created_at > ?")
+      .get(installationID, this.now() - limits.reservationTtlMs).n;
+    return { used: row.free_used ?? 0, uncounted: row.uncounted ?? 0, detections: row.detections_used ?? 0, reserved };
   }
 
   /**
-   * Takes one unit of preview allowance, atomically. `kind` is "answer" or "detection".
-   * Returns true when the unit was granted.
+   * Reserves one free answer, atomically. Returns `{ reservation }` (with `redelivery: true` when the
+   * generation key already consumed a credit and is served again without charge), or `{ refused }`.
    */
-  takePreview(installationID, kind, limits) {
+  reserveFreeAnswer(installationID, generationKey, limits) {
     const at = this.now();
-    // Ended previews still admit answers inside the grace window; detections stop immediately.
-    const result = kind === "answer"
-      ? this.db.prepare(
-          `UPDATE previews SET answers_used = answers_used + 1, started_at = COALESCE(started_at, ?)
-           WHERE installation_id = ? AND answers_used < ? AND (ended_at IS NULL OR ended_at + ? >= ?)`
-        ).run(at, installationID, limits.previewAnswers, limits.previewAnswerGraceMs, at)
-      : this.db.prepare(
-          `UPDATE previews SET detections_used = detections_used + 1, started_at = COALESCE(started_at, ?)
-           WHERE installation_id = ? AND detections_used < ? AND ended_at IS NULL`
-        ).run(at, installationID, limits.previewDetections);
-    return result.changes === 1;
+    const state = this.freeState(installationID, limits);
+    if (state.uncounted >= limits.freeMaxUncounted) return { refused: "too_many_unsuccessful" };
+    if (generationKey) {
+      const done = this.db.prepare("SELECT deliveries FROM generations WHERE installation_id = ? AND generation_key = ?").get(installationID, generationKey);
+      if (done && done.deliveries <= limits.freeRedeliveries) {
+        return { reservation: { id: null, installationID, generationKey, redelivery: true } };
+      }
+    }
+    const id = randomUUID();
+    const inserted = this.db.prepare(
+      `INSERT INTO reservations (id, installation_id, generation_key, created_at)
+       SELECT ?, ?, ?, ?
+       WHERE (SELECT free_used FROM previews WHERE installation_id = ?)
+           + (SELECT COUNT(*) FROM reservations WHERE installation_id = ? AND created_at > ?) < ?`
+    ).run(id, installationID, generationKey ?? null, at, installationID, installationID, at - limits.reservationTtlMs, limits.freeAnswers);
+    return inserted.changes === 1 ? { reservation: { id, installationID, generationKey, redelivery: false } } : { refused: "exhausted" };
   }
 
-  /** The app's report that its 30 seconds of listening are used. Idempotent; never reopens. */
-  endPreview(installationID) {
+  /** Settles a reservation exactly once: `consumed` or `released`. */
+  settleFreeAnswer(reservation, outcome) {
+    const { id, installationID, generationKey, redelivery } = reservation;
     const at = this.now();
-    this.db.prepare("UPDATE previews SET ended_at = COALESCE(ended_at, ?), started_at = COALESCE(started_at, ?) WHERE installation_id = ?")
-      .run(at, at, installationID);
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (id) this.db.prepare("DELETE FROM reservations WHERE id = ?").run(id);
+      if (outcome === "consumed") {
+        const known = generationKey
+          ? this.db.prepare("SELECT deliveries FROM generations WHERE installation_id = ? AND generation_key = ?").get(installationID, generationKey)
+          : null;
+        if (known) {
+          this.db.prepare("UPDATE generations SET deliveries = deliveries + 1 WHERE installation_id = ? AND generation_key = ?").run(installationID, generationKey);
+        } else if (!redelivery) {
+          if (generationKey) this.db.prepare("INSERT INTO generations (installation_id, generation_key, consumed_at) VALUES (?, ?, ?)").run(installationID, generationKey, at);
+          this.db.prepare("UPDATE previews SET free_used = free_used + 1, started_at = COALESCE(started_at, ?) WHERE installation_id = ?").run(at, installationID);
+        }
+      } else {
+        this.db.prepare("UPDATE previews SET uncounted = uncounted + 1 WHERE installation_id = ?").run(installationID);
+      }
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  /** Detection while free answers remain, bounded; atomic. */
+  takeFreeDetection(installationID, limits) {
+    return this.db.prepare(
+      `UPDATE previews SET detections_used = detections_used + 1
+       WHERE installation_id = ? AND free_used < ? AND detections_used < ? AND uncounted < ?`
+    ).run(installationID, limits.freeAnswers, limits.freeDetections, limits.freeMaxUncounted).changes === 1;
   }
 
   cachedEntitlement(installationID) {
@@ -242,33 +333,53 @@ export class AccessControl {
    * The gate every paid route passes. `kind` is "answer" or "detection".
    * Pro is checked first, so Pro users never touch — and are never limited by — the preview.
    */
-  async authorize(installation, kind) {
+  async authorize(installation, kind, { generationKey } = {}) {
     const pro = await this.pro(installation);
     if (pro.active) return { allowed: true, via: "pro" };
-    if (this.store.takePreview(installation.id, kind, this.limits)) return { allowed: true, via: "preview" };
-    return { allowed: false, via: null };
+    if (kind === "answer") {
+      const result = this.store.reserveFreeAnswer(installation.id, generationKey, this.limits);
+      return result.reservation
+        ? { allowed: true, via: "free", reservation: result.reservation }
+        : { allowed: false, via: null, reason: result.refused };
+    }
+    return this.store.takeFreeDetection(installation.id, this.limits)
+      ? { allowed: true, via: "free" }
+      : { allowed: false, via: null, reason: "exhausted" };
+  }
+
+  /**
+   * How a free answer's stream ended decides its credit: consumed only when answer text reached the
+   * client and the response was not only a request for clarification or context.
+   */
+  settle(reservation, { textDelivered, needs }) {
+    if (!reservation) return null;
+    // Delivered text counts even when the client then disconnected; nothing delivered never does.
+    const consumed = Boolean(textDelivered) && !needs;
+    this.store.settleFreeAnswer(reservation, consumed ? "consumed" : "released");
+    return consumed ? "consumed" : "released";
   }
 
   async describe(installation, { refresh = false } = {}) {
     const pro = await this.pro(installation, { refresh });
-    const preview = this.store.preview(installation.id) ?? {};
-    const answersLeft = Math.max(0, this.limits.previewAnswers - (preview.answers_used ?? 0));
-    const ended = preview.ended_at != null || answersLeft === 0;
+    const free = this.store.freeState(installation.id, this.limits);
+    const remaining = free.uncounted >= this.limits.freeMaxUncounted ? 0 : Math.max(0, this.limits.freeAnswers - free.used);
     return {
       entitlement: ENTITLEMENT,
       app_user_id: installation.appUserID,
       pro: { active: pro.active, expires_at: pro.expiresAt ? new Date(pro.expiresAt).toISOString() : null, verified: pro.source !== "verification_failed" && pro.source !== "unconfigured" },
-      preview: { state: ended ? "ended" : preview.started_at ? "started" : "available", answers_left: answersLeft },
+      free_answers: { limit: this.limits.freeAnswers, used: free.used, remaining },
+      // Kept for app builds from before the two-answer allowance; derived from the same ledger.
+      preview: { state: remaining === 0 ? "ended" : free.used > 0 ? "started" : "available", answers_left: remaining },
     };
   }
 }
 
 /** The product events the app may send. Anything else is refused, so nothing free-form is logged. */
 export const PRODUCT_EVENTS = new Set([
-  "trial_started", "trial_30s_consumed", "paywall_viewed", "weekly_selected", "monthly_selected",
+  "trial_started", "trial_30s_consumed", "free_answers_exhausted", "paywall_viewed", "weekly_selected", "monthly_selected",
   "purchase_started", "purchase_completed", "purchase_failed", "purchase_restored", "paywall_dismissed",
 ]);
-const EVENT_FIELDS = { plan: new Set(["weekly", "monthly"]), trigger: new Set(["preview_end", "generate", "settings", "retry"]), reason: new Set(["cancelled", "store_error", "network", "pending", "not_entitled", "unavailable"]) };
+const EVENT_FIELDS = { plan: new Set(["weekly", "monthly"]), trigger: new Set(["preview_end", "free_answers_exhausted", "generate", "settings", "retry"]), reason: new Set(["cancelled", "store_error", "network", "pending", "not_entitled", "unavailable"]) };
 
 /** Validates an event body into a log-safe object, or null. Only enumerated values survive. */
 export function sanitizeEvent(body) {

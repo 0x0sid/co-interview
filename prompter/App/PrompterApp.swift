@@ -12,11 +12,12 @@ struct PrompterApp: App {
 
     init() {
         #if DEBUG
-        // `-NeverblankResetAccess`: start as a brand-new install — no installation credential, an
-        // unused free preview, no AI consent. For UI tests of the first-run flow. Debug only.
+        // `-NeverblankResetAccess`: start as a brand-new install — no installation credential, no
+        // free answers used, no AI consent. For UI tests of the first-run flow. Debug only.
         if ProcessInfo.processInfo.arguments.contains("-NeverblankResetAccess") {
             AccessKeychain.remove("installation")
             AccessKeychain.remove("free-preview")
+            AccessKeychain.remove("free-answers")
             UserDefaults.standard.removeObject(forKey: AIConsent.defaultsKey)
         }
         // `-CopilotInstallationAuth` once switches a Debug build to installation access for good (it is

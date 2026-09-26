@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// A Debug-only record of what each Generate tap actually did, for testing on a real phone.
 ///
@@ -126,6 +127,10 @@ final class GenerateDiagnostics {
         at date: Date = Date()
     ) {
         #if DEBUG
+        // Outcome and reason only — never transcript text. Lets a UI test or a device log show what a
+        // Generate tap did when nothing appears on screen.
+        Logger(subsystem: "talk.cointerview", category: "generate")
+            .notice("[GenerateTap] outcome=\(String(describing: outcome), privacy: .public) reason=\(reason ?? "-", privacy: .public)")
         var trace = GenerateTrace(sessionID: sessionID, requestID: requestID ?? UUID())
         // The tap's own moment, not the recorder's: everything else on this trace is measured from
         // it, and stamping it here instead produced a "queued" duration that ran backwards.

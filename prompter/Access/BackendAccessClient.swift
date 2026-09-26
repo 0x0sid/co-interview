@@ -9,6 +9,12 @@ struct AccessSnapshot: Decodable, Equatable, Sendable {
         /// False when RevenueCat could not be asked; `active` then reflects only an earlier verified expiry.
         let verified: Bool
     }
+    /// The two free AI answers (`backend/access.mjs`). Nil from a backend older than the allowance.
+    struct FreeAnswers: Decodable, Equatable, Sendable {
+        let limit: Int
+        let used: Int
+        let remaining: Int
+    }
     struct Preview: Decodable, Equatable, Sendable {
         /// "available", "started" or "ended".
         let state: String
@@ -17,6 +23,7 @@ struct AccessSnapshot: Decodable, Equatable, Sendable {
     let entitlement: String
     let app_user_id: String
     let pro: Pro
+    var free_answers: FreeAnswers?
     let preview: Preview
 }
 
@@ -24,7 +31,6 @@ struct AccessSnapshot: Decodable, Equatable, Sendable {
 protocol BackendAccessProviding: Sendable {
     func register() async throws -> InstallationCredential
     func access(_ credential: InstallationCredential, refresh: Bool) async throws -> AccessSnapshot
-    func endPreview(_ credential: InstallationCredential) async throws
     func send(event: ProductEvent, credential: InstallationCredential) async
 }
 
@@ -59,14 +65,6 @@ struct BackendAccessClient: BackendAccessProviding {
         return snapshot
     }
 
-    func endPreview(_ credential: InstallationCredential) async throws {
-        var request = URLRequest(url: baseURL.appending(path: "v1/preview/end"))
-        request.httpMethod = "POST"
-        request.setValue(credential.authorizationHeader, forHTTPHeaderField: "Authorization")
-        let (_, response) = try await session.data(for: request)
-        try Self.check(response, expecting: 200)
-    }
-
     /// Fire-and-forget. An event that cannot be sent is dropped; it never delays or fails anything.
     func send(event: ProductEvent, credential: InstallationCredential) async {
         var request = URLRequest(url: baseURL.appending(path: "v1/events"))
@@ -88,7 +86,7 @@ struct BackendAccessClient: BackendAccessProviding {
 struct ProductEvent: Encodable, Equatable, Sendable {
     enum Name: String, Encodable, Sendable {
         case trialStarted = "trial_started"
-        case trial30sConsumed = "trial_30s_consumed"
+        case freeAnswersExhausted = "free_answers_exhausted"
         case paywallViewed = "paywall_viewed"
         case weeklySelected = "weekly_selected"
         case monthlySelected = "monthly_selected"

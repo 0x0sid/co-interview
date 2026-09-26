@@ -2,41 +2,6 @@ import Foundation
 import Testing
 @testable import prompter
 
-// MARK: - Free preview meter
-
-struct FreePreviewMeterTests {
-    @Test
-    func onlyListeningTimeIsCharged() {
-        var meter = FreePreviewMeter()
-        #expect(meter.remaining(at: 100) == 30)
-        meter.start(at: 100)
-        meter.stop(at: 110)            // 10 s listening
-        #expect(meter.used(at: 500) == 10, "time between stretches (setup, paywall, background) is not charged")
-        meter.start(at: 500)
-        #expect(meter.remaining(at: 505) == 15)
-        meter.stop(at: 505)
-        #expect(meter.usedSeconds == 15)
-    }
-
-    @Test
-    func exhaustionIsExactAndFinal() {
-        var meter = FreePreviewMeter(usedSeconds: 25)
-        meter.start(at: 0)
-        #expect(!meter.isExhausted(at: 4.9))
-        #expect(meter.isExhausted(at: 5))
-        #expect(meter.used(at: 999) == 30, "never charged beyond the allowance")
-        meter.stop(at: 999)
-        let restarted = meter.start(at: 1000)
-        #expect(!restarted, "an exhausted preview cannot start again")
-    }
-
-    @Test
-    func restoredUsageIsClamped() {
-        #expect(FreePreviewMeter(usedSeconds: -4).usedSeconds == 0)
-        #expect(FreePreviewMeter(usedSeconds: 400).usedSeconds == 30)
-    }
-}
-
 // MARK: - Savings
 
 struct PlanSavingsTests {
@@ -208,7 +173,6 @@ final class FakeAccessBackend: BackendAccessProviding, @unchecked Sendable {
     var failRegistration = false
     var snapshots: [Result<AccessSnapshot, Error>] = []
     var accessCalls: [Bool] = []
-    var endPreviewCalls = 0
     var events: [ProductEvent] = []
 
     func register() async throws -> InstallationCredential {
@@ -223,51 +187,43 @@ final class FakeAccessBackend: BackendAccessProviding, @unchecked Sendable {
         return try snapshots.removeFirst().get()
     }
 
-    func endPreview(_ credential: InstallationCredential) async throws { endPreviewCalls += 1 }
     func send(event: ProductEvent, credential: InstallationCredential) async { events.append(event) }
 }
 
 extension AccessSnapshot {
-    static func make(pro: Bool = false, verified: Bool = true, preview: String = "available") -> AccessSnapshot {
+    static func make(pro: Bool = false, verified: Bool = true, freeUsed: Int = 0) -> AccessSnapshot {
         AccessSnapshot(entitlement: "neverblank_pro", app_user_id: "nb_x",
                        pro: .init(active: pro, expires_at: nil, verified: verified),
-                       preview: .init(state: preview, answers_left: preview == "ended" ? 0 : 5))
+                       free_answers: .init(limit: 2, used: freeUsed, remaining: max(0, 2 - freeUsed)),
+                       preview: .init(state: freeUsed >= 2 ? "ended" : "available", answers_left: max(0, 2 - freeUsed)))
     }
 }
 
 @MainActor
 struct AccessControllerTests {
-    final class Clock: @unchecked Sendable { var now: TimeInterval = 1_000 }
-
     struct Harness {
         let controller: AccessController
         let backend: FakeAccessBackend
-        let clock: Clock
-        let ledger: FreePreviewLedger
+        let ledger: FreeAnswersLedger
         let credentials: InstallationCredentialStore
         let pro: LockedBox<Bool>
         let identified: LockedBox<[String]>
     }
 
     static func make(backend: FakeAccessBackend = FakeAccessBackend(),
-                     ledger: FreePreviewLedger = .inMemory(),
+                     ledger: FreeAnswersLedger = .inMemory(),
                      credentials: InstallationCredentialStore = .inMemory(),
                      pro: LockedBox<Bool> = LockedBox(false)) -> Harness {
-        let clock = Clock()
         let identified = LockedBox<[String]>([])
         let controller = AccessController(
             credentials: credentials, ledger: ledger,
             makeClient: { _ in backend },
             entitlementActive: { pro.value },
             identify: { identified.value.append($0) },
-            monotonicNow: { clock.now },
-            // Countdown ticks never fire on their own here — each test ends the preview explicitly —
-            // while the retry pauses in `verifyProAfterPurchase` pass instantly.
-            sleep: { duration in
-                if duration == AccessController.tickInterval { try await Task.sleep(for: .seconds(3600)) } else { await Task.yield() }
-            }
+            // The retry pauses in `verifyProAfterPurchase` pass instantly.
+            sleep: { _ in await Task.yield() }
         )
-        return Harness(controller: controller, backend: backend, clock: clock, ledger: ledger,
+        return Harness(controller: controller, backend: backend, ledger: ledger,
                        credentials: credentials, pro: pro, identified: identified)
     }
 
@@ -297,69 +253,53 @@ struct AccessControllerTests {
     }
 
     @Test
-    func thePreviewEndsAfterThirtyListeningSecondsAndShowsThePaywallOnce() async {
+    func twoFreeAnswersThenNoneAndNoAutomaticPaywall() async {
         let h = Self.make()
         await h.controller.bootstrap(backendURL: Self.url)
-        h.controller.setPreviewConditions(true)
-        h.clock.now += 20
-        h.controller.setPreviewConditions(false)     // backgrounded, or a permission prompt
-        h.clock.now += 600                           // not charged
-        #expect(h.controller.previewRemainingSeconds == 10)
-        h.controller.setPreviewConditions(true)
-        h.clock.now += 10
-        #expect(h.controller.isPreviewExhausted)
-        await h.controller.previewDidEnd()
-        #expect(h.controller.paywall?.trigger == .previewEnd)
-        #expect(h.backend.endPreviewCalls == 1)
-        #expect(!h.controller.allowsPaidRequests)
+        #expect(h.controller.freeAnswersRemaining == 2)
+        #expect(h.controller.allowsNewAnswer(pending: 1), "one in progress, one left")
+        #expect(!h.controller.allowsNewAnswer(pending: 2), "two in progress: a third tap may not queue")
+        h.controller.noteAnswerCompleted(counted: true)
+        #expect(h.controller.freeAnswersRemaining == 1)
+        h.controller.noteAnswerCompleted(counted: true)
+        #expect(h.controller.freeAnswersRemaining == 0)
+        #expect(!h.controller.allowsPaidRequests, "detection and new answers stop")
+        #expect(h.controller.paywall == nil, "the second answer is never covered by a paywall")
+        await Task.yield()
+        #expect(h.backend.events.contains { $0.name == .freeAnswersExhausted })
+    }
 
-        // Closing it and ending again never reopens it.
-        h.controller.paywall = nil
-        await h.controller.previewDidEnd()
-        #expect(h.controller.paywall == nil)
-        #expect(h.backend.endPreviewCalls == 1, "reported once")
+    @Test
+    func onlyCountedAnswersUseTheAllowance() async {
+        let h = Self.make()
+        await h.controller.bootstrap(backendURL: Self.url)
+        h.controller.noteAnswerCompleted(counted: false)   // empty, failed, or a clarification
+        #expect(h.controller.freeAnswersRemaining == 2)
+    }
 
-        // A relaunch remembers: exhausted, and still no second automatic paywall.
-        let relaunched = Self.make(backend: h.backend, ledger: h.ledger, credentials: h.credentials)
+    @Test
+    func theAllowanceSurvivesARelaunchAndTheServerCountWins() async {
+        let backend = FakeAccessBackend()
+        let h = Self.make(backend: backend)
+        await h.controller.bootstrap(backendURL: Self.url)
+        h.controller.noteAnswerCompleted(counted: true)
+        let relaunched = Self.make(backend: backend, ledger: h.ledger, credentials: h.credentials)
+        #expect(relaunched.controller.freeAnswersRemaining == 1, "the Keychain record survives a relaunch")
+        backend.snapshots = [.success(.make(freeUsed: 2))]
         await relaunched.controller.bootstrap(backendURL: Self.url)
-        #expect(relaunched.controller.isPreviewExhausted)
-        relaunched.controller.setPreviewConditions(true)
-        await relaunched.controller.previewDidEnd()
-        #expect(relaunched.controller.paywall == nil)
+        #expect(relaunched.controller.freeAnswersRemaining == 0, "the backend's ledger wins")
     }
 
     @Test
-    func thePaywallStopsTheClock() async {
-        let h = Self.make()
-        await h.controller.bootstrap(backendURL: Self.url)
-        h.controller.setPreviewConditions(true)
-        h.clock.now += 5
-        h.controller.requestPaywall(.generate)
-        h.clock.now += 300
-        #expect(h.controller.previewRemainingSeconds == 25)
-        h.controller.setPreviewConditions(true)
-        #expect(!h.controller.meter.isCounting, "no charging while the paywall is up")
-    }
-
-    @Test
-    func proIsNeverLimitedByThePreview() async {
+    func proIsNeverLimitedAndNeverCounted() async {
         let pro = LockedBox(false)
-        let h = Self.make(ledger: .inMemory(FreePreviewRecord(usedSeconds: 30, endReported: true, endPaywallShown: true)), pro: pro)
+        let h = Self.make(ledger: .inMemory(FreeAnswersRecord(used: 2, exhaustionLogged: true)), pro: pro)
         await h.controller.bootstrap(backendURL: Self.url)
         #expect(!h.controller.allowsPaidRequests)
         pro.value = true
-        #expect(h.controller.allowsPaidRequests)
-        h.controller.setPreviewConditions(true)
-        #expect(!h.controller.meter.isCounting, "Pro listening never touches the preview")
-    }
-
-    @Test
-    func theBackendsEndedPreviewWins() async {
-        let backend = FakeAccessBackend()
-        backend.snapshots = [.success(.make(preview: "ended"))]
-        let h = Self.make(backend: backend)
-        await h.controller.bootstrap(backendURL: Self.url)
-        #expect(h.controller.isPreviewExhausted)
+        #expect(h.controller.allowsPaidRequests && h.controller.allowsNewAnswer(pending: 5))
+        h.controller.noteAnswerCompleted(counted: true)
+        #expect(h.controller.freeAnswersUsed == 2, "Pro answers use no free answer")
     }
 
     @Test
@@ -388,7 +328,7 @@ struct AccessControllerTests {
             entitlementActive: { false },
             identify: { _ in },                                   // a login that did not happen
             currentAppUserID: { rcUser.value },
-            monotonicNow: { 0 }, sleep: { _ in await Task.yield() })
+            sleep: { _ in await Task.yield() })
         #expect(!(await controller.prepareForPurchase()), "no server access: no purchase")
         await controller.bootstrap(backendURL: Self.url)
         #expect(!(await controller.prepareForPurchase()), "still anonymous: a purchase would not reach the checked customer")
@@ -422,9 +362,20 @@ struct AccessControllerTests {
 @MainActor
 final class FakeGate: InterviewAccessGate {
     var allowsPaidRequests: Bool
+    /// Free answers left, when counting; nil means "as `allowsPaidRequests` says".
+    var freeRemaining: Int?
     private(set) var paywalls: [PaywallTrigger] = []
-    init(allows: Bool) { allowsPaidRequests = allows }
+    private(set) var completions: [Bool] = []
+    init(allows: Bool, freeRemaining: Int? = nil) { allowsPaidRequests = allows; self.freeRemaining = freeRemaining }
+    func allowsNewAnswer(pending: Int) -> Bool {
+        guard let freeRemaining else { return allowsPaidRequests }
+        return freeRemaining - pending > 0
+    }
     func requestPaywall(_ trigger: PaywallTrigger) { paywalls.append(trigger) }
+    func noteAnswerCompleted(counted: Bool) {
+        completions.append(counted)
+        if counted, let left = freeRemaining { freeRemaining = left - 1 }
+    }
 }
 
 @MainActor
@@ -518,6 +469,45 @@ struct InterviewAccessTests {
         model.handle(.answerFailed(requestID: request.requestID, message: CopilotProviderError.proRequiredMessage))
         #expect(gate.paywalls == [.generate])
         #expect(model.canRetry(questionID: request.questionID))
+    }
+
+    @Test
+    func theThirdGenerateOpensThePaywallWithoutSendingARequest() {
+        let (model, feed) = Support.make()
+        let gate = FakeGate(allows: true, freeRemaining: 2)
+        model.accessGate = gate
+        Support.speak("First?", in: model); Support.tap(model, at: 0); Support.completeActiveRequest(model, feed)
+        Support.speak("Second?", in: model); Support.tap(model, at: 5); Support.completeActiveRequest(model, feed)
+        #expect(gate.completions == [true, true] && gate.paywalls.isEmpty, "both free answers finish, no paywall over the second")
+        Support.speak("Third?", in: model); Support.tap(model, at: 10)
+        #expect(feed.discussionRequests.count == 2, "the third request is never sent")
+        #expect(gate.paywalls == [.generate])
+        #expect(model.isWaitingForAccess(questionID: model.questions.last!.id), "its snapshot is kept for after Pro")
+    }
+
+    @Test
+    func rapidTapsCannotQueueMoreThanIsLeft() {
+        let (model, feed) = Support.make()
+        let gate = FakeGate(allows: true, freeRemaining: 1)
+        model.accessGate = gate
+        Support.speak("One?", in: model); Support.tap(model, at: 0)
+        Support.speak("Two?", in: model); Support.tap(model, at: 1)
+        #expect(feed.discussionRequests.count == 1, "one free answer left: the second tap is held")
+        #expect(gate.paywalls == [.generate])
+    }
+
+    @Test
+    func emptyAndClarificationAnswersAreNotCounted() {
+        let (model, feed) = Support.make()
+        let gate = FakeGate(allows: true, freeRemaining: 2)
+        model.accessGate = gate
+        Support.speak("Unclear?", in: model); Support.tap(model, at: 0)
+        let request = feed.discussionRequests[0]
+        model.handle(.answerStarted(requestID: request.requestID, questionID: request.questionID))
+        model.handle(.answerNeedsInput(requestID: request.requestID, need: .clarification))
+        model.handle(.answerCompleted(requestID: request.requestID, blocks: [.prose("Which one do you mean?")], highlight: nil))
+        #expect(gate.completions == [false], "a clarification uses no free answer")
+        #expect(gate.freeRemaining == 2)
     }
 
     @Test

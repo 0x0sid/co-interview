@@ -35,11 +35,11 @@ final class CopilotEntryUITests: XCTestCase {
     }
 
     private func openDemo(_ app: XCUIApplication) {
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 15), "the home screen has no Interview Copilot entry")
-        entry.tap()
-        XCTAssertTrue(app.buttons["Start demo, DEMO mode"].waitForExistence(timeout: 10))
-        app.buttons["Start demo, DEMO mode"].tap()
+        XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
+        let demo = app.buttons["Start demo, DEMO mode"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 10), "no Demo in the Debug developer section")
+        app.scrollTo(demo)
+        demo.tap()
     }
 
     private func firstQuestion(_ app: XCUIApplication) -> XCUIElement {
@@ -58,15 +58,10 @@ final class CopilotEntryUITests: XCTestCase {
     @MainActor
     @discardableResult
     private func openCopilot(_ app: XCUIApplication) -> Bool {
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 15), "the home screen has no Interview Copilot entry")
-        let arrived = app.buttons["Start demo, DEMO mode"]
-        for _ in 0..<3 {
-            entry.tap()
-            if arrived.waitForExistence(timeout: 6) { return true }
-        }
-        XCTFail("the Interview Copilot start screen never opened")
-        return false
+        // Neverblank now opens straight onto its home screen; there is no entry step to take.
+        let arrived = app.waitForNeverblankHome()
+        if !arrived { XCTFail("Neverblank did not open on its home screen") }
+        return arrived
     }
 
     @MainActor
@@ -166,7 +161,7 @@ final class CopilotEntryUITests: XCTestCase {
 
         // Closing returns to the ordinary app.
         app.buttons["Close interview"].tap()
-        XCTAssertTrue(app.staticTexts["Interview Copilot"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.waitForNeverblankHome(timeout: 10), "closing did not return to the Neverblank home")
         attach(app, "06-after-closing")
     }
 
@@ -351,8 +346,8 @@ final class CopilotEntryUITests: XCTestCase {
         // offer the full, answer-generating Live. Which of the two states appears depends on whether
         // this machine can listen (microphone and speech permission, on-device model), so both are
         // asserted, and neither lets an unqualified "Start live" through.
-        let listenOnly = app.buttons["Start live (listening only), LIVE mode"]
-        let full = app.buttons["Start live, LIVE mode"]
+        let listenOnly = app.buttons["Start interview (listening only), LIVE mode"]
+        let full = app.buttons["Start interview, LIVE mode"]
         XCTAssertTrue(listenOnly.waitForExistence(timeout: 5) || full.waitForExistence(timeout: 1),
                       "no Live action on the start screen")
         if listenOnly.exists {

@@ -1,13 +1,14 @@
-# Neverblank monetization — free preview, Pro, and access control
+# Neverblank monetization — 2 free AI answers, Pro, and access control
 
-Status 2026-09-26. Code complete and tested locally; **not live** until the account setup below is done
-and the backend is deployed. Nothing here has been verified against Apple's sandbox yet.
+Status 2026-09-27. **Two free AI answers replace the 30-second listening preview** (superseded; no
+listening-time limit remains). Code complete and tested locally; the backend release that enforces it
+is **not deployed yet**, and nothing has been verified against Apple's sandbox.
 
 ## The rule
 
 A paid request (question detection, a focused decision, an answer) is served when:
 
-**authenticated installation AND (active `pro` entitlement OR free-preview allowance left)**
+**authenticated installation AND (active `neverblank_pro` entitlement OR free answers left)**
 
 The backend (`backend/access.mjs`) enforces it on every paid route. The app (`prompter/Access/`) uses
 the same rule to decide what to offer, and never unlocks anything on its own say-so.
@@ -21,43 +22,49 @@ the same rule to decide what to offer, and never unlocks anything on its own say
 - RevenueCat is configured with that id (`EntitlementService.configure(appUserID:)`, or `logIn` on the
   first launch once the id is issued).
 - Keychain items often survive a reinstall, but iOS does not promise it. A lost credential means a new
-  installation and a new preview (bounded by the server caps and the per-address install throttle); a
+  installation and new free answers (bounded by the per-address install throttle); a
   subscriber gets access back through **Restore Purchases**, which transfers the purchase to the new id
   — this needs the project's restore behaviour set to *Transfer to new App User ID* (below).
 - Release builds never carry a bearer token. Operator tokens (`COINTERVIEW_TOKENS`) remain for
   development and evaluation only.
 
-## Free preview
+## 2 free AI answers
 
-- 30 seconds of Live **listening**, once per installation. Charged only while: the microphone is
-  actually listening, the app is in the foreground, AI consent was given, answers are configured and
-  no paywall is on screen (`InterviewScreen.previewConditionsMet`). Setup, permission prompts, the
-  paywall and background time are never charged.
-- Labelled as a free preview, not a subscription trial, on the start screen, in the consent sheet
-  and on the Live screen (`AccessCopy`).
-- At 30 s: an answer already accepted finishes (server grace 60 s for queued ones); detection stops;
-  local transcription continues with a status line; the paywall opens **once** (recorded in the
-  Keychain record `endPaywallShown`). The end is reported to the backend (`POST /v1/preview/end`).
-- Pro users never touch the preview meter or the caps.
+- A free installation gets **2 successful AI answers in total** — across sessions and launches. Not a
+  daily allowance, not an App Store introductory trial, nothing charged.
+- The app shows "2 free answers remaining", then "1 free answer remaining". The second answer finishes
+  and stays readable; an inline **Unlock Pro** appears with it — never a modal over it. The **third
+  Generate opens the paywall before any AI request is sent**, keeping that request's snapshot.
+- After the allowance: history, files and on-device transcription keep working; question detection and
+  focused decisions stop for free users. Subscription › View plans is always available.
 
-### Exact limits (code defaults; the backend reads them from the environment)
+### Counting (backend ledger, per installation)
 
-| Limit | Value | Where enforced | Env var |
-| --- | --- | --- | --- |
-| Listening time | 30 s of charged listening, once per installation | app (`FreePreviewMeter.allowance`) | — |
-| Answers | 5 per installation | backend, atomic | `PREVIEW_MAX_ANSWERS` |
-| Detections (classify + focused decisions) | 60 per installation | backend, atomic | `PREVIEW_MAX_DETECTIONS` |
-| After the app reports the end | detections stop at once; an answer may still **start** for 60 s (one accepted before the end but queued) | backend | `PREVIEW_ANSWER_GRACE_MS` |
-| Expiry | none — the preview does not lapse with calendar time, and never resets | — | — |
+| Case | Effect |
+| --- | --- |
+| Completed answer with text (prose or code) | consumes 1 |
+| Failed stream, empty response, clarification-only or context-request response | consumes nothing |
+| Client disconnects after answer text was sent | consumes 1 (it received an answer) |
+| Client disconnects before any text | consumes nothing |
+| Retry of the same generation (same `generationKey`, kept with the snapshot) | not charged again; at most 3 deliveries of one key |
+| Regenerate, follow-up action | a new generation: uses the allowance |
+| Simultaneous taps | capacity is reserved atomically; never more than 2 |
+| Pro request | never touches the counters |
 
-Whichever runs out first ends the preview. When the backend's caps end it before the 30 s, the next
-answer is refused (402), the app shows the paywall once for that request, and `/v1/access` reports
-the preview ended so the app's meter agrees. The user-facing text (`AccessCopy.previewDisclosure`)
-says "30 seconds of Live listening, with question detection and up to 5 answers";
-`AccessCopy.previewAnswerLimit` and the backend default are pinned together by
-`backend/test/access-test.mjs`. The earlier plan proposed 3 answers; 5 was implemented so that a
-30-second stretch with a couple of questions and a retry is not cut short — a one-line change if 3 is
-preferred.
+Bounded abuse control: after 10 unsuccessful free attempts (failures, empty, clarification-only) no more
+free answers are served; free detection is capped at 300 calls; a reservation left by a crashed stream
+stops holding capacity after 3 minutes. Env: `FREE_ANSWERS`, `FREE_MAX_UNCOUNTED`,
+`FREE_MAX_DETECTIONS`, `FREE_REDELIVERIES`, `FREE_RESERVATION_TTL_MS`.
+
+### Migration from the 30-second preview
+
+Applied once, when the new backend first opens the database (`AccessStore.migrate`):
+- a preview that had **ended** counts as the allowance used (`free_used = 2`);
+- otherwise `free_used = min(answers already received, 2)` — nothing is given back;
+- entitlements are untouched; migrated rows are marked `migrated_from = 'preview-30s'`.
+
+Production had one installation at the time (the owner's phone, Pro, preview unused), which keeps Pro.
+Older app builds calling `POST /v1/preview/end` get the current allowance and change nothing.
 
 ## Purchase continuity
 
@@ -75,8 +82,8 @@ preferred.
 - RevenueCat unreachable: the backend honours only a previously **verified, unexpired** expiry; with
   no verified history the answer is "not Pro". Cancelled auto-renew keeps the same expiry, so access
   continues until the paid period ends.
-- Backend refuses (402 `pro_required`): the answer fails with the Pro message, Retry is kept, and the
-  paywall is offered once for that request.
+- Backend refuses (402 `pro_required`, reason `exhausted` or `too_many_unsuccessful`): the answer fails
+  with the Pro message, Retry is kept, and the paywall is offered once for that request.
 
 ## Paywall
 
@@ -89,7 +96,7 @@ discounts, counts, ratings or testimonials. Without plans (no key, no offering) 
 ## Analytics
 
 `POST /v1/events`, names and values from fixed lists only (`PRODUCT_EVENTS`, `sanitizeEvent`):
-trial_started, trial_30s_consumed, paywall_viewed, weekly_selected, monthly_selected,
+trial_started (first free answer used), free_answers_exhausted, paywall_viewed, weekly_selected, monthly_selected,
 purchase_started, purchase_completed, purchase_failed, purchase_restored, paywall_dismissed; optional
 `plan`, `trigger`, `reason`. Written as one log line; nothing else is stored.
 
@@ -97,7 +104,7 @@ purchase_started, purchase_completed, purchase_failed, purchase_restored, paywal
 - Events require the installation credential; the event log line carries no installation id, address
   or content; the generic request log line carries a random request id, method, path, status, time.
 - The access database stores, per installation: id, secret hash, app user id, created and
-  **last-seen** timestamps (updated on every authenticated request, including events), preview
+  **last-seen** timestamps (updated on every authenticated request, including events), free-answer
   counters, cached entitlement expiry. No interview content.
 - Client addresses are held in memory for one hour for the install throttle, never written.
 - Fly's platform may record client addresses at its edge, outside this code.
@@ -154,20 +161,23 @@ truthfully, the `lifetime` product as a Yearly plan at $79.99.
 
 ## Verified so far
 
-- Backend: `node test/access-test.mjs` — 52 checks: credentials, throttle, atomic preview caps under
-  10 simultaneous requests, grace window, Pro never limited, cache, fail-closed, RevenueCat parsing,
-  event sanitising, and the HTTP contract across a real process restart on the same database file.
-  All six backend suites pass, in the app repo and the mirror.
-- iOS unit tests: 31 new (preview meter, savings, Release configuration, access transitions, held
-  requests); full unit suite 429 tests, all passing after aligning one plist guard test.
-- UI, end to end against a local backend in fake-provider mode (`FreePreviewFlowUITests`): fresh
-  install → credential → disclosure → consent → 30 s preview → paywall once → session intact →
-  Generate offers Pro and keeps the request → paywall does not reopen. Backend log confirmed no
-  detection or answer request after the preview ended.
-- Release simulator build succeeds and opens Neverblank directly.
-- Release **device archive** (2026-09-26) builds and signs for team `P9Q6984LRS` (development identity):
-  `CopilotBackendURL` is the Fly URL; no development host/token or ATS exception; no Debug harness,
-  reset hook, scripted speech or Test Store key in the binary; RevenueCat key and legal URLs empty.
+- Earlier (2026-09-26, still valid): existing-subscriber Test Store flow on the owner's phone —
+  registration, RevenueCat identity merge, backend-verified `neverblank_pro`, Generate before and after
+  a home-screen relaunch (authentication evidence indirect: installation last-seen, not per request).
+- Two free answers (2026-09-27, local backend in fake-provider mode, fresh test identities):
+  - `backend/test/access-test.mjs`: two answers then refusal, 10 simultaneous taps reserve exactly two,
+    failures/empty/clarification do not count, code-only counts, retry not charged twice and bounded,
+    disconnect rules, abuse cap, stale reservations, detection stops, Pro never counts, migration rules,
+    persistence across a real restart, request log lines (auth, basis, outcome, credit). All six
+    backend suites pass.
+  - iOS focused suites (84 tests): free-answer controller, third Generate held without a request, rapid
+    taps, empty/clarification not counted, Release configuration.
+  - `FreeAnswersFlowUITests` (twice): disclosure → consent → "2 remaining" → "1 remaining" → "Free
+    answers used" with inline Unlock Pro (no modal) → third Generate opens the paywall; the backend log
+    shows exactly two answer requests, both `free_credit=consumed`, and no third → relaunch keeps the
+    allowance.
+  - Release simulator build: opens Neverblank; no Demo, Developer section, Prompter home, debug menu,
+    reset hook or scripted speech in the binary.
 
 ## Not verified yet
 

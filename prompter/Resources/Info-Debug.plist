@@ -28,6 +28,8 @@
 	<string>$(NEVERBLANK_TERMS_URL)</string>
 	<key>NeverblankPrivacyURL</key>
 	<string>$(NEVERBLANK_PRIVACY_URL)</string>
+	<key>NeverblankSupportURL</key>
+	<string>$(NEVERBLANK_SUPPORT_URL)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>

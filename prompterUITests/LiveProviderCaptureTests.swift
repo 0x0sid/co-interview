@@ -30,19 +30,16 @@ final class LiveProviderCaptureTests: XCTestCase {
                                 "-LiveScriptedSpeech", speech.joined(separator: "||"),
                                 "-LiveScriptedSpeechInterval", String(interval)]
         app.launch()
-        let entry = app.buttons["Interview Copilot. Listens, suggests answers, and follows your voice as you read them."]
-        XCTAssertTrue(entry.waitForExistence(timeout: 20))
-        let startLive = app.buttons["Start live, LIVE mode"]
-        for _ in 0..<3 where !startLive.exists {
-            entry.tap()
-            _ = startLive.waitForExistence(timeout: 10)
-        }
+        XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
+        let startLive = app.buttons["Start interview, LIVE mode"]
         XCTAssertTrue(startLive.waitForExistence(timeout: 15), "Live is not offered — is the backend configured and reachable?")
         // Readiness is checked asynchronously; Live becomes tappable once it passes.
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: startLive)
         wait(for: [enabled], timeout: 20)
         if !startLive.isHittable { app.swipeUp() }
         startLive.tap()
+        // First Live on this simulator: the one-time AI consent.
+        if app.buttons["ai-consent-agree"].waitForExistence(timeout: 3) { app.buttons["ai-consent-agree"].tap() }
         XCTAssertTrue(app.buttons["Generate an answer"].waitForExistence(timeout: 15), "the Live interview never opened")
         return app
     }
