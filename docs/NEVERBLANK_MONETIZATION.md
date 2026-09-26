@@ -185,3 +185,22 @@ truthfully, the `lifetime` product as a Yearly plan at $79.99.
   account setup above. Test Store runs will not be treated as proof that Apple purchases work.
 - The deployed backend: the access release is not on Fly yet (item 5).
 - A Release build on a device.
+
+## Summary & feedback (2026-09-27)
+
+Working versions: app **`cf0e831`** (installed on the owner's phone, over the existing app), backend mirror
+**`2ef172b`**, deployed as Fly **v15** (the access volume and every installation survived the deploy).
+
+- `POST /v1/copilot/review` — Pro only for installations (402 `pro_feature` otherwise; the free-answer
+  ledger is never used or changed); the operator token works for development.
+- Verified on production with a saved interview's transcript (22 lines, real model, operator token):
+  - **unmarked** → unscored conversation summary: topics, questions and practice questions only; no key
+    points, strengths, improvements or score;
+  - **13 lines marked as the candidate's** → scored 0–4 on the rubric (relevance 3, clarity 3, structure
+    2, examples 2), every strength quoting the candidate's marked words (quotes not found are dropped by
+    the server).
+- The app's suggested answers are never sent — only transcript lines. A suggestion read aloud becomes
+  transcript; only the user's marking decides whether it is judged as theirs.
+- The app distinguishes backend unavailable (unreachable, 404, 503), subscription expired (402 with a
+  lapsed entitlement: "renew", with the date) and generation failed (Retry; nothing saved).
+- Reports are saved at Application Support/Reviews/<session id>.json with the snapshot they cover.
