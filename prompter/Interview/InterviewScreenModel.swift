@@ -1231,6 +1231,20 @@ final class InterviewScreenModel {
         var question = questions[index]
         guard let answerIndex = question.answers.firstIndex(where: { $0.id == answerID }) else { return }
         var answer = question.answers[answerIndex]
+        var blocks = blocks
+        // **A finished stream with no text is never a complete answer.** When the model asked its
+        // clarifying question in the title line instead of the body, that question is the answer and
+        // is shown and saved; otherwise the entry fails with Retry, keeping its snapshot.
+        if !Self.hasVisibleText(blocks) {
+            let need = answer.need ?? pendingNeeds[requestID]
+            let label = question.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if need == .clarification, label.hasSuffix("?"), label != Self.pendingQuestionLabel {
+                blocks = [.prose(label)]
+            } else {
+                failAnswer(requestID: requestID, message: Self.emptyAnswerMessage)
+                return
+            }
+        }
         answer.blocks = blocks                   // in the order the feed gave them: prose and code interleaved
         answer.highlight = highlight
         answer.isComplete = true
@@ -1248,6 +1262,16 @@ final class InterviewScreenModel {
             restartSimulatedReadingForCurrentPage()
         } else {
             readyQuestionNumber = index + 1
+        }
+    }
+
+    static let emptyAnswerMessage = "No answer came back. Tap Retry to ask again."
+
+    static func hasVisibleText(_ blocks: [AnswerBlock]) -> Bool {
+        blocks.contains { block in
+            switch block {
+            case .prose(let text), .code(let text): !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
         }
     }
 

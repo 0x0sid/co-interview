@@ -528,3 +528,54 @@ struct InterviewAccessTests {
         #expect(feed.discussionRequests.count == 1, "Demo and tests are unaffected")
     }
 }
+
+// MARK: - Empty answers
+
+@MainActor
+struct EmptyAnswerTests {
+    typealias Support = ManualGenerationTests
+
+    private func start(_ model: InterviewScreenModel, _ feed: Support.RecordingFeed) throws -> (UUID, UUID) {
+        Support.speak("The basis?", in: model)
+        Support.tap(model, at: 0)
+        let request = try #require(feed.discussionRequests.last)
+        model.handle(.answerStarted(requestID: request.requestID, questionID: request.questionID))
+        return (request.requestID, request.questionID)
+    }
+
+    @Test
+    func aStreamWithNoTextIsARetryableFailureNotABlankAnswer() throws {
+        let (model, feed) = Support.make()
+        let (requestID, questionID) = try start(model, feed)
+        model.handle(.answerNeedsInput(requestID: requestID, need: .clarification))
+        model.handle(.answerTopicResolved(requestID: requestID, topic: "Greater Israel Project basis"))
+        model.handle(.answerCompleted(requestID: requestID, blocks: [], highlight: nil))
+        let answer = try #require(model.questions.first { $0.id == questionID }?.selectedAnswer)
+        #expect(answer.isIncomplete, "a blank answer is not complete")
+        #expect(answer.failureMessage == InterviewScreenModel.emptyAnswerMessage)
+        #expect(model.canRetry(questionID: questionID))
+        model.retry(questionID: questionID)
+        #expect(feed.discussionRequests.count == 2, "Retry re-sends the kept snapshot")
+    }
+
+    @Test
+    func aClarifyingQuestionInTheTitleIsShownAndSaved() throws {
+        let (model, feed) = Support.make()
+        let (requestID, questionID) = try start(model, feed)
+        model.handle(.answerNeedsInput(requestID: requestID, need: .clarification))
+        model.handle(.answerTopicResolved(requestID: requestID, topic: "Which project do you mean?"))
+        model.handle(.answerCompleted(requestID: requestID, blocks: [.prose("  ")], highlight: nil))
+        let answer = try #require(model.questions.first { $0.id == questionID }?.selectedAnswer)
+        #expect(!answer.isIncomplete)
+        #expect(answer.blocks == [.prose("Which project do you mean?")])
+    }
+
+    @Test
+    func anAnswerWithTextIsUntouched() throws {
+        let (model, feed) = Support.make()
+        let (requestID, questionID) = try start(model, feed)
+        model.handle(.answerCompleted(requestID: requestID, blocks: [.prose("It rests on two claims.")], highlight: nil))
+        let answer = try #require(model.questions.first { $0.id == questionID }?.selectedAnswer)
+        #expect(!answer.isIncomplete && answer.blocks == [.prose("It rests on two claims.")])
+    }
+}

@@ -239,14 +239,21 @@ function callerFor(request) {
   return installation ? { installation } : null;
 }
 
+/** "installation", "operator" or "none" — the authentication mode, for the request log only. */
+function authMode(caller) {
+  return caller?.operator ? "operator" : caller?.installation ? "installation" : "none";
+}
+
 /**
  * The paid-request gate: operator, or installation AND (pro OR preview allowance). Sends 402 and
  * returns false when refused. Called after the request body is validated, so a malformed request
  * never spends preview allowance.
  */
 async function admit(caller, kind, response) {
-  if (caller?.operator) return true;
+  const meta = (response.meta ??= {});
+  if (caller?.operator) { meta.basis = "operator"; return true; }
   const decision = await access.authorize(caller.installation, kind);
+  meta.basis = decision.allowed ? decision.via : "refused";
   if (decision.allowed) return true;
   send(response, 402, { error: "pro_required", entitlement: ENTITLEMENT });
   return false;
@@ -893,6 +900,11 @@ function startSSE(response) {
 
 function writeEvent(response, payload) {
   if (response.writableEnded) return;
+  // Stream outcome for the request log: counts and kinds only, never the text itself.
+  const meta = (response.meta ??= {});
+  if (payload.type === "delta" && typeof payload.text === "string") meta.textChars = (meta.textChars ?? 0) + payload.text.trim().length;
+  if (payload.type === "done") meta.outcome = (meta.textChars ?? 0) > 0 ? "done" : "done_empty";
+  if (payload.type === "error") meta.outcome = "error";
   response.write(`data: ${JSON.stringify(payload)}\n\n`);
 }
 
@@ -1347,10 +1359,20 @@ const server = createServer(async (request, response) => {
   const started = Date.now();
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
 
-  response.on("finish", () => {
-    // Metadata only — never request or response content, and never a credential.
-    console.log(`[${requestID}] ${request.method} ${url.pathname} -> ${response.statusCode} ${Date.now() - started}ms`);
-  });
+  // Metadata only — never request or response content, never a credential, never an installation
+  // or customer id: the random request id, the route, the status, the time, the authentication
+  // mode, the access basis (pro / preview / operator / refused) and, for a stream, how it ended.
+  const logLine = (ending) => {
+    const meta = response.meta ?? {};
+    const fields = [];
+    if (meta.auth) fields.push(`auth=${meta.auth}`);
+    if (meta.basis) fields.push(`basis=${meta.basis}`);
+    if (ending ?? meta.outcome) fields.push(`outcome=${ending ?? meta.outcome}`);
+    console.log(`[${requestID}] ${request.method} ${url.pathname} -> ${response.statusCode} ${Date.now() - started}ms${fields.length ? " " + fields.join(" ") : ""}`);
+  };
+  response.on("finish", () => logLine());
+  // A client that goes away mid-stream: the response closes without finishing.
+  response.on("close", () => { if (!response.writableFinished) logLine("client_closed"); });
 
   try {
     if (url.pathname === "/health") {
@@ -1383,6 +1405,7 @@ const server = createServer(async (request, response) => {
 
     // Never an open proxy: every other route needs an operator token or an installation credential.
     const caller = callerFor(request);
+    (response.meta ??= {}).auth = authMode(caller);
     if (!caller) return send(response, 401, { error: "unauthorized" });
 
     if (caller.installation && url.pathname === "/v1/access" && request.method === "GET") {
