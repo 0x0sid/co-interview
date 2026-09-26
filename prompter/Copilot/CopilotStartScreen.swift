@@ -43,6 +43,8 @@ struct CopilotStartScreen: View {
     @State private var settingsPaywall: AccessController.PaywallRequest?
     @State private var isChoosingLanguage = false
     @State private var isShowingSettings = false
+    @State private var transcriptFor: InterviewSessionRecord?
+    @State private var reviewFor: InterviewSessionRecord?
     /// The live interview's feed, made **once** when the interview opens. Built inside the cover it
     /// was rebuilt — with a new coordinator — every time this screen re-rendered, including on every
     /// purchase and entitlement change.
@@ -98,13 +100,20 @@ struct CopilotStartScreen: View {
         }
         .confirmationDialog("Delete this interview?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                             titleVisibility: .visible) {
-            Button("Delete interview and its files", role: .destructive) {
-                if let deleting { InterviewSessionStore.delete(deleting, in: modelContext) }
+            Button("Delete", role: .destructive) {
+                if let deleting {
+                    InterviewReviewStore.standard.delete(deleting.id)
+                    // Removes this session and the files only it owned; files other sessions use stay.
+                    InterviewSessionStore.delete(deleting, in: modelContext)
+                }
                 deleting = nil
             }
+            Button("Cancel", role: .cancel) { deleting = nil }
         } message: {
-            Text("The transcript, answers and attached files are removed from this device. This can't be undone.")
+            Text("This removes its saved transcript, answers and interview attachments from this iPhone.")
         }
+        .sheet(item: $transcriptFor) { session in TranscriptViewer(session: session) }
+        .sheet(item: $reviewFor) { session in InterviewReviewSheet(session: session) }
         .navigationTitle(navigationTitle)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isShowingSettings) {
@@ -309,33 +318,43 @@ struct CopilotStartScreen: View {
                         .font(Typography.body(12, weight: .medium))
                     }
                 }
-                // Rows read summary fields only (title, dates, counts); nothing here loads a
-                // transcript, an answer or a file.
-                ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
-                    HStack(alignment: .top, spacing: 8) {
-                        Button { open(.reopen(session, context: modelContext)) } label: { SessionRow(session: session) }
-                            .buttonStyle(.plain)
-                        Menu {
-                            Button("Rename", systemImage: "pencil") {
-                                newTitle = session.title
-                                renaming = session
-                            }
-                            Button("Delete", systemImage: "trash", role: .destructive) { deleting = session }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                                .font(.system(size: 17))
-                                .foregroundStyle(Theme.Color.secondary)
-                                .frame(width: 32, height: 32)
+                // Cards read summary fields only (title, dates, counts); nothing here loads a
+                // transcript, an answer or a file until one is opened.
+                VStack(spacing: 10) {
+                    ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
+                        InterviewHistoryCard(session: session,
+                                             onOpen: { open(.reopen(session, context: modelContext)) },
+                                             onDelete: { deleting = session }) {
+                            historyMenu(for: session)
                         }
-                        .accessibilityLabel("More actions for \(session.title)")
                     }
                 }
             }
-            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
         }
+    }
+
+    /// The saved interview's actions. Transcript viewing and export are local; the review is Pro.
+    private func historyMenu(for session: InterviewSessionRecord) -> some View {
+        Menu {
+            Button("Rename", systemImage: "pencil") {
+                newTitle = session.title
+                renaming = session
+            }
+            Button("View transcript", systemImage: "text.alignleft") { transcriptFor = session }
+            if let url = TranscriptExport.file(for: session) {
+                ShareLink(item: url) { Label("Export transcript", systemImage: "square.and.arrow.up") }
+            }
+            Button(InterviewReviewStore.standard.load(session.id) == nil ? "Generate summary & feedback" : "View summary & feedback",
+                   systemImage: "sparkles") { reviewFor = session }
+            Button("Delete", systemImage: "trash", role: .destructive) { deleting = session }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 19))
+                .foregroundStyle(Theme.Color.secondary)
+                .frame(width: 36, height: 36)
+        }
+        .accessibilityLabel("More actions for \(session.title)")
     }
 
     // MARK: Demo

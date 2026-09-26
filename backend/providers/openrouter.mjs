@@ -152,7 +152,15 @@ export async function* parseChatCompletionsStream(source, { requestedModel } = {
 }
 
 /** Non-streaming structured classification. */
-export async function classify({ apiKey, base = OPENROUTER_BASE, config, messages, schema, order, benchmark, signal }) {
+/**
+ * One schema-enforced JSON completion on a chosen model — the interview review uses it with the answer
+ * model and a larger output budget. Same routing checks and error shapes as `classify`.
+ */
+export async function structured({ apiKey, base = OPENROUTER_BASE, config, messages, schema, schemaName, modelID, maxTokens, order = [], signal }) {
+  return classify({ apiKey, base, config: { ...config, detection_model_id: modelID, detection_max_output_tokens: maxTokens }, messages, schema, order, signal, schemaName });
+}
+
+export async function classify({ apiKey, base = OPENROUTER_BASE, config, messages, schema, order, benchmark, signal, schemaName = "question_detection" }) {
   const modelID = config.detection_model_id;
   const routes = order.length ? order : [];
   for (const slug of routes) {
@@ -168,7 +176,7 @@ export async function classify({ apiKey, base = OPENROUTER_BASE, config, message
     temperature: config.detection_temperature,
     reasoning: reasoningParameter(config, modelID),
     provider: providerRouting(config, routes, { benchmark }),
-    response_format: { type: "json_schema", json_schema: { name: "question_detection", strict: true, schema } },
+    response_format: { type: "json_schema", json_schema: { name: schemaName, strict: true, schema } },
   };
 
   const response = await fetch(`${base}/chat/completions`, {

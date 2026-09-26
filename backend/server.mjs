@@ -36,6 +36,7 @@ import {
 } from "./decisions.mjs";
 import { costUSD } from "./providers/typesafe.mjs";
 import { AccessStore, AccessControl, accessLimitsFromEnv, makeRevenueCatVerifier, sanitizeEvent, ENTITLEMENT } from "./access.mjs";
+import { REVIEW_SCHEMA, buildReviewMessages, finalizeReview, reviewInput } from "./review.mjs";
 
 /**
  * Loads `backend/.env` into `process.env` if it exists.
@@ -1110,6 +1111,64 @@ async function handleClassify(request, response, caller) {
  * the operator allows that, **and** the decision was accepted in code. Otherwise the app keeps the
  * result for diagnostics and builds its request exactly as it would with decisions off.
  */
+/**
+ * Interview summary & feedback (review.mjs). **Pro only** for installations — it never uses the free
+ * answers and never touches their ledger; the operator token works for development. One structured
+ * completion on the answer model over the frozen transcript the app sends.
+ */
+async function handleReview(request, response, caller) {
+  const body = await readBody(request, MAX_ANSWER_BODY_BYTES);
+  let input;
+  try {
+    input = reviewInput(body);
+  } catch (error) {
+    return send(response, error.statusCode ?? 400, { error: String(error.message) });
+  }
+  const meta = (response.meta ??= {});
+  if (caller?.installation) {
+    const pro = await access.pro(caller.installation);
+    meta.basis = pro.active ? "pro" : "refused";
+    if (!pro.active) return send(response, 402, { error: "pro_required", entitlement: ENTITLEMENT, reason: "pro_feature" });
+  } else {
+    meta.basis = "operator";
+  }
+  if (FAKE) {
+    meta.outcome = "done";
+    return send(response, 200, finalizeReview({
+      topics: ["System design"], questions: input.lines.slice(0, 2).map((line) => line.text),
+      key_points: ["[FAKE] A key point"], strengths: [{ point: "[FAKE] Concrete example", evidence: input.lines.find((l) => l.candidate)?.text.split(/\s+/).slice(0, 4).join(" ") ?? "" }],
+      improvements: [{ point: "[FAKE] Lead with the result", example: "Start with the outcome, then how." }],
+      practice_questions: ["[FAKE] Walk me through a trade-off you made."], scores: { relevance: 3, clarity: 3, structure: 2, examples: 3 },
+    }, input));
+  }
+  if (baseConfig.text_provider !== "openrouter") return send(response, 503, { error: "review_unavailable" });
+  const apiKey = keyFor(baseConfig.text_provider);
+  if (!apiKey) return send(response, 503, { error: "provider_unconfigured" });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60_000);
+  request.on("close", () => controller.abort());
+  try {
+    const outcome = await openrouter.structured({
+      apiKey, base: OPENROUTER_BASE, config: baseConfig, messages: buildReviewMessages(input),
+      schema: REVIEW_SCHEMA, schemaName: "interview_review", modelID: baseConfig.answer_model_id,
+      maxTokens: 2000, order: baseConfig.answer_provider_order, signal: controller.signal,
+    });
+    if (!outcome.ok) {
+      meta.outcome = "error";
+      return send(response, outcome.status === 429 ? 429 : 502, { error: "provider_error", detail: outcome.message });
+    }
+    meta.outcome = "done";
+    send(response, 200, finalizeReview(outcome.result, input));
+  } catch (error) {
+    meta.outcome = "error";
+    if (controller.signal.aborted) return send(response, 504, { error: "timeout_or_cancelled" });
+    send(response, 502, { error: "provider_error", detail: String(error).slice(0, 300) });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function handleDecide(request, response, caller) {
   const body = await readBody(request);
   if (decisionConfig.mode === "off") return send(response, 200, { mode: "off", apply: false, eligible: false });
@@ -1522,6 +1581,7 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/v1/copilot/classify") return await handleClassify(request, response, caller);
     if (url.pathname === "/v1/copilot/decide") return await handleDecide(request, response, caller);
     if (url.pathname === "/v1/copilot/answer") return await handleAnswer(request, response, caller);
+    if (url.pathname === "/v1/copilot/review") return await handleReview(request, response, caller);
     send(response, 404, { error: "not_found" });
   } catch (error) {
     const statusCode = error?.statusCode ?? 500;
