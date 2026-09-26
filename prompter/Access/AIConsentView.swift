@@ -72,7 +72,11 @@ struct AIConsentView: View {
 
 /// Wording used in more than one place, so the preview is described the same way everywhere.
 enum AccessCopy {
-    static let previewDisclosure = "Every new install includes one free preview: 30 seconds of Live with question detection and answers. Only time spent listening counts. It is not an App Store subscription trial, nothing is charged, and it does not renew. When it ends, the transcript keeps going on your iPhone; questions and answers need Neverblank Pro."
+    /// The backend's preview answer cap (`PREVIEW_MAX_ANSWERS` in `backend/access.mjs`). Change both
+    /// together; `backend/test/access-test.mjs` checks the backend default is this number.
+    static let previewAnswerLimit = 5
+
+    static let previewDisclosure = "Every new install includes one free preview: 30 seconds of Live listening, with question detection and up to \(previewAnswerLimit) answers. Only time spent listening counts. It is not an App Store subscription trial, nothing is charged, and it does not renew. When it ends, the transcript keeps going on your iPhone; questions and answers need Neverblank Pro."
 
     static func previewRemaining(_ seconds: Int) -> String {
         "Free preview · \(seconds)s left"

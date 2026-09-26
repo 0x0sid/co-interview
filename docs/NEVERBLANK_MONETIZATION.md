@@ -38,8 +38,26 @@ the same rule to decide what to offer, and never unlocks anything on its own say
 - At 30 s: an answer already accepted finishes (server grace 60 s for queued ones); detection stops;
   local transcription continues with a status line; the paywall opens **once** (recorded in the
   Keychain record `endPaywallShown`). The end is reported to the backend (`POST /v1/preview/end`).
-- Server backstop caps, atomic per installation: 5 answers, 60 detections (`PREVIEW_MAX_*`).
 - Pro users never touch the preview meter or the caps.
+
+### Exact limits (code defaults; the backend reads them from the environment)
+
+| Limit | Value | Where enforced | Env var |
+| --- | --- | --- | --- |
+| Listening time | 30 s of charged listening, once per installation | app (`FreePreviewMeter.allowance`) | — |
+| Answers | 5 per installation | backend, atomic | `PREVIEW_MAX_ANSWERS` |
+| Detections (classify + focused decisions) | 60 per installation | backend, atomic | `PREVIEW_MAX_DETECTIONS` |
+| After the app reports the end | detections stop at once; an answer may still **start** for 60 s (one accepted before the end but queued) | backend | `PREVIEW_ANSWER_GRACE_MS` |
+| Expiry | none — the preview does not lapse with calendar time, and never resets | — | — |
+
+Whichever runs out first ends the preview. When the backend's caps end it before the 30 s, the next
+answer is refused (402), the app shows the paywall once for that request, and `/v1/access` reports
+the preview ended so the app's meter agrees. The user-facing text (`AccessCopy.previewDisclosure`)
+says "30 seconds of Live listening, with question detection and up to 5 answers";
+`AccessCopy.previewAnswerLimit` and the backend default are pinned together by
+`backend/test/access-test.mjs`. The earlier plan proposed 3 answers; 5 was implemented so that a
+30-second stretch with a couple of questions and a retry is not cut short — a one-line change if 3 is
+preferred.
 
 ## Purchase continuity
 
@@ -111,7 +129,9 @@ linked beyond the request and not stored by the backend. Confirm against the fin
      `REVENUECAT_SECRET_KEY` and `backend/.env`; never committed. The key currently in `backend/.env`
      belongs to cine and has been disabled there.
 4. **Legal URLs** — Terms of Use and Privacy Policy (https) → build settings `NEVERBLANK_TERMS_URL`,
-   `NEVERBLANK_PRIVACY_URL`; also in App Store Connect metadata.
+   `NEVERBLANK_PRIVACY_URL` (both configurations, in the project); also in App Store Connect metadata.
+   On 2026-09-26 every path on https://neverblank.io returned 404, including `/`, `/terms` and
+   `/privacy`: the pages have to be published first.
 5. **Fly** — the app has two machines (one stopped standby). SQLite on the volume needs exactly one:
    remove the stopped standby (`flyctl machine destroy 8e4359c77219e8 -a backend--d7y3w`, owner's
    decision), then deploy from the mirror. Volume `neverblank_data` (1 GB, ams) already exists.
@@ -130,6 +150,9 @@ linked beyond the request and not stored by the backend. Confirm against the fin
   Generate offers Pro and keeps the request → paywall does not reopen. Backend log confirmed no
   detection or answer request after the preview ended.
 - Release simulator build succeeds and opens Neverblank directly.
+- Release **device archive** (2026-09-26) builds and signs for team `P9Q6984LRS` (development identity):
+  `CopilotBackendURL` is the Fly URL; no development host/token or ATS exception; no Debug harness,
+  reset hook, scripted speech or Test Store key in the binary; RevenueCat key and legal URLs empty.
 
 ## Not verified yet
 

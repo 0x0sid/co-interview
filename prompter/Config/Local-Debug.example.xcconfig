@@ -11,3 +11,8 @@ COPILOT_DEV_BACKEND_HOST = your-subdomain.ngrok-free.app
 // A value from the backend's COINTERVIEW_TOKENS. This is the CLIENT access token, which is not the
 // provider credential: OPENROUTER_API_KEY belongs only in backend/.env and never in the app.
 COPILOT_DEV_BACKEND_TOKEN = replace-with-a-client-token
+
+// The Neverblank project's RevenueCat **Test Store** public key (test_…), for Debug builds only.
+// A Release build refuses test_ keys; its App Store key (appl_…) is the REVENUECAT_PUBLIC_KEY build
+// setting of the Release configuration.
+REVENUECAT_PUBLIC_KEY =

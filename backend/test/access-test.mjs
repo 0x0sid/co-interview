@@ -20,6 +20,13 @@ function check(label, condition, detail = "") {
   else { failures += 1; console.log(`  FAIL ${label} ${detail}`); }
 }
 
+// The deployed defaults, which the app's wording states (AccessCopy.previewAnswerLimit = 5).
+{
+  const defaults = accessLimitsFromEnv({});
+  check("default preview limits: 5 answers, 60 detections, 60 s answer grace",
+    defaults.previewAnswers === 5 && defaults.previewDetections === 60 && defaults.previewAnswerGraceMs === 60_000);
+}
+
 const limits = { ...accessLimitsFromEnv({}), previewAnswers: 3, previewDetections: 4, previewAnswerGraceMs: 60_000 };
 
 // --- Part 1: rules --------------------------------------------------------------------------------

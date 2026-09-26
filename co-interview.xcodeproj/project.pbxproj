@@ -458,6 +458,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "prompter/Resources/Info-Debug.plist";
+				NEVERBLANK_PRIVACY_URL = "";
+				NEVERBLANK_TERMS_URL = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -487,6 +489,9 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = prompter/Resources/Info.plist;
+				NEVERBLANK_PRIVACY_URL = "";
+				NEVERBLANK_TERMS_URL = "";
+				REVENUECAT_PUBLIC_KEY = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
