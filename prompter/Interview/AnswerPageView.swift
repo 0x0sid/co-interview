@@ -13,6 +13,8 @@ import SwiftUI
 struct AnswerPageView: View {
     @Environment(\.ultraContrast) private var ultraContrast
     let question: InterviewQuestion
+    /// Settings › Answer text size, on top of Dynamic Type.
+    @Environment(\.answerTextScale) private var answerTextScale
     let counterText: String
     let alignment: ReadingAlignment?
     let isAutoScrolling: Bool
@@ -189,14 +191,14 @@ struct AnswerPageView: View {
                         // Read mode: the whole paragraph as one Text, so it flows as a paragraph
                         // while individual spoken words still fade.
                         paragraphs[index]
-                            .font(InterviewTheme.Font.answer())
+                            .font(InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale))
                             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         // Streaming, or no alignment yet: same emphasis, no reading state to compose
                         // with. The colour is the view's, so nothing here can be mistaken for "read".
-                        Text(AnswerKeywords.emphasised(text, font: InterviewTheme.Font.answer(weight: .semibold)))
-                            .font(InterviewTheme.Font.answer())
+                        Text(AnswerKeywords.emphasised(text, font: InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale, weight: .semibold)))
+                            .font(InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale))
                             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
                             .foregroundStyle(InterviewTheme.Color.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -230,7 +232,7 @@ struct AnswerPageView: View {
         // Emphasis goes on *after* the reading colours and touches only weight, so the two systems
         // stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
         AnswerKeywords.emphasise(&attributed, source: alignment.text,
-                                 font: InterviewTheme.Font.answer(weight: .semibold))
+                                 font: InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale, weight: .semibold))
 
         // The character span of each paragraph, from the sentences that make it up.
         var spans: [(start: Int, end: Int)] = []
@@ -262,7 +264,7 @@ struct AnswerPageView: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("No answer yet.")
-                .font(InterviewTheme.Font.answer(20))
+                .font(InterviewTheme.Font.answer(20 * answerTextScale))
                 .foregroundStyle(InterviewTheme.Color.muted)
             Button(action: onGenerate) {
                 HStack(spacing: 7) {

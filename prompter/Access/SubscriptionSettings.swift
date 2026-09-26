@@ -58,7 +58,7 @@ struct SubscriptionSettingsView: View {
                         .accessibilityIdentifier("manage-subscription")
                 }
             } else {
-                Text("Free")
+                Text(entitlements.expiredAt.map { "Expired on \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "Free")
                     .font(Typography.body(15, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
                 Text(previewLine)

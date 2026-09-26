@@ -56,6 +56,8 @@ final class EntitlementService {
     private(set) var isLoadingOffering = false
     /// The store product behind the active entitlement, for "Neverblank Pro · Monthly".
     private(set) var activeProductIdentifier: String?
+    /// When a subscription this customer had has lapsed — for "Expired on …". Nil if never subscribed.
+    private(set) var expiredAt: Date?
 
     /// How the active purchase is described. The product's name is used only when it agrees with what
     /// the entitlement actually does: a "lifetime" product that expires and renews is shown as the
@@ -193,6 +195,7 @@ final class EntitlementService {
             // **Confirmed inactive reconciles the cache.** Expiration and revocation must actually
             // revoke; a local premium flag that only ever turns on would be indefinitely trusted.
             activeProductIdentifier = nil
+            expiredAt = entitlement?.expirationDate
             status = .free
             onVerifiedEntitlementChange?(false, Date())
         }

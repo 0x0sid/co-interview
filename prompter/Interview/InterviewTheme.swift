@@ -150,6 +150,9 @@ struct UltraContrastKey: UITraitBridgedEnvironmentKey {
 }
 
 extension EnvironmentValues {
+    /// Settings › Answer text size (the stored `fontScale`), 0.8–1.6, applied to answer text.
+    @Entry var answerTextScale: Double = 1
+
     var ultraContrast: Bool {
         get { self[UltraContrastKey.self] }
         set { self[UltraContrastKey.self] = newValue }

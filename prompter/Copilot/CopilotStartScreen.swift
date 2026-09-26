@@ -42,6 +42,7 @@ struct CopilotStartScreen: View {
     /// The paywall opened from here. Buying here never generates anything: no interview is open.
     @State private var settingsPaywall: AccessController.PaywallRequest?
     @State private var isChoosingLanguage = false
+    @State private var isShowingSettings = false
     /// The live interview's feed, made **once** when the interview opens. Built inside the cover it
     /// was rebuilt — with a new coordinator — every time this screen re-rendered, including on every
     /// purchase and entitlement change.
@@ -77,7 +78,6 @@ struct CopilotStartScreen: View {
                 startInterview
                 permissionHelp
                 recentInterviews
-                settingsSection
                 #if DEBUG
                 if Self.showsDeveloperTools { developerSection }
                 #endif
@@ -107,6 +107,9 @@ struct CopilotStartScreen: View {
         }
         .navigationTitle(navigationTitle)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isShowingSettings) {
+            NeverblankSettingsView(previewApplies: providerConfiguration.usesInstallationAuth)
+        }
         .sheet(isPresented: $isChoosingLanguage) {
             InterviewLanguagePicker(selection: languagePreference) { choice in
                 let settings = AppSettings.fetchOrCreate(in: modelContext)
@@ -216,6 +219,16 @@ struct CopilotStartScreen: View {
                     .font(Typography.body(13))
                     .foregroundStyle(Theme.Color.secondary)
             }
+            Spacer(minLength: 8)
+            Button { isShowingSettings = true } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(Theme.Color.ink)
+                    .frame(width: 44, height: 44)
+                    .background(Theme.Color.card, in: Circle())
+            }
+            .accessibilityLabel("Settings")
+            .accessibilityIdentifier("home-settings")
         }
     }
 
@@ -361,7 +374,7 @@ struct CopilotStartScreen: View {
                     Text(title)
                 }
                 .font(Typography.body(18, weight: .semibold))
-                .frame(maxWidth: .infinity, minHeight: 56)
+                .frame(maxWidth: .infinity, minHeight: 50)
             }
             .buttonStyle(.prompterPrimary)
             .disabled(!enabled)
@@ -369,9 +382,11 @@ struct CopilotStartScreen: View {
             .opacity(enabled ? 1 : 0.45)
             .accessibilityLabel(title)
             .accessibilityIdentifier("start-interview")
-            Text(readiness.summary)
+            // Provider and model names are diagnostics, not customer information.
+            Text(readiness.isChecking ? "Checking…" : readiness.canGenerate ? "Ready to start" : readiness.summary)
                 .font(Typography.body(12))
                 .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
+                .accessibilityIdentifier("start-status")
         }
     }
 

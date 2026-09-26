@@ -177,11 +177,12 @@ struct InterviewScreen: View {
             if let files { AttachmentsSheet(files: files) }
         }
         .sheet(isPresented: $isShowingSettings) {
-            InterviewSettingsSheet(
-                isLive: model.mode == .live,
-                previewApplies: enforcesAccess,
-                language: model.liveLanguage ?? .english,
-                onLanguageChange: { model.changeLanguage($0) }
+            // The app's settings, over the interview: nothing here stops or restarts the session.
+            NeverblankSettingsView(
+                interview: model.mode == .live
+                    ? .init(current: model.liveLanguage ?? .english, onChange: { model.changeLanguage($0) })
+                    : nil,
+                previewApplies: enforcesAccess
             )
         }
         .sheet(item: $provenanceToShow) { selection in
@@ -526,73 +527,3 @@ struct ProvenanceSelection: Identifiable {
     let provenance: AnswerProvenance
 }
 
-/// The gear: the interview language, changeable mid-session without touching what was said.
-struct InterviewSettingsSheet: View {
-    let isLive: Bool
-    let previewApplies: Bool
-    @State var language: InterviewLanguage
-    let onLanguageChange: (InterviewLanguage) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @Environment(EntitlementService.self) private var entitlements: EntitlementService?
-    @Environment(AccessController.self) private var access: AccessController?
-    /// The paywall opened from Settings. It never resumes or sends a request.
-    @State private var plansPaywall: AccessController.PaywallRequest?
-    @State private var isChoosingLanguage = false
-
-    init(isLive: Bool, previewApplies: Bool = false, language: InterviewLanguage, onLanguageChange: @escaping (InterviewLanguage) -> Void) {
-        self.isLive = isLive
-        self.previewApplies = previewApplies
-        _language = State(initialValue: language)
-        self.onLanguageChange = onLanguageChange
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                if isLive {
-                    Section {
-                        Button { isChoosingLanguage = true } label: {
-                            HStack {
-                                Text("Interview language").foregroundStyle(Theme.Color.ink)
-                                Spacer()
-                                Text(language.displayName).foregroundStyle(Theme.Color.secondary)
-                                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.Color.secondary)
-                            }
-                        }
-                        .accessibilityIdentifier("interview-language")
-                    } footer: {
-                        Text(InterviewLanguagePreference.explanation + " Changing it restarts recognition; the transcript and answers so far stay as they are and are not translated.")
-                    }
-                } else {
-                    Text("The demo is scripted in English.")
-                }
-                if let entitlements {
-                    Section("Subscription") {
-                        SubscriptionSettingsView(entitlements: entitlements, access: access, previewApplies: previewApplies,
-                                                 onViewPlans: { plansPaywall = .init(trigger: .settings) })
-                    }
-                }
-            }
-            .navigationTitle("Interview settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-        }
-        .presentationDetents([.medium, .large])
-        .sheet(isPresented: $isChoosingLanguage) {
-            // A running interview needs a concrete language; history, answers and files are kept.
-            InterviewLanguagePicker(selection: .language(language), allowsSystem: false) { choice in
-                if case .language(let chosen) = choice, chosen != language {
-                    language = chosen
-                    onLanguageChange(chosen)
-                }
-            }
-        }
-        .sheet(item: $plansPaywall) { request in
-            if let entitlements, let access {
-                NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { _ in
-                    plansPaywall = nil
-                }
-            }
-        }
-    }
-}

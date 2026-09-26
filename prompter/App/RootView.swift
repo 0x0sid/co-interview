@@ -51,6 +51,8 @@ struct RootView: View {
             #endif
         }
         .preferredColorScheme(preferredScheme)
+        // Settings › Answer text size, for every answer on every screen.
+        .environment(\.answerTextScale, min(1.6, max(0.8, settingsQuery.first?.fontScale ?? 1)))
         // Ultra Contrast is a UIKit trait set on the windows, so every hosting controller — sheets and
         // full-screen covers included — resolves the interview colours from it, and SwiftUI views
         // read it back through the bridged `\.ultraContrast` key. (Setting it through

@@ -16,18 +16,18 @@ enum Theme {
         // MARK: Anchors (fixed by the approved design)
 
         /// App background. Light `#F7F4EF`, dark `#151719`.
-        static let paper = dynamic(light: 0xF7F4EF, dark: 0x151719)
+        static let paper = dynamic(light: 0xF7F4EF, dark: 0x151719, ultra: 0x000000)
         /// Primary text. Light `#242331`, dark `#F2F0EB`.
-        static let ink = dynamic(light: 0x242331, dark: 0xF2F0EB)
+        static let ink = dynamic(light: 0x242331, dark: 0xF2F0EB, ultra: 0xFFFFFF)
         /// Buttons, links, accents. Light `#216A60`, dark `#9ED8C4`.
         static let action = dynamic(light: 0x216A60, dark: 0x9ED8C4)
 
         // MARK: Derived surfaces
 
         /// Card surface — a half-step off `paper` so it separates without a border.
-        static let card = dynamic(light: 0xFFFFFF, dark: 0x1E2124)
+        static let card = dynamic(light: 0xFFFFFF, dark: 0x1E2124, ultra: 0x0D0D0D)
         /// Hairline/border, only where separation is needed without a card.
-        static let hairline = dynamic(light: 0xE4DFD6, dark: 0x2C3034)
+        static let hairline = dynamic(light: 0xE4DFD6, dark: 0x2C3034, ultra: 0x5A5A5A)
 
         // MARK: Reading states
         //
@@ -38,11 +38,11 @@ enum Theme {
         /// Not-yet-spoken text — deliberately identical to `ink`.
         static let future = ink
         /// Already-spoken text — muted but still comfortably readable, never invisible.
-        static let spoken = dynamic(light: 0x6E6B7A, dark: 0x8B9095)
+        static let spoken = dynamic(light: 0x6E6B7A, dark: 0x8B9095, ultra: 0xD0D0D0)
         /// Secondary labels (word counts, captions). Same muted tone as spoken text.
         static let secondary = spoken
         /// Current-sentence highlight underlay — a faint accent tint; `ink` on top stays high.
-        static let currentSentence = dynamic(light: 0xE4EDE9, dark: 0x1E2A27)
+        static let currentSentence = dynamic(light: 0xE4EDE9, dark: 0x1E2A27, ultra: 0x1F1F1F)
 
         // MARK: Status
 
@@ -51,12 +51,15 @@ enum Theme {
         /// Errors — muted, no alarm-red.
         static let error = dynamic(light: 0x8C3A2E, dark: 0xE08C7E)
         /// Text on `ink`- or `action`-filled surfaces.
-        static let onDark = dynamic(light: 0xFFFFFF, dark: 0x151719)
+        static let onDark = dynamic(light: 0xFFFFFF, dark: 0x151719, ultra: 0x000000)
 
         /// Builds a colour that resolves per appearance.
-        static func dynamic(light: UInt32, dark: UInt32) -> SwiftUI.Color {
+        /// `ultra` applies under Ultra Contrast (set on every window, sheets included): true black
+        /// backgrounds and white text app-wide, not only on the interview screen.
+        static func dynamic(light: UInt32, dark: UInt32, ultra: UInt32? = nil) -> SwiftUI.Color {
             SwiftUI.Color(uiColor: UIColor { traits in
-                UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+                if traits[UltraContrastTrait.self] { return UIColor(rgb: ultra ?? dark) }
+                return UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
             })
         }
     }
