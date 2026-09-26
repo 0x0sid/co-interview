@@ -182,6 +182,7 @@ struct InterviewScreen: View {
         .sheet(isPresented: $isShowingSettings) {
             InterviewSettingsSheet(
                 isLive: model.mode == .live,
+                previewApplies: enforcesAccess,
                 language: model.liveLanguage ?? .english,
                 onLanguageChange: { model.changeLanguage($0) }
             )
@@ -535,12 +536,18 @@ struct ProvenanceSelection: Identifiable {
 /// The gear: the interview language, changeable mid-session without touching what was said.
 struct InterviewSettingsSheet: View {
     let isLive: Bool
+    let previewApplies: Bool
     @State var language: InterviewLanguage
     let onLanguageChange: (InterviewLanguage) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlements: EntitlementService?
+    @Environment(AccessController.self) private var access: AccessController?
+    /// The paywall opened from Settings. It never resumes or sends a request.
+    @State private var plansPaywall: AccessController.PaywallRequest?
 
-    init(isLive: Bool, language: InterviewLanguage, onLanguageChange: @escaping (InterviewLanguage) -> Void) {
+    init(isLive: Bool, previewApplies: Bool = false, language: InterviewLanguage, onLanguageChange: @escaping (InterviewLanguage) -> Void) {
         self.isLive = isLive
+        self.previewApplies = previewApplies
         _language = State(initialValue: language)
         self.onLanguageChange = onLanguageChange
     }
@@ -560,11 +567,24 @@ struct InterviewSettingsSheet: View {
                 } else {
                     Text("The demo is scripted in English.")
                 }
+                if let entitlements {
+                    Section("Subscription") {
+                        SubscriptionSettingsView(entitlements: entitlements, access: access, previewApplies: previewApplies,
+                                                 onViewPlans: { plansPaywall = .init(trigger: .settings) })
+                    }
+                }
             }
             .navigationTitle("Interview settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .sheet(item: $plansPaywall) { request in
+            if let entitlements, let access {
+                NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { _ in
+                    plansPaywall = nil
+                }
+            }
+        }
     }
 }

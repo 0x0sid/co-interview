@@ -52,6 +52,20 @@ final class EntitlementService {
     /// loaded, and whenever the store has none — the paywall then says subscriptions are unavailable.
     private(set) var plans: [PlanOffer] = []
     private(set) var offeringsError: String?
+    private(set) var isLoadingOffering = false
+    /// The store product behind the active entitlement, for "Neverblank Pro · Monthly".
+    private(set) var activeProductIdentifier: String?
+
+    /// "Weekly" or "Monthly" for the active subscription, from its product id; nil when unknown.
+    var activePlanName: String? {
+        guard let id = activeProductIdentifier?.lowercased() else { return nil }
+        if let offer = plans.first(where: { $0.productIdentifier.lowercased() == id }) {
+            return offer.kind == .monthly ? "Monthly" : "Weekly"
+        }
+        if id.contains("month") { return "Monthly" }
+        if id.contains("week") { return "Weekly" }
+        return nil
+    }
 
     /// One plan as the store sells it. The price text is the store's own string, in the user's App
     /// Store currency; `price` and `currencyCode` exist only for the savings calculation.
@@ -134,11 +148,13 @@ final class EntitlementService {
     private func apply(_ info: CustomerInfo) {
         let entitlement = info.entitlements[BillingConfiguration.entitlementIdentifier]
         if let entitlement, entitlement.isActive {
+            activeProductIdentifier = entitlement.productIdentifier
             status = .premium(expiration: entitlement.expirationDate, willRenew: entitlement.willRenew)
             onVerifiedEntitlementChange?(true, Date())
         } else {
             // **Confirmed inactive reconciles the cache.** Expiration and revocation must actually
             // revoke; a local premium flag that only ever turns on would be indefinitely trusted.
+            activeProductIdentifier = nil
             status = .free
             onVerifiedEntitlementChange?(false, Date())
         }
@@ -163,6 +179,8 @@ final class EntitlementService {
     func loadOffering() async {
         #if canImport(RevenueCat)
         guard BillingConfiguration.isConfigured else { return }
+        isLoadingOffering = true
+        defer { isLoadingOffering = false }
         do {
             let offerings = try await Purchases.shared.offerings()
             offeringsError = nil
@@ -178,6 +196,10 @@ final class EntitlementService {
                 return PlanOffer(kind: kind, productIdentifier: product.productIdentifier,
                                  localizedPrice: product.localizedPriceString,
                                  price: product.price, currencyCode: product.currencyCode)
+            }
+            if plans.isEmpty {
+                // Loaded, but the offering has no weekly or monthly package: say so, never spin.
+                offeringsError = "No subscription plans are available right now."
             }
             guard let package = current?.availablePackages.first else {
                 localizedPrice = nil

@@ -67,7 +67,7 @@ struct CopilotStartScreen: View {
                 intro
                 languagePicker
                 recentInterviews
-                if providerConfiguration.usesInstallationAuth { proSection }
+                subscriptionCard
                 #if DEBUG
                 demoCard
                 #endif
@@ -338,54 +338,25 @@ struct CopilotStartScreen: View {
         )
     }
 
-    // MARK: Neverblank Pro
+    // MARK: Subscription
 
-    /// Plan status, the preview's terms, and the ways to buy, restore or manage — the "settings"
-    /// entry to the paywall. Nothing bought here generates an answer.
-    private var proSection: some View {
+    /// Settings › Subscription, always on the start screen. Nothing bought here generates an answer.
+    private var subscriptionCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Neverblank Pro")
+            Text("Subscription")
                 .font(Typography.body(13, weight: .semibold))
-                .foregroundStyle(Theme.Color.ink)
-            if case .premium(let expiration, let willRenew) = entitlements.status {
-                Text(proStatusLine(expiration: expiration, willRenew: willRenew))
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.secondary)
-                Button("Manage subscription") { Task { await entitlements.showManageSubscriptions() } }
-                    .font(Typography.body(12, weight: .medium))
-            } else {
-                Text(access.isPreviewExhausted
-                     ? "Your free preview is used. Listening and the transcript stay free; questions and answers need Pro."
-                     : AccessCopy.previewDisclosure)
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.secondary)
-                    .accessibilityIdentifier("preview-disclosure")
-                HStack(spacing: 14) {
-                    Button("See plans") { settingsPaywall = .init(trigger: .settings) }
-                        .accessibilityIdentifier("see-plans")
-                    Button("Restore Purchases") { settingsPaywall = .init(trigger: .settings) }
-                }
-                .font(Typography.body(12, weight: .medium))
-            }
-            if case .failed(let reason) = access.connection {
-                Text(reason)
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.error)
-                Button("Try again") { Task { await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL()) } }
-                    .font(Typography.body(12, weight: .medium))
-            }
+                .foregroundStyle(Theme.Color.secondary)
+            SubscriptionSettingsView(
+                entitlements: entitlements,
+                access: access,
+                previewApplies: providerConfiguration.usesInstallationAuth,
+                onViewPlans: { settingsPaywall = .init(trigger: .settings) }
+            )
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
-    }
-
-    /// Honest renewal wording: a cancelled plan keeps access until it actually ends.
-    private func proStatusLine(expiration: Date?, willRenew: Bool) -> String {
-        guard let expiration else { return "Pro is active." }
-        let date = expiration.formatted(date: .abbreviated, time: .omitted)
-        return willRenew ? "Pro is active. Renews on \(date)." : "Pro is active until \(date). It will not renew."
     }
 
     #if DEBUG

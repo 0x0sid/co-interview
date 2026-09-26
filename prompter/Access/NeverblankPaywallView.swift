@@ -136,15 +136,33 @@ struct NeverblankPaywallView: View {
         "Full Live sessions with Pro",
     ]
 
+    /// Why no plans are shown. Never a price that did not come from the store.
+    private var unavailableMessage: String {
+        if entitlements.isLoadingOffering { return "Loading plans…" }
+        if entitlements.status == .unconfigured {
+            return "Plans can't be shown yet: subscriptions aren't set up in this build. Nothing has been charged."
+        }
+        return entitlements.offeringsError ?? "Plans could not be loaded. Check your connection and try again."
+    }
+
     @ViewBuilder
     private var planPicker: some View {
         if plans.isEmpty {
-            Text(entitlements.status == .unconfigured
-                 ? "Subscriptions are not available in this build."
-                 : entitlements.offeringsError ?? "Loading plans…")
-                .font(Typography.body(14))
-                .foregroundStyle(Theme.Color.secondary)
-                .accessibilityIdentifier("paywall-plans-unavailable")
+            VStack(alignment: .leading, spacing: 10) {
+                Text(unavailableMessage)
+                    .font(Typography.body(14))
+                    .foregroundStyle(Theme.Color.ink)
+                    .accessibilityIdentifier("paywall-plans-unavailable")
+                if !entitlements.isLoadingOffering {
+                    Button("Retry") { Task { await entitlements.loadOffering() } }
+                        .font(Typography.body(14, weight: .semibold))
+                        .accessibilityIdentifier("paywall-retry")
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.Color.hairline, lineWidth: 0.5))
         } else {
             VStack(spacing: 10) {
                 // Monthly first: it is the one recommended, when the prices say it should be.
@@ -284,6 +302,9 @@ struct NeverblankPaywallView: View {
         case .failed(let detail):
             access.log(.init(name: .purchaseFailed, trigger: trigger, reason: .notEntitled))
             message = detail
+            phase = .choosing
+        case .notConfigured:
+            message = "Restore isn't available yet: subscriptions aren't set up in this build."
             phase = .choosing
         default:
             message = "Nothing to restore."

@@ -52,6 +52,21 @@ final class FreePreviewFlowUITests: XCTestCase {
         }
         // The preview is disclosed before Live starts.
         XCTAssertTrue(element(app, "preview-disclosure").waitForExistence(timeout: 15), "the free preview is not disclosed")
+
+        // Settings › Subscription is always reachable; with no plans loadable the paywall still
+        // opens, says why, and offers Retry and Restore — never a hidden paywall or an invented price.
+        let viewPlans = app.buttons["view-plans"]
+        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10), "no View plans on the start screen")
+        if !viewPlans.isHittable { app.swipeUp() }
+        viewPlans.tap()
+        XCTAssertTrue(app.staticTexts["Never interview alone again."].waitForExistence(timeout: 10), "View plans did not open the paywall")
+        XCTAssertTrue(element(app, "paywall-plans-unavailable").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["paywall-retry"].exists, "no Retry when plans are unavailable")
+        XCTAssertTrue(app.buttons["paywall-restore"].exists, "no Restore on the paywall")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '$'")).firstMatch.exists, "a price shown without the store")
+        save(app, "access-0-plans-unavailable")
+        app.buttons["paywall-close"].tap()
+        XCTAssertTrue(app.staticTexts["Never interview alone again."].waitForNonExistence(timeout: 10))
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: startLive)
         wait(for: [enabled], timeout: 30)
         save(app, "access-1-start-screen")
@@ -85,6 +100,12 @@ final class FreePreviewFlowUITests: XCTestCase {
         XCTAssertTrue(status.waitForExistence(timeout: 5))
         XCTAssertTrue(status.label.hasPrefix("Free preview ended"), "status was “\(status.label)”")
         save(app, "access-5-after-preview")
+
+        // Interview settings › Subscription is reachable mid-interview too.
+        app.buttons["Interview settings"].tap()
+        XCTAssertTrue(app.buttons["view-plans"].waitForExistence(timeout: 10), "no Subscription in interview settings")
+        save(app, "access-5b-settings-subscription")
+        app.buttons["Done"].tap()
 
         // Generate now asks for Pro and keeps the request.
         let waitForMoreSpeech = expectation(description: "new speech")
