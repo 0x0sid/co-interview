@@ -35,6 +35,13 @@ final class InterviewAudioInput {
     private var consumeTask: Task<Void, Never>?
     private var tickTask: Task<Void, Never>?
     private var interruptionObserver: NSObjectProtocol?
+    /// Identifies the current capture session. Every start and every teardown advances it, and a
+    /// session's task acts only while it is still current — so a start that completes after a stop
+    /// (or after a newer start) releases what it took instead of publishing itself as the session.
+    private var generation = 0
+    /// The most recent session's work, including its teardown. A new session starts only once it has
+    /// finished, so two sessions never hold the audio session at the same time.
+    private var lastSession: Task<Void, Never>?
     private var language: InterviewLanguage = .english
     /// Vocabulary bias handed to the transcriber once per session (§11.7): project terms, not script terms.
     private var contextualStrings: [String] = []
@@ -44,6 +51,9 @@ final class InterviewAudioInput {
     }
 
     func start(language: InterviewLanguage, contextualStrings: [String] = []) {
+        #if DEBUG
+        LiveLifecycle.event("audio.start", "state=\(state)")
+        #endif
         self.language = language
         self.contextualStrings = contextualStrings
         beginSession(resetActivityClock: true)
@@ -79,6 +89,9 @@ final class InterviewAudioInput {
     }
 
     func stop() {
+        #if DEBUG
+        LiveLifecycle.event("audio.stop", "state=\(state)")
+        #endif
         teardown()
         if let interruptionObserver {
             NotificationCenter.default.removeObserver(interruptionObserver)
@@ -88,10 +101,11 @@ final class InterviewAudioInput {
     }
 
     private func beginSession(resetActivityClock: Bool) {
+        // Retire whatever is running first; it is fully stopped before the new session touches audio.
+        teardown()
+        let session = generation
+        let previous = lastSession
         let newService = makeService()
-        let outgoing = service
-        consumeTask?.cancel()
-        tickTask?.cancel()
         service = newService
         state = .starting
         startCount += 1
@@ -105,27 +119,53 @@ final class InterviewAudioInput {
         let strings = contextualStrings
 
         consumeTask = Task { [weak self] in
-            // Fully await the outgoing session's teardown before the new one activates its audio
+            #if DEBUG
+            LiveLifecycle.adjust(\.consumeTasks, by: 1)
+            LiveLifecycle.event("consumer.begin", "session=\(session)")
+            defer { LiveLifecycle.adjust(\.consumeTasks, by: -1); LiveLifecycle.event("consumer.end", "session=\(session)") }
+            #endif
+            // Fully await the previous session's teardown before this one activates its audio
             // session — the two race otherwise and `engine.start()` can silently fail (M4).
-            await outgoing?.stop()
-            guard let self else { return }
+            await previous?.value
+            guard let self, self.isCurrent(session) else { return }
             do {
                 let stream = try await newService.start(locale: locale, contextualStrings: strings)
+                guard self.isCurrent(session) else {
+                    // Stopped (or superseded) while starting: release what the start took, and
+                    // never become the session.
+                    #if DEBUG
+                    LiveLifecycle.event("audio.obsoleteStart", "session=\(session)")
+                    #endif
+                    await newService.stop()
+                    return
+                }
+                #if DEBUG
+                LiveLifecycle.event("audio.listening", "session=\(session)")
+                #endif
                 self.state = .listening
                 for await delta in stream {
-                    if Task.isCancelled { break }
+                    if Task.isCancelled || !self.isCurrent(session) { break }
                     self.lastActivityTime = delta.timestamp
                     self.lastActivityWallClock = Date()
                     self.onDelta?(delta)
                 }
                 // The stream ended on its own (service stopped, or the analyzer finished).
-                if self.state == .listening { self.state = .idle }
+                if self.isCurrent(session), self.state == .listening { self.state = .idle }
             } catch {
+                guard self.isCurrent(session) else {
+                    await newService.stop()
+                    return
+                }
                 self.state = Self.failureState(for: error)
             }
         }
+        lastSession = consumeTask
 
         tickTask = Task { [weak self] in
+            #if DEBUG
+            LiveLifecycle.adjust(\.tickers, by: 1)
+            defer { LiveLifecycle.adjust(\.tickers, by: -1); LiveLifecycle.event("ticker.end") }
+            #endif
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled, let self, self.state == .listening else { continue }
@@ -135,14 +175,28 @@ final class InterviewAudioInput {
         }
     }
 
+    /// Whether `session` is still the current one and has not been cancelled.
+    private func isCurrent(_ session: Int) -> Bool {
+        generation == session && !Task.isCancelled
+    }
+
+    /// Retires the current session, whatever stage it is in. Synchronous for the caller: from this
+    /// point nothing from that session can publish state or deliver a delta. The service's own stop is
+    /// asynchronous; it is chained into `lastSession` so the next session waits for it.
     private func teardown() {
+        generation += 1
         consumeTask?.cancel()
         consumeTask = nil
         tickTask?.cancel()
         tickTask = nil
         let outgoing = service
         service = nil
-        Task { await outgoing?.stop() }
+        let previous = lastSession
+        let stopping = Task { await outgoing?.stop() }
+        lastSession = Task {
+            await previous?.value
+            await stopping.value
+        }
     }
 
     private static func failureState(for error: Error) -> ListeningState {

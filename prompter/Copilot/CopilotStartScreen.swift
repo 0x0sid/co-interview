@@ -129,7 +129,7 @@ struct CopilotStartScreen: View {
         }
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
-        .fullScreenCover(item: $launch) { launch in
+        .fullScreenCover(item: $launch, onDismiss: { liveFeed = nil }) { launch in
             NavigationStack {
                 switch launch.mode {
                 case .demo:

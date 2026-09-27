@@ -96,4 +96,10 @@ final class LockedBox<Value>: @unchecked Sendable {
         get { lock.lock(); defer { lock.unlock() }; return stored }
         set { lock.lock(); stored = newValue; lock.unlock() }
     }
+    /// Reads and changes the value under one lock, so `+= 1` from two threads cannot lose an update.
+    @discardableResult
+    func mutate<T>(_ body: (inout Value) -> T) -> T {
+        lock.lock(); defer { lock.unlock() }
+        return body(&stored)
+    }
 }

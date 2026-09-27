@@ -44,6 +44,14 @@ final class DemoInterviewFeed: InterviewFeed {
         task = Task { [weak self] in await self?.play() }
     }
 
+    func end() {
+        task?.cancel()
+        task = nil
+        for generation in generations.values { generation.cancel() }
+        generations = [:]
+        continuation.finish()
+    }
+
     func pause() { isPaused = true }
     func resume() { isPaused = false }
 

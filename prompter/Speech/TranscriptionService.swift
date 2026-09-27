@@ -37,6 +37,12 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
     private let audioCapture: AudioCapturing
     private let stream = TranscriptStream()
     private var workTask: Task<Void, Never>?
+    /// Set by `stop()`. One service serves one session, so it is never cleared: a start still
+    /// preparing when it is set gives up before taking the microphone.
+    private let stopRequested = LockedBox(false)
+    #if DEBUG
+    private let debugLive = LockedBox(false)
+    #endif
 
     init(audioCapture: AudioCapturing) {
         self.audioCapture = audioCapture
@@ -94,7 +100,13 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
         }
         try await analyzer.prepareToAnalyze(in: audioFormat)
 
+        // Stopped while preparing (the interview was left, or a newer session replaced this one).
+        guard !stopRequested.value, !Task.isCancelled else { throw CancellationError() }
         let micBufferStream = try audioCapture.start()
+        #if DEBUG
+        if !debugLive.value { debugLive.value = true; LiveLifecycle.adjust(\.transcribers, by: 1) }
+        LiveLifecycle.event("transcriber.start", "locale=\(resolvedLocale.identifier(.bcp47))")
+        #endif
 
         let (analyzerInputs, analyzerContinuation) = AsyncStream<AnalyzerInput>.makeStream()
         let (deltaStream, deltaContinuation) = AsyncStream<TranscriptDelta>.makeStream()
@@ -181,9 +193,16 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
     }
 
     func stop() async {
+        stopRequested.value = true
+        #if DEBUG
+        LiveLifecycle.event("transcriber.stop", "wasLive=\(debugLive.value)")
+        #endif
         workTask?.cancel()
         workTask = nil
         audioCapture.stop()
+        #if DEBUG
+        if debugLive.value { debugLive.value = false; LiveLifecycle.adjust(\.transcribers, by: -1) }
+        #endif
     }
 
     /// One buffer in, one (resampled/reformatted) buffer out. Apple's header for

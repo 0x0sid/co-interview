@@ -280,6 +280,9 @@ final class InterviewScreenModel {
     func start() {
         guard feedTask == nil else { return }
         #if DEBUG
+        LiveLifecycle.event("model.start", "awaitingResume=\(isAwaitingResume)")
+        #endif
+        #if DEBUG
         // A fresh diagnostics session per interview, so two sittings never share a report — and so
         // content capture starts off, whatever it was left as.
         diagnostics.startSession(
@@ -340,6 +343,9 @@ final class InterviewScreenModel {
     /// Ends the session: every in-flight generation is abandoned, and anything that arrives for one
     /// afterwards is ignored because its request is no longer known.
     func stop() {
+        #if DEBUG
+        LiveLifecycle.event("model.stop")
+        #endif
         for requestID in generations.keys { feed.cancelAnswer(requestID: requestID) }
         generations = [:]
         requestByQuestion = [:]
@@ -351,6 +357,10 @@ final class InterviewScreenModel {
         feedTask?.cancel()
         feedTask = nil
         decisions.reset()
+        // Leaving the interview ends it: capture, transcription and detection stop here, explicitly.
+        liveFeed?.onDelta = nil
+        feed.end()
+        if mode == .live { recording = .off }
     }
 
     /// Applies one feed event. Not private: the tests drive the model through this directly, which

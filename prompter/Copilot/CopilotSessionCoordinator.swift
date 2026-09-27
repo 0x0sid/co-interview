@@ -136,7 +136,22 @@ final class CopilotSessionCoordinator {
 
         audio.onDelta = { [weak self] delta in self?.ingest(delta) }
         audio.onSilenceTick = { [weak self] now in self?.tick(now: now) }
+        #if DEBUG
+        LiveLifecycle.adjust(\.coordinators, by: 1)
+        LiveLifecycle.event("coordinator.init")
+        #endif
     }
+
+    #if DEBUG
+    /// Debug lifecycle accounting: whether this coordinator has a live session counted.
+    private var debugSessionCounted = false
+
+    isolated deinit {
+        if debugSessionCounted { LiveLifecycle.adjust(\.liveSessions, by: -1) }
+        LiveLifecycle.adjust(\.coordinators, by: -1)
+        LiveLifecycle.event("coordinator.deinit")
+    }
+    #endif
 
     /// The provider's focused decision, for the screen's tracker. The provider stays private here.
     func decisionService() -> RequestDecisionTracker.Decide {
@@ -156,6 +171,10 @@ final class CopilotSessionCoordinator {
             await provider.decisionRecords(diagnosticsSessionID: sessionID)
         }
         #endif
+        #if DEBUG
+        if !debugSessionCounted { debugSessionCounted = true; LiveLifecycle.adjust(\.liveSessions, by: 1) }
+        LiveLifecycle.event("coordinator.start")
+        #endif
         audio.start(language: project.language, contextualStrings: projectVocabulary())
     }
 
@@ -170,6 +189,10 @@ final class CopilotSessionCoordinator {
 
     /// Ends the session. Everything later is rejected — a late provider response can never reopen it (§8).
     func endSession() {
+        #if DEBUG
+        if debugSessionCounted { debugSessionCounted = false; LiveLifecycle.adjust(\.liveSessions, by: -1) }
+        LiveLifecycle.event("coordinator.endSession")
+        #endif
         state = .ended
         detectionTask?.cancel()
         detectionTask = nil
@@ -385,6 +408,9 @@ final class CopilotSessionCoordinator {
 
         let provider = self.provider
         detectionTask?.cancel()
+        #if DEBUG
+        LiveLifecycle.event("detection.classify", "state=\(state)")
+        #endif
         detectionTask = Task { [weak self] in
             do {
                 let result = try await provider.classify(request)

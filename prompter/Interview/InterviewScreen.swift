@@ -78,6 +78,9 @@ struct InterviewScreen: View {
     /// Stops the session and hands the idle timer back to the system at once — not on the next
     /// render, which may never come once the screen is gone.
     private func endSession() {
+        #if DEBUG
+        LiveLifecycle.event("screen.endSession")
+        #endif
         model.stop()
         recorder?.end()
         isSessionActive = false

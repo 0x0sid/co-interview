@@ -23,11 +23,19 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
     private let engine = AVAudioEngine()
     private var continuation: AsyncStream<AVAudioPCMBuffer>.Continuation?
     private var interruptionObserver: NSObjectProtocol?
+    #if DEBUG
+    /// Debug lifecycle accounting only: what this instance has live right now.
+    private var debugSessionActive = false, debugTapInstalled = false, debugEngineRunning = false
+    #endif
 
     func start() throws -> AsyncStream<AVAudioPCMBuffer> {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers])
         try session.setActive(true)
+        #if DEBUG
+        if !debugSessionActive { debugSessionActive = true; LiveLifecycle.adjust(\.audioSessions, by: 1) }
+        LiveLifecycle.event("audioSession.activate")
+        #endif
 
         let inputNode = engine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
@@ -38,9 +46,17 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
             continuation.yield(buffer)
         }
+        #if DEBUG
+        if !debugTapInstalled { debugTapInstalled = true; LiveLifecycle.adjust(\.taps, by: 1) }
+        LiveLifecycle.event("tap.install")
+        #endif
 
         engine.prepare()
         try engine.start()
+        #if DEBUG
+        if !debugEngineRunning { debugEngineRunning = true; LiveLifecycle.adjust(\.engines, by: 1) }
+        LiveLifecycle.event("engine.start", "isRunning=\(engine.isRunning)")
+        #endif
 
         interruptionObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
@@ -55,7 +71,15 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
 
     func stop() {
         engine.inputNode.removeTap(onBus: 0)
+        #if DEBUG
+        if debugTapInstalled { debugTapInstalled = false; LiveLifecycle.adjust(\.taps, by: -1) }
+        LiveLifecycle.event("tap.remove")
+        #endif
         engine.stop()
+        #if DEBUG
+        if debugEngineRunning { debugEngineRunning = false; LiveLifecycle.adjust(\.engines, by: -1) }
+        LiveLifecycle.event("engine.stop", "isRunning=\(engine.isRunning)")
+        #endif
         continuation?.finish()
         continuation = nil
 
@@ -64,7 +88,13 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
         }
         interruptionObserver = nil
 
+        #if DEBUG
+        let deactivated = (try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)) != nil
+        if debugSessionActive { debugSessionActive = false; LiveLifecycle.adjust(\.audioSessions, by: -1) }
+        LiveLifecycle.event("audioSession.deactivate", "ok=\(deactivated)")
+        #else
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        #endif
     }
 
     /// A phone-call-mid-take interruption (§11.8): stop cleanly and let the caller (the future

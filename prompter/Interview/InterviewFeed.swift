@@ -45,6 +45,9 @@ protocol InterviewFeed: AnyObject {
     func pause()
     func resume()
     func restart()
+    /// Ends the session for good: the microphone, transcription, detection and every task the feed
+    /// owns are released now — not at deinit. Idempotent; a feed is not started again afterwards.
+    func end()
     /// 0.5 or 1.0 in the demo controls.
     func setSpeed(_ multiplier: Double)
 

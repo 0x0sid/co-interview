@@ -26,6 +26,8 @@ struct ManualGenerationTests {
         func pause() { isPaused = true }
         func resume() { isPaused = false }
         func restart() {}
+        private(set) var endCount = 0
+        func end() { endCount += 1 }
         func setSpeed(_ multiplier: Double) {}
         func requestAnswer(requestID: UUID, question: InterviewQuestion, isRegeneration: Bool) {
             questionRequests.append((requestID, question.id, isRegeneration))

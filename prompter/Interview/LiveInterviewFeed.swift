@@ -73,6 +73,9 @@ final class LiveInterviewFeed: InterviewFeed {
     // MARK: - Lifecycle
 
     func start() {
+        #if DEBUG
+        LiveLifecycle.event("feed.start")
+        #endif
         coordinator.startListening()
     }
 
@@ -84,6 +87,8 @@ final class LiveInterviewFeed: InterviewFeed {
     }
 
     func resume() {
+        // An ended session never takes the microphone again, whatever tap arrives late.
+        guard coordinator.state == .active else { return }
         isPaused = false
         coordinator.audio.resumeListening()
     }
@@ -97,6 +102,9 @@ final class LiveInterviewFeed: InterviewFeed {
     /// Ends the session: capture stops, generations are cancelled, and anything arriving afterwards
     /// is rejected by the coordinator's own `.ended` guard.
     func end() {
+        #if DEBUG
+        LiveLifecycle.event("feed.end")
+        #endif
         coordinator.endSession()
         continuation.finish()
     }
