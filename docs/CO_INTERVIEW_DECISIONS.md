@@ -492,3 +492,34 @@ examples) from 0 to 4 and an overall score, each with short evidence, from the l
 marked as theirs only. The narrative summary, topics, key points, practice questions and coaching prose
 are no longer generated. Reviews saved before this still open.
 
+## Live screen and answer language (2026-09-28)
+
+### Pages are what the user asked for; the transcript is plain text
+
+Owner decision after a device test in which "Um, but this is not what I'm asking" was underlined as a
+question and became page Q2. A live interview no longer classifies speech into questions
+(`CopilotSessionCoordinator.detectsQuestions = false`, set by `LiveInterviewFeed`), so a classifier
+guess can never create, select or navigate to a page, and no classification request is sent. The
+transcript is plain text: no underline, colour or tap target. Pages come only from Generate, which
+snapshots the newest uncovered discussion; the page count is generated answers only. A page's
+Regenerate answers from that page's own snapshot. Classification stays available to the demo, the
+pipeline screen and the coordinator's tests; nothing in the live screen needed it (turns come from
+`ConversationLog`, scoring from marked lines).
+
+### The selected interview language is the answer language
+
+Answers followed the speech's language, so Spanish (es-CL) interviews got English answers whenever the
+question held English technical terms. The request now carries `answerLanguage` (full BCP-47, e.g.
+`es-CL`), and the answer prompt names it (`ANSWER LANGUAGE: Spanish (Chile) [es-CL]`) as
+authoritative for the answer and its title, whatever language the speech is in; only an explicit
+request in the speech or note overrides it. Code, identifiers, API, framework and product names stay as
+they are. zh-TW/zh-HK/zh-Hant answers use Traditional characters. Older app builds that send only
+`language` get the same treatment from that field.
+
+### Home screen
+
+No mark, name or tagline above the controls, and an active subscription is shown in Settings (plan,
+renewal, Manage subscription) rather than on the home screen. A free or expired user keeps the compact
+trial entry, and the Settings gear shows a red "1" once per subscription state until the Subscription
+section has been seen (stored in UserDefaults; the SwiftData store is unchanged).
+

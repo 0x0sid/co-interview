@@ -13,6 +13,8 @@ struct SubscriptionSettingsView: View {
     let previewApplies: Bool
     let onViewPlans: () -> Void
     @State private var isVerifying = false
+    /// Seeing this section is what clears the home screen's Settings badge, for this state only.
+    @AppStorage(SettingsBadge.storageKey) private var settingsBadgeSeen = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -41,10 +43,17 @@ struct SubscriptionSettingsView: View {
                 .font(Typography.body(14, weight: .semibold))
                 .accessibilityIdentifier("retry-verification")
             } else if case .premium(let expiration, let willRenew) = entitlements.status {
-                Text(entitlements.activePlanName.map { "Neverblank Pro · \($0)" } ?? "Neverblank Pro")
+                // The one place the current plan is shown (the home screen no longer shows it).
+                Text("Neverblank Pro")
                     .font(Typography.body(15, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
                     .accessibilityIdentifier("subscription-plan")
+                if let plan = entitlements.activePlanName {
+                    Text(plan)
+                        .font(Typography.body(14))
+                        .foregroundStyle(Theme.Color.ink)
+                        .accessibilityIdentifier("subscription-plan-name")
+                }
                 Text(Self.renewalLine(expiration: expiration, willRenew: willRenew))
                     .font(Typography.body(13))
                     .foregroundStyle(Theme.Color.secondary)
@@ -65,7 +74,7 @@ struct SubscriptionSettingsView: View {
                     .font(Typography.body(13))
                     .foregroundStyle(Theme.Color.secondary)
                     .accessibilityIdentifier("free-answers-disclosure")
-                Button("View plans", action: onViewPlans)
+                Button(entitlements.expiredAt == nil ? "View plans" : "Renew", action: onViewPlans)
                     .font(Typography.body(14, weight: .semibold))
                     .accessibilityIdentifier("view-plans")
             }
@@ -76,6 +85,11 @@ struct SubscriptionSettingsView: View {
                 Button("Try again") { Task { await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL()) } }
                     .font(Typography.body(13, weight: .medium))
             }
+        }
+        .onAppear {
+            let state = SettingsBadge.state(isPro: access?.isPro ?? false, needsVerification: access?.needsVerification ?? false,
+                                            usesServerAccess: access?.usesServerAccess ?? false, expiredAt: entitlements.expiredAt)
+            if let seen = SettingsBadge.seenValue(for: state) { settingsBadgeSeen = seen }
         }
     }
 

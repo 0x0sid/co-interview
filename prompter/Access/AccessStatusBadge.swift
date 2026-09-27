@@ -10,8 +10,11 @@ import SwiftUI
 struct AccessStatusBadge: View {
     let entitlements: EntitlementService
     let access: AccessController
+    /// False on the home screen: an active subscription is shown in Settings instead.
+    var showsActivePro = true
     let onOpenPlans: () -> Void
 
+    @ViewBuilder
     var body: some View {
         if access.needsVerification {
             HStack(spacing: 8) {
@@ -22,31 +25,39 @@ struct AccessStatusBadge: View {
             .foregroundStyle(Theme.Color.secondary)
             .accessibilityIdentifier("status-verifying")
         } else if access.isPro {
-            HStack(spacing: 6) {
-                Image(systemName: "checkmark.seal.fill")
-                Text(entitlements.activePlanName.map { "Neverblank Pro · \($0)" } ?? "Neverblank Pro")
-            }
-            .font(Typography.body(13, weight: .semibold))
-            .foregroundStyle(Theme.Color.action)
-            .accessibilityIdentifier("status-pro")
+            if showsActivePro { activePro }
         } else if access.usesServerAccess {
-            HStack(spacing: 10) {
-                Button(action: onOpenPlans) {
-                    Text(access.areFreeAnswersUsed ? "Trial used · Subscribe" : "Trial period")
-                        .font(Typography.body(12, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Self.orange, in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("trial-badge")
-                if !access.areFreeAnswersUsed {
-                    Text(AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining))
-                        .font(Typography.body(13))
-                        .foregroundStyle(Theme.Color.secondary)
-                        .accessibilityIdentifier("trial-remaining")
-                }
+            trial
+        }
+    }
+
+    private var activePro: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill")
+            Text(entitlements.activePlanName.map { "Neverblank Pro · \($0)" } ?? "Neverblank Pro")
+        }
+        .font(Typography.body(13, weight: .semibold))
+        .foregroundStyle(Theme.Color.action)
+        .accessibilityIdentifier("status-pro")
+    }
+
+    private var trial: some View {
+        HStack(spacing: 10) {
+            Button(action: onOpenPlans) {
+                Text(access.areFreeAnswersUsed ? "Trial used · Subscribe" : "Trial period")
+                    .font(Typography.body(12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Self.orange, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("trial-badge")
+            if !access.areFreeAnswersUsed {
+                Text(AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining))
+                    .font(Typography.body(13))
+                    .foregroundStyle(Theme.Color.secondary)
+                    .accessibilityIdentifier("trial-remaining")
             }
         }
     }

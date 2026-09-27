@@ -57,6 +57,8 @@ struct CopilotStartScreen: View {
     @State private var isCheckingBackend = false
     /// What Live can actually do right now — checked, not assumed.
     @State private var readiness = LiveReadiness(isChecking: true)
+    /// Which subscription state's Settings badge has been seen (`SettingsBadge`).
+    @AppStorage(SettingsBadge.storageKey) private var settingsBadgeSeen = ""
     /// The interview language's speech model download, while it runs (0...1).
     @State private var speechDownloadProgress: Double?
     @State private var speechDownloadFailure: String?
@@ -77,7 +79,9 @@ struct CopilotStartScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
-                AccessStatusBadge(entitlements: entitlements, access: access,
+                // Free or trial status stays here as a compact entry; an active subscription is shown
+                // in Settings, not on the home screen.
+                AccessStatusBadge(entitlements: entitlements, access: access, showsActivePro: false,
                                   onOpenPlans: { settingsPaywall = .init(trigger: .settings) })
                 languageRow
                 startInterview
@@ -214,32 +218,35 @@ struct CopilotStartScreen: View {
         #endif
     }
 
-    /// The mark and the name.
+    /// The subscription state the Settings badge is about.
+    private var badgeState: SettingsBadge.State {
+        SettingsBadge.state(isPro: access.isPro, needsVerification: access.needsVerification,
+                            usesServerAccess: access.usesServerAccess, expiredAt: entitlements.expiredAt)
+    }
+
+    /// Just the Settings gear: no mark, name or tagline above the controls (owner decision, 2026-09-28).
     private var header: some View {
-        HStack(spacing: 12) {
-            Image("NeverblankMark")
-                .resizable()
-                .frame(width: 44, height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Neverblank")
-                    .font(Typography.display(26))
-                    .foregroundStyle(Theme.Color.ink)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Real-time answers when the questions start.")
-                    .font(Typography.body(13))
-                    .foregroundStyle(Theme.Color.secondary)
-            }
-            Spacer(minLength: 8)
+        HStack {
+            Spacer()
             Button { isShowingSettings = true } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 19, weight: .medium))
                     .foregroundStyle(Theme.Color.ink)
                     .frame(width: 44, height: 44)
                     .background(Theme.Color.card, in: Circle())
+                    .overlay(alignment: .topTrailing) {
+                        if SettingsBadge.shows(for: badgeState, seen: settingsBadgeSeen) {
+                            Text("1")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(minWidth: 18, minHeight: 18)
+                                .background(Color.red, in: Circle())
+                                .offset(x: 3, y: -3)
+                                .accessibilityIdentifier("settings-badge")
+                        }
+                    }
             }
-            .accessibilityLabel("Settings")
+            .accessibilityLabel(SettingsBadge.shows(for: badgeState, seen: settingsBadgeSeen) ? "Settings, 1 new item" : "Settings")
             .accessibilityIdentifier("home-settings")
         }
     }
