@@ -163,7 +163,7 @@ struct LiveReadiness: Equatable, Sendable {
         switch model {
         case .installed: break
         case .needsDownload, .downloading:
-            readiness.blockers.append(.speechModelNotDownloaded(language: language.displayName))
+            readiness.blockers.append(.speechModelNotDownloaded(language: language.speechModelName))
         case .unsupported:
             readiness.blockers.append(.speechModelUnavailable(locale: language.identifier))
         }

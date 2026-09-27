@@ -42,6 +42,8 @@ struct CopilotStartScreen: View {
     /// The paywall opened from here. Buying here never generates anything: no interview is open.
     @State private var settingsPaywall: AccessController.PaywallRequest?
     @State private var isShowingSettings = false
+    /// Settings opened from the Start guard, scrolled to Interview Language.
+    @State private var settingsFocusesLanguage = false
     @State private var transcriptFor: InterviewSessionRecord?
     @State private var reviewFor: InterviewSessionRecord?
     /// The live interview's feed, made **once** when the interview opens. Built inside the cover it
@@ -120,8 +122,12 @@ struct CopilotStartScreen: View {
         .toolbar(.hidden, for: .navigationBar)
         // The interview language and its speech model are chosen in Settings; what Start can do is
         // re-checked when it closes.
-        .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await refreshReadiness() } }) {
-            NeverblankSettingsView(previewApplies: providerConfiguration.usesInstallationAuth)
+        .sheet(isPresented: $isShowingSettings, onDismiss: {
+            settingsFocusesLanguage = false
+            Task { await refreshReadiness() }
+        }) {
+            NeverblankSettingsView(previewApplies: providerConfiguration.usesInstallationAuth,
+                                   focusesInterviewLanguage: settingsFocusesLanguage)
         }
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
@@ -217,7 +223,7 @@ struct CopilotStartScreen: View {
     private var header: some View {
         HStack {
             Spacer()
-            Button { isShowingSettings = true } label: {
+            Button { settingsFocusesLanguage = false; isShowingSettings = true } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 19, weight: .medium))
                     .foregroundStyle(Theme.Color.ink)
@@ -375,9 +381,17 @@ struct CopilotStartScreen: View {
             if readiness.needsSpeechDownload && !readiness.isChecking {
                 // Start stays blocked: the selected language's model is prepared in Settings, never
                 // replaced by English.
-                Button("Download it in Settings") { isShowingSettings = true }
-                    .font(Typography.body(14, weight: .semibold))
-                    .accessibilityIdentifier("speech-model-open-settings")
+                Button {
+                    settingsFocusesLanguage = true
+                    isShowingSettings = true
+                } label: {
+                    Label("Open Settings", systemImage: "gearshape")
+                        .font(Typography.body(15, weight: .semibold))
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.Color.action)
+                .accessibilityLabel("Open Settings to download the \(language.speechModelName) speech model")
+                .accessibilityIdentifier("speech-model-open-settings")
             }
         }
     }

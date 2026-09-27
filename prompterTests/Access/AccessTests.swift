@@ -563,10 +563,14 @@ struct EmptyAnswerTests {
     }
 
     @Test
-    func aDetectedQuestionIsNeverEchoedAsAClarification() throws {
-        let (model, feed) = Support.make()
+    func aPagesOwnQuestionIsNeverEchoedAsAClarification() throws {
+        // A page that carries its own question — a saved one, since live pages no longer come from
+        // detection — must not have that question echoed back as the model's clarification.
+        let feed = Support.RecordingFeed()
         let question = InterviewQuestion(text: "Why did you leave your last job?")
-        model.handle(.questionDetected(question))
+        var restored = RestoredInterview()
+        restored.questions = [question]
+        let model = InterviewScreenModel(mode: .live, feed: feed, restored: restored)
         model.generate(for: question)
         let request = try #require(feed.questionRequests.last)
         model.handle(.answerStarted(requestID: request.requestID, questionID: request.questionID))

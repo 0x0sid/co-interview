@@ -20,8 +20,13 @@ final class SpeechModelStatus {
         case failed
     }
 
+    /// The app's one status: a download started in Settings keeps running after Settings closes, and
+    /// reopening Settings shows its real progress.
+    static let shared = SpeechModelStatus()
+
     private(set) var state: State = .checking
     private(set) var language: InterviewLanguage?
+    private var downloadTask: Task<Void, Never>?
 
     private let availability: (Locale) async -> SpeechModelAvailability
     private let install: (Locale, @escaping @Sendable (Double) -> Void) async throws -> Void
@@ -46,6 +51,26 @@ final class SpeechModelStatus {
     }
 
     var isReady: Bool { state == .ready }
+    var isDownloading: Bool { if case .downloading = state { true } else { false } }
+    /// The selected language cannot be used until something is done: download, retry, or choose another.
+    var needsAction: Bool { [.needsDownload, .failed, .unsupported].contains(state) }
+
+    /// Starts the download unless one is already running — repeated taps do nothing.
+    func startDownload() {
+        guard !isDownloading, downloadTask == nil else { return }
+        downloadTask = Task { [weak self] in
+            await self?.download()
+            self?.downloadTask = nil
+        }
+    }
+
+    /// Stops waiting for the download. The system may still complete one it has already begun; the
+    /// next check reports whatever is really on the device.
+    func cancelDownload() {
+        downloadTask?.cancel()
+        downloadTask = nil
+        if isDownloading { state = .needsDownload }
+    }
 
     /// Re-reads the model's state for `language` (the selected interview language).
     func refresh(for language: InterviewLanguage) async {
@@ -66,6 +91,7 @@ final class SpeechModelStatus {
     func download() async {
         guard let language else { return }
         state = .downloading(0)
+        defer { if Task.isCancelled, isDownloading { state = .needsDownload } }
         do {
             try await install(language.transcriberLocale) { [weak self] fraction in
                 Task { @MainActor in
@@ -73,8 +99,11 @@ final class SpeechModelStatus {
                     self.state = .downloading(fraction)
                 }
             }
+            guard !Task.isCancelled else { return }
             state = .checking                                        // re-read, rather than assume
             await refresh(for: language)
+        } catch is CancellationError {
+            state = .needsDownload
         } catch SpeechLocaleAssetError.unsupported {
             state = .unsupported
         } catch {
