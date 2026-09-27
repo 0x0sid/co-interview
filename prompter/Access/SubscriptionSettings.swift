@@ -19,10 +19,20 @@ struct SubscriptionSettingsView: View {
     /// True for this visit when the section had not been seen in this state: the card shows its own
     /// small "1" while the gear's badge clears for good.
     @State private var wasUnseenOnOpen = false
+    @Environment(\.layoutMetrics) private var metrics
 
     private var cardState: SubscriptionCardState {
-        SubscriptionCardState.make(status: entitlements.status, needsVerification: access?.needsVerification ?? false,
-                                   expiredAt: entitlements.expiredAt, plan: entitlements.activePlanName)
+        #if DEBUG
+        // UI screenshots only: `-UITestsSubscriptionState pro|free|expired`.
+        switch UITestOverrides.subscriptionState {
+        case "pro": return .active(plan: "Monthly", renewal: Self.renewalLine(expiration: Date().addingTimeInterval(30 * 86_400), willRenew: true))
+        case "expired": return .expired(Date().addingTimeInterval(-86_400))
+        case "free": return .free
+        default: break
+        }
+        #endif
+        return SubscriptionCardState.make(status: entitlements.status, needsVerification: access?.needsVerification ?? false,
+                                          expiredAt: entitlements.expiredAt, plan: entitlements.activePlanName)
     }
 
     private var badgeState: SettingsBadge.State {
@@ -31,31 +41,34 @@ struct SubscriptionSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: metrics.cardSpacing) {
             header
             details
             // Restore stays in reach in every state, inside the card rather than a row beneath it.
             Button("Restore Purchases", action: onViewPlans)
-                .font(Typography.body(14, weight: .medium))
+                .font(Typography.body(metrics.bodySize, weight: .medium))
                 .tint(Theme.Color.action)
+                .frame(minHeight: 30)
                 .accessibilityIdentifier("settings-restore")
             if entitlements.isTestStore {
-                Text("RevenueCat Test Store · simulated purchases, not billed or managed by Apple")
-                    .font(Typography.body(12, weight: .medium))
+                Text("Test Store · simulated purchases, not billed by Apple")
+                    .font(Typography.body(metrics.footnoteSize - 1, weight: .medium))
                     .foregroundStyle(Theme.Color.warm)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let access, case .failed(let reason) = access.connection {
                 Text(reason)
-                    .font(Typography.body(12))
+                    .font(Typography.body(metrics.footnoteSize))
                     .foregroundStyle(Theme.Color.error)
+                    .fixedSize(horizontal: false, vertical: true)
                 Button("Try again") { Task { await access.bootstrap(backendURL: ProviderConfiguration.installationBackendURL()) } }
-                    .font(Typography.body(13, weight: .medium))
+                    .font(Typography.body(metrics.footnoteSize + 1, weight: .medium))
             }
         }
-        .padding(16)
+        .padding(metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(cardBorder, lineWidth: 1))
+        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous).stroke(cardBorder, lineWidth: 1))
         .onAppear {
             wasUnseenOnOpen = SettingsBadge.shows(for: badgeState, seen: settingsBadgeSeen)
             if let seen = SettingsBadge.seenValue(for: badgeState) { settingsBadgeSeen = seen }
@@ -72,10 +85,12 @@ struct SubscriptionSettingsView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(alignment: .center, spacing: 8) {
             Text("Neverblank Pro")
-                .font(Typography.body(18, weight: .semibold))
+                .font(Typography.body(metrics.cardTitleSize, weight: .semibold))
                 .foregroundStyle(Theme.Color.ink)
+                .lineLimit(1)
+                .layoutPriority(1)
             Spacer(minLength: 8)
             switch cardState {
             case .active:
@@ -87,9 +102,9 @@ struct SubscriptionSettingsView: View {
             case .free, .verifying:
                 if wasUnseenOnOpen {
                     Text("1")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(.white)
-                        .frame(minWidth: 20, minHeight: 20)
+                        .frame(minWidth: 18, minHeight: 18)
                         .background(Color.red, in: Circle())
                         .accessibilityLabel("New")
                         .accessibilityIdentifier("subscription-new-badge")
@@ -102,18 +117,21 @@ struct SubscriptionSettingsView: View {
         .accessibilityIdentifier("subscription-title")
     }
 
+    private func line(_ text: String, primary: Bool = false) -> some View {
+        Text(text)
+            .font(Typography.body(primary ? metrics.bodySize + 1 : metrics.bodySize, weight: primary ? .medium : .regular))
+            .foregroundStyle(primary ? Theme.Color.ink : Theme.Color.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
     @ViewBuilder
     private var details: some View {
         switch cardState {
         case .verifying(let plan):
             // Recognised by the store, not yet authorised by the backend: two different things.
-            Text(plan.map { "Subscription recognised · \($0)" } ?? "Subscription recognised")
-                .font(Typography.body(15, weight: .semibold))
-                .foregroundStyle(Theme.Color.ink)
+            line(plan.map { "Subscription recognised · \($0)" } ?? "Subscription recognised", primary: true)
                 .accessibilityIdentifier("subscription-plan")
-            Text("Neverblank is still verifying access for this device. Answers unlock once it confirms.")
-                .font(Typography.body(13))
-                .foregroundStyle(Theme.Color.secondary)
+            line("Verifying access for this device. Answers unlock once it confirms.")
             if let access {
                 Button(isVerifying ? "Verifying…" : "Retry verification") {
                     Task {
@@ -123,80 +141,55 @@ struct SubscriptionSettingsView: View {
                     }
                 }
                 .disabled(isVerifying)
-                .font(Typography.body(14, weight: .semibold))
+                .font(Typography.body(metrics.bodySize, weight: .semibold))
                 .accessibilityIdentifier("retry-verification")
             }
         case .active(let plan, let renewal):
             VStack(alignment: .leading, spacing: 2) {
                 if let plan {
-                    Text("\(plan) plan")
-                        .font(Typography.body(15, weight: .medium))
-                        .foregroundStyle(Theme.Color.ink)
+                    line("\(plan) plan", primary: true)
                         .accessibilityIdentifier("subscription-plan")
                 }
-                Text(renewal)
-                    .font(Typography.body(13))
-                    .foregroundStyle(Theme.Color.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                line(renewal)
             }
-            if entitlements.isTestStore {
-                Text("Simulated in the Test Store: there is nothing to manage in Apple's Subscriptions.")
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.secondary)
-            } else {
+            if !entitlements.isTestStore {
                 Button { Task { await entitlements.showManageSubscriptions() } } label: {
                     Label("Manage subscription", systemImage: "creditcard")
-                        .font(Typography.body(15, weight: .semibold))
+                        .font(Typography.body(metrics.bodySize, weight: .semibold))
+                        .frame(minHeight: metrics.cardControlHeight - 8)
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.Color.action)
                 .accessibilityIdentifier("manage-subscription")
             }
         case .expired(let date):
-            Text("Expired on \(date.formatted(date: .abbreviated, time: .omitted))")
-                .font(Typography.body(15, weight: .medium))
-                .foregroundStyle(Theme.Color.ink)
-                .accessibilityIdentifier("subscription-plan")
-            Text(previewLine)
-                .font(Typography.body(13))
-                .foregroundStyle(Theme.Color.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("free-answers-disclosure")
+            VStack(alignment: .leading, spacing: 2) {
+                line("Expired on \(date.formatted(date: .abbreviated, time: .omitted))", primary: true)
+                    .accessibilityIdentifier("subscription-plan")
+                line("Renew for unlimited AI answers.")
+            }
             primaryButton("Renew", systemImage: "arrow.clockwise")
         case .free:
-            Text("Unlock unlimited interview assistance and Pro features.")
-                .font(Typography.body(15))
-                .foregroundStyle(Theme.Color.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(previewLine)
-                .font(Typography.body(13))
-                .foregroundStyle(Theme.Color.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("free-answers-disclosure")
+            VStack(alignment: .leading, spacing: 2) {
+                line("Unlimited AI answers and Pro features.", primary: true)
+                line(previewLine)
+                    .accessibilityIdentifier("free-answers-disclosure")
+            }
             primaryButton("Upgrade to Pro", systemImage: "sparkles")
         }
     }
 
     private func primaryButton(_ title: String, systemImage: String) -> some View {
-        Button(action: onViewPlans) {
-            Label(title, systemImage: systemImage)
-                .font(Typography.body(16, weight: .semibold))
-                .frame(maxWidth: .infinity, minHeight: 44)
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(Theme.Color.action)
-        .foregroundStyle(Theme.Color.onDark)
-        .accessibilityIdentifier("view-plans")
+        Button(action: onViewPlans) { Label(title, systemImage: systemImage) }
+            .buttonStyle(CardPrimaryButtonStyle())
+            .accessibilityIdentifier("view-plans")
     }
 
+    /// One short line about the free answers; the full disclosure is shown where they are first used.
     private var previewLine: String {
-        guard previewApplies, let access else {
-            return "This build is connected with a developer token, so the free answers and the Pro limit don't apply to Live here."
-        }
-        if access.areFreeAnswersUsed {
-            return "Your 2 free AI answers are used. Listening, the transcript, history and files stay free; more AI answers need Pro."
-        }
-        return AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining) + ". " + AccessCopy.freeAnswersDisclosure
+        guard previewApplies, let access else { return "Developer build: free-answer limits don't apply here." }
+        if access.areFreeAnswersUsed { return "Your 2 free AI answers are used." }
+        return AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining) + "."
     }
 
     /// A cancelled plan keeps access until it actually ends, and says so.
@@ -218,11 +211,11 @@ private struct StatusPill: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .bold))
-            .tracking(0.6)
+            .font(.system(size: 11, weight: .bold))
+            .tracking(0.5)
             .foregroundStyle(foreground)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
             .background(background, in: Capsule())
     }
 }

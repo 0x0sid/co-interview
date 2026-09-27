@@ -29,6 +29,7 @@ struct NeverblankSettingsView: View {
     /// The leave warning is shown at most once per visit: warned, never trapped.
     @State private var warnedAboutModel = false
     @State private var leaveWarning: SettingsLeaveGuard.Decision?
+    @Environment(\.layoutMetrics) private var metrics
 
     private var settings: AppSettings { settingsQuery.first ?? AppSettings.fetchOrCreate(in: modelContext) }
     private var appearance: AppearancePreference { settingsQuery.first?.appearance ?? .system }
@@ -50,10 +51,10 @@ struct NeverblankSettingsView: View {
                         Section {
                             SubscriptionSettingsView(entitlements: entitlements, access: access, previewApplies: previewApplies,
                                                      onViewPlans: { plansPaywall = .init(trigger: .settings) })
-                                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                                .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
                                 .listRowBackground(Color.clear)
                         } header: {
-                            Text("Account")
+                            sectionHeader("Account")
                         }
                     }
 
@@ -61,40 +62,47 @@ struct NeverblankSettingsView: View {
                     Section {
                         Button { isChoosingLanguage = true } label: {
                             HStack(spacing: 8) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Interview Language").foregroundStyle(Theme.Color.ink)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Interview Language")
+                                        .font(Typography.body(metrics.bodySize + 2))
+                                        .foregroundStyle(Theme.Color.ink)
                                     Text(preference.label())
-                                        .font(Typography.body(14))
+                                        .font(Typography.body(metrics.bodySize))
                                         .foregroundStyle(Theme.Color.secondary)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
-                                Spacer(minLength: 8)
+                                .layoutPriority(1)
+                                Spacer(minLength: 6)
                                 if speechModel.needsAction {
                                     Text("Action required")
-                                        .font(Typography.body(12, weight: .semibold))
+                                        .font(Typography.body(metrics.footnoteSize, weight: .semibold))
                                         .foregroundStyle(Theme.Color.warm)
+                                        .fixedSize()
                                         .accessibilityIdentifier("language-action-required")
                                 }
                                 Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.Color.secondary)
                             }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                         }
                         .accessibilityLabel("Interview Language, \(preference.label())\(speechModel.needsAction ? ", action required" : "")")
                         .accessibilityIdentifier("interview-language")
                         SpeechModelCard(language: selectedLanguage, status: speechModel)
-                            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                            .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 2, trailing: 0))
                             .listRowBackground(Color.clear)
                         if preference == .system, let note = InterviewLanguagePreference.resolveSystem().fallbackNote {
-                            Text(note).font(Typography.body(12)).foregroundStyle(Theme.Color.warm)
+                            Text(note).font(Typography.body(metrics.footnoteSize)).foregroundStyle(Theme.Color.warm)
                         }
                     } header: {
-                        Text("Interview")
+                        sectionHeader("Interview")
                     } footer: {
-                        Text(interview.map { "This interview continues in \($0.current.displayName). A change here applies to your next interview." }
-                             ?? InterviewLanguagePreference.explanation + " Saved interviews keep the language they used.")
+                        Text(interview.map { "This interview continues in \($0.current.displayName); a change applies to your next one." }
+                             ?? "Speech recognition and answers use this language. The app's own language follows iPhone Settings.")
+                            .font(Typography.body(metrics.footnoteSize))
                     }
                     .id(Self.interviewLanguageSection)
 
-                    Section("Appearance") {
+                    Section {
                         Picker("Appearance", selection: Binding(get: { appearance }, set: { value in
                             settings.appearanceRaw = value.rawValue
                             try? modelContext.save()
@@ -103,45 +111,61 @@ struct NeverblankSettingsView: View {
                         }
                         .pickerStyle(.segmented)
                         .accessibilityIdentifier("appearance")
+                    } header: {
+                        sectionHeader("Appearance")
+                    } footer: {
                         if appearance.isUltraContrast {
-                            Text("Pure black background and white text everywhere, for bright rooms and low vision.")
-                                .font(Typography.body(12))
-                                .foregroundStyle(Theme.Color.secondary)
+                            Text("Pure black and white, for bright rooms and low vision.")
+                                .font(Typography.body(metrics.footnoteSize))
                         }
                     }
 
-                    Section("Answers") {
-                        VStack(alignment: .leading, spacing: 8) {
+                    Section {
+                        VStack(alignment: .leading, spacing: metrics.cardSpacing) {
                             HStack {
-                                Text("Answer text size")
+                                Text("Answer text size").font(Typography.body(metrics.bodySize + 2))
                                 Spacer()
-                                Text("\(Int((textScale * 100).rounded()))%").foregroundStyle(Theme.Color.secondary)
+                                Text("\(Int((textScale * 100).rounded()))%")
+                                    .font(Typography.body(metrics.bodySize + 1))
+                                    .foregroundStyle(Theme.Color.secondary)
                             }
                             Slider(value: Binding(get: { textScale }, set: { value in
                                 settings.fontScale = (value * 10).rounded() / 10
                                 try? modelContext.save()
                             }), in: 0.8...1.6, step: 0.1)
                             .accessibilityIdentifier("answer-text-size")
-                            Text("I would lead with the migration I ran last year.")
+                            // A short sample at the chosen size: enough to judge the scale, never a page.
+                            Text("I'd lead with the migration.")
                                 .font(InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * textScale))
                                 .foregroundStyle(Theme.Color.ink)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.7)
+                                .frame(maxWidth: .infinity, maxHeight: metrics.previewMaxHeight, alignment: .leading)
+                                .accessibilityLabel("Preview of answer text at \(Int((textScale * 100).rounded())) percent")
                         }
-                        Text("Answers follow your voice as you read them aloud; words already spoken are muted.")
-                            .font(Typography.body(12))
-                            .foregroundStyle(Theme.Color.secondary)
+                        .padding(.vertical, metrics.isCompact ? 2 : 4)
+                    } header: {
+                        sectionHeader("Answers")
+                    } footer: {
+                        Text("Words you've already read aloud are dimmed.")
+                            .font(Typography.body(metrics.footnoteSize))
                     }
 
-                    Section("Help") {
+                    Section {
                         if let support = LegalLinks.support { Link("Support", destination: support) }
                         if let terms = LegalLinks.terms { Link("Terms of Use", destination: terms) }
                         if let privacy = LegalLinks.privacy { Link("Privacy Policy", destination: privacy) }
                         if LegalLinks.support == nil, LegalLinks.terms == nil, LegalLinks.privacy == nil {
-                            Text("Support, Terms and Privacy links appear here once their pages are published.")
-                                .font(Typography.body(12))
+                            Text("Support and legal pages coming soon.")
+                                .font(Typography.body(metrics.footnoteSize + 1))
                                 .foregroundStyle(Theme.Color.secondary)
                         }
+                    } header: {
+                        sectionHeader("Help")
                     }
                 }
+                .listSectionSpacing(metrics.isCompact ? .compact : .default)
+                .environment(\.defaultMinListRowHeight, metrics.isCompact ? 40 : 44)
                 .onAppear {
                     guard focusesInterviewLanguage else { return }
                     Task { @MainActor in withAnimation { proxy.scrollTo(Self.interviewLanguageSection, anchor: .top) } }
@@ -149,9 +173,10 @@ struct NeverblankSettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.Color.paper)
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { attemptLeave() }.accessibilityIdentifier("settings-done") } }
+            // A compact header of our own: the system bar in a sheet spent a lot of height on a large
+            // title area and an oversized Done pill.
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) { header }
             // Swiping down would skip the warning; until it has been shown once, leaving goes through Done.
             .interactiveDismissDisabled(leaveDecision != .leave)
             .alert(leaveWarningTitle, isPresented: Binding(get: { leaveWarning != nil }, set: { if !$0 { leaveWarning = nil } })) {
@@ -200,6 +225,42 @@ struct NeverblankSettingsView: View {
         }
     }
 
+    /// Title centred, a compact Done on the right; 44–52 pt tall instead of the system sheet bar.
+    private var header: some View {
+        ZStack {
+            Text("Settings")
+                .font(Typography.body(metrics.bodySize + 3, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+                .accessibilityAddTraits(.isHeader)
+            HStack {
+                Spacer()
+                Button { attemptLeave() } label: {
+                    Text("Done")
+                        .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
+                        .foregroundStyle(Theme.Color.action)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Theme.Color.card, in: Capsule())
+                        .overlay(Capsule().stroke(Theme.Color.hairline, lineWidth: 0.5))
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("settings-done")
+            }
+        }
+        .padding(.horizontal, metrics.screenPadding)
+        .frame(height: metrics.headerHeight)
+        .background(Theme.Color.paper)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.body(metrics.footnoteSize + 1, weight: .semibold))
+            .foregroundStyle(Theme.Color.secondary)
+            .textCase(nil)
+    }
+
     static let interviewLanguageSection = "interview-language-section"
 
     /// Done: leave, unless the selected language's model is missing or downloading and the user has not
@@ -225,30 +286,52 @@ struct NeverblankSettingsView: View {
 }
 
 /// The selected interview language's speech model, as a card under the Interview Language row:
-/// impossible to miss when a download is needed.
+/// prominent when something is needed, one quiet line when it is installed.
 private struct SpeechModelCard: View {
     let language: InterviewLanguage
     let status: SpeechModelStatus
+    @Environment(\.layoutMetrics) private var metrics
 
     private var name: String { language.speechModelName }
 
     var body: some View {
         content
-            .padding(14)
+            .padding(.horizontal, metrics.cardPadding)
+            .padding(.vertical, status.state == .ready || status.state == .checking ? metrics.cardSpacing + 2 : metrics.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(border, lineWidth: 1))
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous).stroke(border, lineWidth: 1))
     }
 
-    private var needsAttention: Bool { status.needsAction || status.isDownloading }
-    private var background: Color { needsAttention ? Theme.Color.card : Theme.Color.card.opacity(0.6) }
     private var border: Color {
         switch status.state {
         case .needsDownload, .downloading: Theme.Color.warm.opacity(0.7)
         case .failed, .unsupported: Theme.Color.error.opacity(0.7)
-        case .ready: Theme.Color.action.opacity(0.35)
+        case .ready: Theme.Color.action.opacity(0.3)
         case .checking: Theme.Color.hairline
         }
+    }
+
+    /// Icon, a title and at most one short line — the same shape in every state.
+    private func message(_ title: String, _ detail: String?, icon: String, tint: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: metrics.bodySize + 1, weight: .semibold))
+                .foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
+                    .foregroundStyle(detail == nil ? tint : Theme.Color.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let detail {
+                    Text(detail)
+                        .font(Typography.body(metrics.bodySize))
+                        .foregroundStyle(Theme.Color.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder
@@ -256,70 +339,52 @@ private struct SpeechModelCard: View {
         switch status.state {
         case .checking:
             HStack(spacing: 8) {
-                ProgressView()
-                Text("Checking the \(name) speech model…").foregroundStyle(Theme.Color.secondary)
+                ProgressView().controlSize(.small)
+                Text("Checking the \(name) speech model…")
+                    .font(Typography.body(metrics.bodySize))
+                    .foregroundStyle(Theme.Color.secondary)
             }
-            .font(Typography.body(14))
         case .ready:
-            Label("\(name) speech model installed", systemImage: "checkmark.circle.fill")
-                .font(Typography.body(14, weight: .medium))
-                .foregroundStyle(Theme.Color.action)
+            message("\(name) speech model installed", nil, icon: "checkmark.circle.fill", tint: Theme.Color.action)
                 .accessibilityIdentifier("speech-model-ready")
         case .needsDownload:
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Speech model required", systemImage: "exclamationmark.circle.fill")
-                    .font(Typography.body(16, weight: .semibold))
-                    .foregroundStyle(Theme.Color.warm)
-                Text("\(name) needs an on-device speech model before interviews can start.")
-                    .font(Typography.body(14))
-                    .foregroundStyle(Theme.Color.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: metrics.cardSpacing + 2) {
+                message("Speech model required", "\(name) needs an on-device speech model before interviews can start.",
+                        icon: "exclamationmark.circle.fill", tint: Theme.Color.warm)
                 downloadButton("Download")
             }
         case .downloading(let fraction):
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Downloading \(name) speech model…")
-                    .font(Typography.body(15, weight: .semibold))
-                    .foregroundStyle(Theme.Color.ink)
+            VStack(alignment: .leading, spacing: metrics.cardSpacing) {
+                HStack {
+                    Text("Downloading \(name) speech model…")
+                        .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
+                        .foregroundStyle(Theme.Color.ink)
+                    Spacer(minLength: 6)
+                    Text("\(Int((fraction * 100).rounded()))%")
+                        .font(Typography.body(metrics.bodySize).monospacedDigit())
+                        .foregroundStyle(Theme.Color.secondary)
+                }
                 ProgressView(value: fraction)
                     .tint(Theme.Color.action)
                     .accessibilityIdentifier("speech-model-progress")
-                Text("\(Int((fraction * 100).rounded()))%")
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.secondary)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Downloading \(name) speech model, \(Int((fraction * 100).rounded())) percent")
         case .unsupported:
-            Label("\(language.displayName) is not supported for live interviews on this iPhone. Choose another language.",
-                  systemImage: "xmark.octagon.fill")
-                .font(Typography.body(14))
-                .foregroundStyle(Theme.Color.error)
-                .fixedSize(horizontal: false, vertical: true)
+            message("Not supported on this iPhone", "Choose another interview language.", icon: "xmark.octagon.fill", tint: Theme.Color.error)
                 .accessibilityIdentifier("speech-model-unsupported")
         case .failed:
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Couldn't download the \(name) speech model.", systemImage: "exclamationmark.triangle.fill")
-                    .font(Typography.body(15, weight: .semibold))
-                    .foregroundStyle(Theme.Color.error)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Check your connection and try again.")
-                    .font(Typography.body(13))
-                    .foregroundStyle(Theme.Color.secondary)
+            VStack(alignment: .leading, spacing: metrics.cardSpacing + 2) {
+                message("Couldn't download the \(name) speech model.", "Check your connection and try again.",
+                        icon: "exclamationmark.triangle.fill", tint: Theme.Color.error)
                 downloadButton("Try again", identifier: "speech-model-retry")
             }
         }
     }
 
     private func downloadButton(_ title: String, identifier: String = "speech-model-download") -> some View {
-        Button { status.startDownload() } label: {
-            Label(title, systemImage: "arrow.down.circle.fill")
-                .font(Typography.body(16, weight: .semibold))
-                .frame(maxWidth: .infinity, minHeight: 44)
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(Theme.Color.action)
-        .foregroundStyle(Theme.Color.onDark)
+        Button { status.startDownload() } label: { Label(title, systemImage: "arrow.down.circle.fill") }
+        .buttonStyle(CardPrimaryButtonStyle())
         .disabled(status.isDownloading)
         .accessibilityLabel("\(title == "Download" ? "Download" : "Try downloading") the \(name) speech model")
         .accessibilityIdentifier(identifier)

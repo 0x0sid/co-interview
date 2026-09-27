@@ -58,6 +58,7 @@ struct CopilotStartScreen: View {
     @State private var isCheckingBackend = false
     /// What Live can actually do right now — checked, not assumed.
     @State private var readiness = LiveReadiness(isChecking: true)
+    @Environment(\.layoutMetrics) private var metrics
     /// Which subscription state's Settings badge has been seen (`SettingsBadge`).
     @AppStorage(SettingsBadge.storageKey) private var settingsBadgeSeen = ""
 
@@ -75,7 +76,7 @@ struct CopilotStartScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: metrics.sectionSpacing) {
                 header
                 // Free or trial status stays here as a compact entry; an active subscription is shown
                 // in Settings, not on the home screen.
@@ -86,12 +87,16 @@ struct CopilotStartScreen: View {
                 recentInterviews
                 #if DEBUG
                 if Self.showsDeveloperTools { developerSection }
+                // Build identity for development only: small, quiet, centred. Release shows nothing.
+                Text(BuildInfo.footer)
+                    .font(Typography.mono(9))
+                    .foregroundStyle(Theme.Color.secondary.opacity(0.6))
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, metrics.sectionSpacing)
                 #endif
-                Text(footer)
-                    .font(Typography.mono(11))
-                    .foregroundStyle(Theme.Color.secondary)
             }
-            .padding(20)
+            .padding(.horizontal, metrics.screenPadding)
+            .padding(.vertical, metrics.isCompact ? 8 : 12)
         }
         .background(Theme.Color.paper)
         .alert("Rename interview", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
@@ -202,17 +207,6 @@ struct CopilotStartScreen: View {
     /// Debug keeps the development title the UI tests navigate by; Release shows the product name.
     private var navigationTitle: String { "Neverblank" }
 
-    private var footer: String {
-        #if DEBUG
-        BuildInfo.footer
-        #else
-        let info = Bundle.main.infoDictionary
-        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "Version \(version) (\(build))"
-        #endif
-    }
-
     /// The subscription state the Settings badge is about.
     private var badgeState: SettingsBadge.State {
         SettingsBadge.state(isPro: access.isPro, needsVerification: access.needsVerification,
@@ -258,7 +252,7 @@ struct CopilotStartScreen: View {
     @ViewBuilder
     private var recentInterviews: some View {
         if !savedSessions.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: metrics.listCardSpacing + 2) {
                 if let interrupted = savedSessions.first(where: { $0.state == .interrupted }) {
                     Button {
                         open(.reopen(interrupted, context: modelContext))
@@ -267,14 +261,14 @@ struct CopilotStartScreen: View {
                             Text("An interview was interrupted")
                                 .font(Typography.body(13, weight: .semibold))
                                 .foregroundStyle(Theme.Color.ink)
-                            Text("“\(interrupted.title)” — open it to see what was saved. Nothing is sent again unless you choose Retry, and the microphone starts only when you resume.")
+                            Text("“\(interrupted.title)” — open it to see what was saved. The microphone starts only when you resume.")
                                 .font(Typography.body(12))
                                 .foregroundStyle(Theme.Color.secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(12)
-                        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.warm, lineWidth: 1))
+                        .padding(metrics.cardPadding)
+                        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius))
+                        .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius).stroke(Theme.Color.warm, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -292,7 +286,7 @@ struct CopilotStartScreen: View {
                 }
                 // Cards read summary fields only (title, dates, counts); nothing here loads a
                 // transcript, an answer or a file until one is opened.
-                VStack(spacing: 10) {
+                VStack(spacing: metrics.listCardSpacing) {
                     ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
                         InterviewHistoryCard(session: session,
                                              onOpen: { open(.reopen(session, context: modelContext)) },
@@ -352,7 +346,7 @@ struct CopilotStartScreen: View {
     private var startInterview: some View {
         let title = readiness.isListenOnly ? "Start interview (listening only)" : "Start interview"
         let enabled = readiness.canListen && !readiness.isChecking
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: metrics.isCompact ? 5 : 7) {
             Button {
                 if AIConsent.isGiven() {
                     open(.newLive(context: modelContext, preference: languagePreference))
@@ -363,11 +357,16 @@ struct CopilotStartScreen: View {
                 HStack(spacing: 10) {
                     Image(systemName: "waveform")
                     Text(title)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
-                .font(Typography.body(18, weight: .semibold))
-                .frame(maxWidth: .infinity, minHeight: 50)
+                .font(Typography.body(metrics.isCompact ? 17 : 18, weight: .semibold))
+                .foregroundStyle(Theme.Color.onDark)
+                .frame(maxWidth: .infinity, minHeight: metrics.primaryControlHeight)
+                .background(Theme.Color.action, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
             }
-            .buttonStyle(.prompterPrimary)
+            .buttonStyle(.plain)
             .disabled(!enabled)
             // The shared button style does not dim; a button that cannot start must look it.
             .opacity(enabled ? 1 : 0.45)
@@ -375,7 +374,8 @@ struct CopilotStartScreen: View {
             .accessibilityIdentifier("start-interview")
             // Provider and model names are diagnostics, not customer information.
             Text(readiness.isChecking ? "Checking…" : readiness.canGenerate ? "Ready to start" : readiness.summary)
-                .font(Typography.body(12))
+                .font(Typography.body(metrics.footnoteSize))
+                .padding(.leading, 2)
                 .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
                 .accessibilityIdentifier("start-status")
             if readiness.needsSpeechDownload && !readiness.isChecking {
@@ -386,7 +386,8 @@ struct CopilotStartScreen: View {
                     isShowingSettings = true
                 } label: {
                     Label("Open Settings", systemImage: "gearshape")
-                        .font(Typography.body(15, weight: .semibold))
+                        .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
+                        .frame(minHeight: 36)
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.Color.action)
@@ -413,9 +414,9 @@ struct CopilotStartScreen: View {
                 .font(Typography.body(13, weight: .semibold))
                 .accessibilityIdentifier("open-settings")
             }
-            .padding(14)
+            .padding(metrics.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius))
         }
     }
 

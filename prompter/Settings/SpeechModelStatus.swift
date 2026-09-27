@@ -79,6 +79,14 @@ final class SpeechModelStatus {
         state = .checking
         let result = await availability(language.transcriberLocale)
         guard self.language == language else { return }         // the selection moved on meanwhile
+        #if DEBUG
+        // UI screenshots of the download states: `-UITestsSpeechModel failed|downloading`.
+        switch UITestOverrides.speechModel {
+        case "failed": state = .failed; return
+        case "downloading": state = .downloading(0.42); return
+        default: break
+        }
+        #endif
         switch result {
         case .installed: state = .ready
         case .needsDownload: state = .needsDownload

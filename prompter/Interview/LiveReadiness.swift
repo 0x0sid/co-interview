@@ -123,6 +123,15 @@ struct LiveReadiness: Equatable, Sendable {
         // speech asset system there starves the tests' main actor (as `SpeechLocales.load` did). Tests
         // pass `speechModel` explicitly.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return .installed(locale) }
+        // UI screenshots of states the simulator cannot reach: `-UITestsSpeechModel needsDownload`.
+        if let forced = UITestOverrides.speechModel {
+            switch forced {
+            case "installed": return .installed(locale)
+            case "needsDownload", "failed", "downloading": return .needsDownload(locale)
+            case "unsupported": return .unsupported
+            default: break
+            }
+        }
         #endif
         return await SpeechLocaleAssets.shared.availability(for: locale)
     }
