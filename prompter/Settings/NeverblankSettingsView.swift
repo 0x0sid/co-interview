@@ -4,11 +4,11 @@ import SwiftData
 /// Neverblank's settings, one sheet from the home screen's gear or an interview's gear. Presenting it
 /// never interrupts a running interview; every preference is stored and applies app-wide.
 struct NeverblankSettingsView: View {
-    /// In an interview the language row changes **that interview's** language (history, answers and
-    /// files are kept); on the home screen it sets the preference for new interviews.
+    /// Present when Settings is opened from a running interview: the language it is running in. The
+    /// Interview Language row always sets the one persisted preference, which the **next** interview
+    /// snapshots when it starts; a running interview keeps its own language.
     struct InterviewLanguageControl {
         let current: InterviewLanguage
-        let onChange: (InterviewLanguage) -> Void
     }
 
     var interview: InterviewLanguageControl?
@@ -22,10 +22,14 @@ struct NeverblankSettingsView: View {
     @Query private var settingsQuery: [AppSettings]
     @State private var isChoosingLanguage = false
     @State private var plansPaywall: AccessController.PaywallRequest?
+    /// The selected language's speech model: ready, download, unsupported or retry.
+    @State private var speechModel = SpeechModelStatus()
 
     private var settings: AppSettings { settingsQuery.first ?? AppSettings.fetchOrCreate(in: modelContext) }
     private var appearance: AppearancePreference { settingsQuery.first?.appearance ?? .system }
     private var preference: InterviewLanguagePreference { .from(stored: settingsQuery.first?.interviewLanguageRaw) }
+    /// What the next interview will use.
+    private var selectedLanguage: InterviewLanguage { preference.resolved() }
     private var textScale: Double { min(1.6, max(0.8, settingsQuery.first?.fontScale ?? 1)) }
 
     var body: some View {
@@ -71,21 +75,24 @@ struct NeverblankSettingsView: View {
                 Section {
                     Button { isChoosingLanguage = true } label: {
                         HStack {
-                            Text("Interview language").foregroundStyle(Theme.Color.ink)
+                            Text("Interview Language").foregroundStyle(Theme.Color.ink)
                             Spacer()
-                            Text(interview?.current.displayName ?? preference.label())
+                            Text(preference.label())
                                 .foregroundStyle(Theme.Color.secondary)
                                 .lineLimit(1)
                             Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.Color.secondary)
                         }
                     }
                     .accessibilityIdentifier("interview-language")
+                    SpeechModelRow(language: selectedLanguage, status: speechModel)
+                    if preference == .system, let note = InterviewLanguagePreference.resolveSystem().fallbackNote {
+                        Text(note).font(Typography.body(12)).foregroundStyle(Theme.Color.warm)
+                    }
                 } header: {
                     Text("Interview")
                 } footer: {
-                    Text(interview == nil
-                         ? InterviewLanguagePreference.explanation + " Saved interviews keep the language they used."
-                         : "Changing it restarts recognition for this interview; the transcript, answers and files so far are kept and are not translated.")
+                    Text(interview.map { "This interview continues in \($0.current.displayName). A change here applies to your next interview." }
+                         ?? InterviewLanguagePreference.explanation + " Saved interviews keep the language they used.")
                 }
 
                 if let entitlements {
@@ -114,17 +121,12 @@ struct NeverblankSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .sheet(isPresented: $isChoosingLanguage) {
-                if let interview {
-                    InterviewLanguagePicker(selection: .language(interview.current), allowsSystem: false) { choice in
-                        if case .language(let chosen) = choice, chosen != interview.current { interview.onChange(chosen) }
-                    }
-                } else {
-                    InterviewLanguagePicker(selection: preference) { choice in
-                        settings.interviewLanguageRaw = choice.rawValue
-                        try? modelContext.save()
-                    }
+                InterviewLanguagePicker(selection: preference) { choice in
+                    settings.interviewLanguageRaw = choice.rawValue
+                    try? modelContext.save()
                 }
             }
+            .task(id: selectedLanguage.identifier) { await speechModel.refresh(for: selectedLanguage) }
             .sheet(item: $plansPaywall) { request in
                 if let entitlements, let access {
                     // Buying from Settings never generates anything.
@@ -136,3 +138,60 @@ struct NeverblankSettingsView: View {
         }
     }
 }
+
+/// The selected interview language's speech model under the Interview Language row.
+private struct SpeechModelRow: View {
+    let language: InterviewLanguage
+    let status: SpeechModelStatus
+
+    var body: some View {
+        switch status.state {
+        case .checking:
+            HStack(spacing: 8) {
+                ProgressView()
+                Text("Checking the speech model…").foregroundStyle(Theme.Color.secondary)
+            }
+            .font(Typography.body(13))
+        case .ready:
+            Label("Downloaded", systemImage: "checkmark.circle.fill")
+                .font(Typography.body(13))
+                .foregroundStyle(Theme.Color.secondary)
+                .accessibilityIdentifier("speech-model-ready")
+        case .needsDownload:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("\(language.displayName) speech model required")
+                    .font(Typography.body(14, weight: .semibold))
+                    .foregroundStyle(Theme.Color.ink)
+                Text("Download once to use \(language.displayName) interviews on this iPhone.")
+                    .font(Typography.body(12))
+                    .foregroundStyle(Theme.Color.secondary)
+                Button("Download") { Task { await status.download() } }
+                    .font(Typography.body(14, weight: .semibold))
+                    .accessibilityIdentifier("speech-model-download")
+            }
+        case .downloading(let fraction):
+            VStack(alignment: .leading, spacing: 6) {
+                ProgressView(value: fraction)
+                    .accessibilityIdentifier("speech-model-progress")
+                Text("Downloading the \(language.displayName) speech model… \(Int((fraction * 100).rounded()))%")
+                    .font(Typography.body(12))
+                    .foregroundStyle(Theme.Color.secondary)
+            }
+        case .unsupported:
+            Text("\(language.displayName) is not supported for live interviews on this iPhone. Choose another language.")
+                .font(Typography.body(13))
+                .foregroundStyle(Theme.Color.error)
+                .accessibilityIdentifier("speech-model-unsupported")
+        case .failed:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("The \(language.displayName) speech model did not finish downloading. Check your connection and try again.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Theme.Color.error)
+                Button("Try again") { Task { await status.download() } }
+                    .font(Typography.body(14, weight: .semibold))
+                    .accessibilityIdentifier("speech-model-retry")
+            }
+        }
+    }
+}
+

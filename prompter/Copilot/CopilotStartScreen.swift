@@ -41,7 +41,6 @@ struct CopilotStartScreen: View {
     @State private var isAskingConsent = false
     /// The paywall opened from here. Buying here never generates anything: no interview is open.
     @State private var settingsPaywall: AccessController.PaywallRequest?
-    @State private var isChoosingLanguage = false
     @State private var isShowingSettings = false
     @State private var transcriptFor: InterviewSessionRecord?
     @State private var reviewFor: InterviewSessionRecord?
@@ -59,9 +58,6 @@ struct CopilotStartScreen: View {
     @State private var readiness = LiveReadiness(isChecking: true)
     /// Which subscription state's Settings badge has been seen (`SettingsBadge`).
     @AppStorage(SettingsBadge.storageKey) private var settingsBadgeSeen = ""
-    /// The interview language's speech model download, while it runs (0...1).
-    @State private var speechDownloadProgress: Double?
-    @State private var speechDownloadFailure: String?
 
     private var providerConfiguration: ProviderConfiguration { ProviderConfiguration.resolve() }
 
@@ -83,7 +79,6 @@ struct CopilotStartScreen: View {
                 // in Settings, not on the home screen.
                 AccessStatusBadge(entitlements: entitlements, access: access, showsActivePro: false,
                                   onOpenPlans: { settingsPaywall = .init(trigger: .settings) })
-                languageRow
                 startInterview
                 permissionHelp
                 recentInterviews
@@ -123,16 +118,10 @@ struct CopilotStartScreen: View {
         .sheet(item: $reviewFor) { session in InterviewReviewSheet(session: session) }
         .navigationTitle(navigationTitle)
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isShowingSettings) {
+        // The interview language and its speech model are chosen in Settings; what Start can do is
+        // re-checked when it closes.
+        .sheet(isPresented: $isShowingSettings, onDismiss: { Task { await refreshReadiness() } }) {
             NeverblankSettingsView(previewApplies: providerConfiguration.usesInstallationAuth)
-        }
-        .sheet(isPresented: $isChoosingLanguage) {
-            InterviewLanguagePicker(selection: languagePreference) { choice in
-                let settings = AppSettings.fetchOrCreate(in: modelContext)
-                settings.interviewLanguageRaw = choice.rawValue
-                try? modelContext.save()
-                Task { await refreshReadiness() }
-            }
         }
         // The v2.5 interview screen. Demo plays a scripted interview through it; Live opens the
         // state that says what it would need, rather than quietly showing the script.
@@ -256,39 +245,6 @@ struct CopilotStartScreen: View {
     /// phone. A Debug build launched with `-NeverblankDeveloperTools` (UI tests) shows them.
     static var showsDeveloperTools: Bool { ProcessInfo.processInfo.arguments.contains("-NeverblankDeveloperTools") }
     #endif
-
-    /// The interview language: System language by default, showing what it resolves to. Opens the
-    /// searchable language sheet.
-    private var languageRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button { isChoosingLanguage = true } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Interview language")
-                            .font(Typography.body(12, weight: .medium))
-                            .foregroundStyle(Theme.Color.secondary)
-                        Text(languagePreference.label())
-                            .font(Typography.body(16, weight: .semibold))
-                            .foregroundStyle(Theme.Color.ink)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Theme.Color.secondary)
-                }
-                .padding(14)
-                .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("interview-language")
-            if languagePreference == .system, let note = InterviewLanguagePreference.resolveSystem().fallbackNote {
-                Text(note)
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.warm)
-            }
-        }
-    }
 
     // MARK: History
 
@@ -417,62 +373,15 @@ struct CopilotStartScreen: View {
                 .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
                 .accessibilityIdentifier("start-status")
             if readiness.needsSpeechDownload && !readiness.isChecking {
-                speechModelDownload
+                // Start stays blocked: the selected language's model is prepared in Settings, never
+                // replaced by English.
+                Button("Download it in Settings") { isShowingSettings = true }
+                    .font(Typography.body(14, weight: .semibold))
+                    .accessibilityIdentifier("speech-model-open-settings")
             }
         }
     }
 
-    /// The selected language is supported but its on-device speech model is not here yet: one
-    /// explicit download, with progress. Start becomes available when it finishes.
-    private var speechModelDownload: some View {
-        let name = language.displayName
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("\(name) speech model required")
-                .font(Typography.body(15, weight: .semibold))
-                .foregroundStyle(Theme.Color.ink)
-            Text("Download once to use \(name) interviews on this iPhone.")
-                .font(Typography.body(13))
-                .foregroundStyle(Theme.Color.secondary)
-            if let progress = speechDownloadProgress {
-                ProgressView(value: progress)
-                    .accessibilityIdentifier("speech-model-progress")
-                Text("Downloading… \(Int((progress * 100).rounded()))%")
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.secondary)
-            } else {
-                Button("Download") { Task { await downloadSpeechModel() } }
-                    .font(Typography.body(15, weight: .semibold))
-                    .accessibilityIdentifier("speech-model-download")
-            }
-            if let speechDownloadFailure {
-                Text(speechDownloadFailure)
-                    .font(Typography.body(12))
-                    .foregroundStyle(Theme.Color.error)
-            }
-        }
-        .padding(14)
-        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
-    }
-
-    private func downloadSpeechModel() async {
-        let requested = language
-        speechDownloadFailure = nil
-        speechDownloadProgress = 0
-        do {
-            try await SpeechLocaleAssets.shared.prepare(requested.transcriberLocale, allowDownload: true) { fraction in
-                Task { @MainActor in if speechDownloadProgress != nil { speechDownloadProgress = fraction } }
-            }
-            speechDownloadProgress = nil
-        } catch SpeechLocaleAssetError.unsupported {
-            speechDownloadProgress = nil
-            speechDownloadFailure = "\(requested.displayName) is not supported for live interviews on this iPhone."
-        } catch {
-            speechDownloadProgress = nil
-            speechDownloadFailure = "The download did not finish. Check your connection and try again."
-        }
-        await refreshReadiness()
-    }
 
     // MARK: Help and settings
 

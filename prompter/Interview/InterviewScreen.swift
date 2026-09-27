@@ -182,7 +182,7 @@ struct InterviewScreen: View {
             // The app's settings, over the interview: nothing here stops or restarts the session.
             NeverblankSettingsView(
                 interview: model.mode == .live
-                    ? .init(current: model.liveLanguage ?? .english, onChange: { model.changeLanguage($0) })
+                    ? .init(current: model.liveLanguage ?? .english)
                     : nil,
                 previewApplies: enforcesAccess
             )
