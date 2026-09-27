@@ -66,7 +66,7 @@ struct SavedQuestionGenerateTests {
     }
 
     @Test
-    func retryOfASavedQuestionKeepsItsGenerationKeyAndRegenerateGetsANewOne() async throws {
+    func aSavedQuestionKeepsOneGenerationKeyForRetryAndRegenerate() async throws {
         let stub = CopilotTestSupport.StubProvider()
         stub.generationError = CopilotProviderError.timedOut
         let (model, _, saved) = reopened(provider: stub)
@@ -86,6 +86,7 @@ struct SavedQuestionGenerateTests {
             (model.questions.first { $0.id == saved.id }?.answers.count ?? 0) == 3
                 && model.questions.first { $0.id == saved.id }?.selectedAnswer?.isComplete == true
         }
-        #expect(stub.lastAnswerRequest?.generationKey != firstKey, "another version is another generation")
+        // One key per page: another version of the same question uses the same free-answer credit.
+        #expect(stub.lastAnswerRequest?.generationKey == firstKey, "another version of the same question keeps its key")
     }
 }

@@ -19,8 +19,9 @@
 //
 // ## Free answers
 //
-// - A free installation gets `FREE_ANSWERS` (2) successful AI answers in total — not per day, not per
-//   session, and not an App Store trial.
+// - A free installation gets `FREE_ANSWERS` (3) successfully answered questions in total — not per
+//   day, not per session, and not an App Store trial. (Raised from 2 on 2026-09-28; stored usage is
+//   kept, so an installation that had used 2 has 1 left.)
 // - Before an answer is generated, one unit of capacity is **reserved** in a single statement that
 //   succeeds only while `used + active reservations < limit`, so simultaneous taps cannot exceed it.
 // - When the stream ends the reservation is **settled once**: a delivered, non-empty answer (prose or
@@ -28,10 +29,10 @@
 //   an empty response or a clarification-only response **releases** it.
 // - **Disconnecting does not help:** if answer text had already been sent when the client went away,
 //   the credit is consumed; with nothing sent, it is released.
-// - **Retries are not charged twice.** Requests carry a generation key (the app keeps it with the
-//   request's snapshot, so Retry sends the same key). A key that already consumed a credit is served
-//   again without charge, at most `FREE_REDELIVERIES` times. Regenerating or a follow-up action is a
-//   new generation with a new key and uses the same allowance.
+// - **One credit per answered question.** Requests carry a generation key, and the app keeps one key
+//   per answer page: Retry, Regenerate and follow-up actions on that page send the same key. A key that
+//   already consumed a credit is served again without charge, at most `FREE_REDELIVERIES` times (an
+//   abuse bound). A new question — a new page — has a new key and uses the next credit.
 // - **Bounded abuse control:** free requests that end without consuming (failures, empty or
 //   clarification-only results) are counted; after `FREE_MAX_UNCOUNTED` of them no more free answers
 //   are served. Reservations older than `FREE_RESERVATION_TTL_MS` (a crashed server mid-stream) stop
@@ -63,10 +64,10 @@ export function accessLimitsFromEnv(env = process.env) {
     return Number.isFinite(value) && value >= 0 ? value : fallback;
   };
   return {
-    freeAnswers: number("FREE_ANSWERS", 2),
+    freeAnswers: number("FREE_ANSWERS", 3),
     freeDetections: number("FREE_MAX_DETECTIONS", 300),
     freeMaxUncounted: number("FREE_MAX_UNCOUNTED", 10),
-    freeRedeliveries: number("FREE_REDELIVERIES", 3),
+    freeRedeliveries: number("FREE_REDELIVERIES", 8),
     reservationTtlMs: number("FREE_RESERVATION_TTL_MS", 180_000),
     proCacheMs: number("PRO_CACHE_MS", 60_000),
     negativeCacheMs: number("PRO_NEGATIVE_CACHE_MS", 15_000),

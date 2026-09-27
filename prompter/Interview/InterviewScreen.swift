@@ -110,7 +110,8 @@ struct InterviewScreen: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("trial-badge")
-                Text(access.areFreeAnswersUsed ? AccessCopy.freeAnswersUsed : AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining))
+                Text(access.areFreeAnswersUsed ? AccessCopy.freeAnswersUsed
+                                               : AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit))
                     .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
                     .foregroundStyle(InterviewTheme.Color.muted)
                     .accessibilityIdentifier("free-answers-status")

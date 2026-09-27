@@ -284,7 +284,8 @@ struct AccessControllerTests {
         await h.controller.bootstrap(backendURL: Self.url)
         h.controller.noteAnswerCompleted(counted: true)
         let relaunched = Self.make(backend: backend, ledger: h.ledger, credentials: h.credentials)
-        #expect(relaunched.controller.freeAnswersRemaining == 1, "the Keychain record survives a relaunch")
+        #expect(relaunched.controller.freeAnswersRemaining == FreeAnswersRecord.limit - 1,
+                "the Keychain record survives a relaunch (before the backend answers, the app's own limit applies)")
         backend.snapshots = [.success(.make(freeUsed: 2))]
         await relaunched.controller.bootstrap(backendURL: Self.url)
         #expect(relaunched.controller.freeAnswersRemaining == 0, "the backend's ledger wins")
@@ -383,7 +384,7 @@ struct InterviewAccessTests {
     typealias Support = ManualGenerationTests
 
     @Test
-    func generateWithoutAccessHoldsTheExactSnapshotAndSendsItOnceAfterAccess() {
+    func aNewQuestionWithoutAccessOpensThePaywallFirstAndIsSentOnceAfterAccess() throws {
         let (model, feed) = Support.make()
         let gate = FakeGate(allows: false)
         model.accessGate = gate
@@ -391,10 +392,10 @@ struct InterviewAccessTests {
         Support.tap(model, at: 0)
         #expect(feed.discussionRequests.isEmpty, "nothing is sent without access")
         #expect(gate.paywalls == [.generate])
-        let entry = try! #require(model.questions.last)
-        #expect(model.isWaitingForAccess(questionID: entry.id))
+        #expect(model.questions.isEmpty, "no empty page before access")
+        #expect(model.pendingNewQuestion != nil, "the question waits, with its snapshot")
 
-        // Speech keeps arriving while the paywall is up; it must not leak into the held request.
+        // Speech keeps arriving while the paywall is up; it must not leak into the waiting question.
         Support.speak("And what about hot partitions?", in: model)
 
         gate.allowsPaidRequests = true
@@ -404,11 +405,13 @@ struct InterviewAccessTests {
         let sent = feed.discussionRequests[0].discussion
         #expect(sent.newInput == ["How would you shard a payments table?"])
         #expect(!sent.allLines.contains("And what about hot partitions?"), "later speech is not substituted")
-        #expect(!model.isWaitingForAccess(questionID: entry.id))
+        let page = try #require(model.questions.last)
+        #expect(model.currentQuestion?.id == page.id, "the purchase returns to the interview, on its new page")
+        #expect(model.pendingNewQuestion == nil)
     }
 
     @Test
-    func closingThePaywallKeepsTheEntryForRetryAndSendsNothing() throws {
+    func closingThePaywallSendsNothingAndLeavesTheQuestionToAskAgain() throws {
         let (model, feed) = Support.make()
         let gate = FakeGate(allows: false)
         model.accessGate = gate
@@ -416,14 +419,13 @@ struct InterviewAccessTests {
         Support.tap(model, at: 0)
         model.abandonHeldRequests()
         #expect(feed.discussionRequests.isEmpty)
-        let entry = try #require(model.questions.last)
-        #expect(entry.selectedAnswer?.failureMessage == CopilotProviderError.proRequiredMessage)
-        #expect(model.canRetry(questionID: entry.id), "the snapshot is kept")
+        #expect(model.questions.isEmpty, "no page was made for it")
+        #expect(model.pendingNewQuestion == nil)
         #expect(gate.paywalls == [.generate], "closing does not reopen it")
 
-        // Retry after unlocking re-sends the original snapshot.
+        // After unlocking, Generate asks the same speech — nothing was marked as answered.
         gate.allowsPaidRequests = true
-        model.retry(questionID: entry.id)
+        Support.tap(model, at: 5)
         #expect(feed.discussionRequests.count == 1)
         #expect(feed.discussionRequests[0].discussion.newInput == ["Tell me about a failure."])
     }
@@ -444,17 +446,43 @@ struct InterviewAccessTests {
     }
 
     @Test
-    func noAccessMeansNoRegenerateAndThePaywallInstead() throws {
+    func regeneratingAnAnsweredPageNeedsNoFreeAnswerAndKeepsItsKey() throws {
         let (model, feed) = Support.make()
-        let gate = FakeGate(allows: true)
+        let gate = FakeGate(allows: true, freeRemaining: 1)
         model.accessGate = gate
         Support.speak("Why Kafka?", in: model)
         Support.tap(model, at: 0)
+        let key = try #require(feed.discussionRequests.last?.discussion.generationKey)
+        Support.completeActiveRequest(model, feed)
+        #expect(gate.completions == [true], "the page's first answer uses a free answer")
+        gate.allowsPaidRequests = false                       // none left now
+        gate.freeRemaining = 0
+        model.regenerate()
+        #expect(gate.paywalls.isEmpty, "the same question is not charged again")
+        #expect(feed.discussionRequests.count == 2)
+        #expect(feed.discussionRequests.last?.discussion.generationKey == key, "one key per page: the backend serves it free")
+        Support.completeActiveRequest(model, feed)
+        #expect(gate.completions == [true, false], "the second version does not count")
+    }
+
+    @Test
+    func aFollowUpOnAnAnsweredPageUsesThatPagesCredit() throws {
+        let (model, feed) = Support.make()
+        let gate = FakeGate(allows: true, freeRemaining: 1)
+        model.accessGate = gate
+        Support.speak("Why Kafka?", in: model)
+        Support.tap(model, at: 0)
+        let key = try #require(feed.discussionRequests.last?.discussion.generationKey)
         Support.completeActiveRequest(model, feed)
         gate.allowsPaidRequests = false
-        model.regenerate()
-        #expect(feed.questionRequests.isEmpty)
-        #expect(gate.paywalls == [.generate])
+        gate.freeRemaining = 0
+        let page = try #require(model.questions.first)
+        let shorter = FollowUpActions.Action(id: "shorter", title: "Shorter", instruction: "Make it shorter.", systemImage: "scissors")
+        model.generate(action: shorter, for: page, now: Date().addingTimeInterval(5))
+        #expect(gate.paywalls.isEmpty)
+        #expect(feed.discussionRequests.last?.discussion.generationKey == key)
+        Support.completeActiveRequest(model, feed)
+        #expect(gate.completions == [true, false], "the follow-up does not count")
     }
 
     @Test
@@ -472,17 +500,35 @@ struct InterviewAccessTests {
     }
 
     @Test
-    func theThirdGenerateOpensThePaywallWithoutSendingARequest() {
+    func threeQuestionsAreAnsweredAndTheFourthOpensThePaywall() {
         let (model, feed) = Support.make()
-        let gate = FakeGate(allows: true, freeRemaining: 2)
+        let gate = FakeGate(allows: true, freeRemaining: 3)
         model.accessGate = gate
         Support.speak("First?", in: model); Support.tap(model, at: 0); Support.completeActiveRequest(model, feed)
         Support.speak("Second?", in: model); Support.tap(model, at: 5); Support.completeActiveRequest(model, feed)
-        #expect(gate.completions == [true, true] && gate.paywalls.isEmpty, "both free answers finish, no paywall over the second")
-        Support.speak("Third?", in: model); Support.tap(model, at: 10)
-        #expect(feed.discussionRequests.count == 2, "the third request is never sent")
+        Support.speak("Third?", in: model); Support.tap(model, at: 10); Support.completeActiveRequest(model, feed)
+        #expect(gate.completions == [true, true, true] && gate.paywalls.isEmpty, "all three finish, no paywall over the third")
+        #expect(model.questions.count == 3)
+        Support.speak("Fourth?", in: model); Support.tap(model, at: 15)
+        #expect(feed.discussionRequests.count == 3, "the fourth request is never sent")
         #expect(gate.paywalls == [.generate])
-        #expect(model.isWaitingForAccess(questionID: model.questions.last!.id), "its snapshot is kept for after Pro")
+        #expect(model.questions.count == 3, "no empty fourth page")
+        #expect(model.pendingNewQuestion?.snapshot.newInput == ["Fourth?"], "its snapshot is kept for after Pro")
+    }
+
+    @Test
+    func aFailedAnswerDoesNotUseAFreeAnswerAndItsRetryStillCan() throws {
+        let (model, feed) = Support.make()
+        let gate = FakeGate(allows: true, freeRemaining: 1)
+        model.accessGate = gate
+        Support.speak("Why Kafka?", in: model)
+        Support.tap(model, at: 0)
+        let request = try #require(feed.discussionRequests.last)
+        model.handle(.answerStarted(requestID: request.requestID, questionID: request.questionID))
+        model.handle(.answerFailed(requestID: request.requestID, message: "The backend did not answer"))
+        #expect(gate.completions.allSatisfy { !$0 }, "a failure is not counted")
+        model.retry(questionID: request.questionID)
+        #expect(feed.discussionRequests.count == 2, "the retry goes out: its page never used a credit")
     }
 
     @Test

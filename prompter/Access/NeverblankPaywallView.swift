@@ -126,7 +126,7 @@ struct NeverblankPaywallView: View {
     /// Why the paywall is here, in the reader's terms. The session is never at risk and says so.
     private var contextLine: String? {
         switch trigger {
-        case .freeAnswersExhausted: "You've used your 2 free AI answers. Everything from this interview is saved, and listening continues."
+        case .freeAnswersExhausted: "You've used your \(FreeAnswersRecord.limit) free interview answers. Everything from this interview is saved, and listening continues."
         case .generate, .retry: "Your answer is kept. It will be written as soon as you unlock Pro."
         case .settings: nil
         }

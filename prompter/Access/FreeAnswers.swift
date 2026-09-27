@@ -5,7 +5,7 @@ import Foundation
 /// ledger is the real limit (`backend/access.mjs`).
 struct FreeAnswersRecord: Codable, Equatable, Sendable {
     /// The allowance the app assumes before the backend has answered.
-    static let limit = 2
+    static let limit = 3
     var used = 0
     var exhaustionLogged = false
 }

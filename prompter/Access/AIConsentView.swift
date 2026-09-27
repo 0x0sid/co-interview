@@ -31,7 +31,7 @@ struct AIConsentView: View {
                 point("lock", "It is used only to answer during your interview — never for advertising, and never sold.")
                 point("person.2", "Let the people you are speaking with know that you use an assistant, where that is expected or required.")
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("2 free AI answers")
+                    Text("\(FreeAnswersRecord.limit) free interview answers")
                         .font(Typography.body(14, weight: .semibold))
                         .foregroundStyle(Theme.Color.ink)
                     Text(AccessCopy.freeAnswersDisclosure)
@@ -72,11 +72,22 @@ struct AIConsentView: View {
 
 /// Wording used in more than one place, so the free answers are described the same way everywhere.
 enum AccessCopy {
-    static let freeAnswersDisclosure = "Every new install includes 2 free AI answers in total. They don't renew, this isn't an App Store trial, and nothing is charged. After that, listening and the transcript keep working on your iPhone; more AI answers need Neverblank Pro."
+    static let freeAnswersDisclosure = "Every new install includes \(FreeAnswersRecord.limit) free interview answers in total — one per question you ask; regenerating an answer or a follow-up on it is free. They don't renew, this isn't an App Store trial, and nothing is charged. After that, listening and the transcript keep working on your iPhone; more answers need Neverblank Pro."
 
-    static func freeAnswersRemaining(_ count: Int) -> String {
-        count == 1 ? "1 free answer remaining" : "\(count) free answers remaining"
+    /// The free-answer state in one line, by how many are left.
+    static func freeAnswersStatus(remaining: Int, limit: Int = FreeAnswersRecord.limit) -> String {
+        switch remaining {
+        case let count where count >= limit: "\(limit) free interview answers included."
+        case 1: "1 free interview answer remaining."
+        case let count where count > 1: "\(count) free interview answers remaining."
+        default: "Your \(limit) free interview answers are used. Upgrade to Pro for more."
+        }
     }
 
-    static let freeAnswersUsed = "Pro is needed for more AI answers. The transcript keeps going."
+    /// "2 free interview answers remaining" — without the full stop, for compact places.
+    static func freeAnswersRemaining(_ count: Int) -> String {
+        count == 1 ? "1 free interview answer remaining" : "\(count) free interview answers remaining"
+    }
+
+    static let freeAnswersUsed = "Pro is needed for more answers. The transcript keeps going."
 }

@@ -1,7 +1,7 @@
 import XCTest
 
 /// The first-run funnel on a real (local) backend: a fresh install gets its credential, consents, uses
-/// its **2 free AI answers**, sees "Unlock Pro" inline, and the third Generate opens the paywall —
+/// its **3 free interview answers**, sees "Unlock Pro" inline, and the fourth Generate opens the paywall —
 /// with the session intact and no third answer request sent.
 ///
 /// Opt-in: start `backend/` locally with `COINTERVIEW_FAKE=1` and a temporary `ACCESS_DB_PATH`, then
@@ -77,12 +77,12 @@ final class FreeAnswersFlowUITests: XCTestCase {
         wait(for: [moved], timeout: 30)
     }
 
-    func testTwoFreeAnswersThenThePaywallWithTheSessionIntact() throws {
+    func testThreeFreeAnswersThenThePaywallWithTheSessionIntact() throws {
         let app = launch(reset: true)
         XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
         allowPermissionPrompts()
-        XCTAssertTrue(element(app, "free-answers-disclosure").waitForExistence(timeout: 20), "the 2 free answers are not disclosed")
-        XCTAssertTrue(element(app, "free-answers-disclosure").label.contains("2 free AI answers"))
+        XCTAssertTrue(element(app, "free-answers-disclosure").waitForExistence(timeout: 20), "the 3 free answers are not disclosed")
+        XCTAssertTrue(element(app, "free-answers-disclosure").label.contains("3 free interview answers"))
         save(app, "free-1-home")
 
         let start = app.buttons["start-interview"]
@@ -92,37 +92,36 @@ final class FreeAnswersFlowUITests: XCTestCase {
         start.tap()
         let agree = app.buttons["ai-consent-agree"]
         XCTAssertTrue(agree.waitForExistence(timeout: 10), "no AI consent before the first Live interview")
-        XCTAssertTrue(app.staticTexts["2 free AI answers"].exists)
+        XCTAssertTrue(app.staticTexts["3 free interview answers"].exists)
         agree.tap()
 
         XCTAssertTrue(app.buttons["Generate an answer"].waitForExistence(timeout: 15), "the Live interview never opened")
         XCTAssertTrue(element(app, "free-answers-status").waitForExistence(timeout: 20))
-        XCTAssertEqual(status(app), "2 free answers remaining")
-        save(app, "free-2-two-remaining")
+        XCTAssertEqual(status(app), "3 free interview answers included.")
+        save(app, "free-2-three-included")
 
-        generateAndWait(app, expectStatus: "1 free answer remaining")
+        generateAndWait(app, expectStatus: "2 free interview answers remaining")
+        generateAndWait(app, expectStatus: "1 free interview answer remaining")
         save(app, "free-3-one-remaining")
 
         generateAndWait(app, expectStatus: "Pro is needed")
         let headline = app.staticTexts["Never interview alone again."]
-        XCTAssertFalse(headline.exists, "the second answer was covered by the paywall")
-        XCTAssertEqual(app.buttons["trial-badge"].label, "Trial used · Subscribe", "no inline Subscribe after the second answer")
+        XCTAssertFalse(headline.exists, "the third answer was covered by the paywall")
+        XCTAssertEqual(app.buttons["trial-badge"].label, "Trial used · Subscribe", "no inline Subscribe after the third answer")
         save(app, "free-4-used-inline-unlock")
 
-        // The third Generate asks for Pro before anything is sent, and keeps the request.
+        // The fourth new question asks for Pro before anything is sent — and before any page exists.
         pause(3.5)
         app.buttons["Generate an answer"].tap()
-        XCTAssertTrue(headline.waitForExistence(timeout: 10), "the third Generate did not open the paywall")
-        save(app, "free-5-paywall-on-third")
+        XCTAssertTrue(headline.waitForExistence(timeout: 10), "the fourth Generate did not open the paywall")
+        save(app, "free-5-paywall-on-fourth")
         app.buttons["paywall-close"].tap()
-        let kept = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Neverblank Pro is needed")).firstMatch
-        XCTAssertTrue(kept.waitForExistence(timeout: 10), "the held request was not kept for Retry")
 
         // Settings › Subscription is reachable mid-interview.
         app.buttons["Interview settings"].tap()
         XCTAssertTrue(app.buttons["view-plans"].waitForExistence(timeout: 10))
         app.buttons["Done"].tap()
-        save(app, "free-6-kept-for-retry")
+        save(app, "free-6-after-paywall")
 
         // A relaunch keeps the used allowance.
         app.terminate()

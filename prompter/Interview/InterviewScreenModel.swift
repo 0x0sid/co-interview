@@ -82,7 +82,26 @@ final class InterviewScreenModel {
         let questionID: UUID
         var answerID: UUID?
         let isRegeneration: Bool
+        /// The page whose free-answer credit this request uses, when it is not its own: a follow-up
+        /// action on an answered page. Nil for a page's own requests.
+        var sharesCreditWith: UUID? = nil
     }
+
+    /// Pages whose free-answer credit is already used. Their key is re-served without charge, so
+    /// Regenerate, Retry and follow-up actions on them are allowed however many free answers remain
+    /// (the backend bounds re-serving). **One credit per answered question, not per model request.**
+    private(set) var creditedQuestionIDs: Set<UUID> = []
+
+    /// A new question asked with no free answers left and no Pro: the paywall opens **before** any
+    /// page exists. Its snapshot waits here and becomes a page, sent once, after access is verified.
+    struct PendingNewQuestion {
+        let snapshot: DiscussionSnapshot
+        let coveredLines: [UUID: String]
+        let contextFingerprint: String
+        let appliedParentID: String?
+        let decisionStatus: String
+    }
+    private(set) var pendingNewQuestion: PendingNewQuestion?
 
     /// Keyed by request id — the identity that makes a late event recognisable and discardable.
     private var generations: [UUID: Generation] = [:]
@@ -148,7 +167,15 @@ final class InterviewScreenModel {
 
     /// Answers already accepted and not yet finished — each may still use a free answer.
     private var answersInProgress: Int {
-        queuedRequestIDs.filter { !heldRequestIDs.contains($0) }.count + (activeRequestID == nil ? 0 : 1)
+        let inFlight = queuedRequestIDs.filter { !heldRequestIDs.contains($0) } + (activeRequestID.map { [$0] } ?? [])
+        return inFlight.filter { usesNewCredit($0) }.count
+    }
+
+    /// Whether a request could use a new free-answer credit — false for requests on a page, or on the
+    /// parent of a follow-up, that already used its credit.
+    private func usesNewCredit(_ requestID: UUID) -> Bool {
+        guard let generation = generations[requestID] else { return true }
+        return !creditedQuestionIDs.contains(generation.sharesCreditWith ?? generation.questionID)
     }
 
     /// Whether one more answer may be accepted now, counting those already in progress.
@@ -158,7 +185,8 @@ final class InterviewScreenModel {
     /// access for it. Checked **before** anything is sent: the third free answer never reaches the
     /// backend.
     private func enqueue(_ requestID: UUID, trigger: PaywallTrigger) {
-        let allowed = canAcceptAnotherAnswer
+        // A page that already used its credit is re-served free; only new questions need allowance.
+        let allowed = !usesNewCredit(requestID) || canAcceptAnotherAnswer
         queuedRequestIDs.append(requestID)
         if !allowed {
             heldRequestIDs.insert(requestID)
@@ -175,6 +203,14 @@ final class InterviewScreenModel {
 
     /// Access was verified: send the held requests, in order, each exactly once.
     func releaseHeldRequests() {
+        if let pending = pendingNewQuestion {
+            // The question asked before the purchase becomes its page now, from the snapshot taken at
+            // the tap — never rebuilt from later speech.
+            pendingNewQuestion = nil
+            createPage(snapshot: pending.snapshot, action: nil, parent: nil, covering: pending.coveredLines,
+                       contextFingerprint: pending.contextFingerprint, appliedParentID: pending.appliedParentID,
+                       decisionStatus: pending.decisionStatus, sharesCreditWith: nil, now: Date())
+        }
         guard !heldRequestIDs.isEmpty else { return }
         heldRequestIDs = []
         startNextQueuedRequestIfIdle()
@@ -183,6 +219,9 @@ final class InterviewScreenModel {
     /// The paywall closed without access. Each held entry stays, marked as needing Pro, with its
     /// snapshot kept for Retry; nothing is sent and nothing is discarded.
     func abandonHeldRequests() {
+        // The pending new question never became a page: nothing to mark, and its speech stays
+        // uncovered, so Generate can ask it again later.
+        pendingNewQuestion = nil
         let held = queuedRequestIDs.filter { heldRequestIDs.contains($0) }
         guard !held.isEmpty else { return }
         heldRequestIDs = []
@@ -686,14 +725,55 @@ final class InterviewScreenModel {
             snapshot.fileExcerpts = files.fileContext.passages(forQuestion: asked, limit: 3).map(FileExcerpt.init)
             snapshot.filesStillProcessing = files.items.filter { $0.status.isWorking }.map(\.filename)
         }
-        snapshot.generationKey = UUID().uuidString
+        // **One credit per answered question.** A follow-up action on a page that already used its
+        // credit sends that page's key, so the backend serves it without using another free answer.
+        var sharesCreditWith: UUID?
+        if action != nil, let parent, creditedQuestionIDs.contains(parent.id),
+           let parentKey = retainedSnapshots[parent.id]?.generationKey {
+            snapshot.generationKey = parentKey
+            sharesCreditWith = parent.id
+        } else {
+            snapshot.generationKey = UUID().uuidString
+        }
+        let covering = action == nil
+            ? Dictionary(uncoveredLines.map { ($0.id, Self.meaningfulWording($0.text)) }, uniquingKeysWith: { _, last in last })
+            : [:]
+
+        // A new question with no allowance left: the paywall first, and no empty page. The snapshot
+        // waits for verified access (`releaseHeldRequests`), then becomes a page and is sent once.
+        if action == nil, !canAcceptAnotherAnswer {
+            pendingNewQuestion = PendingNewQuestion(snapshot: snapshot, coveredLines: covering,
+                                                    contextFingerprint: contextFingerprint,
+                                                    appliedParentID: appliedParentID, decisionStatus: decisionStatus)
+            diagnostics.recordTap(requestID: nil, outcome: .rejectedQueueFull, reason: "needs Pro: no free answers left")
+            accessGate?.requestPaywall(.generate)
+            return
+        }
+        createPage(snapshot: snapshot, action: action, parent: parent, covering: covering,
+                   contextFingerprint: contextFingerprint, appliedParentID: appliedParentID,
+                   decisionStatus: decisionStatus, sharesCreditWith: sharesCreditWith, now: now)
+    }
+
+    /// Creates the page a Generate asked for, opens it, and queues its request.
+    private func createPage(
+        snapshot: DiscussionSnapshot,
+        action: FollowUpActions.Action?,
+        parent: InterviewQuestion?,
+        covering: [UUID: String],
+        contextFingerprint fingerprint: String,
+        appliedParentID: String?,
+        decisionStatus: String,
+        sharesCreditWith: UUID?,
+        now: Date
+    ) {
         let requestID = UUID()
         let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
         logRouting("latest", sentQuestionID: entry.id, requestID: requestID)
         questions.append(entry)
         let index = questions.count - 1
 
-        generations[requestID] = Generation(questionID: entry.id, answerID: nil, isRegeneration: false)
+        generations[requestID] = Generation(questionID: entry.id, answerID: nil, isRegeneration: false,
+                                            sharesCreditWith: sharesCreditWith)
         requestByQuestion[entry.id] = requestID
         pendingSnapshots[requestID] = snapshot
         retainedSnapshots[entry.id] = snapshot
@@ -713,8 +793,8 @@ final class InterviewScreenModel {
         // while the reader was browsing stays uncovered and is still there for the next ordinary
         // Generate. Reserving it here would silently swallow a question nobody had answered.
         if action == nil {
-            for line in uncoveredLines { coveredLines[line.id] = Self.meaningfulWording(line.text) }
-            lastRequestedContextFingerprint = contextFingerprint
+            for (lineID, wording) in covering { coveredLines[lineID] = wording }
+            lastRequestedContextFingerprint = fingerprint
         }
 
         if let relation = snapshot.interpretation?.relation, ["correction", "abandonment"].contains(relation),
@@ -879,8 +959,10 @@ final class InterviewScreenModel {
         }
         // A page Generate created is answered again from **its own snapshot** — the speech, note and
         // files as they were when it was asked — so newer speech can never become what it answers.
-        if let liveFeed, retainedSnapshots[question.id] != nil
-            || !liveFeed.canAnswerFromCard(questionID: question.id) || !canAcceptAnotherAnswer {
+        if retainedSnapshots[question.id] != nil {
+            requestFromSavedQuestion(question, isRegeneration: isRegeneration)
+        } else if let liveFeed, !liveFeed.canAnswerFromCard(questionID: question.id)
+            || !(creditedQuestionIDs.contains(question.id) || canAcceptAnotherAnswer) {
             requestFromSavedQuestion(question, isRegeneration: isRegeneration)
         } else {
             requestAnswer(for: question, isRegeneration: isRegeneration)
@@ -895,8 +977,9 @@ final class InterviewScreenModel {
               let index = questions.firstIndex(where: { $0.id == question.id }) else { return }
         syncSessionNote()
         var snapshot = retainedSnapshots[question.id] ?? savedQuestionSnapshot(question)
-        // Another version is another generation; a first answer from a retained snapshot keeps its key.
-        if isRegeneration || snapshot.generationKey == nil { snapshot.generationKey = UUID().uuidString }
+        // A page keeps one key for all its requests — Retry, Regenerate — so it uses one free-answer
+        // credit however many versions it has.
+        if snapshot.generationKey == nil { snapshot.generationKey = UUID().uuidString }
         let requestID = UUID()
         generations[requestID] = Generation(questionID: question.id, answerID: nil, isRegeneration: isRegeneration)
         requestByQuestion[question.id] = requestID
@@ -930,7 +1013,7 @@ final class InterviewScreenModel {
         guard requestByQuestion[question.id] == nil else { return }   // no duplicate requests
         // Another version of a page is a paid request too. Nothing is held: the page is still there
         // to ask again from once access is back.
-        guard canAcceptAnotherAnswer else {
+        guard creditedQuestionIDs.contains(question.id) || canAcceptAnotherAnswer else {
             accessGate?.requestPaywall(.generate)
             return
         }
@@ -1354,7 +1437,16 @@ final class InterviewScreenModel {
         answer.blocks = blocks                   // in the order the feed gave them: prose and code interleaved
         // Counted exactly as the backend settles it: text arrived and it was not a request for input.
         let askedForInput = (answer.need ?? pendingNeeds[requestID]) != nil
-        accessGate?.noteAnswerCompleted(counted: Self.hasVisibleText(blocks) && !askedForInput)
+        // One free-answer credit per answered page: only a page's first usable answer counts, and a
+        // follow-up that shares its parent's credit never does.
+        let usable = Self.hasVisibleText(blocks) && !askedForInput
+        let creditPage = generation.sharesCreditWith ?? generation.questionID
+        let firstCreditForPage = usable && !creditedQuestionIDs.contains(creditPage)
+        if usable {
+            creditedQuestionIDs.insert(creditPage)
+            creditedQuestionIDs.insert(generation.questionID)
+        }
+        accessGate?.noteAnswerCompleted(counted: firstCreditForPage && generation.sharesCreditWith == nil)
         answer.highlight = highlight
         answer.isComplete = true
         question.answers[answerIndex] = answer

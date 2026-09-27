@@ -63,7 +63,7 @@ try {
   const freeBody = await free.json();
   check("a free installation is refused: review is a Pro feature", free.status === 402 && freeBody.reason === "pro_feature");
   const access = await (await fetch(`${base}/v1/access`, { headers: { authorization: `Installation ${created.installation_id}.${created.secret}` } })).json();
-  check("a refused review uses no free answer", access.free_answers.used === 0 && access.free_answers.remaining === 2);
+  check("a refused review uses no free answer", access.free_answers.used === 0 && access.free_answers.remaining === 3);
   const op = await fetch(`${base}/v1/copilot/review`, { method: "POST", headers: { authorization: "Bearer operator-token" }, body });
   const report = await op.json();
   check("the operator gets a score", op.status === 200 && report.scores && report.overall !== null && report.version.startsWith("score-"));

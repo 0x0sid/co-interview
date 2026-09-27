@@ -22,13 +22,65 @@ function check(label, condition, detail = "") {
 }
 
 
-const limits = { ...accessLimitsFromEnv({}), freeMaxUncounted: 4, freeRedeliveries: 2 };
+// The mechanism is tested with a limit of 2 (pinned here); the deployed default is checked below.
+const limits = { ...accessLimitsFromEnv({}), freeAnswers: 2, freeMaxUncounted: 4, freeRedeliveries: 2 };
 
-// The deployed defaults, which the app's wording states ("2 free AI answers").
+// The deployed defaults, which the app's wording states ("3 free interview answers").
 {
   const defaults = accessLimitsFromEnv({});
-  check("default: 2 free answers, 300 free detections, 10 unsuccessful free attempts",
-    defaults.freeAnswers === 2 && defaults.freeDetections === 300 && defaults.freeMaxUncounted === 10);
+  check("default: 3 free answers, 300 free detections, 10 unsuccessful free attempts",
+    defaults.freeAnswers === 3 && defaults.freeDetections === 300 && defaults.freeMaxUncounted === 10);
+  check("default: a page's key may be re-served 8 times (Regenerate, follow-ups, Retry)", defaults.freeRedeliveries === 8);
+}
+
+// Three answered questions with the deployed defaults; regenerate and follow-ups on a page are free.
+console.log("three free questions");
+{
+  let clock = 5_000_000;
+  const now = () => clock;
+  const defaults = accessLimitsFromEnv({});
+  const store = new AccessStore(":memory:", { now });
+  store.migrate(defaults);
+  const control = new AccessControl({ store, verify: async () => ({ active: false, expiresAt: null }), limits: defaults, now });
+  const c = control.register("9.9.9.9");
+  const me = control.authenticate({ headers: { authorization: `Installation ${c.installation_id}.${c.secret}` } });
+  const ask = async (key, ending = { textDelivered: true }) => {
+    const r = await control.authorize(me, "answer", { generationKey: key });
+    if (r.allowed) control.settle(r.reservation, ending);
+    return r;
+  };
+  const q1 = await ask("page-1"), q2 = await ask("page-2");
+  const failed = await ask("page-3", { textDelivered: false });                    // a failure is not an answer
+  check("a failed generation does not use a free question", failed.allowed && (await control.describe(me)).free_answers.used === 2);
+  const q3 = await ask("page-3");
+  check("questions 1, 2 and 3 are answered", q1.allowed && q2.allowed && q3.allowed && (await control.describe(me)).free_answers.used === 3);
+  const regen = await ask("page-2"), followUp = await ask("page-2"), regenAgain = await ask("page-1");
+  check("regenerate and follow-ups on an answered page are allowed and free",
+    regen.allowed && followUp.allowed && regenAgain.allowed && (await control.describe(me)).free_answers.used === 3);
+  const q4 = await ask("page-4");
+  check("the 4th new question needs Pro", !q4.allowed && q4.reason === "exhausted");
+  check("the allowance reads 3 used, 0 left", (await control.describe(me)).free_answers.remaining === 0);
+}
+
+// Existing installations keep their usage: 2 used under the old limit leaves 1 of 3.
+console.log("migration to three");
+{
+  let clock = 6_000_000;
+  const now = () => clock;
+  const path = ":memory:";
+  const store = new AccessStore(path, { now });
+  const old = { ...accessLimitsFromEnv({}), freeAnswers: 2 };
+  store.migrate(old);
+  const before = new AccessControl({ store, verify: async () => ({ active: false, expiresAt: null }), limits: old, now });
+  const c = before.register("8.8.8.8");
+  const me = before.authenticate({ headers: { authorization: `Installation ${c.installation_id}.${c.secret}` } });
+  for (const key of ["a", "b"]) { const r = await before.authorize(me, "answer", { generationKey: key }); before.settle(r.reservation, { textDelivered: true }); }
+  check("under the old limit, 2 used means none left", (await before.describe(me)).free_answers.remaining === 0);
+  const after = new AccessControl({ store, verify: async () => ({ active: false, expiresAt: null }), limits: accessLimitsFromEnv({}), now });
+  const described = await after.describe(me);
+  check("with 3 free, the same installation has 1 left and keeps its history", described.free_answers.used === 2 && described.free_answers.remaining === 1);
+  const third = await after.authorize(me, "answer", { generationKey: "c" });
+  check("…and its third question is answered", third.allowed);
 }
 
 // --- Part 1: rules --------------------------------------------------------------------------------

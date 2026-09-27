@@ -188,8 +188,7 @@ struct SubscriptionSettingsView: View {
     /// One short line about the free answers; the full disclosure is shown where they are first used.
     private var previewLine: String {
         guard previewApplies, let access else { return "Developer build: free-answer limits don't apply here." }
-        if access.areFreeAnswersUsed { return "Your 2 free AI answers are used." }
-        return AccessCopy.freeAnswersRemaining(access.freeAnswersRemaining) + "."
+        return AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit)
     }
 
     /// A cancelled plan keeps access until it actually ends, and says so.
