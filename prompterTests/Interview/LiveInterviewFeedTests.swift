@@ -291,7 +291,8 @@ struct LiveInterviewFeedTests {
             language: .english,
             microphonePermission: .granted,
             speechAuthorization: .authorized,
-            probe: { _ in probe }
+            probe: { _ in probe },
+            speechModel: { .installed($0) }
         )
     }
 

@@ -25,38 +25,18 @@ enum SpeechAssetManager {
         return supported
     }
 
-    /// Downloads and installs the on-device model for `locale` if it isn't already present.
-    /// `assetInstallationRequest` returns `nil` when nothing needs downloading, so this is safe
-    /// to call unconditionally at the start of onboarding/demo pre-warm.
+    /// Downloads and installs the on-device model for `locale` if it isn't already present, through
+    /// the app's one reservation owner (`SpeechLocaleAssets`), so reservations never accumulate.
     static func ensureInstalled(locale: Locale) async throws {
-        try await ensureInstalled(locale: locale, onProgress: { _ in })
+        try await SpeechLocaleAssets.shared.prepare(locale, allowDownload: true)
     }
 
-    /// Same as `ensureInstalled(locale:)`, but reports fractional progress (0...1) while
-    /// downloading — used by the Demo explainer's "small progress hint" (§12.2, M5). Verified
-    /// against the real SDK: `AssetInstallationRequest: ProgressReporting` exposes a `Progress`
-    /// (`Foundation.ProgressReporting`, not invented), so this polls its real
-    /// `fractionCompleted` rather than faking a hint. `onProgress` is called on the main actor —
-    /// callers (SwiftUI) don't need their own hop.
+    /// Same, reporting fractional progress (0...1) on the main actor.
     @MainActor
     static func ensureInstalled(locale: Locale, onProgress: @escaping @MainActor (Double) -> Void) async throws {
-        let transcriber = SpeechTranscriber(locale: locale, preset: .transcription)
-        guard let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) else {
-            onProgress(1.0)
-            return
+        try await SpeechLocaleAssets.shared.prepare(locale, allowDownload: true) { fraction in
+            Task { @MainActor in onProgress(fraction) }
         }
-
-        let progress = request.progress
-        let pollTask = Task { @MainActor in
-            while !Task.isCancelled {
-                onProgress(progress.fractionCompleted)
-                if progress.isFinished { break }
-                try? await Task.sleep(for: .milliseconds(200))
-            }
-        }
-
-        try await request.downloadAndInstall()
-        pollTask.cancel()
         onProgress(1.0)
     }
 }

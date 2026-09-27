@@ -57,6 +57,9 @@ struct CopilotStartScreen: View {
     @State private var isCheckingBackend = false
     /// What Live can actually do right now — checked, not assumed.
     @State private var readiness = LiveReadiness(isChecking: true)
+    /// The interview language's speech model download, while it runs (0...1).
+    @State private var speechDownloadProgress: Double?
+    @State private var speechDownloadFailure: String?
 
     private var providerConfiguration: ProviderConfiguration { ProviderConfiguration.resolve() }
 
@@ -345,8 +348,8 @@ struct CopilotStartScreen: View {
             if let url = TranscriptExport.file(for: session) {
                 ShareLink(item: url) { Label("Export transcript", systemImage: "square.and.arrow.up") }
             }
-            Button(InterviewReviewStore.standard.load(session.id) == nil ? "Generate summary & feedback" : "View summary & feedback",
-                   systemImage: "sparkles") { reviewFor = session }
+            Button(InterviewReviewStore.standard.load(session.id) == nil ? "Score interview" : "View score",
+                   systemImage: "gauge.with.dots.needle.50percent") { reviewFor = session }
             Button("Delete", systemImage: "trash", role: .destructive) { deleting = session }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -406,7 +409,62 @@ struct CopilotStartScreen: View {
                 .font(Typography.body(12))
                 .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
                 .accessibilityIdentifier("start-status")
+            if readiness.needsSpeechDownload && !readiness.isChecking {
+                speechModelDownload
+            }
         }
+    }
+
+    /// The selected language is supported but its on-device speech model is not here yet: one
+    /// explicit download, with progress. Start becomes available when it finishes.
+    private var speechModelDownload: some View {
+        let name = language.displayName
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("\(name) speech model required")
+                .font(Typography.body(15, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+            Text("Download once to use \(name) interviews on this iPhone.")
+                .font(Typography.body(13))
+                .foregroundStyle(Theme.Color.secondary)
+            if let progress = speechDownloadProgress {
+                ProgressView(value: progress)
+                    .accessibilityIdentifier("speech-model-progress")
+                Text("Downloading… \(Int((progress * 100).rounded()))%")
+                    .font(Typography.body(12))
+                    .foregroundStyle(Theme.Color.secondary)
+            } else {
+                Button("Download") { Task { await downloadSpeechModel() } }
+                    .font(Typography.body(15, weight: .semibold))
+                    .accessibilityIdentifier("speech-model-download")
+            }
+            if let speechDownloadFailure {
+                Text(speechDownloadFailure)
+                    .font(Typography.body(12))
+                    .foregroundStyle(Theme.Color.error)
+            }
+        }
+        .padding(14)
+        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.Color.hairline, lineWidth: 0.5))
+    }
+
+    private func downloadSpeechModel() async {
+        let requested = language
+        speechDownloadFailure = nil
+        speechDownloadProgress = 0
+        do {
+            try await SpeechLocaleAssets.shared.prepare(requested.transcriberLocale, allowDownload: true) { fraction in
+                Task { @MainActor in if speechDownloadProgress != nil { speechDownloadProgress = fraction } }
+            }
+            speechDownloadProgress = nil
+        } catch SpeechLocaleAssetError.unsupported {
+            speechDownloadProgress = nil
+            speechDownloadFailure = "\(requested.displayName) is not supported for live interviews on this iPhone."
+        } catch {
+            speechDownloadProgress = nil
+            speechDownloadFailure = "The download did not finish. Check your connection and try again."
+        }
+        await refreshReadiness()
     }
 
     // MARK: Help and settings

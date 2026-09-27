@@ -32,10 +32,11 @@ enum LiveLifecycle {
     #if DEBUG
     private static let state = LockedBox((counts: Counts(), events: [String]()))
     private static let logger = Logger(subsystem: "talk.cointerview", category: "lifecycle")
-    /// On a phone, lines also go to stderr so a console capture shows them at once. Not in the unit-test
-    /// host unless asked (`TEST_RUNNER_LIFECYCLE_TRACE=1`): a synchronous write per event across hundreds
-    /// of tests stalls the main actor whenever the runner's pipe backs up.
-    private static let echoesToStandardError: Bool = {
+    /// On a phone, lines go to stderr (so a console capture shows them at once) and to the unified log.
+    /// Neither in the unit-test host unless asked (`TEST_RUNNER_LIFECYCLE_TRACE=1`): Xcode mirrors the
+    /// unified log into the runner's pipe too, and a synchronous write per event across hundreds of
+    /// tests stalls the main actor whenever that pipe backs up.
+    private static let emits: Bool = {
         let environment = ProcessInfo.processInfo.environment
         guard environment["XCTestConfigurationFilePath"] != nil else { return true }
         return environment["LIFECYCLE_TRACE"] == "1"
@@ -64,7 +65,21 @@ enum LiveLifecycle {
             if value.events.count > 1000 { value.events.removeFirst(value.events.count - 1000) }
             return line
         }
-        if echoesToStandardError { FileHandle.standardError.write(Data((line + "\n").utf8)) }
+        guard emits else { return }
+        FileHandle.standardError.write(Data((line + "\n").utf8))
+        logger.notice("\(line, privacy: .public)")
+        #endif
+    }
+
+    /// A free-form debug line with no counts (speech-asset diagnostics). Never transcript text.
+    static func note(_ line: String) {
+        #if DEBUG
+        state.mutate { value in
+            value.events.append(line)
+            if value.events.count > 1000 { value.events.removeFirst(value.events.count - 1000) }
+        }
+        guard emits else { return }
+        FileHandle.standardError.write(Data((line + "\n").utf8))
         logger.notice("\(line, privacy: .public)")
         #endif
     }

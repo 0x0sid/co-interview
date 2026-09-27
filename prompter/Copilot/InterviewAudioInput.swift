@@ -200,6 +200,16 @@ final class InterviewAudioInput {
     }
 
     private static func failureState(for error: Error) -> ListeningState {
+        if let assetError = error as? SpeechLocaleAssetError {
+            switch assetError {
+            case .unsupported(let locale):
+                return .failed("\(InterviewLanguage.nativeName(for: locale.identifier(.bcp47))) is not supported for speech on this iPhone")
+            case .needsDownload(let locale):
+                return .failed("the \(InterviewLanguage.nativeName(for: locale.identifier(.bcp47))) speech model is not downloaded")
+            case .reservationsInUse:
+                return .failed("another language is still in use — try again")
+            }
+        }
         if let assetError = error as? SpeechAssetManager.AssetError {
             switch assetError {
             case .localeNotSupported(let locale):

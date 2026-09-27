@@ -17,7 +17,10 @@ struct LiveReadiness: Equatable, Sendable {
     enum Blocker: Equatable, Sendable {
         case microphoneDenied
         case speechRecognitionDenied
+        /// The language is not supported for on-device speech on this iPhone.
         case speechModelUnavailable(locale: String)
+        /// Supported, but its speech model is not on this iPhone yet: a one-time download.
+        case speechModelNotDownloaded(language: String)
         case backendNotConfigured(reason: String)
         case backendUnreachable(detail: String)
         case backendTimedOut
@@ -36,7 +39,9 @@ struct LiveReadiness: Equatable, Sendable {
             case .speechRecognitionDenied:
                 "Speech recognition access is denied — enable it in Settings"
             case .speechModelUnavailable(let locale):
-                "No on-device speech model for \(locale). Live will not transcribe in this language"
+                "\(InterviewLanguage.nativeName(for: locale)) is not supported for live interviews on this iPhone"
+            case .speechModelNotDownloaded(let language):
+                "\(language) speech model required"
             case .backendNotConfigured(let reason):
                 reason
             case .backendUnreachable(let detail):
@@ -61,7 +66,7 @@ struct LiveReadiness: Equatable, Sendable {
         /// Whether this stops speech being transcribed at all, as opposed to stopping answers.
         var stopsListening: Bool {
             switch self {
-            case .microphoneDenied, .speechRecognitionDenied, .speechModelUnavailable:
+            case .microphoneDenied, .speechRecognitionDenied, .speechModelUnavailable, .speechModelNotDownloaded:
                 true
             default:
                 false
@@ -87,6 +92,11 @@ struct LiveReadiness: Equatable, Sendable {
     /// verified registry. False until the backend actually says otherwise.
     var answerAcceptsImages = false
     var isChecking = false
+    /// The interview language's speech model, as last checked.
+    var speechModel: SpeechModelAvailability?
+
+    /// The one blocker a download fixes, if that is what stands in the way.
+    var needsSpeechDownload: Bool { blockers.contains { if case .speechModelNotDownloaded = $0 { true } else { false } } }
 
     /// Speech can be captured and transcribed.
     var canListen: Bool { !blockers.contains { $0.stopsListening } }
@@ -106,6 +116,17 @@ struct LiveReadiness: Equatable, Sendable {
         return "Ready"
     }
 
+    /// The device's real speech-model state for a locale.
+    nonisolated static func systemSpeechModel(_ locale: Locale) async -> SpeechModelAvailability {
+        #if DEBUG
+        // Not in the unit-test host, where the app's own start screen runs at launch: querying the
+        // speech asset system there starves the tests' main actor (as `SpeechLocales.load` did). Tests
+        // pass `speechModel` explicitly.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return .installed(locale) }
+        #endif
+        return await SpeechLocaleAssets.shared.availability(for: locale)
+    }
+
     /// Permissions are requested, not assumed. Returns what the user actually granted.
     static func requestPermissions() async -> (microphone: Bool, speech: Bool) {
         let microphone = await AVAudioApplication.requestRecordPermission()
@@ -123,7 +144,8 @@ struct LiveReadiness: Equatable, Sendable {
         language: InterviewLanguage,
         microphonePermission: AVAudioApplication.recordPermission = AVAudioApplication.shared.recordPermission,
         speechAuthorization: SFSpeechRecognizerAuthorizationStatus = SFSpeechRecognizer.authorizationStatus(),
-        probe: (ProviderConfiguration) async -> BackendProbe = LiveReadiness.probeBackend
+        probe: (ProviderConfiguration) async -> BackendProbe = LiveReadiness.probeBackend,
+        speechModel: (Locale) async -> SpeechModelAvailability = LiveReadiness.systemSpeechModel
     ) async -> LiveReadiness {
         var readiness = LiveReadiness()
 
@@ -136,8 +158,14 @@ struct LiveReadiness: Equatable, Sendable {
         // chosen language is missing, say so instead of silently transcribing nothing — and never
         // substitute a cloud transcriber for it.
         let locale = language.transcriberLocale
-        if SFSpeechRecognizer(locale: locale)?.isAvailable != true {
-            readiness.blockers.append(.speechModelUnavailable(locale: locale.identifier))
+        let model = await speechModel(locale)
+        readiness.speechModel = model
+        switch model {
+        case .installed: break
+        case .needsDownload, .downloading:
+            readiness.blockers.append(.speechModelNotDownloaded(language: language.displayName))
+        case .unsupported:
+            readiness.blockers.append(.speechModelUnavailable(locale: language.identifier))
         }
 
         switch configuration.availability {

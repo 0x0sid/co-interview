@@ -40,6 +40,8 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
     /// Set by `stop()`. One service serves one session, so it is never cleared: a start still
     /// preparing when it is set gives up before taking the microphone.
     private let stopRequested = LockedBox(false)
+    /// This session's hold on its speech locale: never released by another language while held.
+    private let lease = LockedBox<SpeechLocaleAssets.Lease?>(nil)
     #if DEBUG
     private let debugLive = LockedBox(false)
     #endif
@@ -49,11 +51,27 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
     }
 
     func start(locale: Locale, contextualStrings: [String]) async throws -> AsyncStream<TranscriptDelta> {
-        let resolvedLocale = try await SpeechAssetManager.supportedLocale(for: locale)
-        // Normally pre-warmed during onboarding/the demo screen (§11.2, M5); calling it here too
-        // means this debug screen works standalone on a fresh device/locale with no onboarding
-        // flow to depend on. A no-op if the model is already installed.
-        try await SpeechAssetManager.ensureInstalled(locale: resolvedLocale)
+        // Resolved, reserved (releasing only inactive reservations when the system limit is
+        // reached) and installed if needed — then held for this session. The start screen offers
+        // the download explicitly; this only downloads when a session asks for a language directly
+        // (a mid-interview language change, script reading).
+        let held = try await SpeechLocaleAssets.shared.acquire(locale, allowDownload: true)
+        lease.value = held
+        let resolvedLocale = held.locale
+        do {
+            return try await startTranscribing(resolvedLocale: resolvedLocale, contextualStrings: contextualStrings)
+        } catch {
+            await releaseLease()
+            throw error
+        }
+    }
+
+    private func releaseLease() async {
+        guard let held = lease.mutate({ value -> SpeechLocaleAssets.Lease? in defer { value = nil }; return value }) else { return }
+        await SpeechLocaleAssets.shared.end(held)
+    }
+
+    private func startTranscribing(resolvedLocale: Locale, contextualStrings: [String]) async throws -> AsyncStream<TranscriptDelta> {
 
         // `.fastResults` (confirmed to exist via the real iOS 26.5 SDK's Speech.swiftinterface,
         // not from memory — `SpeechTranscriber.ReportingOption` has `.volatileResults`,
@@ -200,6 +218,7 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
         workTask?.cancel()
         workTask = nil
         audioCapture.stop()
+        await releaseLease()
         #if DEBUG
         if debugLive.value { debugLive.value = false; LiveLifecycle.adjust(\.transcribers, by: -1) }
         #endif
