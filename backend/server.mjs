@@ -710,6 +710,15 @@ export function answerLanguageOf(body) {
   return { code, name };
 }
 
+/**
+ * The hard instruction for the selected answer language. Deliberately independent of the transcript:
+ * the selected interview locale decides, never the speech's language.
+ */
+export function answerLanguageInstruction({ name }) {
+  return `Respond in ${name}. The selected interview language is authoritative even when the transcript contains English, French, code, technical terms, or mixed-language speech. ` +
+    `Write the TITLE in ${name} too. Technical identifiers — Java 8, Stream API, Spring Boot, Python, class names, code — stay unchanged.`;
+}
+
 function buildAnswerMessages(body, words) {
   const answerLanguage = answerLanguageOf(body);
   const passageText = (body.passages ?? [])
@@ -747,7 +756,7 @@ function buildAnswerMessages(body, words) {
   // this session simply has no imported documents — leaves general questions answerable and keeps
   // the evidence requirement on personal claims intact.
   const user = [
-    `ANSWER LANGUAGE: ${answerLanguage.name} [${answerLanguage.code}] — the interview language the candidate selected. Write the TITLE and the whole answer in ${answerLanguage.name}, whatever language the speech below is in.`,
+    `ANSWER LANGUAGE: ${answerLanguage.name} [${answerLanguage.code}]\n${answerLanguageInstruction(answerLanguage)}`,
     `TARGET LENGTH: about ${words[0]}-${words[1]} words, not counting any code block.`,
     `SPEAKER INSTRUCTIONS (from the interviewee, follow unless they conflict with the rules):\n${
       clip(body.projectInstructions, 4000) || "(the speaker has not written any; use a neutral register)"
@@ -793,7 +802,7 @@ function buildAnswerMessages(body, words) {
         ]
       : []),
     // Last, so it is the final thing read: the selected language, not the speech's, decides.
-    `Write the TITLE and the answer in ${answerLanguage.name}.`,
+    `Respond in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
   ].join("\n\n");
 
   // Attachments become extra content parts on the same user message, after the text, so the model

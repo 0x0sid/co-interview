@@ -264,16 +264,31 @@ try {
     for (const [code, name] of [["en-US", "English (United States)"], ["fr-FR", "French (France)"],
                                 ["es-CL", "Spanish (Chile)"], ["zh-TW", "Traditional Chinese (Taiwan)"]]) {
       const { user } = await sentFor({ answerLanguage: code, language: code.slice(0, 2) });
-      check(`${code}: the request names ${name} as the answer language`,
-            user.includes(`ANSWER LANGUAGE: ${name} [${code}]`) && user.includes(`Write the TITLE and the answer in ${name}.`));
+      check(`${code}: the request names ${name} as the answer language, with the hard instruction`,
+            user.includes(`ANSWER LANGUAGE: ${name} [${code}]`) &&
+            user.includes(`Respond in ${name}. The selected interview language is authoritative even when the transcript contains English, French, code, technical terms, or mixed-language speech.`) &&
+            user.includes(`Respond in ${name}, and write the TITLE in ${name}.`));
+    }
+    const spanishInstruction = "Respond in Spanish (Chile). The selected interview language is authoritative";
+    {
+      // Regression: es-CL selected, and the whole transcript is English.
+      const english = ["Thanks for coming in today.", "Can you explain the Stream API in Java 8?"];
+      const { user } = await sentFor({ answerLanguage: "es-CL", language: "es-CL", question: english[1],
+                                       recentConversation: english, newInput: [english[1]] });
+      check("es-CL with an entirely English transcript still requires Spanish",
+            user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes(spanishInstruction) &&
+            user.includes("Respond in Spanish (Chile), and write the TITLE in Spanish (Chile).") && !/ANSWER LANGUAGE: English/.test(user));
     }
     {
-      const english = "Can you explain the Stream API?";
-      const { user } = await sentFor({ answerLanguage: "es-CL", language: "es-CL", question: english,
-                                       recentConversation: ["Hola, gracias por venir.", english], newInput: [english] });
-      check("an English question with es-CL selected is still answered in Spanish",
-            user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes("Write the TITLE and the answer in Spanish (Chile).") && user.includes(english));
+      // Mixed Spanish and English speech: the selection still decides.
+      const mixed = ["Hola, gracias por venir.", "¿Cuál es la diferencia entre Java 8 y Java 6?", "And can you explain the Stream API?"];
+      const { user } = await sentFor({ answerLanguage: "es-CL", language: "es-CL", question: mixed[2],
+                                       recentConversation: mixed, newInput: mixed.slice(1) });
+      check("es-CL with mixed Spanish and English speech still requires Spanish",
+            user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes(spanishInstruction));
     }
+    check("no transcript-language detection decides the answer language",
+          !/language of TO ANSWER NOW/i.test(rules) && /Never choose the language from the speech yourself/.test(rules));
     {
       const { user } = await sentFor({ language: "fr" });
       check("an older app that sends only language still gets that language", user.includes("ANSWER LANGUAGE: French [fr]"));
