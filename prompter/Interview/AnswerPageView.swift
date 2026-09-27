@@ -113,14 +113,20 @@ struct AnswerPageView: View {
             .padding(.bottom, InterviewTheme.Metric.pillClearance)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 6).onChanged { _ in onBeginManualScroll() }
-        )
+        // The scroll view's own phase says when the reader takes over — a vertical scroll only. A
+        // drag gesture here also fired on sideways swipes and competed with the pager's horizontal
+        // pan, so swiping between answers was unreliable.
         .onScrollPhaseChange { _, phase in
-            // The reader keeps the scroll until the view settles; only then is the region they chose
-            // meaningful (see `ScrollOwnership.endManualInteraction`).
-            guard phase == .idle else { return }
-            onEndManualScroll(visibleTokenRange)
+            switch phase {
+            case .interacting:
+                onBeginManualScroll()
+            case .idle:
+                // The reader keeps the scroll until the view settles; only then is the region they
+                // chose meaningful (see `ScrollOwnership.endManualInteraction`).
+                onEndManualScroll(visibleTokenRange)
+            default:
+                break
+            }
         }
     }
 
