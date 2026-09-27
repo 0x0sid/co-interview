@@ -249,6 +249,27 @@ struct InterviewLocalePropagationTests {
         coordinator.endSession()
     }
 
+    /// The selected interview language is sent as the answer language, whatever the speech was in.
+    @Test(arguments: ["en-US", "fr-FR", "es-CL", "zh-TW"])
+    func theInterviewLanguageIsTheAnswerLanguage(_ identifier: String) async throws {
+        let provider = CopilotTestSupport.StubProvider()
+        let coordinator = CopilotSessionCoordinator(
+            project: SessionFileContext(language: InterviewLanguage(identifier: identifier)),
+            provider: provider,
+            audio: InterviewAudioInput(makeService: { RecordingTranscriber() }),
+            generationMode: .manual
+        )
+        // Asked in English on purpose: the selection, not the speech, decides.
+        coordinator.askTyped("Can you explain the Stream API?")
+        let card = try #require(coordinator.cards.first)
+        coordinator.startGeneration(for: card.id)
+        try await CopilotTestSupport.waitUntil("sent") { provider.lastAnswerRequest != nil }
+        #expect(provider.lastAnswerRequest?.answerLanguage == identifier)
+        let body = try JSONSerialization.jsonObject(with: JSONEncoder().encode(try #require(provider.lastAnswerRequest))) as? [String: Any]
+        #expect(body?["answerLanguage"] as? String == identifier, "the field is on the wire")
+        coordinator.endSession()
+    }
+
     @Test
     func changingLanguageMidInterviewRestartsInTheNewLocale() async throws {
         let transcriber = RecordingTranscriber()

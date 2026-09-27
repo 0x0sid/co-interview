@@ -709,6 +709,7 @@ final class CopilotSessionCoordinator {
         )
 
         request.generationKey = discussion?.generationKey ?? UUID().uuidString
+        request.answerLanguage = project.language.identifier
         generationQueue.append(version.id)
         pumpQueue(request: request, versionID: version.id, passages: passages)
     }

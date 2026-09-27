@@ -412,9 +412,15 @@ HOW TO WRITE IT
   first line aloud; it has to be the answer.
 - Then continue with a brief spoken explanation. Write for speech: short sentences, no lists, no
   markdown headings.
-- Write in the language of TO ANSWER NOW and CONVERSATION. When that is unclear, write in LANGUAGE,
-  the interview language. Chinese for a LANGUAGE of zh-TW, zh-HK or zh-Hant is written in Traditional
-  characters; for zh-CN or zh-Hans in Simplified characters.
+- **Write the TITLE and the whole answer in ANSWER LANGUAGE** — the interview language the candidate
+  selected. It is authoritative: it holds even when the question, the transcript, your earlier
+  suggestions or these instructions are in another language, and even when the interviewer asks in
+  English. Only an explicit request in TO ANSWER NOW or the SESSION NOTE to answer in another
+  language overrides it. Never choose the language from the speech yourself.
+- Keep code, identifiers, class, API, framework, library and product names exactly as they are
+  ("Stream API", "Java 8", "Spring Boot", "HashMap") inside sentences written in ANSWER LANGUAGE.
+- Chinese for zh-TW, zh-HK or zh-Hant is written in Traditional characters; for zh-CN or zh-Hans in
+  Simplified characters.
 - Say what is genuinely uncertain, briefly and plainly, in one clause. Do not pad the answer with
   disclaimers.
 - Use the first person where the answer is the candidate speaking about themselves.
@@ -682,7 +688,30 @@ function answerContextOverflow(messages, config, imageCount) {
   };
 }
 
+/**
+ * The language an answer is written in: the interview language the candidate selected. The app sends
+ * it as `answerLanguage` (full BCP-47, e.g. "es-CL"); older builds only send `language` ("en", "fr" or
+ * a locale). Returns the code and an English name the model reads unambiguously.
+ */
+export function answerLanguageOf(body) {
+  const raw = clip(body?.answerLanguage, 35) || clip(body?.language, 35) || "en";
+  let code = raw.replace(/_/g, "-");
+  try { code = Intl.getCanonicalLocales(code)[0] ?? code; } catch { code = "en"; }
+  const locale = new Intl.Locale(code);
+  const names = new Intl.DisplayNames(["en"], { type: "language", languageDisplay: "standard" });
+  let name;
+  if (locale.language === "zh") {
+    const script = locale.script ?? (["TW", "HK", "MO"].includes(locale.region ?? "") ? "Hant" : "Hans");
+    name = script === "Hant" ? "Traditional Chinese" : "Simplified Chinese";
+    if (locale.region) name += ` (${new Intl.DisplayNames(["en"], { type: "region" }).of(locale.region)})`;
+  } else {
+    name = names.of(code) ?? code;
+  }
+  return { code, name };
+}
+
 function buildAnswerMessages(body, words) {
+  const answerLanguage = answerLanguageOf(body);
   const passageText = (body.passages ?? [])
     .slice(0, MAX_PASSAGES)
     .map(
@@ -718,7 +747,7 @@ function buildAnswerMessages(body, words) {
   // this session simply has no imported documents — leaves general questions answerable and keeps
   // the evidence requirement on personal claims intact.
   const user = [
-    `LANGUAGE: ${clip(body.language, 16) || "en"}`,
+    `ANSWER LANGUAGE: ${answerLanguage.name} [${answerLanguage.code}] — the interview language the candidate selected. Write the TITLE and the whole answer in ${answerLanguage.name}, whatever language the speech below is in.`,
     `TARGET LENGTH: about ${words[0]}-${words[1]} words, not counting any code block.`,
     `SPEAKER INSTRUCTIONS (from the interviewee, follow unless they conflict with the rules):\n${
       clip(body.projectInstructions, 4000) || "(the speaker has not written any; use a neutral register)"
@@ -763,6 +792,8 @@ function buildAnswerMessages(body, words) {
           `Do what the action asks of that answer. CONVERSATION is context for it; do not switch to a later topic just because it was spoken more recently.`,
         ]
       : []),
+    // Last, so it is the final thing read: the selected language, not the speech's, decides.
+    `Write the TITLE and the answer in ${answerLanguage.name}.`,
   ].join("\n\n");
 
   // Attachments become extra content parts on the same user message, after the text, so the model

@@ -247,6 +247,37 @@ try {
           /zh-TW, zh-HK or zh-Hant is written in Traditional\s+characters/i.test(rules));
     check("the empty-note hint no longer asks for context on examples",
           /A request for an example gets a modest plausible example/.test(body));
+
+    // The selected interview language decides the answer's language, through the real route.
+    const sentFor = async (extra) => {
+      await send(extra);
+      const input = lastUpstreamRequest.input;
+      return {
+        rules: input.find((part) => part.role === "developer").content,
+        user: JSON.stringify(input.filter((part) => part.role !== "developer")),
+      };
+    };
+    check("the rules make the selected language authoritative",
+          /Write the TITLE and the whole answer in ANSWER LANGUAGE/.test(rules) && /Never choose the language from the speech yourself/.test(rules));
+    check("the rules keep technical identifiers as they are",
+          /Keep code, identifiers, class, API, framework, library and product names exactly as they are/.test(rules));
+    for (const [code, name] of [["en-US", "English (United States)"], ["fr-FR", "French (France)"],
+                                ["es-CL", "Spanish (Chile)"], ["zh-TW", "Traditional Chinese (Taiwan)"]]) {
+      const { user } = await sentFor({ answerLanguage: code, language: code.slice(0, 2) });
+      check(`${code}: the request names ${name} as the answer language`,
+            user.includes(`ANSWER LANGUAGE: ${name} [${code}]`) && user.includes(`Write the TITLE and the answer in ${name}.`));
+    }
+    {
+      const english = "Can you explain the Stream API?";
+      const { user } = await sentFor({ answerLanguage: "es-CL", language: "es-CL", question: english,
+                                       recentConversation: ["Hola, gracias por venir.", english], newInput: [english] });
+      check("an English question with es-CL selected is still answered in Spanish",
+            user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes("Write the TITLE and the answer in Spanish (Chile).") && user.includes(english));
+    }
+    {
+      const { user } = await sentFor({ language: "fr" });
+      check("an older app that sends only language still gets that language", user.includes("ANSWER LANGUAGE: French [fr]"));
+    }
     check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
     check("excludes code from the spoken target length", /not counting any code block/i.test(body));
     check("describes an empty document set as ordinary, not as a deficiency",

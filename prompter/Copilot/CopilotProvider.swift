@@ -112,6 +112,11 @@ struct AnswerRequest: Sendable, Encodable {
     var generationKey: String?
     let passages: [Passage]
     let language: String
+    /// **The language the answer must be written in**: the interview language the user selected, as a
+    /// full BCP-47 locale ("en-US", "fr-FR", "es-CL", "zh-TW"). Authoritative — the backend writes the
+    /// answer and its title in it whatever language the speech was in. `language` keeps its older short
+    /// form for backends that predate this field.
+    var answerLanguage: String?
     let targetWordRange: [Int]
     /// Used only for prompt-cache affinity on the backend; never a credential.
     let projectID: String
