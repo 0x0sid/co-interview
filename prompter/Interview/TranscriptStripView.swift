@@ -2,9 +2,9 @@ import SwiftUI
 
 /// The live transcript at the top of the screen, in its two states.
 ///
-/// **Collapsed** is the working state: the last detected question, underlined in the primary colour,
-/// and the line currently being spoken beneath it in muted grey. Two lines, no scrolling, nothing to
-/// manage.
+/// **Collapsed** is the working state: the two newest lines. Two lines, no scrolling, nothing to
+/// manage. **Plain transcript text only** (owner decision, 2026-09-28): no line is styled, underlined or
+/// tappable as a "detected question" — a classifier's guess is not something to act on.
 ///
 /// **Expanded** shows more of the conversation and reveals the Context panel. Collapsing it is a
 /// view change only — the note and the attached images stay exactly where they were.
@@ -13,7 +13,6 @@ struct TranscriptStripView: View {
     @Binding var isExpanded: Bool
     @Binding var isContextOpen: Bool
     let context: ContextState
-    let onSelectQuestion: (UUID) -> Void
     let onNoteChanged: (String) -> Void
     /// "1 file", "2 files" — images and documents together — or nil when nothing is attached.
     var filesLabel: String? = nil
@@ -29,14 +28,10 @@ struct TranscriptStripView: View {
     /// The expanded transcript's natural height, so a short transcript takes only the room it needs.
     @State private var expandedContentHeight: CGFloat = 0
 
-    /// **Collapsed is exactly two lines**: the last detected question and the newest thing said. It
-    /// never grows, so the answer below it never moves as the conversation continues. Expanding
-    /// shows a longer tail of the same transcript.
+    /// **Collapsed is exactly two lines**: the two newest things said. It never grows, so the answer
+    /// below it never moves as the conversation continues. Expanding shows a longer tail.
     private var visibleLines: [TranscriptLine] {
-        guard !isExpanded else { return Array(lines.suffix(Self.expandedLineLimit)) }
-        let newest = lines.last
-        let lastQuestion = lines.last(where: { $0.isDetectedQuestion && $0.id != newest?.id })
-        return [lastQuestion, newest].compactMap { $0 }
+        Array(lines.suffix(isExpanded ? Self.expandedLineLimit : 2))
     }
 
     /// How many lines the expanded transcript holds. More than this and it scrolls inside itself.
@@ -105,28 +100,12 @@ struct TranscriptStripView: View {
         }
     }
 
-    @ViewBuilder
+    /// Every line the same: text, no button, no highlight, no accessibility action.
     private func lineView(_ line: TranscriptLine) -> some View {
-        if line.isDetectedQuestion {
-            Button {
-                if let id = line.questionID { onSelectQuestion(id) }
-            } label: {
-                Text(line.text)
-                    .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                    .foregroundStyle(InterviewTheme.Color.primary)
-                    .underline(true, color: InterviewTheme.Color.primary.opacity(0.55))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-            .disabled(line.questionID == nil)
-            .accessibilityHint(line.questionID == nil ? "" : "Opens this question")
-        } else {
-            Text(line.text)
-                .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                .foregroundStyle(InterviewTheme.Color.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        Text(line.text)
+            .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+            .foregroundStyle(InterviewTheme.Color.muted)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Context

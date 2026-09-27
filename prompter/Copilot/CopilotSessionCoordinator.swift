@@ -63,6 +63,14 @@ final class CopilotSessionCoordinator {
     /// stay pending so detection picks them up if access returns.
     var allowsPaidDetection: (() -> Bool)?
 
+    /// Whether speech is classified into question cards at all. **Off for a live interview** (owner
+    /// decision, 2026-09-28): a classifier guess ("Um, but this is not what I'm asking") must never
+    /// become a page, and nothing in the live screen needs it — turns come from `ConversationLog`,
+    /// Generate snapshots the transcript itself, scoring uses marked lines. Each classification is a
+    /// paid backend call, so it is not run just to be ignored. Demo, the pipeline screen and the
+    /// coordinator's own tests keep it on.
+    var detectsQuestions = true
+
     /// Observation hooks, in the same idiom `InterviewAudioInput` already uses for `onDelta`.
     /// They exist so `LiveInterviewFeed` can translate this coordinator into `InterviewFeedEvent`s
     /// without polling and without owning any pipeline state of its own.
@@ -254,6 +262,7 @@ final class CopilotSessionCoordinator {
     }
 
     private func evaluateDetection(now: TimeInterval, didFinalize: Bool, manual: Bool = false, isDrain: Bool = false) {
+        guard detectsQuestions else { return }
         // **One turn at a time.** Everything unconsumed used to be classified as a single block, so two
         // questions that finalized back to back became one card and the second was swallowed by the
         // cut-off. `turnExtension` widens the window only when the detector said the question was

@@ -44,28 +44,29 @@ struct LiveInterviewFeedTests {
         return collected
     }
 
-    // MARK: Detection never generates
+    // MARK: Speech never makes a page
 
-    /// The single most important live rule: speech produces questions, not answers.
+    /// The live rule (owner decision, 2026-09-28): speech produces transcript, not questions and not
+    /// answers. A classifier guess never becomes a card, and a live interview does not classify.
     @Test
-    func detectingAQuestionInLiveNeverStartsAnAnswer() async throws {
-        let (feed, coordinator, _) = Self.makeFeed()
+    func liveSpeechNeverBecomesACardOrAClassification() async throws {
+        let (feed, coordinator, provider) = Self.makeFeed()
         coordinator.ingest(CopilotTestSupport.finalDelta("How do you handle backpressure?", at: 1.0))
-        coordinator.tick(now: 3.0)
-        try await Task.sleep(for: .milliseconds(60))
+        coordinator.ingest(CopilotTestSupport.finalDelta("Um, but this is not what I'm asking.", at: 4.0))
+        coordinator.tick(now: 8.0)
+        await Task.yield()
 
-        #expect(coordinator.cards.count == 1, "detection did not produce a question")
-        #expect(coordinator.cards[0].versions.isEmpty, "an answer was generated without anyone asking")
+        #expect(coordinator.cards.isEmpty, "speech alone produced a card")
+        #expect(provider.classifyCallCount == 0, "a live interview sent a classification request")
         _ = feed
     }
 
     @Test
     func generationHappensOnlyWhenTheScreenAsks() async throws {
         let (feed, coordinator, _) = Self.makeFeed()
-        coordinator.ingest(CopilotTestSupport.finalDelta("How do you handle backpressure?", at: 1.0))
-        coordinator.tick(now: 3.0)
-        try await Task.sleep(for: .milliseconds(60))
+        coordinator.askTyped("How do you handle backpressure?")
         let card = try #require(coordinator.cards.first)
+        #expect(card.versions.isEmpty, "asking produced an answer before Generate")
 
         let questionID = UUID()
         // The feed maps interface ids to pipeline cards when it announces them; re-announce here so
@@ -132,9 +133,10 @@ struct LiveInterviewFeedTests {
     @Test
     func realTranscriptDeltasAdvanceTheReader() throws {
         let feed = InterviewScreenModelTests.RecordingFeed()
-        let model = InterviewScreenModel(mode: .live, feed: feed)
         let question = InterviewQuestion(text: "How?")
-        model.handle(.questionDetected(question))
+        var restored = RestoredInterview()
+        restored.questions = [question]
+        let model = InterviewScreenModel(mode: .live, feed: feed, restored: restored)
         model.generate(for: question)
         let request = try #require(feed.requests.last)
         model.handle(.answerStarted(requestID: request.requestID, questionID: question.id))
@@ -214,9 +216,7 @@ struct LiveInterviewFeedTests {
     @Test
     func theSessionNoteIsSnapshottedIntoTheRequest() async throws {
         let (feed, coordinator, provider) = Self.makeFeed()
-        coordinator.ingest(CopilotTestSupport.finalDelta("How do you handle backpressure?", at: 1.0))
-        coordinator.tick(now: 3.0)
-        try await Task.sleep(for: .milliseconds(60))
+        coordinator.askTyped("How do you handle backpressure?")
         let card = try #require(coordinator.cards.first)
 
         coordinator.sessionNote = "Focus on Java 17"

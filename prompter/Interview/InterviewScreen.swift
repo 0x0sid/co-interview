@@ -144,7 +144,6 @@ struct InterviewScreen: View {
                         isExpanded: $model.isTranscriptExpanded,
                         isContextOpen: $model.isContextPanelOpen,
                         context: model.context,
-                        onSelectQuestion: { model.select(questionID: $0) },
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
                         filesLabel: files?.countLabel,
                         onOpenFiles: { isShowingFiles = true },

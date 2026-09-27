@@ -51,7 +51,10 @@ final class LiveInterviewFeed: InterviewFeed {
             self?.onDelta?(delta)
         }
 
-        coordinator.onCardAppended = { [weak self] card in self?.announce(card) }
+        // **Cards are what the user asked for, never classifier guesses.** A live interview does not
+        // classify speech into questions, and nothing the coordinator might still detect is announced:
+        // pages come only from Generate (`requestAnswerForDiscussion`).
+        coordinator.detectsQuestions = false
         coordinator.onCardRenamed = { [weak self] cardID, title in
             guard let self, let requestID = self.requestByCard[cardID] else { return }
             self.continuation.yield(.answerTopicResolved(requestID: requestID, topic: title))
@@ -226,26 +229,6 @@ final class LiveInterviewFeed: InterviewFeed {
 
     // MARK: - Translating the pipeline into interface events
 
-    private func announce(_ card: QuestionCard) {
-        let questionID = UUID()
-        questionIDByCard[card.id] = questionID
-        cardIDByQuestion[questionID] = card.id
-        continuation.yield(.questionDetected(InterviewQuestion(id: questionID, text: card.questionText)))
-        // The lines that asked it learn their question now. They were emitted before detection ran,
-        // and a line is otherwise re-sent only when its words change — so without this the screen
-        // could not tell an earlier question's words from new speech, and sent them again as new input.
-        for utterance in coordinator.conversation.utterances where card.sourceUtteranceIDs.contains(utterance.id) {
-            continuation.yield(.transcriptLine(TranscriptLine(
-                id: utterance.id,
-                text: utterance.text,
-                isDetectedQuestion: true,
-                questionID: questionID,
-                isFinal: true,
-                revision: utterance.revision
-            )))
-        }
-    }
-
     /// Emits transcript lines for finalized turns, and replaces the in-progress line in place.
     ///
     /// A revision updates the line it belongs to rather than appending a second copy — that is what
@@ -264,8 +247,9 @@ final class LiveInterviewFeed: InterviewFeed {
             continuation.yield(.transcriptLine(TranscriptLine(
                 id: utterance.id,
                 text: utterance.text,
-                isDetectedQuestion: isDetectedQuestion(utterance.id),
-                questionID: questionID(forUtterance: utterance.id),
+                // Plain transcript: no line is marked or linked as a question.
+                isDetectedQuestion: false,
+                questionID: nil,
                 isFinal: true,
                 revision: utterance.revision
             )))
@@ -288,17 +272,6 @@ final class LiveInterviewFeed: InterviewFeed {
 
     private static func signature(_ text: String, revision: Int, isFinal: Bool) -> String {
         "\(revision)|\(isFinal)|\(text)"
-    }
-
-    private func isDetectedQuestion(_ utteranceID: UtteranceID) -> Bool {
-        coordinator.cards.contains { $0.sourceUtteranceIDs.contains(utteranceID) }
-    }
-
-    private func questionID(forUtterance utteranceID: UtteranceID) -> UUID? {
-        guard let card = coordinator.cards.first(where: { $0.sourceUtteranceIDs.contains(utteranceID) }) else {
-            return nil
-        }
-        return questionIDByCard[card.id]
     }
 
     /// Streams the *newly added* text of a version, so the screen appends rather than redraws. The

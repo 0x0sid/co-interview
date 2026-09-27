@@ -377,6 +377,9 @@ final class InterviewScreenModel {
             upsert(line)
 
         case .questionDetected(let question):
+            // Live pages are only what the user asked for with Generate; a classifier's guess never
+            // becomes one. The scripted demo still plays its questions.
+            guard mode == .demo else { break }
             appendQuestion(question)
 
         case .answerStarted(let requestID, let questionID):
@@ -874,7 +877,10 @@ final class InterviewScreenModel {
         for line in transcript where line.questionID == question.id {
             coveredLines[line.id] = Self.meaningfulWording(line.text)
         }
-        if let liveFeed, !liveFeed.canAnswerFromCard(questionID: question.id) || !canAcceptAnotherAnswer {
+        // A page Generate created is answered again from **its own snapshot** — the speech, note and
+        // files as they were when it was asked — so newer speech can never become what it answers.
+        if let liveFeed, retainedSnapshots[question.id] != nil
+            || !liveFeed.canAnswerFromCard(questionID: question.id) || !canAcceptAnotherAnswer {
             requestFromSavedQuestion(question, isRegeneration: isRegeneration)
         } else {
             requestAnswer(for: question, isRegeneration: isRegeneration)
