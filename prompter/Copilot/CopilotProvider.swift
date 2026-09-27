@@ -425,6 +425,11 @@ final class BackendCopilotProvider: CopilotProviding, @unchecked Sendable {
                 do {
                     let body = try JSONEncoder().encode(request)
                     #if DEBUG
+                    // The language fields exactly as they are on the wire — read back from the encoded
+                    // JSON, not from the struct. Metadata only: no speech, no answer text.
+                    if let wire = try? JSONSerialization.jsonObject(with: body) as? [String: Any] {
+                        LiveLifecycle.note("[AnswerLang] send answerLanguage=\(wire["answerLanguage"] as? String ?? "-") language=\(wire["language"] as? String ?? "-") action=\(wire["requestedAction"] == nil ? "no" : "yes") key=\((wire["generationKey"] as? String)?.prefix(8) ?? "-")")
+                    }
                     // The bytes actually sent, recorded before the request leaves. Redacted inside
                     // the recorder; image payloads are replaced rather than stored.
                     if request.captureProviderMessages,

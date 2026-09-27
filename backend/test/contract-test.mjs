@@ -266,10 +266,12 @@ try {
       const { user } = await sentFor({ answerLanguage: code, language: code.slice(0, 2) });
       check(`${code}: the request names ${name} as the answer language, with the hard instruction`,
             user.includes(`ANSWER LANGUAGE: ${name} [${code}]`) &&
-            user.includes(`Respond in ${name}. The selected interview language is authoritative even when the transcript contains English, French, code, technical terms, or mixed-language speech.`) &&
-            user.includes(`Respond in ${name}, and write the TITLE in ${name}.`));
+            user.includes(`Respond entirely in ${name}.`) &&
+            user.includes("The selected interview language is authoritative, even when the transcript contains English, French, code, technical terms, or mixed-language speech.") &&
+            user.includes("Do not switch to another language because the transcript, question, recent conversation, technical vocabulary, code, or retrieved context is in another language.") &&
+            user.includes(`Respond entirely in ${name}, and write the TITLE in ${name}.`));
     }
-    const spanishInstruction = "Respond in Spanish (Chile). The selected interview language is authoritative";
+    const spanishInstruction = "Respond entirely in Spanish (Chile).";
     {
       // Regression: es-CL selected, and the whole transcript is English.
       const english = ["Thanks for coming in today.", "Can you explain the Stream API in Java 8?"];
@@ -277,7 +279,7 @@ try {
                                        recentConversation: english, newInput: [english[1]] });
       check("es-CL with an entirely English transcript still requires Spanish",
             user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes(spanishInstruction) &&
-            user.includes("Respond in Spanish (Chile), and write the TITLE in Spanish (Chile).") && !/ANSWER LANGUAGE: English/.test(user));
+            user.includes("Respond entirely in Spanish (Chile), and write the TITLE in Spanish (Chile).") && !/ANSWER LANGUAGE: English/.test(user));
     }
     {
       // Mixed Spanish and English speech: the selection still decides.
@@ -293,6 +295,17 @@ try {
       const { user } = await sentFor({ language: "fr" });
       check("an older app that sends only language still gets that language", user.includes("ANSWER LANGUAGE: French [fr]"));
     }
+    {
+      const { user } = await sentFor({ language: "en", answerLanguage: "es-CL" });
+      check("when both are sent, answerLanguage wins", user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && !user.includes("ANSWER LANGUAGE: English"));
+    }
+    {
+      // A follow-up action on a page keeps the page's language.
+      const { user } = await sentFor({ answerLanguage: "es-CL", language: "es-CL", requestedAction: "Give a shorter version.",
+                                       actionParentQuestion: "Explain the Stream API", actionParentAnswer: "La Stream API…", newInput: [] });
+      check("a follow-up action still requires the selected language", user.includes("ANSWER LANGUAGE: Spanish (Chile) [es-CL]") && user.includes("Respond entirely in Spanish (Chile), and write the TITLE"));
+    }
+    check("no instruction lets the speech's language decide", !/language of TO ANSWER NOW|language of the speech|conversation language/i.test(rules));
     check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
     check("excludes code from the spoken target length", /not counting any code block/i.test(body));
     check("describes an empty document set as ordinary, not as a deficiency",

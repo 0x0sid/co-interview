@@ -715,8 +715,13 @@ export function answerLanguageOf(body) {
  * the selected interview locale decides, never the speech's language.
  */
 export function answerLanguageInstruction({ name }) {
-  return `Respond in ${name}. The selected interview language is authoritative even when the transcript contains English, French, code, technical terms, or mixed-language speech. ` +
-    `Write the TITLE in ${name} too. Technical identifiers — Java 8, Stream API, Spring Boot, Python, class names, code — stay unchanged.`;
+  return [
+    `Respond entirely in ${name}.`,
+    `The selected interview language is authoritative, even when the transcript contains English, French, code, technical terms, or mixed-language speech.`,
+    `Do not switch to another language because the transcript, question, recent conversation, technical vocabulary, code, or retrieved context is in another language.`,
+    `Write the TITLE in ${name} too.`,
+    `Preserve technical identifiers such as Java 8, Stream API, Spring Boot, Python, class names, API names and code naturally.`,
+  ].join("\n");
 }
 
 function buildAnswerMessages(body, words) {
@@ -802,7 +807,7 @@ function buildAnswerMessages(body, words) {
         ]
       : []),
     // Last, so it is the final thing read: the selected language, not the speech's, decides.
-    `Respond in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
+    `Respond entirely in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
   ].join("\n\n");
 
   // Attachments become extra content parts on the same user message, after the text, so the model
@@ -1315,6 +1320,12 @@ async function handleAnswer(request, response, caller) {
       ? `only the first ${MAX_IMAGES} images were sent`
       : null;
   const messages = buildAnswerMessages(modelAcceptsImages ? body : { ...body, images: [] }, words);
+  // Metadata only — which language fields arrived and what the answer is required to be in. No speech.
+  {
+    const resolved = answerLanguageOf(body);
+    console.log(`[answer-language] answerLanguage=${clip(body.answerLanguage ?? "", 35) || "-"} language=${clip(body.language ?? "", 35) || "-"} ` +
+      `resolved=${resolved.code} (${resolved.name}) action=${body.requestedAction ? "yes" : "no"} key=${clip(body.generationKey ?? "", 8) || "-"}`);
+  }
   // Which decision, if any, shaped this request — metadata only, so a device test can match the
   // request to its decision record. No speech, no answer text.
   if (typeof body.decisionStatus === "string") {
