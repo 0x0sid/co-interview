@@ -251,6 +251,8 @@ The line is now drawn by **what the answer claims**, not by what happens to be i
 - Claims about the speaker — experience, employers, projects, figures, outcomes — come only from
   supplied evidence, and are never invented, in any language. "Tell me about a time you…" with
   nothing supplied gets the general substance plus a one-sentence request for the example to use.
+  *(Superseded for requested examples on 2026-09-27 — see "Live answers give an example, not a
+  request for one" below.)*
 - Placeholders are banned outright. Nothing goes into a ready-to-read answer that the speaker would
   have to notice and not say.
 - Genuine ambiguity is asked about, never resolved by picking a plausible reading and answering it.
@@ -440,3 +442,53 @@ question it belongs to, what an answer needs. It never writes text and never sho
 request. It runs in shadow by default when a key exists, off when none does, and "active" can hand it
 only named decision types, above a confidence floor, inside a deadline, with the detector as
 fallback. Nothing is active. See `CO_INTERVIEW_AI_PIPELINE.md` §15.
+
+## Live answers and interview languages (2026-09-27)
+
+### Live answers give an example, not a request for one
+
+**Owner decision; supersedes the earlier rule that a requested example with no supplied evidence gets
+a request for context.** During a live interview the answer has to be usable immediately. When the
+interviewer asks for an example — a project, a difficult problem, a challenge, a conflict, a failure,
+leadership, a technical problem solved — the answer is a complete first-person example, chosen in
+this order:
+
+1. supplied evidence (files, session note, speaker instructions), used exactly — employer names,
+   dates, technologies, responsibilities and figures are never altered or contradicted;
+2. what the candidate already said about themselves earlier in the interview;
+3. otherwise a modest, plausible example that fits the role and topic.
+
+The answer does not say the example is hypothetical, and never answers with "Could you provide a
+specific project…" or "I need more context". Invented examples stay believable: no named well-known
+employers or clients, no degrees, certifications or awards, no dates, no dramatic figures. A single
+hard biographical fact — current employer, job title, a date, a degree, a salary — is still never
+invented; that alone still gets the one-sentence request and `[needs: context]`.
+
+Enforced in `backend/server.mjs` (`ANSWER_RULES`, "EXAMPLES THE INTERVIEWER ASKS FOR") and pinned by
+`backend/test/contract-test.mjs` ("answer policy").
+
+### Speech locale reservations are owned, not accumulated
+
+Apple allows an app `AssetInventory.maximumReservedLocales` speech locales, and
+`assetInstallationRequest` reserves implicitly. The app never released one, so after five languages
+had been tried on the phone the next failed with "Too many allocated locales, 5 maximum".
+`SpeechLocaleAssets` is now the one owner: it reuses an existing reservation, and at the maximum
+releases the least recently used **inactive** locale (English kept preferentially) before reserving
+another. A locale held by a running session is never released. The start screen shows "<Language>
+speech model required — Download once to use <Language> interviews on this iPhone" with a Download
+button and progress when the model is supported but missing, and says plainly when a language is not
+supported on the device. There is no fallback to English.
+
+### The question generated for is the question sent
+
+The bottom Generate answers the newest speech. Lines that asked an earlier detected question belong to
+that question's page and are never sent again as new input; answering a page marks its lines as
+answered. A page's own Generate always sends that page's question.
+
+### Interview review is a score
+
+The post-interview review is **Score interview**: four criteria (relevance, clarity, structure,
+examples) from 0 to 4 and an overall score, each with short evidence, from the lines the candidate
+marked as theirs only. The narrative summary, topics, key points, practice questions and coaching prose
+are no longer generated. Reviews saved before this still open.
+

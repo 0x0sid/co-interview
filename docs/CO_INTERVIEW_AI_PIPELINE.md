@@ -255,10 +255,13 @@ supersedes the earlier rule that every answer had to come only from uploaded doc
   The backend validates every cited id against the passages it actually sent and drops unknown ones.
 - **Nothing is ever stubbed.** Placeholders are banned outright: no `<add a specific example>`, no
   bracketed blanks. The answer is read aloud exactly as written, so a stub becomes something a person
-  says in an interview. Where a personal detail is genuinely missing, the answer asks for that detail
-  in one sentence and gives the general substance around it.
-- **Mixed questions** are answered in two parts: the general half from knowledge, the personal half
-  only as far as the evidence supports, with the remainder requested rather than invented.
+  says in an interview.
+- **A requested example is answered with one** (owner decision, 2026-09-27): supplied evidence first,
+  used exactly; then what the candidate said earlier; otherwise a modest plausible example. Never a
+  request for context. Only a single hard biographical fact (employer, title, date, degree, salary) is
+  still asked for rather than invented. See `CO_INTERVIEW_DECISIONS.md`.
+- **Mixed questions** are answered in two parts: the general half from knowledge, the personal half as
+  an example under the same rules.
 - **Genuine ambiguity is asked about, not resolved by guessing.** A mis-transcription that leaves two
   readings needing different answers gets one clarifying question as the entire reply.
 - **Time-sensitive questions** get what is stable, plus a plain statement that current figures cannot

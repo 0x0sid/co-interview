@@ -1,28 +1,51 @@
 import Foundation
 
-/// Summary & feedback for one saved interview, as the backend returns it (`backend/review.mjs`).
+/// An interview's score, as the backend returns it (`backend/review.mjs`).
+///
+/// **A score, not a report** (owner decision, 2026-09-27). Reviews saved before then also carried a
+/// narrative summary; those keys are simply not decoded, so an old review still opens — and shows its
+/// score — without rewriting its file.
 struct InterviewReviewReport: Codable, Equatable, Sendable {
-    struct Strength: Codable, Equatable, Sendable { let point: String; let evidence: String }
-    struct Improvement: Codable, Equatable, Sendable { let point: String; let example: String }
     struct Scores: Codable, Equatable, Sendable {
         let relevance: Int
         let clarity: Int
         let structure: Int
         let examples: Int
+
+        /// The mean of the four, to one decimal.
+        var overall: Double { (Double(relevance + clarity + structure + examples) / 4 * 10).rounded() / 10 }
+    }
+
+    /// A short quote from the candidate's marked lines per criterion; empty when none was verifiable.
+    struct Evidence: Codable, Equatable, Sendable {
+        let relevance: String
+        let clarity: String
+        let structure: String
+        let examples: String
     }
 
     let version: String
     let attributed: Bool
-    let topics: [String]
-    let questions: [String]
-    let key_points: [String]
-    let strengths: [Strength]
-    let improvements: [Improvement]
-    let practice_questions: [String]
     /// Nil when the evidence does not support a score.
     let scores: Scores?
+    /// Sent by the backend since 2026-09-27; computed from `scores` for older reviews.
+    let overall: Double?
+    let evidence: Evidence?
     let score_note: String
     let disclaimer: String
+
+    init(version: String, attributed: Bool, scores: Scores?, overall: Double? = nil, evidence: Evidence? = nil,
+         score_note: String, disclaimer: String) {
+        self.version = version
+        self.attributed = attributed
+        self.scores = scores
+        self.overall = overall
+        self.evidence = evidence
+        self.score_note = score_note
+        self.disclaimer = disclaimer
+    }
+
+    var overallScore: Double? { overall ?? scores?.overall }
 }
 
 /// A saved report with the transcript snapshot it covers. Stored beside — never over — the
@@ -69,8 +92,18 @@ struct InterviewReviewStore: Sendable {
     }
 }
 
-/// Asks the backend for a review. Pro only; authenticated like every other request.
+/// Asks the backend for a score. Pro only; authenticated like every other request.
 enum InterviewReviewClient {
+    /// Mirrors `MIN_SCORED_LINES` / `MIN_SCORED_WORDS` in `backend/review.mjs`: less marked speech than
+    /// this cannot be scored, so the app says so instead of sending a request.
+    static let minimumMarkedLines = 3
+    static let minimumMarkedWords = 60
+
+    static func canScore(markedLines: [String]) -> Bool {
+        let words = markedLines.reduce(0) { $0 + $1.split(whereSeparator: \.isWhitespace).count }
+        return markedLines.count >= minimumMarkedLines && words >= minimumMarkedWords
+    }
+
     /// Three different situations, each with its own message and remedy.
     enum Failure: Error, Equatable {
         /// The server says this needs Pro (none, or it has expired).

@@ -13,28 +13,34 @@ const check = (label, ok, detail = "") => { if (ok) console.log(`  ok   ${label}
 const mine = (text) => ({ text, candidate: true });
 const theirs = (text) => ({ text, candidate: false });
 const long = "I led the migration of forty services to Kafka and cut delivery latency by sixty percent over two quarters";
-const model = { topics: ["Kafka"], questions: ["Why Kafka?"], key_points: ["Migration"], practice_questions: ["q"],
-  strengths: [{ point: "Concrete result", evidence: "cut delivery latency by sixty percent" }, { point: "Invented", evidence: "I won an award" }],
-  improvements: [{ point: "Lead with the result", example: "Start with the 60%." }], scores: { relevance: 4, clarity: 3, structure: 9, examples: -1 } };
+const model = { scores: { relevance: 4, clarity: 3, structure: 9, examples: -1 },
+  evidence: { relevance: "cut delivery latency by sixty percent", clarity: "I won an award", structure: "", examples: "forty services to Kafka" } };
 
 {
   const lines = [theirs("Tell me about a migration."), mine(long), mine(long), mine(long), mine(long)];
   const report = finalizeReview(model, { lines });
-  check("strengths keep only evidence found in the candidate's own lines", report.strengths.length === 1 && report.strengths[0].point === "Concrete result");
   check("scores are bounded to the 0–4 rubric", report.scores.structure === 4 && report.scores.examples === 0);
+  check("the overall score is the mean of the four, to one decimal", report.overall === 2.8);
+  check("evidence keeps only quotes found in the candidate's own lines",
+    report.evidence.relevance === "cut delivery latency by sixty percent" && report.evidence.clarity === "" && report.evidence.examples === "forty services to Kafka");
+  check("no narrative is produced: no summary, topics, strengths, improvements or practice questions",
+    ["topics", "questions", "key_points", "strengths", "improvements", "practice_questions", "summary"].every((key) => !(key in report)));
   check("it is labelled coaching feedback, not a hiring prediction", report.disclaimer.includes("not a hiring prediction"));
 }
 {
   const lines = [theirs("Tell me about a migration."), mine("Kafka, mostly.")];
   const report = finalizeReview(model, { lines });
-  check("too little of the candidate's speech: no score", report.scores === null && report.score_note === "Not enough evidence to score.");
+  check("too little of the candidate's speech: no score", report.scores === null && report.overall === null && report.score_note.startsWith("Not enough evidence to score"));
 }
 {
   const lines = [{ text: "Tell me about a migration.", candidate: false }, { text: long, candidate: false }];
   const report = finalizeReview(model, { lines });
-  check("without speaker attribution: an unscored summary, no strengths or improvements",
-    report.scores === null && report.strengths.length === 0 && report.improvements.length === 0 && report.key_points.length === 0 && report.score_note.startsWith("Unscored"));
-  check("without attribution the prompt does not ask to judge anyone", buildReviewMessages({ lines, language: "en", title: "" })[0].content.includes("leave strengths, improvements empty"));
+  check("without marked lines: no score, and it says to mark them", report.scores === null && report.score_note.startsWith("Mark the lines you said"));
+}
+{
+  const prompt = buildReviewMessages({ lines: [theirs("Why Kafka?"), mine(long)], language: "fr", title: "" })[0].content;
+  check("the prompt asks for scores and quotes only, never a summary", /scores and short quotes only/.test(prompt) && !/topics|practice|improvements|key_points/.test(prompt));
+  check("the prompt scores only the candidate's lines and never suggested answers", /Score only \[CANDIDATE\] lines/.test(prompt) && /Suggested answers the app displayed are not in this transcript/.test(prompt));
 }
 check("an empty transcript is refused", (() => { try { reviewInput({ lines: [] }); return false; } catch (e) { return e.statusCode === 400; } })());
 check("enough substantial marked lines are scorable; 57 words are not", scorable([mine(long), mine(long), mine(long), mine(long)]) && !scorable([mine(long), mine(long), mine(long)]));
@@ -60,7 +66,11 @@ try {
   check("a refused review uses no free answer", access.free_answers.used === 0 && access.free_answers.remaining === 2);
   const op = await fetch(`${base}/v1/copilot/review`, { method: "POST", headers: { authorization: "Bearer operator-token" }, body });
   const report = await op.json();
-  check("the operator gets a finished report", op.status === 200 && report.scores && report.version);
+  check("the operator gets a score", op.status === 200 && report.scores && report.overall !== null && report.version.startsWith("score-"));
+  const thin = await fetch(`${base}/v1/copilot/review`, { method: "POST", headers: { authorization: "Bearer operator-token" },
+    body: JSON.stringify({ title: "T", language: "en", lines: [theirs("Why Kafka?"), mine("Kafka, mostly.")] }) });
+  const thinReport = await thin.json();
+  check("too little marked speech: answered without a score", thin.status === 200 && thinReport.scores === null);
 } finally {
   server.kill("SIGTERM");
   rmSync(dir, { recursive: true, force: true });

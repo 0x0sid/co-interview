@@ -228,8 +228,25 @@ try {
           /Never say something is "not covered by the documents"/i.test(rules));
     check("allows general questions from the model's own knowledge",
           /answer from your own knowledge/i.test(rules));
-    check("still requires evidence for claims about the speaker",
-          /comes only from PASSAGES/i.test(rules));
+    check("prefers supplied evidence about the speaker, used exactly",
+          /comes\s+first from PASSAGES/i.test(rules) && /never altered, extended or contradicted/i.test(rules));
+    // Owner decision: an example the interviewer asks for is answered, not turned into a request.
+    check("answers a requested example with a plausible one when nothing is supplied",
+          /A plausible example\.\*\* With neither, write a coherent, believable example/i.test(rules));
+    check("forbids answering an example request with a request for context",
+          /Never answer a request for an example with a request for context/i.test(rules));
+    check("no longer forbids composing a requested story",
+          !/are not invitations to compose a story/i.test(rules) && !/The candidate's history exists only in the supplied material/i.test(rules));
+    check("keeps invented examples modest: no employers, credentials, dates or dramatic figures",
+          /no named well-known employers or clients, no degrees,\s+certifications or awards, no dates, and no dramatic figures/i.test(rules));
+    check("never invents a hard biographical fact",
+          /single hard biographical fact[\s\S]*is never invented/i.test(rules));
+    check("never contradicts what was supplied or said",
+          /never contradicts anything supplied or said earlier/i.test(rules));
+    check("writes Traditional characters for a zh-TW interview",
+          /zh-TW, zh-HK or zh-Hant is written in Traditional\s+characters/i.test(rules));
+    check("the empty-note hint no longer asks for context on examples",
+          /A request for an example gets a modest plausible example/.test(body));
     check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
     check("excludes code from the spoken target length", /not counting any code block/i.test(body));
     check("describes an empty document set as ordinary, not as a deficiency",

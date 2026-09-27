@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Summary & feedback for a saved interview: an explicit AI action (Pro) on a frozen snapshot of its
-/// transcript, saved locally with that snapshot.
+/// Score interview: an explicit AI action (Pro) on a frozen snapshot of the saved transcript, saved
+/// locally with that snapshot. **A score only** — no generated summary or coaching report.
 ///
-/// The transcript does not say who spoke, so the candidate can mark the lines they said. Only those are
-/// judged; without them the report is an unscored conversation summary, and with too few of them it
-/// says "Not enough evidence to score". The app's own suggested answers are never part of it.
+/// The transcript does not say who spoke, so the candidate marks the lines they said. Only those are
+/// scored; with too few of them there is nothing to score and no request is sent. The app's own
+/// suggested answers are never part of it.
 struct InterviewReviewSheet: View {
     let session: InterviewSessionRecord
     var store: InterviewReviewStore = .standard
@@ -27,6 +27,10 @@ struct InterviewReviewSheet: View {
             .map { ($0.order, $0.text) }
     }
 
+    private var canScore: Bool {
+        InterviewReviewClient.canScore(markedLines: lines.filter { marked.contains($0.order) }.map(\.text))
+    }
+
     /// Pro, or a development build not using installation access (the backend still decides).
     private var mayGenerate: Bool { access?.usesServerAccess == false || access?.isPro == true }
 
@@ -36,23 +40,17 @@ struct InterviewReviewSheet: View {
                 if let saved {
                     if saved.coversEarlierSnapshot(of: session) {
                         Section {
-                            Label("This report covers an earlier point in the interview. Generate again to include what was said since.",
+                            Label("This score covers an earlier point in the interview. Score again to include what was said since.",
                                   systemImage: "clock.arrow.circlepath")
                                 .font(Typography.body(13))
                                 .foregroundStyle(Theme.Color.warm)
                         }
                     }
-                    ReportSections(report: saved.report, createdAt: saved.createdAt)
-                } else {
-                    Section {
-                        Text("A summary of what was discussed, with coaching feedback on your own answers. It uses this interview's saved transcript as it is now, and never rewrites it.")
-                            .font(Typography.body(14))
-                            .foregroundStyle(Theme.Color.ink)
-                    }
+                    ScoreSections(report: saved.report, createdAt: saved.createdAt)
                 }
 
                 Section {
-                    Button(isMarking ? "Done marking" : (marked.isEmpty ? "Mark the lines you said (for feedback and a score)" : "Marked \(marked.count) line\(marked.count == 1 ? "" : "s") as yours")) {
+                    Button(isMarking ? "Done marking" : (marked.isEmpty ? "Mark the lines you said" : "Marked \(marked.count) line\(marked.count == 1 ? "" : "s") as yours")) {
                         isMarking.toggle()
                     }
                     .accessibilityIdentifier("review-mark")
@@ -71,16 +69,16 @@ struct InterviewReviewSheet: View {
                         }
                     }
                 } footer: {
-                    Text("The transcript doesn't record who spoke. Without marked lines you get an unscored summary of the conversation.")
+                    Text("The transcript doesn't record who spoke. Only the lines you mark are scored.")
                 }
 
                 Section {
                     if lines.isEmpty {
-                        Text("Nothing was transcribed in this interview, so there is nothing to review.")
+                        Text("Nothing was transcribed in this interview, so there is nothing to score.")
                             .foregroundStyle(Theme.Color.secondary)
                     } else if !mayGenerate {
-                        Button(entitlements?.expiredAt == nil ? "Unlock Pro to generate summary & feedback"
-                                                              : "Pro expired — renew to generate summary & feedback") { plansPaywall = .init(trigger: .settings) }
+                        Button(entitlements?.expiredAt == nil ? "Unlock Pro to score interviews"
+                                                              : "Pro expired — renew to score interviews") { plansPaywall = .init(trigger: .settings) }
                             .accessibilityIdentifier("review-unlock")
                         Text("Viewing and exporting the transcript stay free.")
                             .font(Typography.body(12))
@@ -91,15 +89,20 @@ struct InterviewReviewSheet: View {
                         } label: {
                             HStack(spacing: 8) {
                                 if isGenerating { ProgressView() }
-                                Text(isGenerating ? "Reviewing the interview…" : saved == nil ? "Generate summary & feedback" : "Generate again")
+                                Text(isGenerating ? "Scoring…" : saved == nil ? "Score interview" : "Score again")
                             }
                         }
-                        .disabled(isGenerating)
+                        .disabled(isGenerating || !canScore)
                         .accessibilityIdentifier("review-generate")
+                        if !canScore {
+                            Text("Mark at least three of your answers (about 60 words) to get a score.")
+                                .font(Typography.body(12))
+                                .foregroundStyle(Theme.Color.secondary)
+                        }
                     }
                     if let failure {
                         Text(failure).font(Typography.body(13)).foregroundStyle(Theme.Color.error)
-                        if !isGenerating, mayGenerate {
+                        if !isGenerating, mayGenerate, canScore {
                             Button("Retry") { Task { await generate() } }
                         }
                     }
@@ -107,7 +110,7 @@ struct InterviewReviewSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.Color.paper)
-            .navigationTitle("Summary & feedback")
+            .navigationTitle(saved == nil ? "Score interview" : "Interview score")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
             .task {
@@ -122,7 +125,7 @@ struct InterviewReviewSheet: View {
         }
     }
 
-    /// Freezes the transcript and the marks now; later speech is not part of this report.
+    /// Freezes the transcript and the marks now; later speech is not part of this score.
     private func generate() async {
         let snapshot = lines
         let body = InterviewReviewClient.Body(
@@ -143,75 +146,62 @@ struct InterviewReviewSheet: View {
             isMarking = false
         } catch InterviewReviewClient.Failure.proRequired {
             if let expired = entitlements?.expiredAt {
-                failure = "Your Neverblank Pro subscription expired on \(expired.formatted(date: .abbreviated, time: .shortened)). Renew to generate summaries; the transcript stays free to view and export."
+                failure = "Your Neverblank Pro subscription expired on \(expired.formatted(date: .abbreviated, time: .shortened)). Renew to score interviews; the transcript stays free to view and export."
             } else {
-                failure = "Summary & feedback needs Neverblank Pro."
+                failure = "Scoring interviews needs Neverblank Pro."
             }
             plansPaywall = .init(trigger: .settings)
         } catch InterviewReviewClient.Failure.backendUnavailable {
-            failure = "Neverblank's service isn't reachable right now, so the review can't be generated. Check your connection and try again later."
+            failure = "Neverblank's service isn't reachable right now, so the interview can't be scored. Check your connection and try again later."
         } catch InterviewReviewClient.Failure.generationFailed {
-            failure = "The review couldn't be generated this time. Nothing was saved or changed — tap Retry."
+            failure = "The score couldn't be generated this time. Nothing was saved or changed — tap Retry."
         } catch {
-            failure = "The review could not be saved on this iPhone."
+            failure = "The score could not be saved on this iPhone."
         }
     }
 }
 
-/// The saved report.
-private struct ReportSections: View {
+/// The saved score: overall, then each criterion with its evidence.
+private struct ScoreSections: View {
     let report: InterviewReviewReport
     let createdAt: Date
 
     var body: some View {
+        if let scores = report.scores {
+            Section {
+                if let overall = report.overallScore {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Overall").font(Typography.body(17, weight: .semibold)).foregroundStyle(Theme.Color.ink)
+                        Spacer()
+                        Text("\(overall.formatted(.number.precision(.fractionLength(1)))) / 4")
+                            .font(Typography.body(22, weight: .semibold))
+                            .foregroundStyle(Theme.Color.ink)
+                            .accessibilityIdentifier("review-overall")
+                    }
+                }
+                row("Relevance", scores.relevance, report.evidence?.relevance)
+                row("Clarity", scores.clarity, report.evidence?.clarity)
+                row("Structure", scores.structure, report.evidence?.structure)
+                row("Supporting examples", scores.examples, report.evidence?.examples)
+            } footer: {
+                Text(report.score_note)
+            }
+        } else {
+            Section { Text(report.score_note).foregroundStyle(Theme.Color.secondary) }
+        }
         Section {
             Text(report.disclaimer).font(Typography.body(12)).foregroundStyle(Theme.Color.secondary)
-            Text("Generated \(createdAt.formatted(date: .abbreviated, time: .shortened))")
+            Text("Scored \(createdAt.formatted(date: .abbreviated, time: .shortened))")
                 .font(Typography.body(12)).foregroundStyle(Theme.Color.secondary)
         }
-        list("Topics", report.topics)
-        list("Questions discussed", report.questions)
-        list("Your key points", report.key_points)
-        if !report.strengths.isEmpty {
-            Section("Strengths") {
-                ForEach(report.strengths, id: \.point) { strength in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(strength.point).foregroundStyle(Theme.Color.ink)
-                        Text("“\(strength.evidence)”").font(Typography.body(13)).foregroundStyle(Theme.Color.secondary)
-                    }
-                }
-            }
-        }
-        if !report.improvements.isEmpty {
-            Section("To improve") {
-                ForEach(report.improvements, id: \.point) { item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.point).foregroundStyle(Theme.Color.ink)
-                        Text(item.example).font(Typography.body(13)).foregroundStyle(Theme.Color.secondary)
-                    }
-                }
-            }
-        }
-        list("Practice next", report.practice_questions)
-        Section("Coaching score") {
-            if let scores = report.scores {
-                row("Relevance", scores.relevance)
-                row("Clarity", scores.clarity)
-                row("Structure", scores.structure)
-                row("Supporting examples", scores.examples)
-            }
-            Text(report.score_note).font(Typography.body(13)).foregroundStyle(Theme.Color.secondary)
-        }
     }
 
-    @ViewBuilder
-    private func list(_ title: String, _ items: [String]) -> some View {
-        if !items.isEmpty {
-            Section(title) { ForEach(items, id: \.self) { Text($0).foregroundStyle(Theme.Color.ink) } }
+    private func row(_ name: String, _ value: Int, _ evidence: String?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack { Text(name).foregroundStyle(Theme.Color.ink); Spacer(); Text("\(value) / 4").foregroundStyle(Theme.Color.secondary) }
+            if let evidence, !evidence.isEmpty {
+                Text("“\(evidence)”").font(Typography.body(13)).foregroundStyle(Theme.Color.secondary)
+            }
         }
-    }
-
-    private func row(_ name: String, _ value: Int) -> some View {
-        HStack { Text(name); Spacer(); Text("\(value) / 4").foregroundStyle(Theme.Color.secondary) }
     }
 }

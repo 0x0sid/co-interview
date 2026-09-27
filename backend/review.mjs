@@ -1,60 +1,35 @@
-// Interview summary & feedback: an explicit, Pro-only AI review of a frozen transcript snapshot.
+// Interview score: an explicit, Pro-only AI score of a frozen transcript snapshot.
 //
-// Principles, enforced here rather than trusted to the model:
-// - **Only the candidate's own words are judged.** The app sends which lines the candidate marked as
-//   theirs. Without enough of them the report is an unscored conversation summary, and strengths and
-//   improvements are left empty.
-// - **Evidence is real.** Each strength must quote the candidate's marked lines; a quote that is not
-//   found in them is dropped.
+// Owner decision (2026-09-27): **a score, not a report.** No summary, topics, key points, practice
+// questions or coaching prose are generated. Principles, enforced here rather than trusted to the model:
+// - **Only the candidate's own words are scored.** The app sends which lines the candidate marked as
+//   theirs; nothing else — including suggested answers the app showed — is judged.
 // - **A score only when the evidence supports it**, on a transparent 0–4 rubric (relevance, clarity,
-//   structure, supporting examples). Too little evidence → "Not enough evidence to score."
+//   structure, supporting examples). Too little marked speech → no score, and no model call.
+// - **Each criterion carries a short quote** from the candidate's marked lines; a quote not found there
+//   is dropped, so the evidence shown is always real.
 // - It is AI coaching feedback, not a hiring prediction, and nothing is inferred about voice,
 //   confidence or body language from text.
 
-export const REVIEW_VERSION = "review-2026-09-27.1";
+export const REVIEW_VERSION = "score-2026-09-27.1";
 
 /** Below this, the candidate's marked speech is too little to score. */
 export const MIN_SCORED_LINES = 3;
 export const MIN_SCORED_WORDS = 60;
 
+export const CRITERIA = ["relevance", "clarity", "structure", "examples"];
+
+const criterionObject = (itemType) => ({
+  type: "object",
+  properties: Object.fromEntries(CRITERIA.map((name) => [name, { type: itemType }])),
+  required: CRITERIA,
+  additionalProperties: false,
+});
+
 export const REVIEW_SCHEMA = {
   type: "object",
-  properties: {
-    topics: { type: "array", items: { type: "string" } },
-    questions: { type: "array", items: { type: "string" } },
-    key_points: { type: "array", items: { type: "string" } },
-    strengths: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { point: { type: "string" }, evidence: { type: "string" } },
-        required: ["point", "evidence"],
-        additionalProperties: false,
-      },
-    },
-    improvements: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { point: { type: "string" }, example: { type: "string" } },
-        required: ["point", "example"],
-        additionalProperties: false,
-      },
-    },
-    practice_questions: { type: "array", items: { type: "string" } },
-    scores: {
-      type: "object",
-      properties: {
-        relevance: { type: "integer" },
-        clarity: { type: "integer" },
-        structure: { type: "integer" },
-        examples: { type: "integer" },
-      },
-      required: ["relevance", "clarity", "structure", "examples"],
-      additionalProperties: false,
-    },
-  },
-  required: ["topics", "questions", "key_points", "strengths", "improvements", "practice_questions", "scores"],
+  properties: { scores: criterionObject("integer"), evidence: criterionObject("string") },
+  required: ["scores", "evidence"],
   additionalProperties: false,
 };
 
@@ -79,27 +54,15 @@ export function scorable(lines) {
 }
 
 export function buildReviewMessages({ lines, language, title }) {
-  const attributed = lines.some((line) => line.candidate);
-  const canScore = scorable(lines);
-  const transcript = lines.map((line, n) => `${n + 1}. ${attributed ? (line.candidate ? "[CANDIDATE] " : "[OTHER] ") : ""}${line.text}`).join("\n");
+  const transcript = lines.map((line, n) => `${n + 1}. ${line.candidate ? "[CANDIDATE] " : "[OTHER] "}${line.text}`).join("\n");
   const system = [
-    "You write interview coaching feedback for the candidate, from a transcript.",
-    `Write every string in the language with code ${language}.`,
+    "You score a candidate's interview answers from a transcript. You return scores and short quotes only — no summary, no advice.",
+    `Write every quote exactly as it appears in the transcript (language ${language}); never translate it.`,
     "It is AI coaching feedback, not a hiring prediction. Never guess the outcome.",
-    "Work from the text only: never comment on voice, tone, pace, confidence, nerves or body language.",
-    "The app may also have shown suggested answers on screen; those are not in this transcript and must not be judged.",
-    attributed
-      ? "Lines marked [CANDIDATE] are the candidate's own words; [OTHER] lines are the interviewer or others. Judge only [CANDIDATE] lines."
-      : "Speakers are not identified. Summarise the conversation only: leave strengths, improvements empty, because you cannot know which words are the candidate's.",
-    "topics: the subjects discussed. questions: the questions that were asked, as asked (short).",
-    "key_points: the main points the candidate made (empty if speakers are not identified).",
-    "strengths: each with `evidence` = an exact quote of a few words copied from a [CANDIDATE] line.",
-    "improvements: each specific, with `example` = a concrete better way to say or structure it.",
-    "practice_questions: 3 to 5 questions worth practising next, based on the topics.",
-    canScore
-      ? "scores: rate the [CANDIDATE] answers 0–4 on relevance (answers what was asked), clarity (easy to follow), structure (logical order, e.g. situation–action–result), examples (concrete supporting examples). 0 = absent, 4 = strong."
-      : "scores: set all four to 0; there is not enough of the candidate's speech to score, and the app will say so.",
-    "Be specific and brief. Do not invent anything that is not in the transcript.",
+    "Work from the text only: never judge voice, tone, pace, confidence, nerves or body language.",
+    "Lines marked [CANDIDATE] are the candidate's own words; [OTHER] lines are the interviewer or others. Score only [CANDIDATE] lines. Suggested answers the app displayed are not in this transcript and are not judged.",
+    "scores: rate the [CANDIDATE] answers 0–4 on relevance (answers what was asked), clarity (easy to follow), structure (logical order, e.g. situation–action–result), examples (concrete supporting examples). 0 = absent, 4 = strong.",
+    "evidence: for each criterion, an exact quote of a few words copied from one [CANDIDATE] line that best shows the score.",
   ].join("\n");
   const user = `INTERVIEW: ${title || "(untitled)"}\nTRANSCRIPT (in order):\n${transcript}`;
   return [
@@ -109,46 +72,36 @@ export function buildReviewMessages({ lines, language, title }) {
 }
 
 /**
- * Enforces the rules on the model's output: drops strengths whose evidence is not found in the
- * candidate's marked lines, clears judgement without attribution, and removes scores without
- * enough evidence.
+ * Enforces the rules on the model's output: scores bounded to the rubric, only with enough marked
+ * speech; quotes kept only when found in the candidate's marked lines. `result` is null when the
+ * model was not called because there was nothing to score.
  */
 export function finalizeReview(result, { lines }) {
   const attributed = lines.some((line) => line.candidate);
   const candidateText = normalize(lines.filter((line) => line.candidate).map((line) => line.text).join(" "));
   const canScore = scorable(lines);
-  const list = (value, max = 12) => (Array.isArray(value) ? value.map((v) => clip(v, 400)).filter(Boolean).slice(0, max) : []);
-  const strengths = attributed
-    ? (Array.isArray(result?.strengths) ? result.strengths : [])
-        .map((s) => ({ point: clip(s?.point, 400), evidence: clip(s?.evidence, 300) }))
-        .filter((s) => s.point && s.evidence && candidateText.includes(normalize(s.evidence)))
-        .slice(0, 6)
-    : [];
-  const improvements = attributed
-    ? (Array.isArray(result?.improvements) ? result.improvements : [])
-        .map((s) => ({ point: clip(s?.point, 400), example: clip(s?.example, 500) }))
-        .filter((s) => s.point)
-        .slice(0, 6)
-    : [];
   const bound = (n) => Math.max(0, Math.min(4, Number.isInteger(n) ? n : 0));
   const scores = canScore && result?.scores
-    ? { relevance: bound(result.scores.relevance), clarity: bound(result.scores.clarity), structure: bound(result.scores.structure), examples: bound(result.scores.examples) }
+    ? Object.fromEntries(CRITERIA.map((name) => [name, bound(result.scores[name])]))
     : null;
+  const evidence = scores
+    ? Object.fromEntries(CRITERIA.map((name) => {
+        const quote = clip(result?.evidence?.[name], 300).trim();
+        return [name, quote && candidateText.includes(normalize(quote)) ? quote : ""];
+      }))
+    : null;
+  const overall = scores ? Math.round((CRITERIA.reduce((sum, name) => sum + scores[name], 0) / CRITERIA.length) * 10) / 10 : null;
   return {
     version: REVIEW_VERSION,
     attributed,
-    topics: list(result?.topics),
-    questions: list(result?.questions, 20),
-    key_points: attributed ? list(result?.key_points) : [],
-    strengths,
-    improvements,
-    practice_questions: list(result?.practice_questions, 6),
     scores,
+    overall,
+    evidence,
     score_note: scores
       ? "Scored 0–4 on relevance, clarity, structure and supporting examples, from your marked answers only."
       : attributed
-        ? "Not enough evidence to score."
-        : "Unscored conversation summary: mark the lines you said to get feedback and a score.",
+        ? "Not enough evidence to score: mark at least three of your answers."
+        : "Mark the lines you said to get a score.",
     disclaimer: "AI coaching feedback, not a hiring prediction. Based on the transcript text only.",
   };
 }
