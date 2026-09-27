@@ -23,6 +23,8 @@ struct InterviewScreen: View {
     private let recorder: SessionRecorder?
     @State private var isShowingFiles = false
     @State private var isShowingSettings = false
+    /// "End meeting?" — from the ••• menu or the back chevron.
+    @State private var isConfirmingEndMeeting = false
     @State private var provenanceToShow: ProvenanceSelection?
     let title: String
     /// What Live can do this session.
@@ -77,6 +79,14 @@ struct InterviewScreen: View {
 
     /// Stops the session and hands the idle timer back to the system at once — not on the next
     /// render, which may never come once the screen is gone.
+    /// "End meeting": the one way a meeting finishes — the canonical teardown (`endSession`: capture,
+    /// transcription, detection, ticker and audio session stop; the recorder saves the meeting), then
+    /// back to Home, where it is listed.
+    private func finishMeeting() {
+        endSession()
+        dismiss()
+    }
+
     private func endSession() {
         #if DEBUG
         LiveLifecycle.event("screen.endSession")
@@ -132,7 +142,8 @@ struct InterviewScreen: View {
                     listeningLabel: model.mode == .live ? model.listeningState?.label : nil,
                     canGoToPrevious: model.canGoToPrevious,
                     canGoToNext: model.canGoToNext,
-                    onBack: { endSession(); dismiss() },
+                    // Leaving a live interview ends it: the same confirmation as "End meeting".
+                    onBack: { model.mode == .live ? (isConfirmingEndMeeting = true) : finishMeeting() },
                     onPrevious: { model.goToPrevious() },
                     onNext: { model.goToNext() },
                     onSettings: { isShowingSettings = true }
@@ -193,6 +204,13 @@ struct InterviewScreen: View {
                                   currentFileIDs: Set((files?.items ?? []).map(\.id.uuidString)))
         }
         .onDisappear { endSession() }
+        .alert("End meeting?", isPresented: $isConfirmingEndMeeting) {
+            Button("Cancel", role: .cancel) {}
+            Button("End meeting", role: .destructive) { finishMeeting() }
+                .accessibilityIdentifier("end-meeting-confirm")
+        } message: {
+            Text("Your transcript and generated answers from this interview will be saved.")
+        }
         .sheet(item: paywallBinding) { request in
             if let access, let entitlements {
                 NeverblankPaywallView(trigger: request.trigger, entitlements: entitlements, access: access) { unlocked in
@@ -426,6 +444,16 @@ struct InterviewScreen: View {
 
     @ViewBuilder
     private var moreMenu: some View {
+        if model.mode == .live {
+            Button(role: .destructive) {
+                isConfirmingEndMeeting = true
+            } label: {
+                Label("End meeting", systemImage: "stop.circle")
+            }
+            .accessibilityIdentifier("end-meeting")
+            Divider()
+        }
+
         Button {
             model.regenerate()
         } label: {

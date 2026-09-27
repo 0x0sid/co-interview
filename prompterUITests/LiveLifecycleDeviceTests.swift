@@ -44,6 +44,9 @@ final class LiveLifecycleDeviceTests: XCTestCase {
             pause(8)                                   // listening
             snapshot("round \(round) listening")
             app.buttons["Close interview"].tap()
+            // Leaving a live interview asks "End meeting?" — confirm through the same path.
+            let confirm = app.buttons["End meeting"].firstMatch
+            if confirm.waitForExistence(timeout: 5) { confirm.tap() }
             XCTAssertTrue(app.waitForNeverblankHome(timeout: 15), "round \(round): did not return home")
             pause(2)
             snapshot("round \(round) after exit")
