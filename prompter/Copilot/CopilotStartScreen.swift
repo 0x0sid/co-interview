@@ -27,13 +27,14 @@ struct CopilotStartScreen: View {
     @Environment(AccessController.self) private var access
     @Environment(EntitlementService.self) private var entitlements
     @Query private var settingsQuery: [AppSettings]
-    @Query(filter: #Predicate<InterviewSessionRecord> { $0.modeRaw == "live" },
-           sort: \InterviewSessionRecord.lastActivityAt, order: .reverse)
-    private var savedSessions: [InterviewSessionRecord]
+    /// Home's Meetings: the newest five, five more each time the list is scrolled to its end.
+    @State private var meetings = MeetingsPager()
+    /// "See all": every meeting, in larger batches.
+    @State private var allMeetings = MeetingsPager(batchSize: 20)
+    @State private var interruptedMeeting: InterviewSessionRecord?
+    @State private var isShowingAllMeetings = false
     /// The interview on screen, with its record, files and recorder.
     @State private var launch: InterviewLaunch?
-    /// Every saved interview is listed, not only the latest three.
-    @State private var isShowingAllInterviews = false
     @State private var renaming: InterviewSessionRecord?
     @State private var newTitle = ""
     @State private var deleting: InterviewSessionRecord?
@@ -99,10 +100,16 @@ struct CopilotStartScreen: View {
             .padding(.vertical, metrics.isCompact ? 8 : 12)
         }
         .background(Theme.Color.paper)
+        .onAppear { reloadMeetings() }
+        .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in reloadMeetings() }
+        .navigationDestination(isPresented: $isShowingAllMeetings) {
+            MeetingsListScreen(pager: allMeetings, card: { meetingCard($0) })
+        }
         .alert("Rename interview", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Title", text: $newTitle)
             Button("Save") {
                 if let renaming { InterviewSessionStore.rename(renaming, to: newTitle, in: modelContext) }
+                reloadMeetings()
                 renaming = nil
             }
             Button("Cancel", role: .cancel) { renaming = nil }
@@ -116,6 +123,8 @@ struct CopilotStartScreen: View {
                     InterviewSessionStore.delete(deleting, in: modelContext)
                 }
                 deleting = nil
+                // The next meeting moves up to keep the page full.
+                reloadMeetings()
             }
             Button("Cancel", role: .cancel) { deleting = nil }
         } message: {
@@ -251,9 +260,9 @@ struct CopilotStartScreen: View {
     /// The last few saved interviews, and an interrupted one called out first.
     @ViewBuilder
     private var recentInterviews: some View {
-        if !savedSessions.isEmpty {
+        if !meetings.meetings.isEmpty {
             VStack(alignment: .leading, spacing: metrics.listCardSpacing + 2) {
-                if let interrupted = savedSessions.first(where: { $0.state == .interrupted }) {
+                if let interrupted = interruptedMeeting {
                     Button {
                         open(.reopen(interrupted, context: modelContext))
                     } label: {
@@ -272,32 +281,63 @@ struct CopilotStartScreen: View {
                     }
                     .buttonStyle(.plain)
                 }
-                HStack {
-                    Text(isShowingAllInterviews ? "All saved interviews" : "Saved interviews")
-                        .font(Typography.body(13, weight: .semibold))
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Meetings")
+                        .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
                         .foregroundStyle(Theme.Color.ink)
-                    Spacer()
-                    if savedSessions.count > 3 || isShowingAllInterviews {
-                        Button(isShowingAllInterviews ? "Show recent" : "All saved interviews (\(savedSessions.count))") {
-                            isShowingAllInterviews.toggle()
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("meetings-title")
+                    if meetings.total > MeetingsPager.homeBatchSize {
+                        Text("· \(meetings.total)")
+                            .font(Typography.body(metrics.bodySize))
+                            .foregroundStyle(Theme.Color.secondary)
+                            .accessibilityLabel("\(meetings.total) meetings")
+                    }
+                    Spacer(minLength: 8)
+                    if meetings.total > MeetingsPager.homeBatchSize {
+                        Button("See all") {
+                            allMeetings.reload(in: modelContext)
+                            isShowingAllMeetings = true
                         }
-                        .font(Typography.body(12, weight: .medium))
+                        .font(Typography.body(metrics.bodySize, weight: .medium))
+                        .accessibilityIdentifier("meetings-see-all")
                     }
                 }
+                .lineLimit(1)
                 // Cards read summary fields only (title, dates, counts); nothing here loads a
-                // transcript, an answer or a file until one is opened.
-                VStack(spacing: metrics.listCardSpacing) {
-                    ForEach(isShowingAllInterviews ? Array(savedSessions) : Array(savedSessions.prefix(3))) { session in
-                        InterviewHistoryCard(session: session,
-                                             onOpen: { open(.reopen(session, context: modelContext)) },
-                                             onDelete: { deleting = session }) {
-                            historyMenu(for: session)
-                        }
+                // transcript, an answer or a file until one is opened. Lazy, so the loader row below
+                // appears — and loads the next five — only when it is actually scrolled to.
+                LazyVStack(spacing: metrics.listCardSpacing) {
+                    ForEach(meetings.meetings) { session in
+                        meetingCard(session)
+                    }
+                    if meetings.hasMore {
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(maxWidth: .infinity, minHeight: 28)
+                            .onAppear { meetings.loadMore(in: modelContext) }
+                            .accessibilityLabel("Loading more meetings")
                     }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// One meeting's card with its actions, the same on Home and in "See all".
+    private func meetingCard(_ session: InterviewSessionRecord) -> some View {
+        InterviewHistoryCard(session: session,
+                             onOpen: { open(.reopen(session, context: modelContext)) },
+                             onDelete: { deleting = session }) {
+            historyMenu(for: session)
+        }
+    }
+
+    /// Re-reads what Home lists: after anything is saved — a meeting ending, a rename, a delete.
+    private func reloadMeetings() {
+        meetings.reload(in: modelContext)
+        if isShowingAllMeetings { allMeetings.reload(in: modelContext) }
+        interruptedMeeting = MeetingsPager.interrupted(in: modelContext)
     }
 
     /// The saved interview's actions. Transcript viewing and export are local; the review is Pro.
