@@ -231,6 +231,19 @@ final class LiveInterviewFeed: InterviewFeed {
         questionIDByCard[card.id] = questionID
         cardIDByQuestion[questionID] = card.id
         continuation.yield(.questionDetected(InterviewQuestion(id: questionID, text: card.questionText)))
+        // The lines that asked it learn their question now. They were emitted before detection ran,
+        // and a line is otherwise re-sent only when its words change — so without this the screen
+        // could not tell an earlier question's words from new speech, and sent them again as new input.
+        for utterance in coordinator.conversation.utterances where card.sourceUtteranceIDs.contains(utterance.id) {
+            continuation.yield(.transcriptLine(TranscriptLine(
+                id: utterance.id,
+                text: utterance.text,
+                isDetectedQuestion: true,
+                questionID: questionID,
+                isFinal: true,
+                revision: utterance.revision
+            )))
+        }
     }
 
     /// Emits transcript lines for finalized turns, and replaces the in-progress line in place.

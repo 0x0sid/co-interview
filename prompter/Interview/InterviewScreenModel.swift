@@ -686,6 +686,7 @@ final class InterviewScreenModel {
         snapshot.generationKey = UUID().uuidString
         let requestID = UUID()
         let entry = InterviewQuestion(text: Self.pendingQuestionLabel)
+        logRouting("latest", sentQuestionID: entry.id, requestID: requestID)
         questions.append(entry)
         let index = questions.count - 1
 
@@ -730,6 +731,15 @@ final class InterviewScreenModel {
         startNextQueuedRequestIfIdle()
     }
 
+    /// Debug only: which question a Generate tap went to, by identity — never the words.
+    private func logRouting(_ path: String, sentQuestionID: UUID, requestID: UUID? = nil) {
+        #if DEBUG
+        func short(_ id: UUID?) -> String { id.map { String($0.uuidString.prefix(8)) } ?? "-" }
+        let detected = transcript.last(where: { $0.questionID != nil })?.questionID
+        LiveLifecycle.note("[Routing] generate path=\(path) detected=\(short(detected)) selected=\(short(explicitlySelectedQuestionID)) visible=\(short(currentQuestion?.id)) request=\(short(requestID)) sent=\(short(sentQuestionID)) questions=\(questions.count)")
+        #endif
+    }
+
     /// Hands the recorder what this tap decided. Observation only — nothing here is read back.
     private func recordTapForDiagnostics(requestID: UUID, snapshot: DiscussionSnapshot, at now: Date) {
         let covered = Set(coveredLines.keys)
@@ -770,7 +780,11 @@ final class InterviewScreenModel {
     /// prompt is assembled and the model's context window is known; it is not something to
     /// approximate here by counting lines.
     private func transcriptSnapshot() -> DiscussionSnapshot {
-        let uncovered = Set(uncoveredLines.map(\.id))
+        // **An earlier question is not new input.** Lines that asked a detected question other than
+        // the newest one belong to that question's page; answering them here is how an answer about
+        // "managing five people" came back for "a difficult Python project".
+        let newestDetected = transcript.last(where: { $0.questionID != nil })?.questionID
+        let uncovered = Set(uncoveredLines.filter { $0.questionID == nil || $0.questionID == newestDetected }.map(\.id))
         // The line still being spoken is provisional: it travels, but apart, so that finalizing it
         // updates one line rather than adding a second copy of the same speech.
         let openLine = transcript.last.flatMap { $0.isFinal ? nil : $0 }
@@ -855,6 +869,11 @@ final class InterviewScreenModel {
     /// other page request goes through the queue with a snapshot — held behind the paywall when there
     /// is no access, and sent at most once, in this session, after access is verified.
     private func answerPage(_ question: InterviewQuestion, isRegeneration: Bool) {
+        logRouting("page", sentQuestionID: question.id)
+        // The page's own words are answered now: they are no longer new input for the next Generate.
+        for line in transcript where line.questionID == question.id {
+            coveredLines[line.id] = Self.meaningfulWording(line.text)
+        }
         if let liveFeed, !liveFeed.canAnswerFromCard(questionID: question.id) || !canAcceptAnotherAnswer {
             requestFromSavedQuestion(question, isRegeneration: isRegeneration)
         } else {
