@@ -43,14 +43,18 @@ struct ProviderConfigurationTests {
         }
     }
 
+    /// No token is built into the app: a Debug build with a backend and no token entered at runtime
+    /// authenticates as its installation, like Release — and waits while it has no credential yet.
     @Test
-    func aBackendURLWithoutATokenIsUnavailable() {
-        let configuration = ProviderConfiguration.resolve(
-            bundle: emptyBundle,
-            defaults: defaults([ProviderConfiguration.backendURLDefaultsKey: "https://example.invalid"]),
-            isDebugBuild: true
-        )
-        #expect(configuration.isUnavailable)
+    func aBackendURLWithoutATokenAuthenticatesAsTheInstallation() {
+        let settings = defaults([ProviderConfiguration.backendURLDefaultsKey: "https://example.invalid"])
+        let waiting = ProviderConfiguration.resolve(bundle: emptyBundle, defaults: settings, isDebugBuild: true, installation: nil)
+        #expect(waiting.isUnavailable, "no credential yet: connecting, never an operator token")
+        let credential = InstallationCredential(installationID: "inst", secret: "secret", appUserID: "nb_inst")
+        let installed = ProviderConfiguration.resolve(bundle: emptyBundle, defaults: settings, isDebugBuild: true, installation: credential)
+        #expect(installed.usesInstallationAuth)
+        #expect(installed.authorizationHeader == credential.authorizationHeader)
+        #expect(installed.token.isEmpty)
     }
 
     @Test

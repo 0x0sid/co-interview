@@ -41,8 +41,6 @@
 	     These keys exist only in this Debug plist; Info.plist (Release) has neither. -->
 	<key>CopilotDevBackendHost</key>
 	<string>$(COPILOT_DEV_BACKEND_HOST)</string>
-	<key>CopilotDevBackendToken</key>
-	<string>$(COPILOT_DEV_BACKEND_TOKEN)</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Neverblank contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
 	<!-- Development only, and deliberately the narrowest exception that works.

@@ -17,9 +17,8 @@ struct InfoPlistConfigurationTests {
     static let developmentOnlyKeys: Set<String> = [
         "NSAppTransportSecurity",
         "NSLocalNetworkUsageDescription",
-        // Backend host and client token injected from the git-ignored Local-Debug.xcconfig.
+        // Backend host (not a secret) injected from the git-ignored Local-Debug.xcconfig.
         "CopilotDevBackendHost",
-        "CopilotDevBackendToken",
         // Billing-test builds only (set on the xcodebuild command line); Release always uses it.
         "NeverblankInstallationAccess",
     ]
@@ -64,6 +63,21 @@ struct InfoPlistConfigurationTests {
     /// costs money and what an attacker wants, and it belongs in the backend's environment. This
     /// asserts the absence by shape rather than by listing the keys we happen to use today, so a new
     /// key added carelessly in future fails here.
+    /// **No backend token in any build.** An operator token baked into the Debug plist reached every
+    /// Debug build on a device and was accepted by production. Neither plist may carry a token key.
+    @Test
+    func neitherPlistCarriesABackendToken() throws {
+        for name in ["Info.plist", "Info-Debug.plist"] {
+            let plist = try Self.plist(named: name)
+            for (key, value) in plist {
+                #expect(!key.lowercased().contains("token"), "\(name) has a token key: \(key)")
+                if let text = value as? String {
+                    #expect(!text.contains("TOKEN"), "\(name) substitutes a token setting at \(key)")
+                }
+            }
+        }
+    }
+
     @Test
     func neitherPlistCarriesAProviderCredential() throws {
         for name in ["Info.plist", "Info-Debug.plist"] {
@@ -87,7 +101,7 @@ struct InfoPlistConfigurationTests {
     func theDebugPlistHoldsSubstitutionsRatherThanRealValues() throws {
         let debug = try Self.plist(named: "Info-Debug.plist")
         #expect(debug["CopilotDevBackendHost"] as? String == "$(COPILOT_DEV_BACKEND_HOST)")
-        #expect(debug["CopilotDevBackendToken"] as? String == "$(COPILOT_DEV_BACKEND_TOKEN)")
+        #expect(debug["CopilotDevBackendToken"] == nil, "no token is ever built into the app")
     }
 
     @Test

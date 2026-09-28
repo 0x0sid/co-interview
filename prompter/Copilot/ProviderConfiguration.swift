@@ -3,8 +3,9 @@ import Foundation
 /// How the app finds its backend — and what it does when it cannot (§9).
 ///
 /// **Three rules this type exists to enforce:**
-/// 1. No permanent provider credential is ever compiled into the app. Only a backend URL and, during
-///    development, a bearer token the developer sets themselves.
+/// 1. No credential is ever compiled into the app — not a provider key, and not a backend operator
+///    token, in Debug or Release. The app authenticates as its installation. A developer can still
+///    enter a bearer token at runtime (debug screen or launch arguments); it lives on that device only.
 /// 2. Missing configuration produces an honest *unavailable* state. It never falls back to invented
 ///    answers.
 /// 3. The development fake is `#if DEBUG` only **and** opt-in, and everything it produces is labelled.
@@ -141,11 +142,13 @@ struct ProviderConfiguration: Equatable, Sendable {
                 }
                 return ProviderConfiguration(availability: .backend(url: url), token: "", installation: credential, source: source)
             }
+            // No token entered at runtime: authenticate as this installation, exactly as Release does.
+            // No operator token is built into any app.
             guard !token.isEmpty else {
-                return ProviderConfiguration(
-                    availability: .unavailable(reason: "A backend URL is set but no access token — suggestions are unavailable"),
-                    token: ""
-                )
+                guard let credential = installation() else {
+                    return ProviderConfiguration(availability: .unavailable(reason: "Connecting to Neverblank…"), token: "", source: source)
+                }
+                return ProviderConfiguration(availability: .backend(url: url), token: "", installation: credential, source: source)
             }
             return ProviderConfiguration(availability: .backend(url: url), token: token, source: source)
         }
@@ -162,16 +165,13 @@ struct ProviderConfiguration: Equatable, Sendable {
         )
     }
 
-    /// Backend host and client token baked into a **Debug** build from the git-ignored
-    /// `prompter/Config/Local-Debug.xcconfig`, so Start live works without typing anything.
+    /// The development backend **host** baked into a Debug build from the git-ignored
+    /// `prompter/Config/Local-Debug.xcconfig` — a hostname, not a secret. No token comes with it: a
+    /// Debug build authenticates as its installation unless a developer enters a token at runtime.
+    /// (An operator token used to be baked in here; it reached every Debug build's Info.plist.)
     ///
-    /// Three properties make this safe:
-    /// - The keys live only in `Info-Debug.plist`, which only the Debug configuration uses, so a
-    ///   Release build has neither key and this returns nil there.
-    /// - The value is a **client access token**, the credential the app is meant to hold. The
-    ///   provider key (`OPENROUTER_API_KEY`) stays in `backend/.env` and never reaches the app.
-    /// - The host is stored without a scheme because xcconfig treats `//` as a comment and would
-    ///   silently truncate `https://…`. The scheme is added here, and it is always `https`.
+    /// The host is stored without a scheme because xcconfig treats `//` as a comment and would
+    /// silently truncate `https://…`. The scheme is added here, and it is always `https`.
     static func developmentDefaults(bundle: Bundle, isDebugBuild: Bool) -> (url: String, token: String)? {
         guard isDebugBuild else { return nil }
         // A UI test asserting the *unconfigured* state cannot do so on a machine whose Debug build
@@ -181,10 +181,8 @@ struct ProviderConfiguration: Equatable, Sendable {
         if ProcessInfo.processInfo.arguments.contains("-CopilotIgnoreDevelopmentDefaults") { return nil }
         let host = (bundle.object(forInfoDictionaryKey: "CopilotDevBackendHost") as? String ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let token = (bundle.object(forInfoDictionaryKey: "CopilotDevBackendToken") as? String ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !host.isEmpty, !token.isEmpty else { return nil }
-        return ("https://" + host, token)
+        guard !host.isEmpty, !host.contains("$(") else { return nil }
+        return ("https://" + host, "")
     }
 
     private static func firstNonEmpty(_ candidates: String?...) -> String {

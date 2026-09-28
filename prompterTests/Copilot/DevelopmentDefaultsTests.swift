@@ -4,10 +4,10 @@ import Foundation
 
 /// The precedence rule for finding the backend, and the line the development defaults must not cross.
 ///
-/// Debug builds can carry a backend host and client token so Start live works without typing
-/// anything. That convenience is only safe if two things hold: a value saved in the app always wins
-/// (otherwise a stale baked-in URL would be unfixable from the device), and a Release build carries
-/// none of it.
+/// Debug builds can carry a development backend **host** so Start live works without typing anything
+/// — never a token: with no token entered at runtime, a Debug build authenticates as its installation,
+/// like Release. A value saved in the app always wins (otherwise a stale baked-in URL would be
+/// unfixable from the device), and a Release build carries none of it.
 @MainActor
 struct DevelopmentDefaultsTests {
     /// Stands in for the app bundle, so these run without a real Info.plist.
@@ -16,20 +16,24 @@ struct DevelopmentDefaultsTests {
         override func object(forInfoDictionaryKey key: String) -> Any? { values[key] }
     }
 
+    static let installation = InstallationCredential(installationID: "inst", secret: "secret", appUserID: "nb_inst")
+
     static func defaults() -> UserDefaults {
         let suite = UserDefaults(suiteName: "DevelopmentDefaultsTests.\(UUID().uuidString)")!
         return suite
     }
 
     @Test
-    func aDebugBuildUsesTheBakedInBackendWhenNothingIsSaved() throws {
+    func aDebugBuildUsesTheBakedInHostAndAuthenticatesAsItsInstallation() throws {
         let bundle = StubBundle()
         bundle.values = [
             "CopilotDevBackendHost": "example.ngrok-free.app",
+            // An old build's token key is ignored: no token is ever taken from the bundle.
             "CopilotDevBackendToken": "client-token",
         ]
 
-        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: Self.defaults(), isDebugBuild: true)
+        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: Self.defaults(), isDebugBuild: true,
+                                                          installation: Self.installation)
 
         guard case .backend(let url) = configuration.availability else {
             Issue.record("expected a configured backend, got \(configuration.availability)")
@@ -37,7 +41,9 @@ struct DevelopmentDefaultsTests {
         }
         // The scheme is added by the app: xcconfig cannot hold "//" without truncating it.
         #expect(url.absoluteString == "https://example.ngrok-free.app")
-        #expect(configuration.token == "client-token")
+        #expect(configuration.token.isEmpty, "no token comes from the build")
+        #expect(configuration.usesInstallationAuth)
+        #expect(configuration.authorizationHeader == Self.installation.authorizationHeader)
     }
 
     /// The rule that keeps a stale default harmless.
@@ -46,7 +52,6 @@ struct DevelopmentDefaultsTests {
         let bundle = StubBundle()
         bundle.values = [
             "CopilotDevBackendHost": "stale.ngrok-free.app",
-            "CopilotDevBackendToken": "stale-token",
         ]
         let saved = Self.defaults()
         saved.set("https://chosen.example.com", forKey: ProviderConfiguration.backendURLDefaultsKey)
@@ -74,12 +79,12 @@ struct DevelopmentDefaultsTests {
         let bundle = StubBundle()
         bundle.values = [
             "CopilotDevBackendHost": "new-tunnel.ngrok-free.app",
-            "CopilotDevBackendToken": "client-token",
         ]
         let saved = Self.defaults()
         saved.set("https://old-tunnel.ngrok-free.app", forKey: ProviderConfiguration.backendURLDefaultsKey)
 
-        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: saved, isDebugBuild: true)
+        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: saved, isDebugBuild: true,
+                                                          installation: Self.installation)
 
         guard case .backend(let url) = configuration.availability else {
             Issue.record("expected a configured backend, got \(configuration.availability)")
@@ -96,12 +101,12 @@ struct DevelopmentDefaultsTests {
         let bundle = StubBundle()
         bundle.values = [
             "CopilotDevBackendHost": "tunnel.ngrok-free.app",
-            "CopilotDevBackendToken": "client-token",
         ]
         let saved = Self.defaults()
         saved.set("https://co-interview.example.com", forKey: ProviderConfiguration.backendURLDefaultsKey)
 
-        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: saved, isDebugBuild: true)
+        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: saved, isDebugBuild: true,
+                                                          installation: Self.installation)
 
         guard case .backend(let url) = configuration.availability else {
             Issue.record("expected a configured backend, got \(configuration.availability)")
@@ -144,17 +149,32 @@ struct DevelopmentDefaultsTests {
         #expect(ProviderConfiguration.developmentDefaults(bundle: bundle, isDebugBuild: false) == nil)
     }
 
-    /// A half-filled template must not produce a half-configured backend.
+    /// A host alone is a complete development configuration; no token is ever read from the bundle.
     @Test
-    func anIncompleteLocalConfigurationIsIgnored() {
+    func theDevelopmentDefaultIsAHostAndNeverAToken() {
         let bundle = StubBundle()
-        bundle.values = ["CopilotDevBackendHost": "example.ngrok-free.app"]   // no token
-        #expect(ProviderConfiguration.developmentDefaults(bundle: bundle, isDebugBuild: true) == nil)
+        bundle.values = ["CopilotDevBackendHost": "example.ngrok-free.app", "CopilotDevBackendToken": "leaked"]
+        let defaults = ProviderConfiguration.developmentDefaults(bundle: bundle, isDebugBuild: true)
+        #expect(defaults?.url == "https://example.ngrok-free.app")
+        #expect(defaults?.token == "", "a token in the bundle is ignored")
 
         // Unsubstituted build settings, which is what an absent xcconfig leaves behind, are empty
         // strings rather than values — and empty is correctly treated as "not configured".
         let unsubstituted = StubBundle()
-        unsubstituted.values = ["CopilotDevBackendHost": "", "CopilotDevBackendToken": ""]
+        unsubstituted.values = ["CopilotDevBackendHost": ""]
         #expect(ProviderConfiguration.developmentDefaults(bundle: unsubstituted, isDebugBuild: true) == nil)
+    }
+
+    /// A developer can still use a token — entered at runtime on the device, never built in.
+    @Test
+    func aTokenEnteredAtRuntimeIsStillHonoured() throws {
+        let bundle = StubBundle()
+        bundle.values = ["CopilotDevBackendHost": "example.ngrok-free.app"]
+        let saved = Self.defaults()
+        saved.set("typed-on-device", forKey: ProviderConfiguration.backendTokenDefaultsKey)
+        let configuration = ProviderConfiguration.resolve(bundle: bundle, defaults: saved, isDebugBuild: true,
+                                                          installation: Self.installation)
+        #expect(configuration.token == "typed-on-device")
+        #expect(!configuration.usesInstallationAuth)
     }
 }
