@@ -67,20 +67,14 @@ struct SubscriptionSettingsView: View {
         }
         .padding(metrics.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous).stroke(cardBorder, lineWidth: 1))
+        // A native glass card with a hairline edge; the PRO / Expired pill carries the state, not a
+        // coloured frame.
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous)
+            .strokeBorder(Theme.Color.hairline, lineWidth: 0.5))
         .onAppear {
             wasUnseenOnOpen = SettingsBadge.shows(for: badgeState, seen: settingsBadgeSeen)
             if let seen = SettingsBadge.seenValue(for: badgeState) { settingsBadgeSeen = seen }
-        }
-    }
-
-    /// Active reads as the app's action colour; expired as warm; free and verifying stay neutral.
-    private var cardBorder: Color {
-        switch cardState {
-        case .active: Theme.Color.action.opacity(0.55)
-        case .expired: Theme.Color.warm.opacity(0.6)
-        case .free, .verifying: Theme.Color.hairline
         }
     }
 
