@@ -38,6 +38,9 @@
 		BB11223344556677889900AA /* Exceptions for "prompter" folder in "prompter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Config/Local-Debug.example.xcconfig",
+				"Config/Local-Debug.xcconfig",
+				"Resources/Info-Debug.plist",
 				Resources/Info.plist,
 			);
 			target = 15004F7C3027AAF700C22261 /* prompter */;
