@@ -62,6 +62,49 @@ console.log("three free questions");
   check("the allowance reads 3 used, 0 left", (await control.describe(me)).free_answers.remaining === 0);
 }
 
+// Cancellation and concurrency with the deployed limit.
+console.log("cancellation and concurrency");
+{
+  let clock = 7_000_000;
+  const now = () => clock;
+  const defaults = accessLimitsFromEnv({});
+  const store = new AccessStore(":memory:", { now });
+  store.migrate(defaults);
+  const control = new AccessControl({ store, verify: async () => ({ active: false, expiresAt: null }), limits: defaults, now });
+  const user = () => { const c = control.register(`7.7.7.${Math.floor(Math.random() * 250)}`); return control.authenticate({ headers: { authorization: `Installation ${c.installation_id}.${c.secret}` } }); };
+  const used = async (who) => (await control.describe(who)).free_answers.used;
+
+  // Cancel before any answer text (the stream ends with nothing delivered): released, not charged.
+  const a = user();
+  const pre = await control.authorize(a, "answer", { generationKey: "page-A" });
+  control.settle(pre.reservation, { textDelivered: false });
+  check("cancelled before usable text: not charged", pre.allowed && (await used(a)) === 0);
+  const retry = await control.authorize(a, "answer", { generationKey: "page-A" });
+  control.settle(retry.reservation, { textDelivered: true });
+  check("the retry with the same key, answered: charged once", retry.allowed && (await used(a)) === 1);
+
+  // Cancel after usable text: charged once, and nothing on that page charges again.
+  const b = user();
+  const post = await control.authorize(b, "answer", { generationKey: "page-B" });
+  control.settle(post.reservation, { textDelivered: true });                 // text delivered, then cancelled
+  check("cancelled after usable text: charged", (await used(b)) === 1);
+  for (let n = 0; n < 3; n += 1) {                                            // retry, regenerate, follow-up
+    const again = await control.authorize(b, "answer", { generationKey: "page-B" });
+    control.settle(again.reservation, { textDelivered: true });
+  }
+  check("…and retry/regenerate/follow-up on that page add nothing", (await used(b)) === 1);
+
+  // Two new pages at once with 2 used: exactly one gets the last free answer.
+  const c = user();
+  for (const key of ["c1", "c2"]) { const r = await control.authorize(c, "answer", { generationKey: key }); control.settle(r.reservation, { textDelivered: true }); }
+  const racing = await Promise.all(["c3", "c4"].map((key) => control.authorize(c, "answer", { generationKey: key })));
+  check("two concurrent new keys at 2 used: only one is admitted", racing.filter((r) => r.allowed).length === 1, JSON.stringify(racing.map((r) => r.allowed)));
+  for (const r of racing) if (r.allowed) control.settle(r.reservation, { textDelivered: true });
+  check("…and usage never passes the limit", (await used(c)) === 3);
+  const after = await control.authorize(c, "answer", { generationKey: "c5" });
+  check("…and the next new page is refused", !after.allowed && after.reason === "exhausted");
+}
+
 // Existing installations keep their usage: 2 used under the old limit leaves 1 of 3.
 console.log("migration to three");
 {

@@ -289,6 +289,11 @@ final class InterviewScreenModel {
             questions = restored.questions
             coveredLines = restored.coveredLines
             retainedSnapshots = restored.retainedSnapshots
+            // A saved page with a usable answer already used its free-answer credit, and its saved
+            // snapshot carries the same key: Regenerate, follow-ups and Retry on it stay free.
+            creditedQuestionIDs = Set(restored.questions.filter { question in
+                question.answers.contains { $0.isComplete && !$0.isIncomplete && Self.hasVisibleText($0.blocks) }
+            }.map(\.id))
             context.note = restored.note
             currentIndex = max(0, questions.count - 1)
             wasInterrupted = restored.wasInterrupted
@@ -979,7 +984,7 @@ final class InterviewScreenModel {
         var snapshot = retainedSnapshots[question.id] ?? savedQuestionSnapshot(question)
         // A page keeps one key for all its requests — Retry, Regenerate — so it uses one free-answer
         // credit however many versions it has.
-        if snapshot.generationKey == nil { snapshot.generationKey = UUID().uuidString }
+        if snapshot.generationKey == nil { snapshot.generationKey = Self.legacyPageKey(question.id) }
         let requestID = UUID()
         generations[requestID] = Generation(questionID: question.id, answerID: nil, isRegeneration: isRegeneration)
         requestByQuestion[question.id] = requestID
@@ -1029,9 +1034,16 @@ final class InterviewScreenModel {
     /// arrives with a request id this model no longer knows, and is dropped.
     func cancelGeneration(for questionID: UUID) {
         guard let requestID = requestByQuestion[questionID] else { return }
+        // Cancelled after usable answer text arrived: that answer was received, and the backend has
+        // charged it — the app agrees. Cancelled before any: nothing is charged.
+        if let generation = generations[requestID] { settleCredit(generation, usable: deliveredUsableText(requestID)) }
         feed.cancelAnswer(requestID: requestID)
         generations[requestID] = nil
         requestByQuestion[questionID] = nil
+        queuedRequestIDs.removeAll { $0 == requestID }
+        heldRequestIDs.remove(requestID)
+        // A cancelled request frees the queue, like a finished or failed one.
+        finishRequest(requestID)
     }
 
     // MARK: - Recording
@@ -1437,16 +1449,7 @@ final class InterviewScreenModel {
         answer.blocks = blocks                   // in the order the feed gave them: prose and code interleaved
         // Counted exactly as the backend settles it: text arrived and it was not a request for input.
         let askedForInput = (answer.need ?? pendingNeeds[requestID]) != nil
-        // One free-answer credit per answered page: only a page's first usable answer counts, and a
-        // follow-up that shares its parent's credit never does.
-        let usable = Self.hasVisibleText(blocks) && !askedForInput
-        let creditPage = generation.sharesCreditWith ?? generation.questionID
-        let firstCreditForPage = usable && !creditedQuestionIDs.contains(creditPage)
-        if usable {
-            creditedQuestionIDs.insert(creditPage)
-            creditedQuestionIDs.insert(generation.questionID)
-        }
-        accessGate?.noteAnswerCompleted(counted: firstCreditForPage && generation.sharesCreditWith == nil)
+        settleCredit(generation, usable: Self.hasVisibleText(blocks) && !askedForInput)
         answer.highlight = highlight
         answer.isComplete = true
         question.answers[answerIndex] = answer
@@ -1485,6 +1488,8 @@ final class InterviewScreenModel {
     private func failAnswer(requestID: UUID, message: String) {
         modelTitles[requestID] = nil
         guard let generation = generations[requestID] else { return }
+        // Failed after usable text had arrived: charged, like the backend. Failed before: not.
+        settleCredit(generation, usable: deliveredUsableText(requestID))
         if let answerID = generation.answerID,
            let index = questions.firstIndex(where: { $0.id == generation.questionID }),
            let answerIndex = questions[index].answers.firstIndex(where: { $0.id == answerID }) {
@@ -1502,6 +1507,35 @@ final class InterviewScreenModel {
             accessGate?.requestPaywall(.generate)
         }
     }
+    /// A saved page from before keys were kept with the page: a key derived from its stable page id, so
+    /// reopening it any number of times always sends the same key. (Its original key was never saved,
+    /// so the backend cannot know it was answered; its first request after this change may count once.)
+    static func legacyPageKey(_ pageID: UUID) -> String { "page-\(pageID.uuidString.lowercased())" }
+
+    /// Whether usable answer text has reached this request's answer: at least one visible character
+    /// of answer text, and not a request for clarification or context. The backend's rule
+    /// (`backend/server.mjs`, settle: `textChars > 0 && !needs`) — no punctuation involved, so it holds
+    /// for bullets, code, Chinese and short answers alike.
+    private func deliveredUsableText(_ requestID: UUID) -> Bool {
+        guard let generation = generations[requestID], let answerID = generation.answerID,
+              let question = questions.first(where: { $0.id == generation.questionID }),
+              let answer = question.answers.first(where: { $0.id == answerID }) else { return false }
+        return Self.hasVisibleText(answer.blocks) && (answer.need ?? pendingNeeds[requestID]) == nil
+    }
+
+    /// One free-answer credit per answered page, used the first time usable answer text reaches it —
+    /// on completion, or on a failure or cancellation after text arrived. A follow-up that shares its
+    /// parent's credit never uses another. The backend's count is authoritative; this mirrors it.
+    private func settleCredit(_ generation: Generation, usable: Bool) {
+        let creditPage = generation.sharesCreditWith ?? generation.questionID
+        let firstCreditForPage = usable && !creditedQuestionIDs.contains(creditPage)
+        if usable {
+            creditedQuestionIDs.insert(creditPage)
+            creditedQuestionIDs.insert(generation.questionID)
+        }
+        accessGate?.noteAnswerCompleted(counted: firstCreditForPage && generation.sharesCreditWith == nil)
+    }
+
     /// True while `abandonHeldRequests` marks entries, so closing the paywall cannot reopen it.
     private var heldAbandoning = false
 
