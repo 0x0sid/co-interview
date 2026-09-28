@@ -61,19 +61,72 @@ final class EntitlementService {
     /// RevenueCat's facts about the Pro subscription — the active one, or the last one after it lapsed.
     /// Nil for a customer who never subscribed.
     private(set) var subscription: SubscriptionDetails?
-    /// Each product's billing period, **from the store product itself** (offering packages, or a
-    /// product lookup for one no longer offered). Never guessed from dates.
-    private var periodByProduct: [String: PlanKind] = [:]
-    /// Products the store could not describe: only these fall back to reading the product id.
-    private var productsWithoutMetadata: Set<String> = []
+    /// Each product's billing period and price, **from the store product itself** (offering packages,
+    /// or a product lookup for one no longer offered). Never from the product id, never from dates.
+    private var metadataByProduct: [String: ProductMetadata] = [:]
+
+    /// What the store says one product is.
+    struct ProductMetadata: Equatable {
+        var period: PlanPeriod
+        /// The store's own price string ("$9.99", "9,99 US$").
+        var localizedPrice: String
+    }
+
+    /// A plan's billing period, from the product's subscription period only.
+    enum PlanPeriod: Equatable {
+        case weekly, monthly, yearly
+        /// A one-time (non-subscription) purchase.
+        case lifetime
+        /// A subscription period this app does not name (3 months, 6 months…). Shown as the generic
+        /// "Subscription" — never guessed from the product id.
+        case other
+
+        init(kind: PlanKind?) {
+            switch kind {
+            case .weekly: self = .weekly
+            case .monthly: self = .monthly
+            case .yearly: self = .yearly
+            case .lifetime: self = .lifetime
+            case nil: self = .other
+            }
+        }
+
+        /// From the store product's category and subscription period.
+        static func of(isSubscription: Bool, unit: String?, value: Int) -> PlanPeriod {
+            PlanPeriod(kind: PlanKind.classify(isSubscription: isSubscription, periodUnit: unit, periodValue: value))
+        }
+
+        var title: String {
+            switch self {
+            case .weekly: "Weekly"
+            case .monthly: "Monthly"
+            case .yearly: "Yearly"
+            case .lifetime: "Lifetime"
+            case .other: "Subscription"
+            }
+        }
+
+        /// "week", "month", "year" for a price line; nil when the period has no one-word name.
+        var noun: String? {
+            switch self {
+            case .weekly: "week"
+            case .monthly: "month"
+            case .yearly: "year"
+            case .lifetime, .other: nil
+            }
+        }
+
+        /// A specific plan worth naming after it lapsed; `.other` is not.
+        var isNamed: Bool { self != .other }
+    }
 
     /// What RevenueCat says about one subscription. Every date here is RevenueCat's own — nothing is
     /// computed from a purchase date plus a period, which trials, intro offers, billing retries,
     /// grace periods and plan changes would all make wrong.
     struct SubscriptionDetails: Equatable {
         var productIdentifier: String
-        /// Weekly, monthly or yearly, from the product's subscription period. Nil until known.
-        var period: PlanKind?
+        /// From the product's subscription period. Nil until the store has described the product.
+        var period: PlanPeriod?
         /// The entitlement's expiration: the renewal date while it renews, the end date once cancelled.
         var expiration: Date?
         var willRenew: Bool
@@ -81,41 +134,74 @@ final class EntitlementService {
         var billingIssueDetectedAt: Date?
         /// Apple's billing grace period, while access continues despite the billing issue.
         var gracePeriodExpiresDate: Date?
+        /// The store's price string for this product, when known.
+        var localizedPrice: String?
     }
 
-    /// How the active purchase is described. The product's name is used only when it agrees with what
-    /// the entitlement actually does: a "lifetime" product that expires and renews is shown as the
-    /// renewing subscription it is, under its real product id, not as Lifetime.
+    /// The one normalized subscription state every screen reads. RevenueCat's fields are mapped in
+    /// `apply(_:)` and nowhere else; views only word this.
+    struct SubscriptionPresentation: Equatable {
+        var entitlementActive: Bool
+        /// Store-recognised, not yet confirmed by the backend.
+        var needsVerification: Bool
+        var planPeriod: PlanPeriod?
+        var expirationDate: Date?
+        var willRenew: Bool
+        var billingIssueDetected: Bool
+        /// Active only while RevenueCat's grace period has not ended.
+        var gracePeriodActive: Bool
+        var gracePeriodExpiresDate: Date?
+        var productIdentifier: String?
+        var localizedPrice: String?
+        /// "$9.99 / month", from the store's price and the product's own period.
+        var localizedPricePerPeriod: String?
+        /// A subscription existed and lapsed (Expired), as opposed to never subscribed (Free).
+        var hasLapsed: Bool
+
+        static let none = SubscriptionPresentation(entitlementActive: false, needsVerification: false, planPeriod: nil,
+                                                   expirationDate: nil, willRenew: false, billingIssueDetected: false,
+                                                   gracePeriodActive: false, gracePeriodExpiresDate: nil,
+                                                   productIdentifier: nil, localizedPrice: nil,
+                                                   localizedPricePerPeriod: nil, hasLapsed: false)
+    }
+
+    /// The subscription as the UI should describe it right now.
+    func presentation(needsVerification: Bool = false, now: Date = .now) -> SubscriptionPresentation {
+        var result = SubscriptionPresentation.none
+        result.needsVerification = needsVerification
+        if case .premium = status { result.entitlementActive = true }
+        guard let details = subscription else { return result }
+        let price = details.localizedPrice ?? metadataByProduct[details.productIdentifier]?.localizedPrice
+        let period = details.period ?? metadataByProduct[details.productIdentifier]?.period
+        result.planPeriod = period
+        result.productIdentifier = details.productIdentifier
+        result.expirationDate = details.expiration
+        result.willRenew = details.willRenew
+        result.billingIssueDetected = details.billingIssueDetectedAt != nil
+        result.gracePeriodExpiresDate = details.gracePeriodExpiresDate
+        result.gracePeriodActive = result.entitlementActive && (details.gracePeriodExpiresDate.map { $0 > now } ?? false)
+        result.localizedPrice = price
+        result.localizedPricePerPeriod = price.flatMap { price in period?.noun.map { "\(price) / \($0)" } }
+        result.hasLapsed = !result.entitlementActive && details.expiration != nil
+        return result
+    }
+
+    /// "Monthly" for the active plan (the Home badge); nil when inactive or not yet described.
     var activePlanName: String? {
-        guard let id = activeProductIdentifier else { return nil }
-        let expires: Bool
-        if case .premium(let expiration, _) = status { expires = expiration != nil } else { expires = false }
-        guard let named = planTitle(forProductIdentifier: id) else { return nil }
-        let namedLifetime = named == PlanKind.lifetime.title
-        if namedLifetime == expires { return "“\(id)” (renewing subscription — misconfigured product)" }
-        return named
-    }
-
-    /// The plan a lapsed subscription was on, when it is known; nil rather than a guess.
-    var expiredPlanName: String? {
-        guard activeProductIdentifier == nil, let id = subscription?.productIdentifier else { return nil }
-        return planTitle(forProductIdentifier: id)
-    }
-
-    /// The store's period for the product; the product id's wording only when the store has no
-    /// metadata for it at all.
-    private func planTitle(forProductIdentifier id: String) -> String? {
-        if let kind = subscription?.productIdentifier == id ? subscription?.period : nil { return kind.title }
-        if let kind = periodByProduct[id] { return kind.title }
-        return productsWithoutMetadata.contains(id) ? Self.planName(forProductIdentifier: id) : nil
+        let current = presentation()
+        guard current.entitlementActive else { return nil }
+        return current.planPeriod?.title
     }
 
     /// The one place a verified entitlement lands — purchase, restore, refresh and the SDK's
-    /// customer-info stream all come through here, so each of them updates the plan, its period and
-    /// its dates together, never only the Pro boolean.
+    /// customer-info stream all come through here, so each of them updates the plan, its period, its
+    /// dates, its billing state and its price together, never only the Pro boolean.
     func update(isActive: Bool, details: SubscriptionDetails?) {
         var details = details
-        if let id = details?.productIdentifier, details?.period == nil { details?.period = periodByProduct[id] }
+        if let id = details?.productIdentifier, let metadata = metadataByProduct[id] {
+            if details?.period == nil { details?.period = metadata.period }
+            if details?.localizedPrice == nil { details?.localizedPrice = metadata.localizedPrice }
+        }
         subscription = details
         if isActive {
             activeProductIdentifier = details?.productIdentifier
@@ -131,12 +217,12 @@ final class EntitlementService {
         onVerifiedEntitlementChange?(isActive, Date())
     }
 
-    nonisolated static func planName(forProductIdentifier identifier: String) -> String? {
-        let id = identifier.lowercased()
-        for kind in [PlanKind.lifetime, .yearly, .monthly, .weekly] where id.contains(kind.rawValue) || id.contains(kind.periodNoun ?? kind.rawValue) {
-            return kind.title
-        }
-        return nil
+    /// Records what the store says a product is, and fills it into the current subscription.
+    func record(productIdentifier id: String, metadata: ProductMetadata) {
+        metadataByProduct[id] = metadata
+        guard subscription?.productIdentifier == id else { return }
+        if subscription?.period == nil { subscription?.period = metadata.period }
+        if subscription?.localizedPrice == nil { subscription?.localizedPrice = metadata.localizedPrice }
     }
 
     /// One plan as the store sells it. The price text is the store's own string, in the user's App
@@ -147,13 +233,24 @@ final class EntitlementService {
         let localizedPrice: String
         let price: Decimal
         let currencyCode: String?
+        /// The store's own per-month price for this product (RevenueCat `localizedPricePerMonth`,
+        /// computed from the product's price with its own formatter).
+        var storePricePerMonth: String? = nil
         var id: PlanKind { kind }
 
-        /// A yearly plan's price per month, from the store's own price and currency ("US$19.99"). Nil
-        /// for other plans or without a currency. Shown beside the annual total, never instead of it.
+        /// A yearly plan's price per month, from the yearly product's own price: the store's per-month
+        /// string when it gives one, otherwise that price over 12 in its own currency. Nil for other
+        /// plans. Shown beside the annual total, never instead of it.
         var monthlyEquivalent: String? {
-            guard kind == .yearly, let currencyCode, price > 0 else { return nil }
+            guard kind == .yearly, price > 0 else { return nil }
+            if let storePricePerMonth { return storePricePerMonth }
+            guard let currencyCode else { return nil }
             return Self.format(price / 12, currencyCode: currencyCode)
+        }
+
+        /// "$9.99 / week" — the store's price and the plan's period.
+        var pricePerPeriod: String {
+            kind.periodNoun.map { "\(localizedPrice) / \($0)" } ?? localizedPrice
         }
 
         static func format(_ amount: Decimal, currencyCode: String, locale: Locale = .current) -> String {
@@ -258,28 +355,22 @@ final class EntitlementService {
             )
         }
         update(isActive: entitlement?.isActive == true, details: details)
-        if let id = details?.productIdentifier, periodByProduct[id] == nil {
-            Task { await resolvePeriod(ofProduct: id) }
+        if let id = details?.productIdentifier, metadataByProduct[id] == nil {
+            Task { await resolveMetadata(ofProduct: id) }
         }
     }
 
     /// Asks the store what the entitled product is when the offering did not say — a plan no longer
-    /// offered, or a customer who bought before the offering loaded.
-    private func resolvePeriod(ofProduct id: String) async {
-        guard let product = await Purchases.shared.products([id]).first else {
-            productsWithoutMetadata.insert(id)
-            return
-        }
+    /// offered, or a customer who bought before the offering loaded. No answer leaves the period
+    /// unknown: an active plan is then "Subscription", a lapsed one names no plan.
+    private func resolveMetadata(ofProduct id: String) async {
+        guard let product = await Purchases.shared.products([id]).first else { return }
         record(product)
     }
 
     private func record(_ product: StoreProduct) {
-        guard let kind = Self.planKind(of: product) else { return }
-        periodByProduct[product.productIdentifier] = kind
-        productsWithoutMetadata.remove(product.productIdentifier)
-        if subscription?.productIdentifier == product.productIdentifier, subscription?.period == nil {
-            subscription?.period = kind
-        }
+        record(productIdentifier: product.productIdentifier,
+               metadata: ProductMetadata(period: Self.planPeriod(of: product), localizedPrice: product.localizedPriceString))
     }
     #endif
 
@@ -320,7 +411,7 @@ final class EntitlementService {
                 #endif
                 // Offered only when the product's name and its store definition agree. Lifetime is not
                 // sold to new customers; an existing lifetime entitlement is unaffected.
-                if let kind, kind != .lifetime, kind.agrees(withProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
+                if let kind, kind != .lifetime, !kind.isContradicted(byProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
                     found[kind] = package
                 }
             }
@@ -330,7 +421,8 @@ final class EntitlementService {
                 let product = package.storeProduct
                 return PlanOffer(kind: kind, productIdentifier: product.productIdentifier,
                                  localizedPrice: product.localizedPriceString,
-                                 price: product.price, currencyCode: product.currencyCode)
+                                 price: product.price, currencyCode: product.currencyCode,
+                                 storePricePerMonth: kind == .yearly ? product.localizedPricePerMonth : nil)
             }
             if plans.isEmpty {
                 // Loaded, but the offering has no plan this app sells: say so, never spin.
@@ -438,6 +530,10 @@ final class EntitlementService {
     #endif
 
     #if canImport(RevenueCat)
+    static func planPeriod(of product: StoreProduct) -> PlanPeriod {
+        PlanPeriod(kind: planKind(of: product))
+    }
+
     static func planKind(of product: StoreProduct) -> PlanKind? {
         let unit: String? = product.subscriptionPeriod.map { period in
             switch period.unit {

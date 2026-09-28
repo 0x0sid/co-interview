@@ -73,8 +73,8 @@ final class SettingsCaptureTests: XCTestCase {
     /// Each plan state of the Pro card, with dates in a long locale format, on whatever phone runs
     /// it (the SE is the one that matters). Every line of the card must stay inside the screen.
     func testCaptureEachPlanStateWithLocalizedDates() throws {
-        let states: [(String, String)] = [("pro-weekly", "en_US"), ("pro", "fr_FR"), ("pro-yearly", "de_DE"),
-                                          ("cancelled", "fr_FR"), ("grace", "de_DE"), ("expired", "en_GB"),
+        let states: [(String, String)] = [("pro-weekly", "fr_FR"), ("cancelled", "en_US"), ("pro-yearly", "de_DE"),
+                                          ("grace", "fr_FR"), ("billing-expired", "en_GB"), ("expired", "en_US"),
                                           ("expired-unknown", "zh_Hant_TW")]
         for (state, locale) in states {
             let app = launch("light", ["-UITestsSubscriptionState", state, "-UITestsSpeechModel", "installed",

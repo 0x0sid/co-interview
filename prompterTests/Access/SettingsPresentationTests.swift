@@ -80,32 +80,30 @@ struct SettingsPresentationTests {
 
     @Test
     func anActiveSubscriptionShowsItsPlanAndRenewal() {
-        let renews = Date().addingTimeInterval(30 * 86_400)
-        let state = SubscriptionCardState.make(status: .premium(expiration: renews, willRenew: true),
-                                               needsVerification: false, expiredAt: nil, plan: "Monthly")
-        guard case .active(let plan, let renewal, let note) = state else { Issue.record("not active: \(state)"); return }
-        #expect(plan == "Monthly")
-        #expect(renewal.hasPrefix("Renews "))
-        #expect(note == nil)
+        var subscription = EntitlementService.SubscriptionPresentation.none
+        subscription.entitlementActive = true
+        subscription.planPeriod = .monthly
+        subscription.expirationDate = Date().addingTimeInterval(30 * 86_400)
+        subscription.willRenew = true
+        let state = SubscriptionCardState.make(subscription)
+        guard case .active(let plan, let detail, let notice) = state else { Issue.record("not active: \(state)"); return }
+        #expect(plan == "Monthly" && detail.hasPrefix("Renews ") && notice == nil)
         #expect(state.accessibilitySummary.contains("active") && state.accessibilitySummary.contains("Monthly"),
                 "VoiceOver hears the state, not only the PRO badge")
     }
 
     @Test
-    func aCancelledSubscriptionSaysActiveUntil() {
-        let state = SubscriptionCardState.make(status: .premium(expiration: Date().addingTimeInterval(9 * 86_400), willRenew: false),
-                                               needsVerification: false, expiredAt: nil, plan: "Monthly")
-        guard case .active(_, let renewal, let note) = state else { Issue.record("not active"); return }
-        #expect(renewal.hasPrefix("Active until"))
-        #expect(note == .cancelled)
-    }
-
-    @Test
-    func freeAndExpiredAreDistinct() {
+    func freeExpiredAndVerifyingAreDistinct() {
         let expired = Date(timeIntervalSince1970: 1_790_000_000)
-        #expect(SubscriptionCardState.make(status: .free, needsVerification: false, expiredAt: nil, plan: nil) == .free)
-        #expect(SubscriptionCardState.make(status: .free, needsVerification: false, expiredAt: expired, plan: nil) == .expired(plan: nil, date: expired))
-        #expect(SubscriptionCardState.make(status: .free, needsVerification: true, expiredAt: nil, plan: "Monthly") == .verifying(plan: "Monthly"))
+        #expect(SubscriptionCardState.make(.none) == .free)
+        var lapsed = EntitlementService.SubscriptionPresentation.none
+        lapsed.expirationDate = expired
+        lapsed.hasLapsed = true
+        #expect(SubscriptionCardState.make(lapsed) == .expired(plan: nil, date: expired, billingIssue: false))
+        var verifying = EntitlementService.SubscriptionPresentation.none
+        verifying.needsVerification = true
+        verifying.planPeriod = .monthly
+        #expect(SubscriptionCardState.make(verifying) == .verifying(plan: "Monthly"))
     }
 
     @Test

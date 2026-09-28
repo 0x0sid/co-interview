@@ -23,36 +23,43 @@ struct SubscriptionSettingsView: View {
 
     private var cardState: SubscriptionCardState {
         #if DEBUG
-        // UI screenshots only: `-UITestsSubscriptionState pro|pro-weekly|pro-yearly|cancelled|grace|
-        // expired|expired-unknown|free`. Fixed dates, so captures are comparable.
-        if let fixture = Self.fixture(UITestOverrides.subscriptionState) { return fixture }
+        // UI screenshots only: `-UITestsSubscriptionState pro|pro-weekly|pro-yearly|cancelled|
+        // cancelled-weekly|grace|billing-expired|expired|expired-unknown|free`. Fixed dates.
+        if let fixture = Self.fixture(UITestOverrides.subscriptionState) { return .make(fixture) }
         #endif
-        return SubscriptionCardState.make(status: entitlements.status, needsVerification: access?.needsVerification ?? false,
-                                          expiredAt: entitlements.expiredAt, plan: entitlements.activePlanName,
-                                          subscription: entitlements.subscription, expiredPlan: entitlements.expiredPlanName)
+        return .make(entitlements.presentation(needsVerification: access?.needsVerification ?? false))
     }
 
     #if DEBUG
-    static func fixture(_ name: String?) -> SubscriptionCardState? {
+    /// Normalized states for captures, built the same way the service builds them.
+    static func fixture(_ name: String?) -> EntitlementService.SubscriptionPresentation? {
         let date = { (y: Int, m: Int, d: Int) in
             Calendar(identifier: .gregorian).date(from: DateComponents(year: y, month: m, day: d, hour: 12)) ?? .now
         }
-        func active(_ plan: String, _ end: Date, renews: Bool, billingIssue: Bool = false) -> SubscriptionCardState {
-            SubscriptionCardState.make(status: .premium(expiration: end, willRenew: renews), needsVerification: false,
-                                       expiredAt: nil, plan: plan,
-                                       subscription: .init(productIdentifier: plan.lowercased(), period: nil, expiration: end,
-                                                           willRenew: renews, billingIssueDetectedAt: billingIssue ? .now : nil,
-                                                           gracePeriodExpiresDate: billingIssue ? end : nil))
+        func state(_ period: EntitlementService.PlanPeriod?, _ end: Date, active: Bool, renews: Bool,
+                   billingIssue: Bool = false, grace: Bool = false) -> EntitlementService.SubscriptionPresentation {
+            var p = EntitlementService.SubscriptionPresentation.none
+            p.entitlementActive = active
+            p.planPeriod = period
+            p.expirationDate = end
+            p.willRenew = renews
+            p.billingIssueDetected = billingIssue
+            p.gracePeriodActive = grace
+            p.gracePeriodExpiresDate = grace ? end : nil
+            p.hasLapsed = !active
+            return p
         }
         switch name {
-        case "pro": return active("Monthly", date(2026, 10, 29), renews: true)
-        case "pro-weekly": return active("Weekly", date(2026, 10, 6), renews: true)
-        case "pro-yearly": return active("Yearly", date(2027, 9, 29), renews: true)
-        case "cancelled": return active("Monthly", date(2026, 10, 29), renews: false)
-        case "grace": return active("Monthly", date(2026, 10, 12), renews: true, billingIssue: true)
-        case "expired": return .expired(plan: "Monthly", date: date(2026, 9, 29))
-        case "expired-unknown": return .expired(plan: nil, date: date(2026, 9, 29))
-        case "free": return .free
+        case "pro": return state(.monthly, date(2026, 10, 29), active: true, renews: true)
+        case "pro-weekly": return state(.weekly, date(2026, 10, 6), active: true, renews: true)
+        case "pro-yearly": return state(.yearly, date(2027, 9, 29), active: true, renews: true)
+        case "cancelled": return state(.monthly, date(2026, 10, 29), active: true, renews: false)
+        case "cancelled-weekly": return state(.weekly, date(2026, 10, 6), active: true, renews: false)
+        case "grace": return state(.monthly, date(2026, 10, 12), active: true, renews: true, billingIssue: true, grace: true)
+        case "billing-expired": return state(.monthly, date(2026, 9, 27), active: false, renews: true, billingIssue: true)
+        case "expired": return state(.monthly, date(2026, 9, 27), active: false, renews: false)
+        case "expired-unknown": return state(nil, date(2026, 9, 27), active: false, renews: false)
+        case "free": return .none
         default: return nil
         }
     }
@@ -161,39 +168,34 @@ struct SubscriptionSettingsView: View {
                 .font(Typography.body(metrics.bodySize, weight: .semibold))
                 .accessibilityIdentifier("retry-verification")
             }
-        case .active(let plan, let renewal, let note):
+        case .active(let plan, let detail, let notice):
             VStack(alignment: .leading, spacing: 2) {
                 if let plan {
                     line(plan, primary: true)
                         .accessibilityIdentifier("subscription-plan")
                 }
-                line(renewal)
+                // A billing issue is said before the date it qualifies; "Cancelled" after it.
+                if notice == .billingIssue { noticeLine(.billingIssue) }
+                line(detail)
                     .accessibilityIdentifier("subscription-renewal")
-                if let note {
-                    line(note.text, color: note == .billingIssue ? Theme.Color.warm : nil)
-                        .accessibilityIdentifier("subscription-note")
-                }
+                if notice == .cancelled { noticeLine(.cancelled) }
             }
-            if !entitlements.isTestStore {
-                Button { Task { await entitlements.showManageSubscriptions() } } label: {
-                    Label("Manage subscription", systemImage: "creditcard")
-                        .font(Typography.body(metrics.bodySize, weight: .semibold))
-                        .frame(minHeight: metrics.cardControlHeight - 8)
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.Color.action)
-                .accessibilityIdentifier("manage-subscription")
-            }
-        case .expired(let plan, let date):
+            manageButton("Manage subscription", systemImage: "creditcard")
+        case .expired(let plan, let date, let billingIssue):
             VStack(alignment: .leading, spacing: 2) {
                 if let plan {
-                    line("\(plan) plan", primary: true)
+                    line(plan, primary: true)
                         .accessibilityIdentifier("subscription-plan")
                 }
-                line("Expired \(SubscriptionCardState.dateText(date, nearTime: false))", primary: plan == nil)
-                    .accessibilityIdentifier("subscription-renewal")
+                if billingIssue { noticeLine(.billingIssue) }
+                if let date {
+                    line("Expired \(SubscriptionCardState.dateText(date, nearTime: false))", primary: plan == nil && !billingIssue)
+                        .accessibilityIdentifier("subscription-renewal")
+                }
             }
             primaryButton("Renew Pro", systemImage: "arrow.clockwise")
+            // Apple's own subscription page is where a payment method is fixed; nothing else is offered.
+            if billingIssue { manageButton("Fix billing", systemImage: "creditcard") }
         case .free:
             VStack(alignment: .leading, spacing: 2) {
                 line("Unlimited AI answers and Pro features.", primary: true)
@@ -201,6 +203,28 @@ struct SubscriptionSettingsView: View {
                     .accessibilityIdentifier("free-answers-disclosure")
             }
             primaryButton("Upgrade to Pro", systemImage: "sparkles")
+        }
+    }
+
+    /// "Cancelled" in the secondary colour; "Billing issue" in the restrained warning colour — the
+    /// line only, never the card.
+    private func noticeLine(_ notice: SubscriptionCardState.Notice) -> some View {
+        line(notice.text, color: notice == .billingIssue ? Theme.Color.warm : nil)
+            .accessibilityIdentifier("subscription-note")
+    }
+
+    /// Apple's manage-subscriptions sheet. Not offered for the Test Store, which Apple does not manage.
+    @ViewBuilder
+    private func manageButton(_ title: String, systemImage: String) -> some View {
+        if !entitlements.isTestStore {
+            Button { Task { await entitlements.showManageSubscriptions() } } label: {
+                Label(title, systemImage: systemImage)
+                    .font(Typography.body(metrics.bodySize, weight: .semibold))
+                    .frame(minHeight: metrics.cardControlHeight - 8)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Color.action)
+            .accessibilityIdentifier("manage-subscription")
         }
     }
 

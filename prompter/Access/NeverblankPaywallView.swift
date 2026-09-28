@@ -227,7 +227,7 @@ struct NeverblankPaywallView: View {
                     }
                 }
                 Spacer()
-                Text(offer.kind.periodNoun.map { "\(offer.localizedPrice) / \($0)" } ?? offer.localizedPrice)
+                Text(offer.pricePerPeriod)
                     .font(Typography.body(15, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
             }

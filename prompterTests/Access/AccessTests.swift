@@ -41,25 +41,25 @@ struct PlanLineupTests {
     }
 
     @Test
-    func purchasedPlansAreNamedFromTheirIdentifier() {
-        #expect(EntitlementService.planName(forProductIdentifier: "monthly") == "Monthly")
-        #expect(EntitlementService.planName(forProductIdentifier: "talk.cointerview.pro.weekly") == "Weekly")
-        #expect(EntitlementService.planName(forProductIdentifier: "lifetime") == "Lifetime")
-        #expect(EntitlementService.planName(forProductIdentifier: "yearly") == "Yearly")
+    func misconfiguredProductsAreNotOffered() {
+        // The Test Store as found on 2026-09-26: ids that say the opposite of their store period.
+        #expect(PlanKind.monthly.isContradicted(byProductIdentifier: "yearly"), "`yearly` defined as 1 month")
+        #expect(PlanKind.yearly.isContradicted(byProductIdentifier: "lifetime"), "`lifetime` defined as a 1-year subscription")
+        // Correct definitions, including the App Store ids.
+        for (kind, id) in [(PlanKind.monthly, "monthly"), (.yearly, "yearly"), (.lifetime, "lifetime"),
+                           (.weekly, "talk.cointerview.pro.weekly"), (.monthly, "talk.cointerview.pro.monthly"),
+                           (.yearly, "talk.cointerview.pro.yearly")] {
+            #expect(!kind.isContradicted(byProductIdentifier: id), "\(id)")
+        }
     }
 
+    /// The id never decides what a plan is: a neutral id is offered as whatever the store says.
     @Test
-    func misconfiguredProductsAreNotOffered() {
-        // The Test Store as found on 2026-09-26.
-        #expect(PlanKind.monthly.agrees(withProductIdentifier: "monthly"))
-        #expect(!PlanKind.monthly.agrees(withProductIdentifier: "yearly"), "`yearly` defined as 1 month")
-        #expect(!PlanKind.yearly.agrees(withProductIdentifier: "lifetime"), "`lifetime` defined as a 1-year subscription")
-        // Correct definitions, including the App Store ids.
-        #expect(PlanKind.yearly.agrees(withProductIdentifier: "yearly"))
-        #expect(PlanKind.lifetime.agrees(withProductIdentifier: "lifetime"))
-        #expect(PlanKind.weekly.agrees(withProductIdentifier: "talk.cointerview.pro.weekly"))
-        #expect(PlanKind.monthly.agrees(withProductIdentifier: "talk.cointerview.pro.monthly"))
-        #expect(PlanKind.yearly.agrees(withProductIdentifier: "talk.cointerview.pro.yearly"))
+    func aNeutralProductIdentifierIsOfferedAsItsStorePeriod() {
+        for kind in [PlanKind.weekly, .monthly, .yearly] {
+            #expect(!kind.isContradicted(byProductIdentifier: "neverblank_pro_1"), "\(kind)")
+            #expect(!kind.isContradicted(byProductIdentifier: "pro.plus"), "\(kind)")
+        }
     }
 
     private func price(_ kind: PlanKind, _ amount: String, _ currency: String = "USD") -> PlanSavings.Price {

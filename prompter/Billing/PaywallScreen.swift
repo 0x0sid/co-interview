@@ -71,10 +71,9 @@ struct PaywallScreen: View {
                 .font(Typography.body(17, weight: .semibold))
                 .foregroundStyle(Theme.Color.action)
 
-            if case .active(let plan, let renewal, let note) = SubscriptionCardState.make(
-                status: entitlements.status, needsVerification: false, expiredAt: nil,
-                plan: entitlements.activePlanName, subscription: entitlements.subscription) {
-                Text([plan, renewal, note?.text].compactMap { $0 }.joined(separator: " · "))
+            let subscription = entitlements.presentation()
+            if case .active(let plan, let detail, let notice) = SubscriptionCardState.make(subscription) {
+                Text([plan, subscription.localizedPricePerPeriod, notice?.text, detail].compactMap { $0 }.joined(separator: " · "))
                     .font(Typography.body(14))
                     .foregroundStyle(Theme.Color.secondary)
             }
