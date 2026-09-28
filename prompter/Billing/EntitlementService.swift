@@ -58,6 +58,30 @@ final class EntitlementService {
     private(set) var activeProductIdentifier: String?
     /// When a subscription this customer had has lapsed — for "Expired on …". Nil if never subscribed.
     private(set) var expiredAt: Date?
+    /// RevenueCat's facts about the Pro subscription — the active one, or the last one after it lapsed.
+    /// Nil for a customer who never subscribed.
+    private(set) var subscription: SubscriptionDetails?
+    /// Each product's billing period, **from the store product itself** (offering packages, or a
+    /// product lookup for one no longer offered). Never guessed from dates.
+    private var periodByProduct: [String: PlanKind] = [:]
+    /// Products the store could not describe: only these fall back to reading the product id.
+    private var productsWithoutMetadata: Set<String> = []
+
+    /// What RevenueCat says about one subscription. Every date here is RevenueCat's own — nothing is
+    /// computed from a purchase date plus a period, which trials, intro offers, billing retries,
+    /// grace periods and plan changes would all make wrong.
+    struct SubscriptionDetails: Equatable {
+        var productIdentifier: String
+        /// Weekly, monthly or yearly, from the product's subscription period. Nil until known.
+        var period: PlanKind?
+        /// The entitlement's expiration: the renewal date while it renews, the end date once cancelled.
+        var expiration: Date?
+        var willRenew: Bool
+        /// The store could not charge the renewal (RevenueCat `billingIssueDetectedAt`).
+        var billingIssueDetectedAt: Date?
+        /// Apple's billing grace period, while access continues despite the billing issue.
+        var gracePeriodExpiresDate: Date?
+    }
 
     /// How the active purchase is described. The product's name is used only when it agrees with what
     /// the entitlement actually does: a "lifetime" product that expires and renews is shown as the
@@ -66,10 +90,45 @@ final class EntitlementService {
         guard let id = activeProductIdentifier else { return nil }
         let expires: Bool
         if case .premium(let expiration, _) = status { expires = expiration != nil } else { expires = false }
-        guard let named = Self.planName(forProductIdentifier: id) else { return nil }
+        guard let named = planTitle(forProductIdentifier: id) else { return nil }
         let namedLifetime = named == PlanKind.lifetime.title
         if namedLifetime == expires { return "“\(id)” (renewing subscription — misconfigured product)" }
         return named
+    }
+
+    /// The plan a lapsed subscription was on, when it is known; nil rather than a guess.
+    var expiredPlanName: String? {
+        guard activeProductIdentifier == nil, let id = subscription?.productIdentifier else { return nil }
+        return planTitle(forProductIdentifier: id)
+    }
+
+    /// The store's period for the product; the product id's wording only when the store has no
+    /// metadata for it at all.
+    private func planTitle(forProductIdentifier id: String) -> String? {
+        if let kind = subscription?.productIdentifier == id ? subscription?.period : nil { return kind.title }
+        if let kind = periodByProduct[id] { return kind.title }
+        return productsWithoutMetadata.contains(id) ? Self.planName(forProductIdentifier: id) : nil
+    }
+
+    /// The one place a verified entitlement lands — purchase, restore, refresh and the SDK's
+    /// customer-info stream all come through here, so each of them updates the plan, its period and
+    /// its dates together, never only the Pro boolean.
+    func update(isActive: Bool, details: SubscriptionDetails?) {
+        var details = details
+        if let id = details?.productIdentifier, details?.period == nil { details?.period = periodByProduct[id] }
+        subscription = details
+        if isActive {
+            activeProductIdentifier = details?.productIdentifier
+            expiredAt = nil
+            status = .premium(expiration: details?.expiration, willRenew: details?.willRenew ?? false)
+        } else {
+            // **Confirmed inactive reconciles the cache.** Expiration and revocation must actually
+            // revoke; a local premium flag that only ever turns on would be indefinitely trusted.
+            activeProductIdentifier = nil
+            expiredAt = details?.expiration
+            status = .free
+        }
+        onVerifiedEntitlementChange?(isActive, Date())
     }
 
     nonisolated static func planName(forProductIdentifier identifier: String) -> String? {
@@ -187,17 +246,39 @@ final class EntitlementService {
 
     private func apply(_ info: CustomerInfo) {
         let entitlement = info.entitlements[BillingConfiguration.entitlementIdentifier]
-        if let entitlement, entitlement.isActive {
-            activeProductIdentifier = entitlement.productIdentifier
-            status = .premium(expiration: entitlement.expirationDate, willRenew: entitlement.willRenew)
-            onVerifiedEntitlementChange?(true, Date())
-        } else {
-            // **Confirmed inactive reconciles the cache.** Expiration and revocation must actually
-            // revoke; a local premium flag that only ever turns on would be indefinitely trusted.
-            activeProductIdentifier = nil
-            expiredAt = entitlement?.expirationDate
-            status = .free
-            onVerifiedEntitlementChange?(false, Date())
+        let details = entitlement.map { entitlement in
+            // The per-product subscription record carries the grace period; the entitlement does not.
+            let record = info.subscriptionsByProductIdentifier[entitlement.productIdentifier]
+            return SubscriptionDetails(
+                productIdentifier: entitlement.productIdentifier,
+                expiration: entitlement.expirationDate,
+                willRenew: entitlement.willRenew,
+                billingIssueDetectedAt: entitlement.billingIssueDetectedAt ?? record?.billingIssuesDetectedAt,
+                gracePeriodExpiresDate: record?.gracePeriodExpiresDate
+            )
+        }
+        update(isActive: entitlement?.isActive == true, details: details)
+        if let id = details?.productIdentifier, periodByProduct[id] == nil {
+            Task { await resolvePeriod(ofProduct: id) }
+        }
+    }
+
+    /// Asks the store what the entitled product is when the offering did not say — a plan no longer
+    /// offered, or a customer who bought before the offering loaded.
+    private func resolvePeriod(ofProduct id: String) async {
+        guard let product = await Purchases.shared.products([id]).first else {
+            productsWithoutMetadata.insert(id)
+            return
+        }
+        record(product)
+    }
+
+    private func record(_ product: StoreProduct) {
+        guard let kind = Self.planKind(of: product) else { return }
+        periodByProduct[product.productIdentifier] = kind
+        productsWithoutMetadata.remove(product.productIdentifier)
+        if subscription?.productIdentifier == product.productIdentifier, subscription?.period == nil {
+            subscription?.period = kind
         }
     }
     #endif
@@ -230,6 +311,7 @@ final class EntitlementService {
             // package slot, so a mis-slotted product is still shown as what it is.
             var found: [PlanKind: Package] = [:]
             for package in current?.availablePackages ?? [] {
+                record(package.storeProduct)
                 let kind = Self.planKind(of: package.storeProduct)
                 #if DEBUG
                 // What the store says each package is — metadata only, for diagnosing the dashboard.

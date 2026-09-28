@@ -70,6 +70,28 @@ final class SettingsCaptureTests: XCTestCase {
                                     "-UITestsInterviewLanguage", "fr-FR"])
     }
 
+    /// Each plan state of the Pro card, with dates in a long locale format, on whatever phone runs
+    /// it (the SE is the one that matters). Every line of the card must stay inside the screen.
+    func testCaptureEachPlanStateWithLocalizedDates() throws {
+        let states: [(String, String)] = [("pro-weekly", "en_US"), ("pro", "fr_FR"), ("pro-yearly", "de_DE"),
+                                          ("cancelled", "fr_FR"), ("grace", "de_DE"), ("expired", "en_GB"),
+                                          ("expired-unknown", "zh_Hant_TW")]
+        for (state, locale) in states {
+            let app = launch("light", ["-UITestsSubscriptionState", state, "-UITestsSpeechModel", "installed",
+                                       "-AppleLocale", locale])
+            openSettings(app)
+            save(app, "plan-\(state)-\(locale)")
+            XCTAssertTrue(app.descendants(matching: .any)["subscription-title"].exists, "\(state): no Neverblank Pro card")
+            for id in ["subscription-plan", "subscription-renewal", "subscription-note"] {
+                let element = app.descendants(matching: .any)[id]
+                guard element.exists else { continue }
+                XCTAssertLessThanOrEqual(element.frame.maxX, app.frame.maxX - 8, "\(state) \(locale): \(id) runs off the card")
+                XCTAssertGreaterThan(element.frame.height, 0)
+            }
+            app.terminate()
+        }
+    }
+
     func testCaptureExpiredSubscriptionAndMissingSpeechModel() throws {
         capture("light", "expired-missing", ["-UITestsSubscriptionState", "expired", "-UITestsSpeechModel", "needsDownload"])
         capture("dark", "pro-installed", ["-UITestsSubscriptionState", "pro", "-UITestsSpeechModel", "installed"])

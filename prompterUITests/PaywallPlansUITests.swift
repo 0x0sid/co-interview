@@ -19,9 +19,12 @@ final class PaywallPlansUITests: XCTestCase {
         app.launchArguments += ["-UITestsQuietMotion"]
         app.launch()
         XCTAssertTrue(app.waitForNeverblankHome(), "Neverblank did not open on its home screen")
+        // Plans are offered from the Neverblank Pro card in Settings (Home has no plans button).
+        let gear = app.buttons["home-settings"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 10))
+        gear.tap()
         let viewPlans = app.buttons["view-plans"]
-        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10))
-        app.scrollTo(viewPlans)
+        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10), "no Upgrade to Pro on the Settings card")
         viewPlans.tap()
         XCTAssertTrue(app.staticTexts["Never interview alone again."].waitForExistence(timeout: 10))
 

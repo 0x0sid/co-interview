@@ -71,10 +71,10 @@ struct PaywallScreen: View {
                 .font(Typography.body(17, weight: .semibold))
                 .foregroundStyle(Theme.Color.action)
 
-            if case .premium(let expiration, let willRenew) = entitlements.status, let expiration {
-                Text(willRenew
-                     ? "Renews on \(expiration.formatted(date: .abbreviated, time: .omitted))."
-                     : "Access continues until \(expiration.formatted(date: .abbreviated, time: .omitted)) and will not renew.")
+            if case .active(let plan, let renewal, let note) = SubscriptionCardState.make(
+                status: entitlements.status, needsVerification: false, expiredAt: nil,
+                plan: entitlements.activePlanName, subscription: entitlements.subscription) {
+                Text([plan, renewal, note?.text].compactMap { $0 }.joined(separator: " · "))
                     .font(Typography.body(14))
                     .foregroundStyle(Theme.Color.secondary)
             }

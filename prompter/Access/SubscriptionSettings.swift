@@ -23,17 +23,40 @@ struct SubscriptionSettingsView: View {
 
     private var cardState: SubscriptionCardState {
         #if DEBUG
-        // UI screenshots only: `-UITestsSubscriptionState pro|free|expired`.
-        switch UITestOverrides.subscriptionState {
-        case "pro": return .active(plan: "Monthly", renewal: Self.renewalLine(expiration: Date().addingTimeInterval(30 * 86_400), willRenew: true))
-        case "expired": return .expired(Date().addingTimeInterval(-86_400))
-        case "free": return .free
-        default: break
-        }
+        // UI screenshots only: `-UITestsSubscriptionState pro|pro-weekly|pro-yearly|cancelled|grace|
+        // expired|expired-unknown|free`. Fixed dates, so captures are comparable.
+        if let fixture = Self.fixture(UITestOverrides.subscriptionState) { return fixture }
         #endif
         return SubscriptionCardState.make(status: entitlements.status, needsVerification: access?.needsVerification ?? false,
-                                          expiredAt: entitlements.expiredAt, plan: entitlements.activePlanName)
+                                          expiredAt: entitlements.expiredAt, plan: entitlements.activePlanName,
+                                          subscription: entitlements.subscription, expiredPlan: entitlements.expiredPlanName)
     }
+
+    #if DEBUG
+    static func fixture(_ name: String?) -> SubscriptionCardState? {
+        let date = { (y: Int, m: Int, d: Int) in
+            Calendar(identifier: .gregorian).date(from: DateComponents(year: y, month: m, day: d, hour: 12)) ?? .now
+        }
+        func active(_ plan: String, _ end: Date, renews: Bool, billingIssue: Bool = false) -> SubscriptionCardState {
+            SubscriptionCardState.make(status: .premium(expiration: end, willRenew: renews), needsVerification: false,
+                                       expiredAt: nil, plan: plan,
+                                       subscription: .init(productIdentifier: plan.lowercased(), period: nil, expiration: end,
+                                                           willRenew: renews, billingIssueDetectedAt: billingIssue ? .now : nil,
+                                                           gracePeriodExpiresDate: billingIssue ? end : nil))
+        }
+        switch name {
+        case "pro": return active("Monthly", date(2026, 10, 29), renews: true)
+        case "pro-weekly": return active("Weekly", date(2026, 10, 6), renews: true)
+        case "pro-yearly": return active("Yearly", date(2027, 9, 29), renews: true)
+        case "cancelled": return active("Monthly", date(2026, 10, 29), renews: false)
+        case "grace": return active("Monthly", date(2026, 10, 12), renews: true, billingIssue: true)
+        case "expired": return .expired(plan: "Monthly", date: date(2026, 9, 29))
+        case "expired-unknown": return .expired(plan: nil, date: date(2026, 9, 29))
+        case "free": return .free
+        default: return nil
+        }
+    }
+    #endif
 
     private var badgeState: SettingsBadge.State {
         SettingsBadge.state(isPro: access?.isPro ?? false, needsVerification: access?.needsVerification ?? false,
@@ -111,10 +134,10 @@ struct SubscriptionSettingsView: View {
         .accessibilityIdentifier("subscription-title")
     }
 
-    private func line(_ text: String, primary: Bool = false) -> some View {
+    private func line(_ text: String, primary: Bool = false, color: Color? = nil) -> some View {
         Text(text)
             .font(Typography.body(primary ? metrics.bodySize + 1 : metrics.bodySize, weight: primary ? .medium : .regular))
-            .foregroundStyle(primary ? Theme.Color.ink : Theme.Color.secondary)
+            .foregroundStyle(color ?? (primary ? Theme.Color.ink : Theme.Color.secondary))
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -138,13 +161,18 @@ struct SubscriptionSettingsView: View {
                 .font(Typography.body(metrics.bodySize, weight: .semibold))
                 .accessibilityIdentifier("retry-verification")
             }
-        case .active(let plan, let renewal):
+        case .active(let plan, let renewal, let note):
             VStack(alignment: .leading, spacing: 2) {
                 if let plan {
-                    line("\(plan) plan", primary: true)
+                    line(plan, primary: true)
                         .accessibilityIdentifier("subscription-plan")
                 }
                 line(renewal)
+                    .accessibilityIdentifier("subscription-renewal")
+                if let note {
+                    line(note.text, color: note == .billingIssue ? Theme.Color.warm : nil)
+                        .accessibilityIdentifier("subscription-note")
+                }
             }
             if !entitlements.isTestStore {
                 Button { Task { await entitlements.showManageSubscriptions() } } label: {
@@ -156,13 +184,16 @@ struct SubscriptionSettingsView: View {
                 .tint(Theme.Color.action)
                 .accessibilityIdentifier("manage-subscription")
             }
-        case .expired(let date):
+        case .expired(let plan, let date):
             VStack(alignment: .leading, spacing: 2) {
-                line("Expired on \(date.formatted(date: .abbreviated, time: .omitted))", primary: true)
-                    .accessibilityIdentifier("subscription-plan")
-                line("Renew for unlimited AI answers.")
+                if let plan {
+                    line("\(plan) plan", primary: true)
+                        .accessibilityIdentifier("subscription-plan")
+                }
+                line("Expired \(SubscriptionCardState.dateText(date, nearTime: false))", primary: plan == nil)
+                    .accessibilityIdentifier("subscription-renewal")
             }
-            primaryButton("Renew", systemImage: "arrow.clockwise")
+            primaryButton("Renew Pro", systemImage: "arrow.clockwise")
         case .free:
             VStack(alignment: .leading, spacing: 2) {
                 line("Unlimited AI answers and Pro features.", primary: true)
@@ -183,16 +214,6 @@ struct SubscriptionSettingsView: View {
     private var previewLine: String {
         guard previewApplies, let access else { return "Developer build: free-answer limits don't apply here." }
         return AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit)
-    }
-
-    /// A cancelled plan keeps access until it actually ends, and says so.
-    static func renewalLine(expiration: Date?, willRenew: Bool) -> String {
-        guard let expiration else { return "Active." }
-        // Within a day (Test Store periods are minutes to hours), the time matters as much as the date.
-        let date = expiration.timeIntervalSinceNow < 86_400
-            ? expiration.formatted(date: .abbreviated, time: .shortened)
-            : expiration.formatted(date: .abbreviated, time: .omitted)
-        return willRenew ? "Renews on \(date)." : "Active until \(date). It will not renew."
     }
 }
 
