@@ -68,6 +68,11 @@ struct RootView: View {
             InterviewSessionStore.markInterruptedSessions(in: modelContext)
             #if DEBUG
             InterviewSessionStore.seedForScreenshotsIfRequested(in: modelContext)
+            if let identifier = UITestOverrides.interviewLanguage {
+                AppSettings.fetchOrCreate(in: modelContext).interviewLanguageRaw =
+                    InterviewLanguagePreference.language(InterviewLanguage(identifier: identifier)).rawValue
+                try? modelContext.save()
+            }
             #endif
             let settings = AppSettings.fetchOrCreate(in: modelContext)
             entitlements.onVerifiedEntitlementChange = { active, at in

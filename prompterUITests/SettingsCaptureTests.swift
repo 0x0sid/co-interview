@@ -60,6 +60,16 @@ final class SettingsCaptureTests: XCTestCase {
         for appearance in ["light", "dark"] { capture(appearance, "default") }
     }
 
+    /// Small-phone check of the subscription card in each state, with a long language name.
+    func testCaptureSubscriptionStatesWithALongLanguageName() throws {
+        capture("light", "free-zhTW-missing", ["-UITestsSubscriptionState", "free", "-UITestsSpeechModel", "needsDownload",
+                                               "-UITestsInterviewLanguage", "zh-TW"])
+        capture("dark", "expired-es", ["-UITestsSubscriptionState", "expired", "-UITestsSpeechModel", "installed",
+                                       "-UITestsInterviewLanguage", "es-CL"])
+        capture("light", "pro-fr", ["-UITestsSubscriptionState", "pro", "-UITestsSpeechModel", "installed",
+                                    "-UITestsInterviewLanguage", "fr-FR"])
+    }
+
     func testCaptureExpiredSubscriptionAndMissingSpeechModel() throws {
         capture("light", "expired-missing", ["-UITestsSubscriptionState", "expired", "-UITestsSpeechModel", "needsDownload"])
         capture("dark", "pro-installed", ["-UITestsSubscriptionState", "pro", "-UITestsSpeechModel", "installed"])

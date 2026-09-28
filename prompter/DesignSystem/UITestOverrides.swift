@@ -7,6 +7,8 @@ import Foundation
 enum UITestOverrides {
     static var subscriptionState: String? { value(after: "-UITestsSubscriptionState") }
     static var speechModel: String? { value(after: "-UITestsSpeechModel") }
+    /// `-UITestsInterviewLanguage zh-TW`: screenshots with a long language name in Settings.
+    static var interviewLanguage: String? { value(after: "-UITestsInterviewLanguage") }
 
     private static func value(after flag: String) -> String? {
         let arguments = ProcessInfo.processInfo.arguments
