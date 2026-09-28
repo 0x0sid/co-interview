@@ -32,10 +32,10 @@ struct TranscriptStripView: View {
     /// Where the expanded transcript is: at (or within a few points of) its last line.
     @State private var isAtBottom = true
 
-    /// **Collapsed is exactly two lines**: the two newest things said. It never grows, so the answer
-    /// below it never moves as the conversation continues. Expanding shows a longer tail.
+    /// The expanded feed's lines. Collapsed, the transcript is `CollapsedTranscriptPreview`: exactly
+    /// three lines of height, so the answer below it never moves as the conversation continues.
     private var visibleLines: [TranscriptLine] {
-        Array(lines.suffix(isExpanded ? Self.expandedLineLimit : 2))
+        Array(lines.suffix(Self.expandedLineLimit))
     }
 
     /// How many lines the expanded transcript holds. More than this and it scrolls inside itself.
@@ -53,15 +53,14 @@ struct TranscriptStripView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: isExpanded ? 5 : 2) {
                 header
 
                 if isExpanded {
                     expandedFeed
                 } else {
-                    ForEach(visibleLines) { line in
-                        lineView(line)
-                    }
+                    // Exactly three lines, reserved from the start: streaming never resizes it.
+                    CollapsedTranscriptPreview(lines: lines)
                 }
             }
 
@@ -250,3 +249,68 @@ struct TranscriptStripView: View {
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
     }
 }
+
+/// The collapsed Live transcript: **exactly three lines of height, always**, showing the newest speech.
+///
+/// The height is reserved from the font's own metrics (three empty lines, `reservesSpace`), never
+/// measured from the transcript, so a long partial cannot push it to four or five lines before the
+/// next revision shrinks it again. The newest text sits at the bottom and older text is clipped at the
+/// top; transcript updates carry no animation, so only expanding or collapsing changes the height.
+struct CollapsedTranscriptPreview: View {
+    let lines: [TranscriptLine]
+
+    static let lineCount = 3
+    /// One step below the expanded transcript's 14 pt, still comfortable on a small iPhone.
+    static let font = InterviewTheme.Font.ui(13, relativeTo: .footnote)
+
+    var body: some View {
+        // The fixed box: three lines of the preview font, whatever the text is.
+        Text(verbatim: "\n\n")
+            .font(Self.font)
+            .lineLimit(Self.lineCount, reservesSpace: true)
+            .hidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .bottomLeading) {
+                Text(Self.previewText(from: lines))
+                    .font(Self.font)
+                    .foregroundStyle(InterviewTheme.Color.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .bottomLeading)
+                    // Clipping hides the older text above the box but does not stop it taking touches or
+                    // accessibility focus: without these it covered the header and swallowed the tap
+                    // that expands the transcript.
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+            .clipped()
+            .contentShape(Rectangle())
+            // Older text fades as it leaves the top edge, so the cut reads as scrolled, not broken.
+            .mask(
+                LinearGradient(stops: [.init(color: .black.opacity(0.35), location: 0),
+                                       .init(color: .black, location: 0.28)],
+                               startPoint: .top, endPoint: .bottom)
+            )
+            .transaction { $0.animation = nil }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(lines.last?.text ?? "No speech yet")
+            .accessibilityAddTraits(.updatesFrequently)
+            .accessibilityIdentifier("transcript-preview")
+    }
+
+    /// The newest speech, as one flowing text: the last lines, newest last, bounded so a long
+    /// interview never lays out more than a few lines' worth of text here.
+    static func previewText(from lines: [TranscriptLine], maxCharacters: Int = 320) -> String {
+        var parts: [String] = []
+        var count = 0
+        for line in lines.reversed() {
+            let text = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+            parts.insert(text, at: 0)
+            count += text.count + 1
+            if count >= maxCharacters { break }
+        }
+        let joined = parts.joined(separator: " ")
+        return joined.count > maxCharacters ? String(joined.suffix(maxCharacters)) : joined
+    }
+}
+
