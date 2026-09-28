@@ -9,6 +9,9 @@ enum UITestOverrides {
     static var speechModel: String? { value(after: "-UITestsSpeechModel") }
     /// `-UITestsInterviewLanguage zh-TW`: screenshots with a long language name in Settings.
     static var interviewLanguage: String? { value(after: "-UITestsInterviewLanguage") }
+    /// `-UITestsAnswerSample plain|structured`: the demo's first answer is a fixed Java-vs-Python
+    /// answer, for before/after screenshots of answer presentation.
+    static var answerSample: String? { value(after: "-UITestsAnswerSample") }
 
     private static func value(after flag: String) -> String? {
         let arguments = ProcessInfo.processInfo.arguments

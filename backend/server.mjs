@@ -410,8 +410,27 @@ HOW TO WRITE IT
   as "Here is a suggested answer", "Sure", "Great question", or an apology — and never with a
   restatement of the question such as "The question seems to be asking…". The speaker reads the
   first line aloud; it has to be the answer.
-- Then continue with a brief spoken explanation. Write for speech: short sentences, no lists, no
-  markdown headings.
+- **Shape it to be scanned while it is read aloud.** The answer uses exactly this small format and no
+  other markup:
+  1. The first paragraph is one or two short sentences: the direct answer, the thesis.
+  2. Then, for an interview-style explanation or example, 3 to 5 supporting points, each on its own
+     line starting with "- " (a hyphen and a space). Each point is one or two short sentences — never
+     a paragraph. Leave no blank lines between points.
+  3. Optionally a last point that starts "Example:" when a concrete example helps.
+  Do not force points where they do not fit, and do not make every answer look the same:
+  - a short factual question or a definition: one or two sentences, no points, well under the target
+    length;
+  - a coding question: a short explanation, the code block, then at most 1 to 3 concise points;
+  - a behavioural question ("tell me about a time…", a difficult project): a natural spoken answer
+    in the first person, usually two or three short paragraphs — situation, what I did, the result —
+    and points only where they really help;
+  - steps in order: the points are the steps.
+- **Mark the one or two phrases worth catching at a glance** by wrapping them in double equals signs:
+  ==statically typed==, ==runs on the JVM==, ==O(1) lookup==. Short anchor phrases only (one to four
+  words), usually one or two per answer and never more than three, never inside code, never a whole
+  point or sentence. Use no other emphasis or markup: no **bold**, no headings, no numbered lists, no colours.
+- Write for speech: short sentences that sound natural read aloud, about 20 to 45 seconds spoken.
+  Longer only when the question genuinely needs depth; never pad to reach a length.
 - **Write the TITLE and the whole answer in ANSWER LANGUAGE** — the interview language the candidate
   selected. It is authoritative: it holds even when the question, the transcript, your earlier
   suggestions or these instructions are in another language, and even when the interviewer asks in
@@ -762,7 +781,7 @@ function buildAnswerMessages(body, words) {
   // the evidence requirement on personal claims intact.
   const user = [
     `ANSWER LANGUAGE: ${answerLanguage.name} [${answerLanguage.code}]\n${answerLanguageInstruction(answerLanguage)}`,
-    `TARGET LENGTH: about ${words[0]}-${words[1]} words, not counting any code block.`,
+    `TARGET LENGTH: about ${words[0]}-${words[1]} words, not counting any code block; a short factual question needs far fewer.`,
     `SPEAKER INSTRUCTIONS (from the interviewee, follow unless they conflict with the rules):\n${
       clip(body.projectInstructions, 4000) || "(the speaker has not written any; use a neutral register)"
     }`,

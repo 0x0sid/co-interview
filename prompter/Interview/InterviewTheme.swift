@@ -15,6 +15,9 @@ enum InterviewTheme {
         static let background = dynamic(light: 0xF8F5EF, dark: 0x1D2120, ultra: 0x000000)
         /// Primary: deep teal / pale mint. Carries highlights, the Generate button and detected questions.
         static let primary = dynamic(light: 0x2F6B5E, dark: 0xBEEBDC, ultra: 0xFFFFFF)
+        /// The answer's `==anchor==` marker: a soft mint stroke behind a few words, never yellow and
+        /// never a pill. Ultra Contrast outlines it in white instead (`AnswerHighlightRenderer`).
+        static let answerHighlight = dynamic(light: 0xCDEBDD, dark: 0x2E5C4F, ultra: 0xFFFFFF)
         /// Text on top of `primary`.
         static let onPrimary = dynamic(light: 0xFFFFFF, dark: 0x16211D, ultra: 0x000000)
         /// Body text.
@@ -81,10 +84,13 @@ enum InterviewTheme {
     }
 
     enum Metric {
-        /// The answer's base size, before Dynamic Type.
-        static let answerSize: CGFloat = 21
-        /// Line height of the answer, as a multiple of its size.
-        static let answerLineHeight: CGFloat = 1.4
+        /// The answer's base size, before Dynamic Type. It was 21: with points and anchors doing the
+        /// structuring, a notch smaller shows the whole shape of an answer above the fold while
+        /// staying readable at arm's length.
+        static let answerSize: CGFloat = 19
+        /// Line height of the answer, as a multiple of its size. Slightly tighter than the old 1.4:
+        /// the lines of one point belong together; the space *between* points does the separating.
+        static let answerLineHeight: CGFloat = 1.32
         /// Extra leading needed to reach that line height.
         ///
         /// **Not `size × (lineHeight − 1)`.** SwiftUI's `lineSpacing` is added *on top of* the font's
@@ -97,6 +103,11 @@ enum InterviewTheme {
         }()
         /// Space between answer paragraphs: clearly a new paragraph, not a new section.
         static let answerParagraphSpacing: CGFloat = 14
+        /// Between two points: clearly more than the leading inside one, less than a paragraph.
+        static let answerPointSpacing: CGFloat = 11
+        /// The bullet's column: a small dot and the gap after it, so a point's wrapped lines hang
+        /// just past the dot rather than at a deep list indent.
+        static let answerBulletGap: CGFloat = 8
         /// The Generate button.
         static let generateDiameter: CGFloat = 56
         /// Height of the fade the content scrolls under.

@@ -55,12 +55,28 @@ enum AnswerBlock: Equatable, Sendable, Identifiable {
     }
 
     /// Blank lines separate paragraphs, and each paragraph is its own prose block so the reader
-    /// aligns against one paragraph at a time.
+    /// aligns against one paragraph at a time. A line starting "- " (`AnswerStructure`) is a point
+    /// of its own even without a blank line before it; the block keeps its prefix and any `==`
+    /// markers, so the stored answer is the source and reopening it rebuilds the same points.
     private static func paragraphs(of text: String) -> [AnswerBlock] {
-        text.components(separatedBy: "\n\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .map { .prose($0.replacingOccurrences(of: "\n", with: " ")) }
+        var blocks: [String] = []
+        for paragraph in text.components(separatedBy: "\n\n") {
+            var current: String?
+            for line in paragraph.components(separatedBy: "\n") {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                guard !trimmed.isEmpty else { continue }
+                if AnswerStructure.isBullet(trimmed) {
+                    if let current { blocks.append(current) }
+                    current = trimmed
+                } else if let existing = current {
+                    current = existing + " " + trimmed
+                } else {
+                    current = trimmed
+                }
+            }
+            if let current { blocks.append(current) }
+        }
+        return blocks.map { .prose($0) }
     }
 }
 
@@ -109,14 +125,22 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
         self.createdAt = createdAt
     }
 
+    /// Whether this answer is shown with the structured presentation: lead, points and anchors.
+    ///
+    /// A saved plain answer (every answer before this format) is not, and renders exactly as it
+    /// always did. An answer still streaming always is, so nothing about how it looks can flip when
+    /// its first point or anchor arrives: no heuristic keyword weight appears and disappears.
+    var usesStructuredPresentation: Bool {
+        !isComplete || AnswerStructure.isStructured(blocks)
+    }
+
     /// The text the reader follows: prose only, paragraphs separated by a blank line so
     /// `ScriptIndex` segments them as separate paragraphs.
+    ///
+    /// The shown text only (`AnswerStructure.spokenText`): no bullet prefix and no `==` markers ever
+    /// reach tokenisation, alignment or speech. For an old plain answer it is the prose unchanged.
     var proseText: String {
-        blocks.compactMap { block -> String? in
-            if case .prose(let text) = block { return text }
-            return nil
-        }
-        .joined(separator: "\n\n")
+        AnswerStructure.spokenText(of: blocks)
     }
 
     var codeBlocks: [String] {

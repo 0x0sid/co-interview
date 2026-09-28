@@ -307,6 +307,20 @@ try {
     }
     check("no instruction lets the speech's language decide", !/language of TO ANSWER NOW|language of the speech|conversation language/i.test(rules));
     check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
+    // Scannable answers: a lead, 3-5 points as "- " lines, and at most a few ==marked== anchor phrases.
+    check("asks for a short lead then 3 to 5 points on \"- \" lines",
+          /first paragraph is one or two short sentences/i.test(rules) && /3 to 5 supporting points, each on its own\s+line starting with "- "/i.test(rules));
+    check("marks anchor phrases with ==…==, one or two, never more than three",
+          /wrapping them in double equals signs/i.test(rules) && /never more than three/i.test(rules));
+    check("allows no other markup (no bold, headings or colours)", /no \*\*bold\*\*, no headings, no numbered lists, no colours/i.test(rules));
+    check("does not force points on code, definitions or short facts", /Do not force points where they do not fit/i.test(rules));
+    check("no longer forbids lists outright", !/no lists, no\s+markdown headings/i.test(rules));
+    check("varies the shape: short facts stay one or two sentences with no points",
+          /short factual question or a definition: one or two sentences, no points/i.test(rules));
+    check("varies the shape: behavioural answers are spoken paragraphs, not forced points",
+          /behavioural question[\s\S]{0,160}situation, what I did, the result/i.test(rules));
+    check("varies the shape: code answers are explanation, code, then 1 to 3 points",
+          /coding question: a short explanation, the code block, then at most 1 to 3/i.test(rules));
     check("excludes code from the spoken target length", /not counting any code block/i.test(body));
     check("describes an empty document set as ordinary, not as a deficiency",
           /no imported documents/i.test(body));

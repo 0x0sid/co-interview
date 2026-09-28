@@ -166,54 +166,109 @@ struct AnswerPageView: View {
 
     /// One block, paired with which paragraph of the aligned text it is (prose only). Computed once,
     /// outside the view builder, so the pairing cannot depend on how often SwiftUI re-evaluates a body.
+    ///
+    /// The paragraphs come from `AnswerStructure.prose(of:)`, the same list `proseText` is built
+    /// from, so paragraph *i* here is paragraph *i* of the aligned text even when a block has
+    /// nothing to show yet (a lone "-" that has not got its words).
     private struct PositionedBlock: Identifiable {
         let id: Int
         let block: AnswerBlock
+        let prose: AnswerStructure.Prose?
         let proseIndex: Int?
+        /// Space above this block.
+        let spacing: CGFloat
     }
 
     private func positionedBlocks(_ answer: InterviewAnswer) -> [PositionedBlock] {
-        var proseIndex = 0
-        return answer.blocks.enumerated().map { offset, block in
+        let proses = AnswerStructure.prose(of: answer.blocks)
+        let byBlock = Dictionary(uniqueKeysWithValues: proses.enumerated().map { ($1.blockIndex, $0) })
+        var result: [PositionedBlock] = []
+        var previousWasPoint = false
+        for (offset, block) in answer.blocks.enumerated() {
+            let spacing: CGFloat
             switch block {
             case .prose:
-                defer { proseIndex += 1 }
-                return PositionedBlock(id: offset, block: block, proseIndex: proseIndex)
+                guard let index = byBlock[offset] else { continue }
+                let isPoint = proses[index].role == .bullet
+                spacing = result.isEmpty ? 0
+                    : (isPoint && previousWasPoint ? InterviewTheme.Metric.answerPointSpacing : InterviewTheme.Metric.answerParagraphSpacing)
+                result.append(PositionedBlock(id: offset, block: block, prose: proses[index], proseIndex: index, spacing: spacing))
+                previousWasPoint = isPoint
             case .code:
-                return PositionedBlock(id: offset, block: block, proseIndex: nil)
+                spacing = result.isEmpty ? 0 : InterviewTheme.Metric.answerParagraphSpacing
+                result.append(PositionedBlock(id: offset, block: block, prose: nil, proseIndex: nil, spacing: spacing))
+                previousWasPoint = false
+            }
+        }
+        return result
+    }
+
+    private var answerFontSize: CGFloat { InterviewTheme.Metric.answerSize * answerTextScale }
+
+    @ViewBuilder
+    private func answerBlocks(_ answer: InterviewAnswer) -> some View {
+        let structured = answer.usesStructuredPresentation
+        let paragraphs = alignment.map { styledParagraphs(for: $0, answer: answer, structured: structured) }
+
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(positionedBlocks(answer)) { positioned in
+                Group {
+                    switch positioned.block {
+                    case .prose(let raw):
+                        let text: Text = if let paragraphs, let index = positioned.proseIndex, index < paragraphs.count {
+                            // Read mode: the whole paragraph as one Text, so it flows as a paragraph
+                            // while individual spoken words still fade.
+                            paragraphs[index]
+                        } else {
+                            // Streaming, or no alignment yet: same emphasis, no reading state to
+                            // compose with. The colour is the view's, so nothing here can be mistaken
+                            // for "read".
+                            streamingText(raw: raw, prose: positioned.prose, structured: structured)
+                        }
+                        prose(text, role: structured ? positioned.prose?.role ?? .body : .body)
+                    case .code(let code):
+                        CodeCardView(code: code)
+                    }
+                }
+                .padding(.top, positioned.spacing)
             }
         }
     }
 
+    /// One paragraph or point. A point hangs its wrapped lines just past a small dot; the lead is a
+    /// touch heavier, never a title. Weight is fixed per role from the first word, so it does not
+    /// change as the paragraph streams in.
     @ViewBuilder
-    private func answerBlocks(_ answer: InterviewAnswer) -> some View {
-        let paragraphs = alignment.map { styledParagraphs(for: $0) }
-
-        VStack(alignment: .leading, spacing: InterviewTheme.Metric.answerParagraphSpacing) {
-            ForEach(positionedBlocks(answer)) { positioned in
-                switch positioned.block {
-                case .prose(let text):
-                    if let paragraphs, let index = positioned.proseIndex, index < paragraphs.count {
-                        // Read mode: the whole paragraph as one Text, so it flows as a paragraph
-                        // while individual spoken words still fade.
-                        paragraphs[index]
-                            .font(InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale))
-                            .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        // Streaming, or no alignment yet: same emphasis, no reading state to compose
-                        // with. The colour is the view's, so nothing here can be mistaken for "read".
-                        Text(AnswerKeywords.emphasised(text, font: InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale, weight: .semibold)))
-                            .font(InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale))
-                            .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
-                            .foregroundStyle(InterviewTheme.Color.ink)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                case .code(let code):
-                    CodeCardView(code: code)
-                }
+    private func prose(_ text: Text, role: AnswerStructure.Prose.Role) -> some View {
+        let styled = text
+            .font(InterviewTheme.Font.answer(answerFontSize, weight: role == .lead ? .medium : .regular))
+            .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
+            .foregroundStyle(InterviewTheme.Color.ink)
+            .textRenderer(AnswerHighlightRenderer(color: InterviewTheme.Color.answerHighlight, outline: ultraContrast))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        if role == .bullet {
+            HStack(alignment: .firstTextBaseline, spacing: InterviewTheme.Metric.answerBulletGap) {
+                // The system face's bullet is round; the answer face draws a small square.
+                Text("•")
+                    .font(.system(size: answerFontSize, weight: .semibold))
+                    .foregroundStyle(InterviewTheme.Color.primary)
+                    .accessibilityHidden(true)
+                styled
             }
+        } else {
+            styled
         }
+    }
+
+    private func streamingText(raw: String, prose: AnswerStructure.Prose?, structured: Bool) -> Text {
+        guard structured, let prose else {
+            // The old path, unchanged: heuristic keyword weight on the stored text.
+            return Text(AnswerKeywords.emphasised(raw, font: InterviewTheme.Font.answer(answerFontSize, weight: .semibold)))
+        }
+        var attributed = AttributedString(prose.text)
+        AnswerStructure.mark(&attributed, ranges: prose.emphasis, in: prose.text)
+        AnswerKeywords.hideInlineCodeMarkers(&attributed)
+        return AnswerStructure.text(attributed)
     }
 
     /// One styled `Text` per paragraph of the aligned answer.
@@ -224,9 +279,9 @@ struct AnswerPageView: View {
     /// character range, which keeps the original spacing exactly as written and still greys
     /// individual spoken words.
     ///
-    /// Paragraph *i* corresponds to prose block *i*, because `proseText` joins the prose blocks with
-    /// a blank line and nothing else.
-    private func styledParagraphs(for alignment: ReadingAlignment) -> [Text] {
+    /// Paragraph *i* corresponds to prose paragraph *i* of `AnswerStructure.prose(of:)`, because
+    /// `proseText` joins exactly those with a blank line and nothing else.
+    private func styledParagraphs(for alignment: ReadingAlignment, answer: InterviewAnswer, structured: Bool) -> [Text] {
         var attributed = ScriptStyling.styledAttributedString(
             rawText: alignment.text,
             scriptIndex: alignment.scriptIndex,
@@ -235,10 +290,22 @@ struct AnswerPageView: View {
             palette: InterviewTheme.readingPalette,
             underlineSpoken: ultraContrast
         )
-        // Emphasis goes on *after* the reading colours and touches only weight, so the two systems
-        // stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
-        AnswerKeywords.emphasise(&attributed, source: alignment.text,
-                                 font: InterviewTheme.Font.answer(InterviewTheme.Metric.answerSize * answerTextScale, weight: .semibold))
+        if structured {
+            // Anchors, at their offsets in the aligned text. They touch no font and no colour, so
+            // the reading state and the highlight stack: a spoken anchor is grey on mint.
+            var offset = 0
+            var ranges: [NSRange] = []
+            for prose in AnswerStructure.prose(of: answer.blocks) {
+                ranges += prose.emphasis.map { NSRange(location: $0.location + offset, length: $0.length) }
+                offset += (prose.text as NSString).length + 2
+            }
+            AnswerStructure.mark(&attributed, ranges: ranges, in: alignment.text)
+        } else {
+            // Emphasis goes on *after* the reading colours and touches only weight, so the two
+            // systems stack: a keyword already spoken is grey and bold, an unspoken one is ink and bold.
+            AnswerKeywords.emphasise(&attributed, source: alignment.text,
+                                     font: InterviewTheme.Font.answer(answerFontSize, weight: .semibold))
+        }
 
         // The character span of each paragraph, from the sentences that make it up.
         var spans: [(start: Int, end: Int)] = []
@@ -260,7 +327,7 @@ struct AnswerPageView: View {
             // nothing about the alignment's character positions changes.
             var paragraph = AttributedString(attributed[range])
             AnswerKeywords.hideInlineCodeMarkers(&paragraph)
-            return Text(paragraph)
+            return AnswerStructure.text(paragraph)
         }
     }
 

@@ -910,10 +910,8 @@ final class InterviewScreenModel {
     private func priorSuggestionTexts() -> [String] {
         questions.compactMap { question in
             guard let answer = question.selectedAnswer, answer.isComplete else { return nil }
-            let text = answer.blocks.compactMap { block -> String? in
-                if case .prose(let prose) = block { return prose }
-                return nil
-            }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = AnswerStructure.prose(of: answer.blocks).map(\.text)
+                .joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
             return text.isEmpty ? nil : text
         }
     }

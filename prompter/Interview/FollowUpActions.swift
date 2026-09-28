@@ -67,10 +67,7 @@ enum FollowUpActions {
             )]
         }
 
-        let prose = blocks.compactMap { block -> String? in
-            if case .prose(let text) = block { return text }
-            return nil
-        }.joined(separator: " ")
+        let prose = AnswerStructure.prose(of: blocks).map(\.text).joined(separator: " ")
         let hasCode = blocks.contains { if case .code = $0 { return true } else { return false } }
         let wordCount = prose.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
         let french = language.isFrench

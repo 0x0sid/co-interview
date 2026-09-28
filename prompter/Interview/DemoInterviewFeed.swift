@@ -27,7 +27,7 @@ final class DemoInterviewFeed: InterviewFeed {
     /// Which script entry answers which question, matched on the question's text.
     private var answersByQuestionText: [String: Exchange] = [:]
 
-    init(script: [Exchange] = Exchange.demoScript) {
+    init(script: [Exchange] = Exchange.scriptForThisLaunch) {
         self.script = script
         (events, continuation) = AsyncStream<InterviewFeedEvent>.makeStream(bufferingPolicy: .unbounded)
         for exchange in script + Exchange.generatedExtras {
@@ -192,17 +192,22 @@ extension DemoInterviewFeed {
 
         var regeneratedBlocks: [AnswerBlock] { regenerated ?? blocks }
 
-        /// The prose, cut into revealing chunks.
+        /// The prose, cut into revealing chunks. Each paragraph after the first starts on a new line
+        /// (a point) or after a blank line, as a live stream would send it, so the streamed text
+        /// parses into the same blocks as the finished answer.
         var proseChunks: [String] {
-            blocks.compactMap { block -> String? in
+            let paragraphs = blocks.compactMap { block -> String? in
                 if case .prose(let text) = block { return text }
                 return nil
             }
-            .flatMap { paragraph in
-                paragraph
+            return paragraphs.enumerated().flatMap { index, paragraph in
+                let chunks = paragraph
                     .split(separator: " ")
                     .chunked(into: 12)
                     .map { $0.joined(separator: " ") }
+                guard index > 0, let first = chunks.first else { return chunks }
+                let separator = AnswerStructure.isBullet(paragraph) ? "\n" : "\n\n"
+                return [separator + first] + chunks.dropFirst()
             }
         }
     }
@@ -211,6 +216,34 @@ extension DemoInterviewFeed {
 extension DemoInterviewFeed.Exchange {
     /// Three technical questions plus one project discussion, as the design board shows.
     /// Entirely invented content.
+    /// The demo script, or — for answer-presentation screenshots only (DEBUG) — the same script whose
+    /// first question is a fixed Java-vs-Python answer.
+    static var scriptForThisLaunch: [Self] {
+        #if DEBUG
+        if let sample = UITestOverrides.answerSample, var first = demoScript.first {
+            first.question = "What's the difference between Java and Python?"
+            first.blocks = sample == "structured" ? javaPythonStructured : javaPythonPlain
+            first.regenerated = nil
+            return [first] + demoScript.dropFirst()
+        }
+        #endif
+        return demoScript
+    }
+
+    #if DEBUG
+    static let javaPythonPlain: [AnswerBlock] = [.prose(
+        "Java and Python are both general-purpose languages, but they trade type safety for speed of writing differently. Java is statically typed and compiled to bytecode that runs on the JVM, which catches many errors before runtime. Python is dynamically typed and interpreted, so it is quicker to write and read, especially for scripts and data work. Java tends to be faster and more predictable at scale, while Python leans on libraries like NumPy for heavy computation. For example, I'd pick Java with Spring Boot for a large backend service, and Python for data pipelines or automation."
+    )]
+    static let javaPythonStructured: [AnswerBlock] = AnswerBlock.parsed(from: """
+    Java and Python are both general-purpose languages, but they trade ==type safety== for speed of writing differently.
+
+    - Java is statically typed and compiled to bytecode that ==runs on the JVM==, which catches many errors before runtime.
+    - Python is dynamically typed and interpreted, so it is quicker to write and read, especially for scripts and data work.
+    - Java tends to be faster and more predictable at scale; Python leans on libraries like NumPy for heavy computation.
+    - Example: I'd pick Java with Spring Boot for a large backend service, and Python for data pipelines or automation.
+    """)
+    #endif
+
     static let demoScript: [Self] = [
         Self(
             leadIn: [

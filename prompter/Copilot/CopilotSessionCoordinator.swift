@@ -733,12 +733,13 @@ final class CopilotSessionCoordinator {
 
     /// Default answer length, in words, **excluding any code block**.
     ///
-    /// Sized for reading aloud: 60–120 produced answers that outlasted the point being made, and a
-    /// spoken answer that overstays is worse than one that stops. A request carrying several
+    /// Sized for reading aloud, about 20–45 seconds spoken. The lead-and-points format carries more
+    /// in the same glance than one paragraph did, so it is a little longer than the old 40–100; a
+    /// short factual question is still told to stay well under it. A request carrying several
     /// questions is allowed to run longer — the prompt tells the model to answer all of them, and
     /// that instruction outranks the target. A tunable prototype setting (§6), not a product rule.
-    static let targetMinimumWords = 40
-    static let targetMaximumWords = 100
+    static let targetMinimumWords = 70
+    static let targetMaximumWords = 130
 
     private var pendingRequests: [AnswerVersionID: (AnswerRequest, [ProjectPassage])] = [:]
 

@@ -179,8 +179,8 @@ struct AnswerQualityTests {
     /// Sized for speech, and counted excluding code.
     @Test
     func theAnswerTargetIsSpokenLength() {
-        #expect(CopilotSessionCoordinator.targetMinimumWords == 40)
-        #expect(CopilotSessionCoordinator.targetMaximumWords == 100)
+        #expect(CopilotSessionCoordinator.targetMinimumWords == 70)
+        #expect(CopilotSessionCoordinator.targetMaximumWords == 130)
     }
 
     // MARK: - Layout
