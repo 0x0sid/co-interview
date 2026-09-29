@@ -190,7 +190,28 @@ final class InterviewScreenModel {
         queuedRequestIDs.append(requestID)
         if !allowed {
             heldRequestIDs.insert(requestID)
-            accessGate?.requestPaywall(trigger)
+            // No paywall is coming (it already opened by itself once): nothing may wait for one.
+            // The entry is marked as needing Pro, keeps its snapshot for Retry, and the inline
+            // Upgrade is the way on.
+            if !offerAutomaticPaywall(trigger) { abandonHeldRequests() }
+        }
+    }
+
+    /// When a blocked new answer last met the inline lock instead of a paywall — for the screen's
+    /// "Upgrade to continue". Nil until that happens this session.
+    private(set) var freeAllowanceBlockedAt: Date?
+
+    /// A new answer was blocked by the used-up free answers. The paywall opens by itself only the
+    /// first time ever (`InterviewAccessGate.requestAutomaticPaywall`); a duplicate tap while it is
+    /// up joins that one. Returns whether a paywall is showing for this attempt to wait on.
+    private func offerAutomaticPaywall(_ trigger: PaywallTrigger) -> Bool {
+        guard let accessGate else { return true }
+        switch accessGate.requestAutomaticPaywall(trigger) {
+        case .presented, .alreadyShowing:
+            return true
+        case .suppressed:
+            freeAllowanceBlockedAt = Date()
+            return false
         }
     }
 
@@ -203,6 +224,8 @@ final class InterviewScreenModel {
 
     /// Access was verified: send the held requests, in order, each exactly once.
     func releaseHeldRequests() {
+        // Access was verified: the quiet lock no longer applies.
+        freeAllowanceBlockedAt = nil
         if let pending = pendingNewQuestion {
             // The question asked before the purchase becomes its page now, from the snapshot taken at
             // the tap — never rebuilt from later speech.
@@ -746,12 +769,15 @@ final class InterviewScreenModel {
 
         // A new question with no allowance left: the paywall first, and no empty page. The snapshot
         // waits for verified access (`releaseHeldRequests`), then becomes a page and is sent once.
+        // Once the paywall has opened by itself, a blocked question is not held: nothing is pending,
+        // its speech stays uncovered, and the inline Upgrade is shown instead of a modal.
         if action == nil, !canAcceptAnotherAnswer {
-            pendingNewQuestion = PendingNewQuestion(snapshot: snapshot, coveredLines: covering,
-                                                    contextFingerprint: contextFingerprint,
-                                                    appliedParentID: appliedParentID, decisionStatus: decisionStatus)
             diagnostics.recordTap(requestID: nil, outcome: .rejectedQueueFull, reason: "needs Pro: no free answers left")
-            accessGate?.requestPaywall(.generate)
+            if offerAutomaticPaywall(.generate) {
+                pendingNewQuestion = PendingNewQuestion(snapshot: snapshot, coveredLines: covering,
+                                                        contextFingerprint: contextFingerprint,
+                                                        appliedParentID: appliedParentID, decisionStatus: decisionStatus)
+            }
             return
         }
         createPage(snapshot: snapshot, action: action, parent: parent, covering: covering,
@@ -1017,7 +1043,7 @@ final class InterviewScreenModel {
         // Another version of a page is a paid request too. Nothing is held: the page is still there
         // to ask again from once access is back.
         guard creditedQuestionIDs.contains(question.id) || canAcceptAnotherAnswer else {
-            accessGate?.requestPaywall(.generate)
+            _ = offerAutomaticPaywall(.generate)
             return
         }
         syncSessionNote()
@@ -1502,7 +1528,7 @@ final class InterviewScreenModel {
         // The backend refused this request for access (its own counters ended the preview before
         // this device's did). The answer keeps its snapshot for Retry; the paywall is offered once.
         if message == CopilotProviderError.proRequiredMessage, !heldAbandoning {
-            accessGate?.requestPaywall(.generate)
+            _ = offerAutomaticPaywall(.generate)
         }
     }
     /// A saved page from before keys were kept with the page: a key derived from its stable page id, so

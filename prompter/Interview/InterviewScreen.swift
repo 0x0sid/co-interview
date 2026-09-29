@@ -104,28 +104,54 @@ struct InterviewScreen: View {
         )
     }
 
-    /// Free answers left, or — once both are used — what still works and an inline way to Pro. Never
-    /// a modal over the answer being read.
+    /// Free answers left, or — once they are used — the quiet locked state: "3 free answers used" and
+    /// an Upgrade button. After the paywall has opened by itself once, a blocked new question lands
+    /// here ("Upgrade to continue") instead of in another modal. Tapping Upgrade is explicit intent
+    /// and opens the paywall every time.
     @ViewBuilder
     private var accessStatus: some View {
         if enforcesAccess, let access, !access.isPro {
-            HStack(spacing: 10) {
-                Button { access.requestPaywall(.freeAnswersExhausted) } label: {
-                    Text(access.areFreeAnswersUsed ? "Trial used · Subscribe" : "Trial period")
-                        .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption1))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 4)
-                        .background(AccessStatusBadge.orange, in: Capsule())
+            if access.areFreeAnswersUsed {
+                // The locked state: muted status, one mint Upgrade — the screen's own primary, not a
+                // warning. After a blocked new question it reads "Upgrade to continue".
+                HStack(spacing: 10) {
+                    Text(AccessCopy.freeAnswersUsed(limit: access.freeAnswerLimit))
+                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                        .lineLimit(2)
+                        .accessibilityIdentifier("free-answers-status")
+                    Spacer(minLength: 0)
+                    Button { access.requestPaywall(.freeAnswersExhausted) } label: {
+                        Text(model.freeAllowanceBlockedAt != nil ? "Upgrade to continue" : "Upgrade")
+                            .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
+                            .foregroundStyle(InterviewTheme.Color.onPrimary)
+                            .lineLimit(1)
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 5)
+                            .background(InterviewTheme.Color.primary, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .fixedSize()
+                    .accessibilityIdentifier("upgrade-inline")
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("trial-badge")
-                Text(access.areFreeAnswersUsed ? AccessCopy.freeAnswersUsed
-                                               : AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit))
-                    .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
-                    .foregroundStyle(InterviewTheme.Color.muted)
-                    .accessibilityIdentifier("free-answers-status")
-                Spacer(minLength: 0)
+            } else {
+                HStack(spacing: 10) {
+                    Button { access.requestPaywall(.freeAnswersExhausted) } label: {
+                        Text("Trial period")
+                            .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption1))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(AccessStatusBadge.orange, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("trial-badge")
+                    Text(AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit))
+                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
+                        .foregroundStyle(InterviewTheme.Color.muted)
+                        .accessibilityIdentifier("free-answers-status")
+                    Spacer(minLength: 0)
+                }
             }
         }
     }

@@ -89,5 +89,6 @@ enum AccessCopy {
         count == 1 ? "1 free interview answer remaining" : "\(count) free interview answers remaining"
     }
 
-    static let freeAnswersUsed = "Pro is needed for more answers. The transcript keeps going."
+    /// The quiet locked state once the free answers are used.
+    static func freeAnswersUsed(limit: Int) -> String { "\(limit) free answers used. The transcript keeps going." }
 }

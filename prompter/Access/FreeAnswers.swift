@@ -8,6 +8,35 @@ struct FreeAnswersRecord: Codable, Equatable, Sendable {
     static let limit = 3
     var used = 0
     var exhaustionLogged = false
+    /// **Presentation only.** The paywall has already opened by itself once because the free
+    /// answers ran out; it never opens by itself again (the inline Upgrade stays). It grants nothing,
+    /// resets nothing, and the backend never sees it.
+    var automaticPaywallSeen = false
+
+    init(used: Int = 0, exhaustionLogged: Bool = false, automaticPaywallSeen: Bool = false) {
+        self.used = used
+        self.exhaustionLogged = exhaustionLogged
+        self.automaticPaywallSeen = automaticPaywallSeen
+    }
+
+    /// Tolerant of records saved before a field existed: a missing key keeps its default, so adding
+    /// a field can never make an old record unreadable — which would reset `used` to zero.
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        used = try container.decodeIfPresent(Int.self, forKey: .used) ?? 0
+        exhaustionLogged = try container.decodeIfPresent(Bool.self, forKey: .exhaustionLogged) ?? false
+        automaticPaywallSeen = try container.decodeIfPresent(Bool.self, forKey: .automaticPaywallSeen) ?? false
+    }
+}
+
+/// What asking for the automatic free-allowance paywall did.
+enum AutomaticPaywallOutcome: Equatable, Sendable {
+    /// Opened, for the first and only time.
+    case presented
+    /// A paywall is already showing (or about to): this request joins it, nothing new opens.
+    case alreadyShowing
+    /// It opened once before: no modal. The blocked attempt is answered by the inline Upgrade.
+    case suppressed
 }
 
 struct FreeAnswersLedger: Sendable {

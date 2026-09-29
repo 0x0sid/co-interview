@@ -265,7 +265,10 @@ struct AccessControllerTests {
         #expect(h.controller.freeAnswersRemaining == 0)
         #expect(!h.controller.allowsPaidRequests, "detection and new answers stop")
         #expect(h.controller.paywall == nil, "the second answer is never covered by a paywall")
-        await Task.yield()
+        // `log` sends from a detached task: wait for it (bounded) rather than hoping one yield is enough.
+        for _ in 0..<200 where !h.backend.events.contains(where: { $0.name == .freeAnswersExhausted }) {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
         #expect(h.backend.events.contains { $0.name == .freeAnswersExhausted })
     }
 
@@ -365,14 +368,35 @@ final class FakeGate: InterviewAccessGate {
     var allowsPaidRequests: Bool
     /// Free answers left, when counting; nil means "as `allowsPaidRequests` says".
     var freeRemaining: Int?
+    /// Every paywall actually presented, automatic or explicit.
     private(set) var paywalls: [PaywallTrigger] = []
     private(set) var completions: [Bool] = []
+    /// A paywall sheet is up (until `dismissPaywall`). Mirrors `AccessController.paywall != nil`.
+    private(set) var isShowingPaywall = false
+    /// Mirrors `AccessController.hasSeenFreeAllowancePaywall` (persisted there; shared here by
+    /// reusing the same gate across "meetings").
+    var automaticPaywallSeen = false
     init(allows: Bool, freeRemaining: Int? = nil) { allowsPaidRequests = allows; self.freeRemaining = freeRemaining }
     func allowsNewAnswer(pending: Int) -> Bool {
         guard let freeRemaining else { return allowsPaidRequests }
         return freeRemaining - pending > 0
     }
-    func requestPaywall(_ trigger: PaywallTrigger) { paywalls.append(trigger) }
+    func requestPaywall(_ trigger: PaywallTrigger) {
+        guard !isShowingPaywall else { return }
+        isShowingPaywall = true
+        paywalls.append(trigger)
+    }
+    func requestAutomaticPaywall(_ trigger: PaywallTrigger) -> AutomaticPaywallOutcome {
+        if isShowingPaywall { return .alreadyShowing }
+        guard !automaticPaywallSeen else { return .suppressed }
+        automaticPaywallSeen = true
+        isShowingPaywall = true
+        paywalls.append(trigger)
+        return .presented
+    }
+    func dismissPaywall() { isShowingPaywall = false }
+    /// A verified purchase: unlimited from now on.
+    func becomePro() { freeRemaining = nil; allowsPaidRequests = true; isShowingPaywall = false }
     func noteAnswerCompleted(counted: Bool) {
         completions.append(counted)
         if counted, let left = freeRemaining { freeRemaining = left - 1 }

@@ -170,8 +170,27 @@ final class AccessController {
 
     // MARK: - Paywall and purchase
 
+    /// Explicit purchase intent (Upgrade, Subscribe, Settings): opens the paywall every time it is
+    /// asked, but a request while one is already showing is ignored — one sheet, never a stack.
     func requestPaywall(_ trigger: PaywallTrigger) {
+        guard paywall == nil else { return }
         paywall = PaywallRequest(trigger: trigger)
+    }
+
+    /// The paywall has already opened by itself once for the used-up free answers (persisted with the
+    /// free-answer record, so relaunches, new meetings and reopened ones all remember it).
+    var hasSeenFreeAllowancePaywall: Bool { record.automaticPaywallSeen }
+
+    /// A new question blocked by the free allowance. **The only automatic paywall**, and it opens at
+    /// most once per installation: the first blocked attempt presents it; every later one is answered
+    /// by the inline "Upgrade" instead. Pro never gets here (nothing is blocked).
+    func requestAutomaticPaywall(_ trigger: PaywallTrigger) -> AutomaticPaywallOutcome {
+        if paywall != nil { return .alreadyShowing }
+        guard !record.automaticPaywallSeen, !isPro else { return .suppressed }
+        record.automaticPaywallSeen = true
+        ledger.save(record)
+        paywall = PaywallRequest(trigger: trigger)
+        return .presented
     }
 
     /// Makes sure a purchase will belong to the customer the backend checks: the installation is
