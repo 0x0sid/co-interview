@@ -33,7 +33,7 @@ enum SubscriptionCardState: Equatable {
     /// `plan`: "Weekly", "Monthly", "Yearly", or "Subscription" for a period the app does not name.
     /// `detail`: "Renews Oct 6, 2026", "Active until Oct 29, 2026" or "Access remains active until …".
     case active(plan: String?, detail: String, notice: Notice?)
-    /// `plan`: the last known plan, nil when unknown — never guessed.
+    /// `plan`: the last known plan, nil when unknown — never guessed.  
     case expired(plan: String?, date: Date?, billingIssue: Bool)
     case free
 
@@ -104,5 +104,64 @@ enum SubscriptionCardState: Equatable {
             "Neverblank Pro, expired\(plan.map { ", \($0)" } ?? "")\(billingIssue ? ", billing issue" : "")\(date.map { ", \(Self.dateText($0, nearTime: false))" } ?? "")."
         case .free: "Neverblank Pro, not subscribed."
         }
+    }
+}
+
+/// Settings › Answer text size while it is being dragged.
+///
+/// **The drag never touches the stored preference.** `Slider` calls its binding at touch rate
+/// (60–120 Hz), with the same snapped value over and over. Writing `AppSettings.fontScale` there
+/// invalidated the app's root (`RootView` reads it into `\.answerTextScale`), re-rendered every live
+/// answer page — each rebuilding its structured-answer parse and speech-following styling — and ran a
+/// synchronous SwiftData save on the main thread, every tick; the cost grew with the meeting. Now the
+/// drag moves only `displayed` (the percentage and the preview), and the preference is written once,
+/// when the drag ends — or at once for a non-drag change such as a VoiceOver adjustment.
+struct AnswerTextSizeEditor: Equatable {
+    static let range: ClosedRange<Double> = 0.8...1.6
+    /// 10% steps: each is a visible change at answer size, and the slider snaps to them natively.
+    static let step = 0.1
+
+    /// What the slider, the percentage and the preview show right now.
+    private(set) var displayed: Double
+    private(set) var isEditing = false
+    /// The stored preference as last written (or read).
+    private(set) var persisted: Double
+
+    init(persisted: Double) {
+        let value = Self.normalized(persisted)
+        self.persisted = value
+        displayed = value
+    }
+
+    static func normalized(_ value: Double) -> Double {
+        (min(range.upperBound, max(range.lowerBound, value)) * 10).rounded() / 10
+    }
+
+    var percent: Int { Int((displayed * 100).rounded()) }
+
+    /// The slider's editing state changed. Ending a drag returns the value to store, if it changed.
+    mutating func setEditing(_ editing: Bool) -> Double? {
+        isEditing = editing
+        return editing ? nil : commitIfChanged()
+    }
+
+    /// The slider moved. During a drag nothing is returned (nothing is stored); outside one — an
+    /// accessibility adjustment — the new value is returned to store at once.
+    mutating func update(_ value: Double) -> Double? {
+        displayed = Self.normalized(value)
+        return isEditing ? nil : commitIfChanged()
+    }
+
+    /// The stored value changed elsewhere (another screen, a relaunch): follow it unless dragging.
+    mutating func syncPersisted(_ value: Double) {
+        guard !isEditing else { return }
+        persisted = Self.normalized(value)
+        displayed = persisted
+    }
+
+    private mutating func commitIfChanged() -> Double? {
+        guard displayed != persisted else { return nil }
+        persisted = displayed
+        return displayed
     }
 }

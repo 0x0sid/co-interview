@@ -76,14 +76,15 @@ struct SubscriptionSettingsView: View {
             details
             // Restore stays in reach in every state, inside the card rather than a row beneath it.
             Button("Restore Purchases", action: onViewPlans)
-                .font(Typography.body(metrics.bodySize, weight: .medium))
+                .font(Typography.body(metrics.bodySize - 1, weight: .medium))
                 .tint(Theme.Color.action)
-                .frame(minHeight: 30)
+                .frame(minHeight: 28)
                 .accessibilityIdentifier("settings-restore")
             if entitlements.isTestStore {
-                Text("Test Store · simulated purchases, not billed by Apple")
-                    .font(Typography.body(metrics.footnoteSize - 1, weight: .medium))
-                    .foregroundStyle(Theme.Color.warm)
+                // Development only (a Test Store key is refused in Release): small and secondary.
+                Text("Test Store · simulated purchases")
+                    .font(Typography.body(metrics.footnoteSize - 2))
+                    .foregroundStyle(Theme.Color.secondary.opacity(0.8))
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let access, case .failed(let reason) = access.connection {
@@ -95,13 +96,11 @@ struct SubscriptionSettingsView: View {
                     .font(Typography.body(metrics.footnoteSize + 1, weight: .medium))
             }
         }
-        .padding(metrics.cardPadding)
+        .padding(.horizontal, metrics.cardPadding - 2)
+        .padding(.vertical, metrics.cardPadding - 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // A native glass card with a hairline edge; the PRO / Expired pill carries the state, not a
-        // coloured frame.
+        // A light native glass surface, no drawn frame; the PRO / Expired pill carries the state.
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous)
-            .strokeBorder(Theme.Color.hairline, lineWidth: 0.5))
         .onAppear {
             wasUnseenOnOpen = SettingsBadge.shows(for: badgeState, seen: settingsBadgeSeen)
             if let seen = SettingsBadge.seenValue(for: badgeState) { settingsBadgeSeen = seen }

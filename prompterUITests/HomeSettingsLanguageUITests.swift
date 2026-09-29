@@ -22,7 +22,7 @@ final class HomeSettingsLanguageUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("Interview Language"), "row label: \(row.label)")
         let state = app.descendants(matching: .any).matching(NSPredicate(format:
             "identifier IN {'speech-model-ready','speech-model-download','speech-model-unsupported','speech-model-retry','speech-model-progress'}")).firstMatch
-        let checking = app.staticTexts["Checking the speech model…"]
+        let checking = app.staticTexts["Checking speech model…"]
         XCTAssertTrue(state.waitForExistence(timeout: 10) || checking.exists, "Settings shows no speech-model state")
     }
 }

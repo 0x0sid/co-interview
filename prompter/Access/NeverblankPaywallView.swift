@@ -35,31 +35,25 @@ struct NeverblankPaywallView: View {
     private var prices: [PlanSavings.Price] {
         plans.map { PlanSavings.Price(kind: $0.kind, amount: $0.price, currency: $0.currencyCode) }
     }
-    /// What savings are measured against: the subscription that costs most per week.
-    private var baseline: PlanSavings.Price? { PlanSavings.baseline(prices) }
-    /// "Best value" goes only to the plan the store's prices make cheapest per week — if any saves.
+    /// The plan the store's prices make cheapest per week, if any saves — only to preselect it.
     private var bestValue: PlanKind? { PlanSavings.bestValue(prices) }
 
-    private func saving(_ offer: EntitlementService.PlanOffer) -> Int? {
-        guard let baseline, baseline.kind != offer.kind else { return nil }
-        return PlanSavings.savingPercent(.init(kind: offer.kind, amount: offer.price, currency: offer.currencyCode), comparedWith: baseline)
-    }
-
-    /// Shown order: the longest commitment first, lifetime last.
-    private static let order: [PlanKind] = [.yearly, .monthly, .weekly]
+    /// Shown order: shortest period first, so Monthly and Yearly read as a pair.
+    private static let order: [PlanKind] = [.weekly, .monthly, .yearly]
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 16) {
                 closeRow
                 header
                 if let context = contextLine {
                     Text(context)
                         .font(Typography.body(14))
                         .foregroundStyle(Theme.Color.ink)
-                        .padding(12)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 12))
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 benefits
                 if entitlements.isTestStore { testStoreNotice }
@@ -78,7 +72,9 @@ struct NeverblankPaywallView: View {
                 }
                 footer
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
         }
         .background(Theme.Color.paper)
         .interactiveDismissDisabled(phase != .choosing)
@@ -112,14 +108,16 @@ struct NeverblankPaywallView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("Never interview alone again.")
-                .font(Typography.display(30))
+                .font(Typography.display(28))
                 .foregroundStyle(Theme.Color.ink)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Text("Real-time answers when the questions start.")
-                .font(Typography.body(17))
+                .font(Typography.body(16))
                 .foregroundStyle(Theme.Color.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -133,15 +131,16 @@ struct NeverblankPaywallView: View {
     }
 
     private var benefits: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(Self.benefitLines, id: \.self) { line in
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 9) {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(Theme.Color.action)
                     Text(line)
                         .font(Typography.body(15))
                         .foregroundStyle(Theme.Color.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -181,62 +180,64 @@ struct NeverblankPaywallView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.Color.hairline, lineWidth: 0.5))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else {
-            VStack(spacing: 10) {
-                ForEach(Self.order, id: \.self) { kind in
-                    if let offer = plan(kind) { planRow(offer) }
+            // One translucent group, rows divided by hairlines — whatever real plans the offering has.
+            let shown = Self.order.compactMap(plan)
+            VStack(spacing: 0) {
+                ForEach(Array(shown.enumerated()), id: \.element.kind) { index, offer in
+                    if index > 0 {
+                        Divider().overlay(Theme.Color.hairline).padding(.leading, 14)
+                    }
+                    planRow(offer)
                 }
             }
+            .padding(4)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
     private func planRow(_ offer: EntitlementService.PlanOffer) -> some View {
         let isSelected = selected == offer.kind
-        let isRecommended = offer.kind == bestValue
         return Button {
             userChose = true
             guard selected != offer.kind else { return }
-            selected = offer.kind
+            withAnimation(.snappy(duration: 0.2)) { selected = offer.kind }
             // The funnel's events name the two original plans; the plan field carries the rest.
             access.log(.init(name: offer.kind == .weekly ? .weeklySelected : .monthlySelected, plan: offer.kind, trigger: trigger))
         } label: {
-            HStack(alignment: .center, spacing: 12) {
-                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 20))
-                    .foregroundStyle(isSelected ? Theme.Color.action : Theme.Color.secondary)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        Text(offer.kind.title)
-                            .font(Typography.body(16, weight: .semibold))
-                            .foregroundStyle(Theme.Color.ink)
-                        if isRecommended {
-                            Text("BEST VALUE")
-                                .font(Typography.mono(10, weight: .medium))
-                                .foregroundStyle(Theme.Color.onDark)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2)
-                                .background(Theme.Color.action, in: Capsule())
-                        }
-                    }
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(offer.kind.title)
+                        .font(Typography.body(16, weight: isSelected ? .semibold : .medium))
+                        .foregroundStyle(Theme.Color.ink)
                     if let subtitle = subtitle(for: offer) {
                         Text(subtitle)
-                            .font(Typography.body(12))
+                            .font(Typography.body(12.5))
                             .foregroundStyle(Theme.Color.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                Spacer()
+                .layoutPriority(1)
+                Spacer(minLength: 8)
                 Text(offer.pricePerPeriod)
-                    .font(Typography.body(15, weight: .semibold))
+                    .font(Typography.body(15, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(Theme.Color.ink)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.Color.action)
+                    .opacity(isSelected ? 1 : 0)
+                    .accessibilityHidden(true)
             }
-            .padding(isRecommended ? 16 : 14)
-            .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14)
-                .stroke(isSelected ? Theme.Color.action : Theme.Color.hairline, lineWidth: isSelected ? 2 : 0.5))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 11)
+            .background(isSelected ? Theme.Color.action.opacity(0.10) : .clear,
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlanRowPressStyle())
         .accessibilityIdentifier("plan-\(offer.kind.rawValue)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
@@ -256,7 +257,7 @@ struct NeverblankPaywallView: View {
             .disabled(plan(selected) == nil || phase != .choosing)
             .accessibilityIdentifier("paywall-continue")
             Text(selected == .lifetime ? "One-time purchase." : "Cancel anytime.")
-                .font(Typography.body(13, weight: .medium))
+                .font(Typography.body(12.5, weight: .medium))
                 .foregroundStyle(Theme.Color.secondary)
                 .frame(maxWidth: .infinity)
         }
@@ -281,14 +282,10 @@ struct NeverblankPaywallView: View {
         }
     }
 
+    /// Only what the price itself says: a yearly plan's per-month equivalent, from its own store price.
+    /// No badges, no savings claims.
     private func subtitle(for offer: EntitlementService.PlanOffer) -> String? {
-        var parts: [String] = []
-        if let perMonth = offer.monthlyEquivalent { parts.append("\(perMonth)/month · Billed annually") }
-        if let saving = saving(offer), let baseline {
-            parts.append("Save \(saving)% compared with paying \(baseline.kind.title.lowercased())")
-        }
-        if parts.isEmpty, offer.kind == .weekly { parts.append("Low commitment") }
-        return parts.isEmpty ? nil : parts.joined(separator: "\n")
+        offer.monthlyEquivalent.map { "\($0) / month" }
     }
 
     private func termsLine(for offer: EntitlementService.PlanOffer) -> String {
@@ -305,9 +302,9 @@ struct NeverblankPaywallView: View {
     }
 
     private var testStoreNotice: some View {
-        Text("RevenueCat Test Store — purchases here are simulated and never billed or managed by Apple.")
-            .font(Typography.body(12, weight: .medium))
-            .foregroundStyle(Theme.Color.warm)
+        Text("Test Store · simulated purchases, not billed by Apple")
+            .font(Typography.body(11.5))
+            .foregroundStyle(Theme.Color.secondary)
             .accessibilityIdentifier("paywall-test-store")
     }
 
@@ -433,5 +430,15 @@ enum LegalLinks {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: key) as? String,
               !raw.isEmpty, !raw.hasPrefix("$("), let url = URL(string: raw), url.scheme == "https" else { return nil }
         return url
+    }
+}
+
+/// A plan row's press: a slight give and dim, springing back — fluid, no border flash.
+private struct PlanRowPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
