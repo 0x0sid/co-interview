@@ -409,9 +409,10 @@ final class EntitlementService {
                 let product = package.storeProduct
                 Self.log.info("[Plans] package=\(package.identifier, privacy: .public) product=\(product.productIdentifier, privacy: .public) category=\(String(describing: product.productCategory), privacy: .public) type=\(String(describing: product.productType), privacy: .public) period=\(product.subscriptionPeriod.map { "\($0.value) \($0.unit)" } ?? "none", privacy: .public) → \(kind?.rawValue ?? "not sold", privacy: .public)")
                 #endif
-                // Offered only when the product's name and its store definition agree. Lifetime is not
-                // sold to new customers; an existing lifetime entitlement is unaffected.
-                if let kind, kind != .lifetime, !kind.isContradicted(byProductIdentifier: package.storeProduct.productIdentifier), found[kind] == nil {
+                // The plan is what the store product is (its category and subscription period) —
+                // never what its package or product id is called. Lifetime is not sold to new
+                // customers; an existing lifetime entitlement is unaffected.
+                if let kind, kind != .lifetime, found[kind] == nil {
                     found[kind] = package
                 }
             }

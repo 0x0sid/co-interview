@@ -112,24 +112,6 @@ enum PlanKind: String, Codable, Sendable, CaseIterable {
     }
 }
 
-extension PlanKind {
-    /// Whether a product's **name** contradicts what the store says it is: a product named "yearly"
-    /// that the store sells as a monthly subscription, or "lifetime" sold as a yearly subscription, is
-    /// misconfigured on the dashboard and is not offered until it is corrected.
-    ///
-    /// **The name never decides what a plan is** — the store's period does. A neutral id ("pro_1m",
-    /// "neverblank.plus") contradicts nothing and is offered as whatever the store says it is; this
-    /// only refuses to sell a product whose own id says the opposite of its store definition.
-    func isContradicted(byProductIdentifier identifier: String) -> Bool {
-        let id = identifier.lowercased()
-        let names = [rawValue, periodNoun].compactMap { $0 }
-        if names.contains(where: { id.contains($0) }) { return false }
-        return PlanKind.allCases.filter { $0 != self }
-            .flatMap { [$0.rawValue, $0.periodNoun].compactMap { $0 } }
-            .contains { id.contains($0) }
-    }
-}
-
 /// Savings computed from the **store's** prices, per week of access.
 ///
 /// A saving is shown only when it is real: same currency, positive prices, and genuinely cheaper per
