@@ -56,7 +56,7 @@ struct NeverblankPaywallView: View {
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 benefits
-                if entitlements.isTestStore { testStoreNotice }
+                if let notice = BillingEnvironment.testStoreNotice(.paywall) { testStoreNotice(notice) }
                 if isVerificationPending {
                     verificationPendingBlock
                 } else {
@@ -301,8 +301,8 @@ struct NeverblankPaywallView: View {
         selected = bestValue ?? (plan(.monthly) != nil ? .monthly : Self.order.first { plan($0) != nil } ?? .monthly)
     }
 
-    private var testStoreNotice: some View {
-        Text("Test Store · simulated purchases, not billed by Apple")
+    private func testStoreNotice(_ notice: String) -> some View {
+        Text(notice)
             .font(Typography.body(11.5))
             .foregroundStyle(Theme.Color.secondary)
             .accessibilityIdentifier("paywall-test-store")
@@ -381,9 +381,7 @@ struct NeverblankPaywallView: View {
         phase = .restoring
         switch await entitlements.restore() {
         case .purchased:
-            if entitlements.isTestStore {
-                message = "Test Store restore: this reflects RevenueCat's simulated purchases, not an Apple restore."
-            }
+            if let notice = BillingEnvironment.testStoreNotice(.restore) { message = notice }
             await confirm(event: .purchaseRestored)
         case .failed(let detail):
             access.log(.init(name: .purchaseFailed, trigger: trigger, reason: .notEntitled))

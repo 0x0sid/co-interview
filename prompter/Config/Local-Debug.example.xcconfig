@@ -10,6 +10,5 @@
 COPILOT_DEV_BACKEND_HOST = your-subdomain.ngrok-free.app
 
 // The Neverblank project's RevenueCat **Test Store** public key (test_…), for Debug builds only.
-// A Release build refuses test_ keys; its App Store key (appl_…) is the REVENUECAT_PUBLIC_KEY build
-// setting of the Release configuration.
-REVENUECAT_PUBLIC_KEY =
+// Debug.xcconfig includes this file. Release never does: it uses Release.xcconfig (App Store key).
+REVENUECAT_API_KEY =

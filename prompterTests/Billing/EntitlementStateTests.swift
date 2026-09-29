@@ -55,18 +55,29 @@ struct EntitlementStateTests {
     /// Neverblank's one entitlement, the same identifier the backend checks (`backend/access.mjs`).
     @Test
     func entitlementIdentifierMatchesTheBackend() {
-        #expect(BillingConfiguration.entitlementIdentifier == "neverblank_pro")
+        #expect(BillingEnvironment.entitlementIdentifier == "neverblank_pro")
     }
 
-    /// Placeholder or empty keys count as unconfigured rather than as a broken key.
+    /// Placeholder or empty values count as unconfigured rather than as a broken key.
     @Test
-    func unsubstitutedOrEmptyKeysAreTreatedAsUnconfigured() {
+    func unsubstitutedOrEmptyValuesAreTreatedAsUnconfigured() {
         // Checked on explicit values: the host app's own key depends on a git-ignored local file.
-        for raw in [nil, "", "   ", "$(REVENUECAT_PUBLIC_KEY)"] as [String?] {
-            #expect(BillingConfiguration.key(fromPlistValue: raw, isDebugBuild: true) == nil, "\(raw ?? "nil")")
-            #expect(BillingConfiguration.key(fromPlistValue: raw, isDebugBuild: false) == nil, "\(raw ?? "nil")")
+        for raw in [nil, "", "   ", "$(REVENUECAT_API_KEY)"] as [String?] {
+            #expect(BillingEnvironment.resolve(mode: "app-store", key: raw, isDebugBuild: false) == nil, "\(raw ?? "nil")")
+            #expect(BillingEnvironment.resolve(mode: "test-store", key: raw, isDebugBuild: true) == nil, "\(raw ?? "nil")")
         }
-        #expect(BillingConfiguration.key(fromPlistValue: " appl_abc ", isDebugBuild: false) == "appl_abc")
-        #expect(BillingConfiguration.key(fromPlistValue: "test_abc", isDebugBuild: false) == nil, "Release refuses a Test Store key")
+        for mode in [nil, "", "$(BILLING_STORE_MODE)", "sandbox"] as [String?] {
+            #expect(BillingEnvironment.resolve(mode: mode, key: "appl_abc", isDebugBuild: false) == nil, "\(mode ?? "nil")")
+        }
+        #expect(BillingEnvironment.resolve(mode: " app-store ", key: " appl_abc ", isDebugBuild: false)?.apiKey == "appl_abc")
+    }
+
+    /// The store is the declared mode, and the key has to agree with it.
+    @Test
+    func theModeAndTheKeyMustAgree() {
+        #expect(BillingEnvironment.resolve(mode: "test-store", key: "appl_abc", isDebugBuild: true) == nil,
+                "Test Store mode with an App Store key is a misconfiguration")
+        #expect(BillingEnvironment.resolve(mode: "app-store", key: "appl_abc", isDebugBuild: true)?.store == .appStore,
+                "a Debug build may be pointed at the App Store on purpose")
     }
 }

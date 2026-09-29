@@ -111,9 +111,13 @@ struct AccessConfigurationTests {
 
     @Test
     func releaseNeverUsesATestStoreKey() {
-        #expect(BillingConfiguration.acceptedKey("test_abc", isDebugBuild: false) == nil)
-        #expect(BillingConfiguration.acceptedKey("appl_abc", isDebugBuild: false) == "appl_abc")
-        #expect(BillingConfiguration.acceptedKey("test_abc", isDebugBuild: true) == "test_abc")
+        #expect(BillingEnvironment.resolve(mode: "test-store", key: "test_abc", isDebugBuild: false) == nil,
+                "a Release binary never sells through the Test Store")
+        #expect(BillingEnvironment.resolve(mode: "app-store", key: "test_abc", isDebugBuild: false) == nil)
+        #expect(BillingEnvironment.resolve(mode: "app-store", key: "appl_abc", isDebugBuild: false)
+                == .init(store: .appStore, apiKey: "appl_abc"))
+        #expect(BillingEnvironment.resolve(mode: "test-store", key: "test_abc", isDebugBuild: true)
+                == .init(store: .testStore, apiKey: "test_abc"))
     }
 
     @Test

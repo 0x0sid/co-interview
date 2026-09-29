@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BillingStoreMode</key>
+	<string>$(BILLING_STORE_MODE)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -20,22 +22,22 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>RevenueCatPublicKey</key>
-	<string>$(REVENUECAT_PUBLIC_KEY)</string>
-	<key>NeverblankTermsURL</key>
-	<string>$(NEVERBLANK_TERMS_URL)</string>
-	<key>NeverblankPrivacyURL</key>
-	<string>$(NEVERBLANK_PRIVACY_URL)</string>
-	<key>NeverblankSupportURL</key>
-	<string>$(NEVERBLANK_SUPPORT_URL)</string>
 	<key>CopilotBackendURL</key>
-	<string>https://backend--d7y3w.fly.dev</string>
+	<string>https://$(NEVERBLANK_BACKEND_HOST)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Neverblank listens only while Live is on, to transcribe your interview on your iPhone. Audio is never recorded or uploaded.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, the text (not the audio) is sent to Neverblank’s AI service.</string>
+	<key>NeverblankPrivacyURL</key>
+	<string>$(NEVERBLANK_PRIVACY_URL)</string>
+	<key>NeverblankSupportURL</key>
+	<string>$(NEVERBLANK_SUPPORT_URL)</string>
+	<key>NeverblankTermsURL</key>
+	<string>$(NEVERBLANK_TERMS_URL)</string>
+	<key>RevenueCatPublicKey</key>
+	<string>$(REVENUECAT_API_KEY)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SpaceGrotesk-Variable.ttf</string>

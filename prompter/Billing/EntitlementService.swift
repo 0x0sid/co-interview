@@ -278,7 +278,7 @@ final class EntitlementService {
     /// `identify(appUserID:)` moves it — and anything bought meanwhile — onto the issued id.
     func configure(appUserID: String? = nil, cachedPremium: Bool, cachedAt: Date?) {
         #if canImport(RevenueCat)
-        guard let key = BillingConfiguration.publicAPIKey else {
+        guard let key = BillingEnvironment.apiKey else {
             status = .unconfigured
             return
         }
@@ -303,7 +303,7 @@ final class EntitlementService {
     /// lands on the customer the server checks. A no-op when already there or unconfigured.
     func identify(appUserID: String) async {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured, Purchases.isConfigured,
+        guard BillingEnvironment.isConfigured, Purchases.isConfigured,
               Purchases.shared.appUserID != appUserID else { return }
         if let result = try? await Purchases.shared.logIn(appUserID) {
             apply(result.customerInfo)
@@ -321,8 +321,6 @@ final class EntitlementService {
         #endif
     }
 
-    /// The RevenueCat **Test Store**: simulated purchases, never billed or managed by Apple.
-    var isTestStore: Bool { BillingConfiguration.publicAPIKey?.hasPrefix(BillingConfiguration.testStoreKeyPrefix) == true }
 
     /// True while RevenueCat says the entitlement is active — or, offline, while the last verified
     /// state was. The backend verifies again for every paid request; this only decides what to offer.
@@ -342,7 +340,7 @@ final class EntitlementService {
     }
 
     private func apply(_ info: CustomerInfo) {
-        let entitlement = info.entitlements[BillingConfiguration.entitlementIdentifier]
+        let entitlement = info.entitlements[BillingEnvironment.entitlementIdentifier]
         let details = entitlement.map { entitlement in
             // The per-product subscription record carries the grace period; the entitlement does not.
             let record = info.subscriptionsByProductIdentifier[entitlement.productIdentifier]
@@ -376,7 +374,7 @@ final class EntitlementService {
 
     func refresh() async {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { status = .unconfigured; return }
+        guard BillingEnvironment.isConfigured else { status = .unconfigured; return }
         do {
             let info = try await Purchases.shared.customerInfo()
             apply(info)
@@ -391,7 +389,7 @@ final class EntitlementService {
     /// Loads the current offering so the paywall can show real, localized prices.
     func loadOffering() async {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { return }
+        guard BillingEnvironment.isConfigured else { return }
         isLoadingOffering = true
         defer { isLoadingOffering = false }
         do {
@@ -449,7 +447,7 @@ final class EntitlementService {
     /// Buys one Neverblank plan. Unlocks only on a verified active entitlement in the result.
     func purchase(plan: PlanKind) async -> PurchaseOutcome {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { return .notConfigured }
+        guard BillingEnvironment.isConfigured else { return .notConfigured }
         if packagesByPlan[plan] == nil { await loadOffering() }
         guard let package = packagesByPlan[plan] else {
             return .failed("This plan is unavailable right now. Please try again later.")
@@ -459,7 +457,7 @@ final class EntitlementService {
         do {
             let result = try await Purchases.shared.purchase(package: package)
             if result.userCancelled { return .cancelled }
-            if result.customerInfo.entitlements[BillingConfiguration.entitlementIdentifier]?.isActive == true {
+            if result.customerInfo.entitlements[BillingEnvironment.entitlementIdentifier]?.isActive == true {
                 apply(result.customerInfo)
                 return .purchased
             }
@@ -476,7 +474,7 @@ final class EntitlementService {
 
     func purchase() async -> PurchaseOutcome {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { return .notConfigured }
+        guard BillingEnvironment.isConfigured else { return .notConfigured }
         guard let offerings = try? await Purchases.shared.offerings(),
               let package = offerings.current?.availablePackages.first else {
             return .failed("Subscriptions are unavailable right now. Please try again later.")
@@ -486,7 +484,7 @@ final class EntitlementService {
         do {
             let result = try await Purchases.shared.purchase(package: package)
             if result.userCancelled { return .cancelled }
-            let entitlement = result.customerInfo.entitlements[BillingConfiguration.entitlementIdentifier]
+            let entitlement = result.customerInfo.entitlements[BillingEnvironment.entitlementIdentifier]
             if entitlement?.isActive == true {
                 apply(result.customerInfo)
                 return .purchased
@@ -503,11 +501,11 @@ final class EntitlementService {
 
     func restore() async -> PurchaseOutcome {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { return .notConfigured }
+        guard BillingEnvironment.isConfigured else { return .notConfigured }
         do {
             let info = try await Purchases.shared.restorePurchases()
             apply(info)
-            return info.entitlements[BillingConfiguration.entitlementIdentifier]?.isActive == true
+            return info.entitlements[BillingEnvironment.entitlementIdentifier]?.isActive == true
                 ? .purchased
                 : .failed("No previous purchase was found for this Apple Account.")
         } catch {
@@ -521,7 +519,7 @@ final class EntitlementService {
     /// Native manage-subscription sheet.
     func showManageSubscriptions() async {
         #if canImport(RevenueCat)
-        guard BillingConfiguration.isConfigured else { return }
+        guard BillingEnvironment.isConfigured else { return }
         try? await Purchases.shared.showManageSubscriptions()
         #endif
     }

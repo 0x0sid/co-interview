@@ -80,9 +80,9 @@ struct SubscriptionSettingsView: View {
                 .tint(Theme.Color.action)
                 .frame(minHeight: 28)
                 .accessibilityIdentifier("settings-restore")
-            if entitlements.isTestStore {
-                // Development only (a Test Store key is refused in Release): small and secondary.
-                Text("Test Store · simulated purchases")
+            if let notice = BillingEnvironment.testStoreNotice(.settings) {
+                // Development only (Debug builds with the Test Store): small and secondary.
+                Text(notice)
                     .font(Typography.body(metrics.footnoteSize - 2))
                     .foregroundStyle(Theme.Color.secondary.opacity(0.8))
                     .fixedSize(horizontal: false, vertical: true)
@@ -215,7 +215,7 @@ struct SubscriptionSettingsView: View {
     /// Apple's manage-subscriptions sheet. Not offered for the Test Store, which Apple does not manage.
     @ViewBuilder
     private func manageButton(_ title: String, systemImage: String) -> some View {
-        if !entitlements.isTestStore {
+        if !BillingEnvironment.isTestStore {
             Button { Task { await entitlements.showManageSubscriptions() } } label: {
                 Label(title, systemImage: systemImage)
                     .font(Typography.body(metrics.bodySize, weight: .semibold))

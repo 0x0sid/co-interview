@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BillingStoreMode</key>
+	<string>$(BILLING_STORE_MODE)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -20,39 +22,31 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>NeverblankInstallationAccess</key>
-	<string>$(NEVERBLANK_INSTALLATION_ACCESS)</string>
-	<key>RevenueCatPublicKey</key>
-	<string>$(REVENUECAT_PUBLIC_KEY)</string>
-	<key>NeverblankTermsURL</key>
-	<string>$(NEVERBLANK_TERMS_URL)</string>
-	<key>NeverblankPrivacyURL</key>
-	<string>$(NEVERBLANK_PRIVACY_URL)</string>
-	<key>NeverblankSupportURL</key>
-	<string>$(NEVERBLANK_SUPPORT_URL)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Neverblank listens only while Live is on, to transcribe your interview on your iPhone. Audio is never recorded or uploaded.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, the text (not the audio) is sent to Neverblank’s AI service.</string>
-	<!-- Development defaults, injected from the git-ignored prompter/Config/Local-Debug.xcconfig.
-	     Empty when that file is absent, which simply means the app asks you to configure it.
-	     These keys exist only in this Debug plist; Info.plist (Release) has neither. -->
 	<key>CopilotDevBackendHost</key>
 	<string>$(COPILOT_DEV_BACKEND_HOST)</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Neverblank contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
-	<!-- Development only, and deliberately the narrowest exception that works.
-	     NSAllowsLocalNetworking permits plain HTTP to local addresses (RFC 1918 and .local) so the
-	     phone can reach a backend running on the developer's Mac. It does NOT allow insecure loads to
-	     internet hosts: NSAllowsArbitraryLoads stays off, so every public connection still requires
-	     HTTPS. See docs/CO_INTERVIEW_AI_PIPELINE.md §10. -->
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Neverblank contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Neverblank listens only while Live is on, to transcribe your interview on your iPhone. Audio is never recorded or uploaded.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, the text (not the audio) is sent to Neverblank’s AI service.</string>
+	<key>NeverblankInstallationAccess</key>
+	<string>$(NEVERBLANK_INSTALLATION_ACCESS)</string>
+	<key>NeverblankPrivacyURL</key>
+	<string>$(NEVERBLANK_PRIVACY_URL)</string>
+	<key>NeverblankSupportURL</key>
+	<string>$(NEVERBLANK_SUPPORT_URL)</string>
+	<key>NeverblankTermsURL</key>
+	<string>$(NEVERBLANK_TERMS_URL)</string>
+	<key>RevenueCatPublicKey</key>
+	<string>$(REVENUECAT_API_KEY)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SpaceGrotesk-Variable.ttf</string>

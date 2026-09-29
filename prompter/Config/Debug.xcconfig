@@ -1,0 +1,11 @@
+// Debug builds: RevenueCat Test Store (simulated purchases, never billed by Apple).
+//
+// Committed. The Test Store public SDK key and the development backend host live in the
+// git-ignored Local-Debug.xcconfig (template: Local-Debug.example.xcconfig), included last so it
+// wins. Nothing secret belongs in either file: RevenueCat SDK keys are public, and no backend or
+// provider token is ever built into the app.
+BILLING_STORE_MODE = test-store
+REVENUECAT_API_KEY =
+COPILOT_DEV_BACKEND_HOST =
+
+#include? "Local-Debug.xcconfig"

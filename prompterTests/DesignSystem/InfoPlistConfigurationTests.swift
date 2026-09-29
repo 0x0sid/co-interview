@@ -137,4 +137,74 @@ struct InfoPlistConfigurationTests {
             #expect(releaseValue == debugValue, "\(key) differs between the Debug and Release plists")
         }
     }
+
+    // MARK: Billing environment
+
+    static func repositoryFile(_ path: String) throws -> String {
+        var url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        url.append(path: path)
+        return try String(contentsOf: url, encoding: .utf8)
+    }
+
+    /// Both plists take the store and the key from build settings — never a literal key.
+    @Test
+    func bothPlistsTakeTheBillingStoreAndKeyFromBuildSettings() throws {
+        for name in ["Info.plist", "Info-Debug.plist"] {
+            let plist = try Self.plist(named: name)
+            #expect(plist["BillingStoreMode"] as? String == "$(BILLING_STORE_MODE)", "\(name)")
+            #expect(plist["RevenueCatPublicKey"] as? String == "$(REVENUECAT_API_KEY)", "\(name)")
+        }
+    }
+
+    /// Debug sells through the Test Store, Release through the App Store — declared in the committed
+    /// xcconfigs, with no key committed in either.
+    @Test
+    func theCommittedXcconfigsDeclareTheStorePerConfiguration() throws {
+        let debug = try Self.repositoryFile("prompter/Config/Debug.xcconfig")
+        let release = try Self.repositoryFile("prompter/Config/Release.xcconfig")
+        #expect(debug.contains("BILLING_STORE_MODE = test-store"))
+        #expect(release.contains("BILLING_STORE_MODE = app-store"))
+        for text in [debug, release] {
+            let settings = text.split(separator: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
+            #expect(!settings.contains { $0.contains("test_") || $0.contains("appl_") }, "no key literal committed")
+            #expect(!settings.contains { $0.uppercased().contains("TOKEN") }, "no token setting")
+        }
+        #expect(!release.contains("Local-Debug"), "Release never reads the development file")
+    }
+
+    /// The production backend comes from the Release configuration, not a literal in the plist.
+    @Test
+    func theReleaseBackendURLComesFromTheReleaseConfiguration() throws {
+        let plist = try Self.plist(named: "Info.plist")
+        #expect(plist["CopilotBackendURL"] as? String == "https://$(NEVERBLANK_BACKEND_HOST)")
+        let release = try Self.repositoryFile("prompter/Config/Release.xcconfig")
+        let host = release.split(separator: "\n").first { $0.hasPrefix("NEVERBLANK_BACKEND_HOST") }
+            .map { $0.split(separator: "=", maxSplits: 1).last?.trimmingCharacters(in: .whitespaces) ?? "" }
+        #expect(host == "backend--d7y3w.fly.dev")
+        #expect(!(host ?? "").contains("/"), "a host only: xcconfig would cut an https:// value at //")
+    }
+
+    /// "Stamp Build Info" writes the checkout path, commit and date into Debug builds only.
+    @Test
+    func buildInfoIsStampedIntoDebugOnly() throws {
+        let project = try Self.repositoryFile("co-interview.xcodeproj/project.pbxproj")
+        let stamp = try #require(project.range(of: "/* Stamp Build Info */ = {"))
+        let script = project[stamp.upperBound...].prefix(1_600)
+        #expect(script.contains("[ \\\"${CONFIGURATION}\\\" = \\\"Debug\\\" ] || exit 0"),
+                "the stamp must exit before writing anything outside Debug")
+    }
+
+    /// The Release build runs the safety check, and it enforces what it says.
+    @Test
+    func theReleaseBuildRunsTheSafetyCheck() throws {
+        let project = try Self.repositoryFile("co-interview.xcodeproj/project.pbxproj")
+        #expect(project.contains("/* Release safety check */ = {"))
+        #expect(project.contains("scripts/release-guard.sh"))
+        #expect(!project.contains("REVENUECAT_PUBLIC_KEY"), "a target-level key setting would override the xcconfig")
+        let guardScript = try Self.repositoryFile("scripts/release-guard.sh")
+        for rule in ["test_*)", "app-store", "CopilotBackendURL", "ngrok", "COPILOT_DEV_BACKEND_TOKEN", "sk-or-v1-", "backend/.env"] {
+            #expect(guardScript.contains(rule), "the guard no longer checks \(rule)")
+        }
+    }
 }

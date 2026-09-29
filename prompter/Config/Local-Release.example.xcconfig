@@ -1,0 +1,3 @@
+// Copy to Local-Release.xcconfig (git-ignored) and fill in, or put the key in Release.xcconfig.
+// The RevenueCat App Store iOS public SDK key — Project settings › API keys › App Store app.
+REVENUECAT_API_KEY = appl_REPLACE_ME
