@@ -207,4 +207,36 @@ struct InfoPlistConfigurationTests {
             #expect(guardScript.contains(rule), "the guard no longer checks \(rule)")
         }
     }
+
+    // MARK: Neverblank identity
+
+    /// Home Screen, Settings and system dialogs show Neverblank — never the internal target name.
+    @Test
+    func bothPlistsNameTheAppNeverblank() throws {
+        for name in ["Info.plist", "Info-Debug.plist"] {
+            let plist = try Self.plist(named: name)
+            #expect(plist["CFBundleDisplayName"] as? String == "Neverblank", "\(name)")
+            #expect(plist["CFBundleName"] as? String == "Neverblank", "\(name): $(PRODUCT_NAME) would show the internal target name")
+            for key in ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"] {
+                let text = try #require(plist[key] as? String)
+                #expect(text.hasPrefix("Neverblank "), "\(name) \(key)")
+                for legacy in ["Prompter", "Co-Interview", "CoInterview", "telepron"] {
+                    #expect(!text.contains(legacy), "\(name) \(key) mentions \(legacy)")
+                }
+            }
+        }
+    }
+
+    /// The app ships as io.neverblank.app; the Xcode StoreKit test file never ships in the bundle.
+    @Test
+    func theAppShipsAsNeverblankWithoutTheStoreKitTestFile() throws {
+        let project = try Self.repositoryFile("co-interview.xcodeproj/project.pbxproj")
+        #expect(project.components(separatedBy: "PRODUCT_BUNDLE_IDENTIFIER = io.neverblank.app;").count - 1 == 2)
+        #expect(!project.contains("talk.cointerview"))
+        #expect(project.contains("Billing/Prompter.storekit,"), "the .storekit file must stay excluded from the app target")
+        let guardScript = try Self.repositoryFile("scripts/release-guard.sh")
+        for rule in ["io.neverblank.app", "CFBundleDisplayName", "NeverblankPrivacyURL", "NeverblankTermsURL"] {
+            #expect(guardScript.contains(rule), "the guard no longer checks \(rule)")
+        }
+    }
 }

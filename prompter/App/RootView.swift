@@ -11,16 +11,6 @@ struct RootView: View {
     @Environment(EntitlementService.self) private var entitlements
     @Environment(AccessController.self) private var access
 
-    /// Applied once at the root so every screen — including sheets and the reader — follows the
-    /// stored preference. `nil` means "follow the system", which is the default (M5.10).
-    ///
-    /// Reading it from the `@Query` rather than a fetch keeps it reactive without re-creating any
-    /// session state: changing appearance re-renders the view tree, it does **not** rebuild the
-    /// matcher, reset the cursor, clear spoken history or restart speech recognition.
-    private var preferredScheme: ColorScheme? {
-        appearance.colorScheme
-    }
-
     private var appearance: AppearancePreference {
         #if DEBUG
         // `-UITestsAppearance ultraContrast`: screenshots of an appearance without touching the
@@ -50,17 +40,15 @@ struct RootView: View {
             CopilotStartScreen()
             #endif
         }
-        .preferredColorScheme(preferredScheme)
         // Settings › Answer text size, for every answer on every screen.
         .environment(\.answerTextScale, min(1.6, max(0.8, settingsQuery.first?.fontScale ?? 1)))
         // Regular or compact spacing and control sizes, from the window's real size (small iPhones).
         .adaptiveLayoutMetrics()
-        // Ultra Contrast is a UIKit trait set on the windows, so every hosting controller — sheets and
-        // full-screen covers included — resolves the interview colours from it, and SwiftUI views
-        // read it back through the bridged `\.ultraContrast` key. (Setting it through
-        // `.environment` alone does not reach the trait collection colours are resolved against.)
-        .onAppear { UltraContrastTrait.apply(appearance.isUltraContrast) }
-        .onChange(of: appearance.isUltraContrast) { _, isOn in UltraContrastTrait.apply(isOn) }
+        // The appearance — light/dark style and Ultra Contrast — is applied to the windows, so every
+        // hosting controller, including a sheet that is already open (Settings), updates at once and
+        // resolves the interview colours from the same traits (`AppearanceController`).
+        .onAppear { AppearanceController.apply(appearance) }
+        .onChange(of: appearance) { _, value in AppearanceController.apply(value) }
         .task {
             // Configure once, honouring any cached entitlement so a premium reader opening offline
             // is not downgraded while the network call is in flight.
@@ -69,8 +57,10 @@ struct RootView: View {
             #if DEBUG
             InterviewSessionStore.seedForScreenshotsIfRequested(in: modelContext)
             if let identifier = UITestOverrides.interviewLanguage {
-                AppSettings.fetchOrCreate(in: modelContext).interviewLanguageRaw =
-                    InterviewLanguagePreference.language(InterviewLanguage(identifier: identifier)).rawValue
+                // "system" puts the preference back to "System language" (no explicit choice).
+                AppSettings.fetchOrCreate(in: modelContext).interviewLanguageRaw = identifier == "system"
+                    ? InterviewLanguagePreference.system.rawValue
+                    : InterviewLanguagePreference.language(InterviewLanguage(identifier: identifier)).rawValue
                 try? modelContext.save()
             }
             #endif

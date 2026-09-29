@@ -5,6 +5,8 @@
 #   - no RevenueCat key, or a Test Store key (test_…) instead of the App Store key (appl_…);
 #   - a billing mode other than app-store;
 #   - no production backend URL (CopilotBackendURL, https) in the built Info.plist;
+#   - a bundle identifier other than io.neverblank.app, an app name other than Neverblank, or no
+#     https Privacy Policy / Terms of Use link (the paywall must show both for App Review);
 #   - a backend or provider credential: token build settings, token-shaped Info.plist entries,
 #     an OpenRouter-shaped key, or any operator token / provider key from the local backend/.env.
 #
@@ -33,6 +35,20 @@ case "$url" in
   https://?*.?*) ;;
   *) fail "the production backend URL (NEVERBLANK_BACKEND_HOST → CopilotBackendURL, https://…) is missing or invalid in the built Info.plist." ;;
 esac
+
+# Identity and App Review essentials.
+[ "${PRODUCT_BUNDLE_IDENTIFIER:-}" = "io.neverblank.app" ] || fail "PRODUCT_BUNDLE_IDENTIFIER is '${PRODUCT_BUNDLE_IDENTIFIER:-}', not io.neverblank.app."
+for entry in CFBundleDisplayName CFBundleName; do
+  name=$(/usr/libexec/PlistBuddy -c "Print :$entry" "$plist" 2>/dev/null || true)
+  [ "$name" = "Neverblank" ] || fail "$entry in the built Info.plist is '$name', not Neverblank."
+done
+for entry in NeverblankPrivacyURL NeverblankTermsURL; do
+  link=$(/usr/libexec/PlistBuddy -c "Print :$entry" "$plist" 2>/dev/null || true)
+  case "$link" in
+    https://?*.?*) ;;
+    *) fail "$entry is missing (an https URL is required on the paywall for App Review). Set the matching NEVERBLANK_*_URL setting for Release." ;;
+  esac
+done
 
 # Build settings that must never carry a value in Release.
 for name in COPILOT_DEV_BACKEND_HOST COPILOT_DEV_BACKEND_TOKEN COINTERVIEW_TOKEN COINTERVIEW_TOKENS \

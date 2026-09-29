@@ -144,10 +144,10 @@ struct SubscriptionDisplayTests {
     /// An id that names another plan does not change what the store says the product is.
     @Test
     func thePlanComesFromStoreMetadataNotTheProductIdentifier() {
-        let service = Self.service(active: true, id: "talk.cointerview.pro.monthly", period: .yearly,
+        let service = Self.service(active: true, id: "io.neverblank.pro.monthly", period: .yearly,
                                    end: Self.date(2027, 9, 29), renews: true)
         #expect(Self.card(service) == .active(plan: "Yearly", detail: "Renews Sep 29, 2027", notice: nil))
-        let unlabelled = Self.service(active: true, id: "talk.cointerview.pro.weekly", period: nil,
+        let unlabelled = Self.service(active: true, id: "io.neverblank.pro.weekly", period: nil,
                                       end: Self.date(2026, 10, 6), renews: true)
         #expect(unlabelled.activePlanName == nil, "no store metadata: the id's 'weekly' is not read")
     }

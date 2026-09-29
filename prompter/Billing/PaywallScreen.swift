@@ -45,7 +45,7 @@ struct PaywallScreen: View {
             .padding(20)
         }
         .background(Theme.Color.paper)
-        .navigationTitle("Prompter Premium")
+        .navigationTitle("Neverblank Pro")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await entitlements.loadOffering()
@@ -54,7 +54,7 @@ struct PaywallScreen: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Prompter Premium")
+            Text("Neverblank Pro")
                 .font(Typography.display(28))
                 .foregroundStyle(Theme.Color.ink)
             Text("Unlimited reading time. Everything else stays free.")
@@ -125,7 +125,7 @@ struct PaywallScreen: View {
                     case .purchased: message = nil
                     case .cancelled: break                       // silent: the reader chose to stop
                     case .pending:
-                        message = "Your purchase needs approval before Premium unlocks. You can keep using Prompter meanwhile."
+                        message = "Your purchase needs approval before Premium unlocks. You can keep using Neverblank meanwhile."
                     case .failed(let text): message = text
                     case .notConfigured: message = "Subscriptions aren\u{2019}t available in this build yet."
                     }

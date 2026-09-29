@@ -31,7 +31,7 @@ enum LiveLifecycle {
 
     #if DEBUG
     private static let state = LockedBox((counts: Counts(), events: [String]()))
-    private static let logger = Logger(subsystem: "talk.cointerview", category: "lifecycle")
+    private static let logger = Logger(subsystem: "io.neverblank.app", category: "lifecycle")
     /// On a phone, lines go to stderr (so a console capture shows them at once) and to the unified log.
     /// Neither in the unit-test host unless asked (`TEST_RUNNER_LIFECYCLE_TRACE=1`): Xcode mirrors the
     /// unified log into the runner's pipe too, and a synchronous write per event across hundreds of

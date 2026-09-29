@@ -114,6 +114,8 @@ struct NeverblankSettingsView: View {
 
                     Section {
                         Picker("Appearance", selection: Binding(get: { appearance }, set: { value in
+                            // Applied before the save, so the open sheet changes on this tap.
+                            AppearanceController.apply(value)
                             settings.appearanceRaw = value.rawValue
                             try? modelContext.save()
                         })) {

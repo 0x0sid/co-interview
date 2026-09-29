@@ -9,7 +9,7 @@ struct PremiumAnnouncementScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Prompter Premium")
+                Text("Neverblank Pro")
                     .font(Typography.display(28))
                     .foregroundStyle(Theme.Color.ink)
 
@@ -20,7 +20,7 @@ struct PremiumAnnouncementScreen: View {
                     .padding(.vertical, 6)
                     .background(Capsule().fill(Theme.Color.currentSentence))
 
-                Text("Subscriptions aren\u{2019}t available yet. Everything in Prompter is free to use right now, and nothing has been charged.")
+                Text("Subscriptions aren\u{2019}t available yet. Everything in Neverblank is free to use right now, and nothing has been charged.")
                     .font(Typography.body(16))
                     .foregroundStyle(Theme.Color.ink)
 
@@ -42,7 +42,7 @@ struct PremiumAnnouncementScreen: View {
             .padding(20)
         }
         .background(Theme.Color.paper)
-        .navigationTitle("Prompter Premium")
+        .navigationTitle("Neverblank Pro")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

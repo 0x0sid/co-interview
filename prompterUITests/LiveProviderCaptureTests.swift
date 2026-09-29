@@ -65,12 +65,15 @@ final class LiveProviderCaptureTests: XCTestCase {
         app.buttons["Expand live transcript"].tap()
         let context = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Context'")).firstMatch
         XCTAssertTrue(context.waitForExistence(timeout: 5))
-        let field = app.textFields["Anything the answers should know"]
+        let field = app.descendants(matching: .any)["context-note-field"]
         if !field.exists { context.tap() }
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.tap()
         field.typeText("Secret: I love pizza")
         save(app, "live-1-note-typed-keyboard-open")
+        // Typed context is used once it is added.
+        app.buttons["add-context"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["added-context"].waitForExistence(timeout: 5))
 
         app.buttons["Generate an answer"].tap()
         XCTAssertTrue(answerComplete(app).waitForExistence(timeout: 45), "no answer arrived")
@@ -157,7 +160,7 @@ final class LiveProviderCaptureTests: XCTestCase {
         save(app, "live-6-missing-detail-add-context")
 
         addContext.tap()
-        XCTAssertTrue(app.textFields["Anything the answers should know"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["context-note-field"].waitForExistence(timeout: 5))
         save(app, "live-7-add-context-opens-note")
     }
 }

@@ -258,6 +258,18 @@ struct TranscriptLine: Identifiable, Equatable, Sendable {
 /// `SessionFiles`.
 struct ContextState: Equatable, Sendable {
     var note: String = ""
+
+    /// The note after adding a typed draft, or nil when there is nothing to add: a blank draft, or
+    /// one already in the note (a second tap, or the same text again). Each addition is its own line,
+    /// so earlier context is kept and the answers see all of it.
+    static func adding(_ draft: String, to note: String) -> String? {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        let lines = note.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard !lines.contains(text) else { return nil }
+        let existing = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        return existing.isEmpty ? text : existing + "\n" + text
+    }
 }
 
 /// What the recording mark in the header is saying.

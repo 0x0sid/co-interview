@@ -251,7 +251,7 @@ struct ScriptListScreen: View {
                     }
             }
             .accessibilityLabel(hasUnreadPremiumAnnouncement
-                                ? "Settings, 1 new item: Prompter Premium"
+                                ? "Settings, 1 new item: Neverblank Pro"
                                 : "Settings")
         }
     }
@@ -264,7 +264,7 @@ struct ScriptListScreen: View {
                 Text("See the magic — 30 seconds")
                     .font(Typography.body(19, weight: .semibold))
                     .foregroundStyle(Theme.Color.ink)
-                Text("Try Prompter with a bundled script. No signup, never metered.")
+                Text("Try Neverblank with a bundled script. No signup, never metered.")
                     .font(Typography.body(15))
                     .foregroundStyle(Theme.Color.spoken)
             }

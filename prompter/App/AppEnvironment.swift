@@ -6,7 +6,7 @@ enum AppEnvironment {
     ///
     /// Two things keep them apart, and either alone would be sufficient:
     ///
-    /// 1. the app's bundle identifier differs (`talk.cointerview` vs `talk.prompter`), so iOS gives
+    /// 1. the app's bundle identifier differs (`io.neverblank.app` vs `talk.prompter`), so iOS gives
     ///    the two apps entirely different sandboxed containers; and
     /// 2. the store file is named explicitly below rather than taking SwiftData's default.
     ///

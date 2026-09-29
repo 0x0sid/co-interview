@@ -46,7 +46,6 @@ struct CopilotStartScreen: View {
     /// Settings opened from the Start guard, scrolled to Interview Language.
     @State private var settingsFocusesLanguage = false
     @State private var transcriptFor: InterviewSessionRecord?
-    @State private var reviewFor: InterviewSessionRecord?
     /// The live interview's feed, made **once** when the interview opens. Built inside the cover it
     /// was rebuilt — with a new coordinator — every time this screen re-rendered, including on every
     /// purchase and entitlement change.
@@ -59,6 +58,8 @@ struct CopilotStartScreen: View {
     @State private var isCheckingBackend = false
     /// What Live can actually do right now — checked, not assumed.
     @State private var readiness = LiveReadiness(isChecking: true)
+    /// The app-wide speech-model status Settings downloads through, so progress shows here too.
+    private let speechModel = SpeechModelStatus.shared
     @Environment(\.layoutMetrics) private var metrics
     /// Which subscription state's Settings badge has been seen (`SettingsBadge`).
     @AppStorage(SettingsBadge.storageKey) private var settingsBadgeSeen = ""
@@ -131,7 +132,6 @@ struct CopilotStartScreen: View {
             Text("This removes its saved transcript, answers and interview attachments from this iPhone.")
         }
         .sheet(item: $transcriptFor) { session in TranscriptViewer(session: session) }
-        .sheet(item: $reviewFor) { session in InterviewReviewSheet(session: session) }
         .navigationTitle(navigationTitle)
         .toolbar(.hidden, for: .navigationBar)
         // The interview language and its speech model are chosen in Settings; what Start can do is
@@ -210,6 +210,12 @@ struct CopilotStartScreen: View {
             await refreshBackend()
             #endif
             await refreshReadiness()
+        }
+        // The selected language's model, live: a download started here or in Settings shows its
+        // progress, and Start is re-checked the moment the model is installed.
+        .task(id: language.identifier) { await speechModel.refresh(for: language) }
+        .onChange(of: speechModel.state) { _, state in
+            if state == .ready { Task { await refreshReadiness() } }
         }
     }
 
@@ -351,8 +357,6 @@ struct CopilotStartScreen: View {
             if let url = TranscriptExport.file(for: session) {
                 ShareLink(item: url) { Label("Export transcript", systemImage: "square.and.arrow.up") }
             }
-            Button(InterviewReviewStore.standard.load(session.id) == nil ? "Score interview" : "View score",
-                   systemImage: "gauge.with.dots.needle.50percent") { reviewFor = session }
             Button("Delete", systemImage: "trash", role: .destructive) { deleting = session }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -412,31 +416,112 @@ struct CopilotStartScreen: View {
             .opacity(enabled ? 1 : 0.45)
             .accessibilityLabel(title)
             .accessibilityIdentifier("start-interview")
-            // Provider and model names are diagnostics, not customer information.
-            Text(readiness.isChecking ? "Checking…" : readiness.canGenerate ? "Ready to start" : readiness.summary)
-                .font(Typography.body(metrics.footnoteSize))
-                .padding(.leading, 2)
-                .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
-                .accessibilityIdentifier("start-status")
-            if readiness.needsSpeechDownload && !readiness.isChecking {
-                // Start stays blocked: the selected language's model is prepared in Settings, never
-                // replaced by English.
-                Button {
-                    settingsFocusesLanguage = true
-                    isShowingSettings = true
-                } label: {
-                    Label("Open Settings", systemImage: "gearshape")
-                        .font(Typography.body(metrics.bodySize + 1, weight: .semibold))
-                        .frame(minHeight: 36)
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.Color.action)
-                .accessibilityLabel("Open Settings to download the \(language.speechModelName) speech model")
-                .accessibilityIdentifier("speech-model-open-settings")
+            if showsSpeechSetup {
+                // Why a model is needed and the one next step — instead of an error line.
+                speechSetupCard
+            } else {
+                // Provider and model names are diagnostics, not customer information.
+                Text(readiness.isChecking ? "Checking…" : readiness.canGenerate ? "Ready when you are." : readiness.summary)
+                    .font(Typography.body(metrics.footnoteSize))
+                    .padding(.leading, 2)
+                    .foregroundStyle(enabled ? Theme.Color.secondary : Theme.Color.error)
+                    .accessibilityIdentifier("start-status")
             }
         }
     }
 
+
+    // MARK: Speech model setup
+
+    private var speechSetup: SpeechSetupState {
+        SpeechSetupState.make(hasChosenLanguage: languagePreference != .system,
+                              needsModel: readiness.needsSpeechDownload,
+                              model: speechModel.state, languageName: language.speechModelName)
+    }
+
+    /// Shown while the selected language's model is missing, downloading or failed.
+    private var showsSpeechSetup: Bool {
+        guard !readiness.isChecking || speechModel.isDownloading else { return false }
+        switch speechSetup {
+        case .ready, .checking: return false
+        case .downloading, .failed: return true
+        case .chooseLanguage, .download, .unsupported: return readiness.needsSpeechDownload
+        }
+    }
+
+    /// One compact card: what the speech model is for, and the next step.
+    private var speechSetupCard: some View {
+        let state = speechSetup
+        return VStack(alignment: .leading, spacing: metrics.isCompact ? 6 : 8) {
+            Text(state.headline)
+                .font(Typography.body(metrics.bodySize + 2, weight: .semibold))
+                .foregroundStyle(Theme.Color.ink)
+                .accessibilityAddTraits(.isHeader)
+            Text(state.body)
+                .font(Typography.body(metrics.bodySize))
+                .foregroundStyle(Theme.Color.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let helper = state.helper {
+                Text(helper)
+                    .font(Typography.body(metrics.footnoteSize))
+                    .foregroundStyle(Theme.Color.secondary.opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            switch state {
+            case .chooseLanguage:
+                setupButton("Choose language", systemImage: "globe", identifier: "speech-setup-choose-language") { chooseLanguage() }
+            case .download:
+                setupButton("Download speech model", systemImage: "arrow.down.circle", identifier: "speech-setup-download") {
+                    speechModel.startDownload()
+                }
+                changeLanguageButton
+            case .downloading(let fraction, _):
+                HStack(spacing: 10) {
+                    ProgressView(value: fraction).tint(Theme.Color.action)
+                    Text("\(Int((fraction * 100).rounded()))%")
+                        .font(Typography.body(metrics.footnoteSize).monospacedDigit())
+                        .foregroundStyle(Theme.Color.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Downloading the speech model, \(Int((fraction * 100).rounded())) percent")
+                .accessibilityIdentifier("speech-setup-progress")
+            case .failed:
+                setupButton("Retry", systemImage: "arrow.clockwise", identifier: "speech-setup-retry") { speechModel.startDownload() }
+                changeLanguageButton
+            case .unsupported:
+                setupButton("Change language", systemImage: "globe", identifier: "speech-setup-change-language") { chooseLanguage() }
+            case .checking, .ready:
+                EmptyView()
+            }
+        }
+        .padding(metrics.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.Color.card, in: RoundedRectangle(cornerRadius: metrics.cardCornerRadius, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("speech-setup")
+    }
+
+    private func setupButton(_ title: String, systemImage: String, identifier: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Label(title, systemImage: systemImage) }
+            .buttonStyle(CardPrimaryButtonStyle())
+            .disabled(speechModel.isDownloading)
+            .padding(.top, 2)
+            .accessibilityIdentifier(identifier)
+    }
+
+    private var changeLanguageButton: some View {
+        Button("Change language") { chooseLanguage() }
+            .font(Typography.body(metrics.bodySize, weight: .medium))
+            .tint(Theme.Color.action)
+            .frame(maxWidth: .infinity, minHeight: 32)
+            .accessibilityIdentifier("speech-setup-change-language")
+    }
+
+    /// The interview language is chosen in Settings, its only selector.
+    private func chooseLanguage() {
+        settingsFocusesLanguage = true
+        isShowingSettings = true
+    }
 
     // MARK: Help and settings
 

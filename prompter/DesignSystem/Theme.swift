@@ -124,4 +124,34 @@ enum AppearancePreference: String, CaseIterable, Identifiable {
         case .dark, .ultraContrast: .dark
         }
     }
+
+    /// The window-level style for this appearance: `.unspecified` follows the system.
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .system: .unspecified
+        case .light: .light
+        case .dark, .ultraContrast: .dark
+        }
+    }
+}
+
+/// Applies the appearance to every window, **style and Ultra Contrast together, in one pass**.
+///
+/// It used to be two mechanisms: SwiftUI's `.preferredColorScheme` on the root view for light/dark,
+/// and this UIKit trait for Ultra. `.preferredColorScheme` does not reach a sheet that is already
+/// presented, so switching appearance inside Settings left the Settings sheet on the old scheme
+/// (Dark stayed light until Settings was reopened) while the Ultra trait *did* reach it — which is
+/// the washed-out, half-updated Settings seen on a switch. Window overrides propagate to every
+/// presented controller at once, sheets and full-screen covers included.
+@MainActor
+enum AppearanceController {
+    static func apply(_ appearance: AppearancePreference) {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.overrideUserInterfaceStyle = appearance.interfaceStyle
+                window.traitOverrides[UltraContrastTrait.self] = appearance.isUltraContrast
+            }
+        }
+    }
 }

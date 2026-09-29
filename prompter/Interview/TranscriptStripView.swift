@@ -20,8 +20,12 @@ struct TranscriptStripView: View {
     var onOpenFiles: () -> Void = {}
     /// Changes when "Add context" asks for the keyboard in the note field.
     var noteFocusRequest: Int = 0
+    /// Whether the note field has the keyboard, so the screen can keep its floating control clear.
+    var onEditingNoteChanged: (Bool) -> Void = { _ in }
 
-    @State private var note: String = ""
+    /// What is being typed. It becomes part of the interview's context only when "Add context" (or
+    /// Return) is used — never keystroke by keystroke.
+    @State private var draft: String = ""
     /// While the note has the keyboard, neither panel collapses under the user. Losing a half-typed
     /// note to a mistimed tap on a chevron is not a trade worth making for a few points of height.
     @FocusState private var isEditingNote: Bool
@@ -50,6 +54,9 @@ struct TranscriptStripView: View {
     /// Six long lines were already enough to push the answer off-screen on a phone, so the expanded
     /// strip stops here and scrolls within itself, and the answer keeps the rest.
     static let expandedMaxHeight: CGFloat = 168
+    /// While context is being typed the transcript steps back to a couple of lines, so the field, its
+    /// button and the floating session control all fit above the keyboard, even on a small iPhone.
+    static let expandedWhileTypingMaxHeight: CGFloat = 40
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -68,7 +75,8 @@ struct TranscriptStripView: View {
                 contextPanel
             }
         }
-        .onAppear { note = context.note }
+        .onChange(of: isEditingNote) { _, editing in onEditingNoteChanged(editing) }
+        .animation(.easeInOut(duration: 0.2), value: isEditingNote)
         // Opened from anywhere (the header or the ••• menu): at the newest line, following.
         .onChange(of: isExpanded) { _, expanded in if expanded { follow.jumpToLatest() } }
         .onChange(of: noteFocusRequest) { _, _ in
@@ -136,7 +144,7 @@ struct TranscriptStripView: View {
             // Bounded and internally scrolled: a long tail of transcript scrolls here rather than
             // growing downwards into the answer. Content-sized up to the ceiling, so four short lines
             // do not sit on top of an empty band.
-            .frame(height: min(max(expandedContentHeight, 1), Self.expandedMaxHeight))
+            .frame(height: min(max(expandedContentHeight, 1), isEditingNote ? Self.expandedWhileTypingMaxHeight : Self.expandedMaxHeight))
             .scrollBounceBehavior(.basedOnSize)
             .onScrollGeometryChange(for: Bool.self) { geometry in
                 geometry.contentOffset.y + geometry.containerSize.height >= geometry.contentSize.height - 12
@@ -232,21 +240,81 @@ struct TranscriptStripView: View {
             }
 
             if isContextOpen {
-                TextField("Anything the answers should know", text: $note)
-                    .focused($isEditingNote)
-                    .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                    .foregroundStyle(InterviewTheme.Color.ink)
-                    .onChange(of: note) { _, newValue in onNoteChanged(newValue) }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
-                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+                HStack(spacing: 8) {
+                    TextField("Anything the answers should know", text: $draft, axis: .vertical)
+                        .lineLimit(1...3)
+                        .focused($isEditingNote)
+                        .submitLabel(.done)
+                        .onSubmit(addDraft)
+                        .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+                        .foregroundStyle(InterviewTheme.Color.ink)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
+                        .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+                        .accessibilityIdentifier("context-note-field")
+                    addContextButton
+                }
+                if !context.note.isEmpty {
+                    addedContext
+                }
             }
         }
         .padding(13)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(InterviewTheme.Color.surface, in: RoundedRectangle(cornerRadius: 15))
         .overlay(RoundedRectangle(cornerRadius: 15).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+    }
+
+    private var canAddDraft: Bool { ContextState.adding(draft, to: context.note) != nil }
+
+    /// The primary action once there is something to add: accent-coloured, disabled while the field is
+    /// blank (or only repeats what was already added), so one tap adds it once.
+    private var addContextButton: some View {
+        Button(action: addDraft) {
+            Text("Add context")
+                .font(InterviewTheme.Font.ui(13, weight: .semibold, relativeTo: .footnote))
+                .foregroundStyle(InterviewTheme.Color.onPrimary)
+                .lineLimit(1)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(InterviewTheme.Color.primary.opacity(canAddDraft ? 1 : 0.35), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .disabled(!canAddDraft)
+        .accessibilityLabel("Add context")
+        .accessibilityHint("Adds what you typed to this interview's context for the next answers")
+        .accessibilityIdentifier("add-context")
+    }
+
+    /// What the answers already take into account, with a way to clear it.
+    private var addedContext: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(InterviewTheme.Color.primary)
+            Text(context.note)
+                .font(InterviewTheme.Font.ui(12.5, relativeTo: .footnote))
+                .foregroundStyle(InterviewTheme.Color.muted)
+                .lineLimit(isEditingNote ? 1 : 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Clear") { onNoteChanged("") }
+                .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .footnote))
+                .foregroundStyle(InterviewTheme.Color.primary)
+                .accessibilityLabel("Clear added context")
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("added-context")
+    }
+
+    /// Adds the draft to the interview's context once, then clears the field and puts the keyboard
+    /// away. Nothing is generated: the context is used by the next Generate.
+    private func addDraft() {
+        guard let updated = ContextState.adding(draft, to: context.note) else { return }
+        onNoteChanged(updated)
+        draft = ""
+        isEditingNote = false
     }
 }
 

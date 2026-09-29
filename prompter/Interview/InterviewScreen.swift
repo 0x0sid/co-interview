@@ -42,10 +42,11 @@ struct InterviewScreen: View {
     private let enforcesAccess: Bool
     @Environment(AccessController.self) private var access: AccessController?
     @Environment(EntitlementService.self) private var entitlements: EntitlementService?
+    /// The Context note has the keyboard (`TranscriptStripView`).
+    @State private var isEditingContext = false
     #if DEBUG
     @State private var isMarkingProblem = false
     @State private var problemNote = ""
-    @State private var isShowingDiagnostics = false
     #endif
 
     init(
@@ -185,7 +186,8 @@ struct InterviewScreen: View {
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
                         filesLabel: files?.countLabel,
                         onOpenFiles: { isShowingFiles = true },
-                        noteFocusRequest: model.noteFocusRequest
+                        noteFocusRequest: model.noteFocusRequest,
+                        onEditingNoteChanged: { isEditingContext = $0 }
                     )
                     pager
                 }
@@ -262,7 +264,6 @@ struct InterviewScreen: View {
             }
         }
         #if DEBUG
-        .sheet(isPresented: $isShowingDiagnostics) { DiagnosticsSheet() }
         .alert("Mark a problem", isPresented: $isMarkingProblem) {
             TextField("What looked wrong? (optional)", text: $problemNote)
             Button("Mark") {
@@ -393,8 +394,11 @@ struct InterviewScreen: View {
                 menu: { moreMenu }
             )
         }
-        .padding(.bottom, 26)
+        // Always visible, still centred. While context is typed the keyboard lifts it; it then sits
+        // closer to the keyboard so the note field and its Add button stay clear above it.
+        .padding(.bottom, isEditingContext ? 6 : 26)
         .animation(.easeInOut(duration: 0.2), value: model.readyQuestionNumber)
+        .animation(.easeInOut(duration: 0.2), value: isEditingContext)
     }
 
     /// A reopened session is on screen with the microphone off. Listening starts only here.
@@ -496,14 +500,6 @@ struct InterviewScreen: View {
             }
         }
 
-        if model.mode == .live, recheckReadiness != nil {
-            Button {
-                Task { await recheck() }
-            } label: {
-                Label("Check connection", systemImage: "arrow.clockwise.circle")
-            }
-        }
-
         Button {
             model.isTranscriptExpanded.toggle()
         } label: {
@@ -520,20 +516,6 @@ struct InterviewScreen: View {
             Label("Mark a problem", systemImage: "flag")
         }
         .disabled(model.diagnostics.lastTrace == nil)
-
-        // Reachable **from inside the session**. Content capture is per-session and starts off, so
-        // without a way in from here there was no moment at which it could be switched on for the
-        // interview actually running — leaving the diagnostics screen meant ending the session it
-        // was meant to record.
-        Button {
-            isShowingDiagnostics = true
-        } label: {
-            // **A fixed label on purpose.** Reading `isContentCaptureEnabled` here made the menu
-            // depend on an @Observable that changes while the menu is presenting, and the menu then
-            // never settled — "Regenerate answer" stopped appearing in it at all. Whether capture is
-            // on is shown inside the sheet, and on every exported report.
-            Label("Diagnostics", systemImage: "stethoscope")
-        }
         #endif
     }
 }

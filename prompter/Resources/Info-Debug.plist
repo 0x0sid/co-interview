@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Neverblank</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -24,6 +24,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CopilotDevBackendHost</key>
 	<string>$(COPILOT_DEV_BACKEND_HOST)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -34,9 +36,9 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Neverblank contacts the development backend you run on your own computer, on your local network, to suggest answers. Nothing is sent to it unless you tap Generate.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Neverblank listens only while Live is on, to transcribe your interview on your iPhone. Audio is never recorded or uploaded.</string>
+	<string>Neverblank uses the microphone only while a Live meeting or interview is running, to transcribe it on your iPhone. Audio is never recorded or uploaded.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, the text (not the audio) is sent to Neverblank’s AI service.</string>
+	<string>Neverblank turns speech into text on your iPhone. To detect questions and suggest answers, that text — never the audio — is sent to Neverblank’s AI service.</string>
 	<key>NeverblankInstallationAccess</key>
 	<string>$(NEVERBLANK_INSTALLATION_ACCESS)</string>
 	<key>NeverblankPrivacyURL</key>
@@ -68,15 +70,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

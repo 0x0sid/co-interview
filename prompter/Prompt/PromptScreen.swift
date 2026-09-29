@@ -760,7 +760,7 @@ struct PromptScreen: View {
                     .font(Typography.body(16))
                     .foregroundStyle(palette.spoken)
             }
-            Text("Shot something great? Tag #Prompter")
+            Text("Shot something great? Tag #Neverblank")
                 .font(Typography.body(13))
                 .foregroundStyle(palette.spoken)
             Spacer()

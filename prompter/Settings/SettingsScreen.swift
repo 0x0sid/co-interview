@@ -29,7 +29,7 @@ struct SettingsScreen: View {
                             }
                     } label: {
                         HStack {
-                            Label("Prompter Premium", systemImage: "sparkles")
+                            Label("Neverblank Pro", systemImage: "sparkles")
                             Spacer()
                             if entitlements.status.allowsUnlimitedReading {
                                 Text("Active")
@@ -47,8 +47,8 @@ struct SettingsScreen: View {
                     }
                     .accessibilityLabel(
                         (settingsQuery.first?.hasSeenPremiumAnnouncement ?? false)
-                            ? "Prompter Premium"
-                            : "Prompter Premium, 1 new item"
+                            ? "Neverblank Pro"
+                            : "Neverblank Pro, 1 new item"
                     )
                 }
 

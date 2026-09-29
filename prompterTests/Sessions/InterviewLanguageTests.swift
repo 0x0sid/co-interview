@@ -53,10 +53,10 @@ struct InterviewLanguageTests {
 
     @Test
     func theYearlyMonthlyEquivalentComesFromTheStorePrice() {
-        let yearly = EntitlementService.PlanOffer(kind: .yearly, productIdentifier: "talk.cointerview.pro.yearly",
+        let yearly = EntitlementService.PlanOffer(kind: .yearly, productIdentifier: "io.neverblank.pro.yearly",
                                                   localizedPrice: "$239.88", price: Decimal(string: "239.88")!, currencyCode: "USD")
         #expect(yearly.monthlyEquivalent == EntitlementService.PlanOffer.format(Decimal(string: "19.99")!, currencyCode: "USD"))
-        let monthly = EntitlementService.PlanOffer(kind: .monthly, productIdentifier: "talk.cointerview.pro.monthly",
+        let monthly = EntitlementService.PlanOffer(kind: .monthly, productIdentifier: "io.neverblank.pro.monthly",
                                                    localizedPrice: "$25.00", price: 25, currencyCode: "USD")
         #expect(monthly.monthlyEquivalent == nil)
     }

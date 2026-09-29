@@ -30,7 +30,7 @@ struct InstallationCredential: Codable, Equatable, Sendable {
 /// that**, so nothing here depends on it: a lost credential means a new installation, and purchases
 /// come back through Restore Purchases.
 enum AccessKeychain {
-    static let service = "talk.cointerview.access"
+    static let service = "io.neverblank.access"
 
     static func data(for account: String) -> Data? {
         var query = baseQuery(account)

@@ -92,6 +92,50 @@ final class SettingsCaptureTests: XCTestCase {
         }
     }
 
+    /// Appearance chosen in Settings — the stored preference, not a forced launch argument — switched
+    /// System → Light → Dark → Ultra → System, captured immediately after each tap and a moment later.
+    func testAppearanceSwitchesUpdateSettingsAtOnce() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-UITestsQuietMotion", "-UITestsSpeechModel", "installed", "-UITestsSubscriptionState", "pro"]
+        app.launch()
+        XCTAssertTrue(app.waitForNeverblankHome())
+        openSettings(app)
+        let picker = app.segmentedControls["appearance"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 10))
+        for label in ["Light", "Dark", "Ultra", "System", "Dark", "Light", "Ultra", "Light"] {
+            picker.buttons[label].tap()
+            usleep(400_000)                                  // one animation, not a settle-and-hope wait
+            let shot = XCUIScreen.main.screenshot()
+            save(app, "appearance-\(label)")
+            // The Settings sheet background (left margin, beside the cards): it must follow the choice on this tap.
+            let brightness = Self.brightness(of: shot.image, atX: 0.02, y: 0.2)
+            switch label {
+            case "Light": XCTAssertGreaterThan(brightness, 0.75, "Light: the open Settings sheet did not turn light")
+            case "Dark": XCTAssertLessThan(brightness, 0.3, "Dark: the open Settings sheet stayed light")
+            case "Ultra": XCTAssertLessThan(brightness, 0.08, "Ultra: the open Settings sheet is not black")
+            default: break
+            }
+        }
+    }
+
+    /// Mean brightness (0…1) of a small patch of the screenshot at a relative position.
+    private static func brightness(of image: UIImage, atX x: CGFloat, y: CGFloat) -> CGFloat {
+        guard let cg = image.cgImage else { return -1 }
+        let px = Int(CGFloat(cg.width) * x), py = Int(CGFloat(cg.height) * y)
+        let size = 6
+        var pixels = [UInt8](repeating: 0, count: size * size * 4)
+        guard let context = CGContext(data: &pixels, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let patch = cg.cropping(to: CGRect(x: px, y: py, width: size, height: size)) else { return -1 }
+        context.draw(patch, in: CGRect(x: 0, y: 0, width: size, height: size))
+        var total: CGFloat = 0
+        for i in stride(from: 0, to: pixels.count, by: 4) {
+            total += (CGFloat(pixels[i]) * 0.299 + CGFloat(pixels[i + 1]) * 0.587 + CGFloat(pixels[i + 2]) * 0.114) / 255
+        }
+        return total / CGFloat(size * size)
+    }
+
     func testCaptureExpiredSubscriptionAndMissingSpeechModel() throws {
         capture("light", "expired-missing", ["-UITestsSubscriptionState", "expired", "-UITestsSpeechModel", "needsDownload"])
         capture("dark", "pro-installed", ["-UITestsSubscriptionState", "pro", "-UITestsSpeechModel", "installed"])

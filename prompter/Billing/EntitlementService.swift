@@ -283,6 +283,10 @@ final class EntitlementService {
             return
         }
         guard !Purchases.isConfigured else { return }
+        #if !DEBUG
+        // Release: RevenueCat's own warnings and errors only, no informational logging.
+        Purchases.logLevel = .warn
+        #endif
         // No account screen anywhere: the identity is the server-issued installation's.
         if let appUserID {
             Purchases.configure(withAPIKey: key, appUserID: appUserID)
@@ -525,7 +529,7 @@ final class EntitlementService {
     }
 
     #if DEBUG
-    private static let log = Logger(subsystem: "talk.cointerview", category: "billing")
+    private static let log = Logger(subsystem: "io.neverblank.app", category: "billing")
     #endif
 
     #if canImport(RevenueCat)
