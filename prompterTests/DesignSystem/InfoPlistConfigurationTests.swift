@@ -234,6 +234,9 @@ struct InfoPlistConfigurationTests {
         #expect(project.components(separatedBy: "PRODUCT_BUNDLE_IDENTIFIER = io.neverblank.app;").count - 1 == 2)
         #expect(!project.contains("talk.cointerview"))
         #expect(project.contains("Billing/Prompter.storekit,"), "the .storekit file must stay excluded from the app target")
+        for local in ["\"Config/Local-Debug.xcconfig\",", "\"Config/Local-Release.xcconfig\","] {
+            #expect(project.contains(local), "\(local) must stay excluded from the app target: it would ship in the bundle")
+        }
         let guardScript = try Self.repositoryFile("scripts/release-guard.sh")
         for rule in ["io.neverblank.app", "CFBundleDisplayName", "NeverblankPrivacyURL", "NeverblankTermsURL"] {
             #expect(guardScript.contains(rule), "the guard no longer checks \(rule)")

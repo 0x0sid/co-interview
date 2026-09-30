@@ -65,6 +65,12 @@ if /usr/bin/plutil -p "$plist" 2>/dev/null | grep -qE '=> "(sk-|test_)'; then
   fail "the built Info.plist carries a provider-key or Test Store key value."
 fi
 
+# The app bundle: no build configuration, debug plist or StoreKit test file ships.
+if [ -d "${TARGET_BUILD_DIR}/${WRAPPER_NAME}" ]; then
+  stray=$(find "${TARGET_BUILD_DIR}/${WRAPPER_NAME}" \( -name '*.xcconfig' -o -name 'Info-Debug.plist' -o -name '*.storekit' \) | sed 's|.*/||' | tr '\n' ' ')
+  [ -z "$stray" ] || fail "the app bundle contains build or test configuration files: $stray"
+fi
+
 # The app bundle: no OpenRouter-shaped key, and none of the operator tokens or provider keys this
 # machine's backend uses (read from backend/.env, compared without printing).
 app="${TARGET_BUILD_DIR}/${WRAPPER_NAME}"

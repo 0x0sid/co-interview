@@ -47,6 +47,7 @@
 				"Config/Local-Debug.example.xcconfig",
 				"Config/Local-Debug.xcconfig",
 				"Config/Local-Release.example.xcconfig",
+				"Config/Local-Release.xcconfig",
 				Config/Release.xcconfig,
 				"Resources/Info-Debug.plist",
 				Resources/Info.plist,
