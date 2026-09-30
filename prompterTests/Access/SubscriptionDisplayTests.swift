@@ -203,4 +203,55 @@ struct SubscriptionDisplayTests {
         #expect(!SubscriptionCardState.dateText(justExpired, now: Self.now, locale: Self.us, nearTime: false).contains(":"))
         #expect(!SubscriptionCardState.dateText(justExpired, now: Self.now, locale: Self.us).contains(":"))
     }
+
+    // MARK: Paywall while subscribed
+
+    static let offers = [
+        EntitlementService.PlanOffer(kind: .monthly, productIdentifier: "io.neverblank.pro.monthly", localizedPrice: "$9.99",
+                                     price: Decimal(string: "9.99")!, currencyCode: "USD"),
+        EntitlementService.PlanOffer(kind: .yearly, productIdentifier: "io.neverblank.pro.yearly", localizedPrice: "$79.99",
+                                     price: Decimal(string: "79.99")!, currencyCode: "USD"),
+    ]
+
+    static func availability(activeProduct: String?, active: Bool, end: Date = date(2026, 10, 29)) -> [PlanKind: EntitlementService.PlanAvailability] {
+        let service = EntitlementService()
+        if let activeProduct {
+            service.update(isActive: active, details: .init(productIdentifier: activeProduct, expiration: end, willRenew: true))
+        }
+        return EntitlementService.planAvailability(for: offers, subscription: service.presentation(now: now))
+    }
+
+    @Test
+    func notSubscribedEveryPlanIsPurchasable() {
+        #expect(Self.availability(activeProduct: nil, active: false) == [.monthly: .purchasable, .yearly: .purchasable])
+    }
+
+    /// Monthly active: Monthly is the current plan and is never bought again; Yearly is an upgrade.
+    @Test
+    func monthlyActiveMarksMonthlyCurrentAndKeepsYearlyAsAnUpgrade() {
+        #expect(Self.availability(activeProduct: "io.neverblank.pro.monthly", active: true)
+                == [.monthly: .current, .yearly: .purchasable])
+    }
+
+    /// Yearly active: Yearly is current; Monthly is a downgrade left to Apple's subscription settings.
+    @Test
+    func yearlyActiveMarksYearlyCurrentAndMonthlyManagedByApple() {
+        #expect(Self.availability(activeProduct: "io.neverblank.pro.yearly", active: true)
+                == [.monthly: .managedByApple, .yearly: .current])
+    }
+
+    /// A lapsed subscription (a Sandbox period ending, say) makes every plan purchasable again once
+    /// CustomerInfo says the entitlement is inactive — no duration is assumed anywhere.
+    @Test
+    func anExpiredSubscriptionMakesEveryPlanPurchasableAgain() {
+        #expect(Self.availability(activeProduct: "io.neverblank.pro.monthly", active: false, end: Self.date(2026, 9, 1))
+                == [.monthly: .purchasable, .yearly: .purchasable])
+    }
+
+    /// The current plan is matched by the store product id, not by reading the id's wording: an active
+    /// product the offering does not contain (a Test Store `monthly`) marks nothing current.
+    @Test
+    func theCurrentPlanIsMatchedByStoreProductIDOnly() {
+        #expect(Self.availability(activeProduct: "monthly", active: true) == [.monthly: .purchasable, .yearly: .purchasable])
+    }
 }

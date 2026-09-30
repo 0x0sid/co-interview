@@ -186,6 +186,41 @@ final class EntitlementService {
         return result
     }
 
+    /// Whether a plan can be bought from the paywall right now.
+    enum PlanAvailability: Equatable {
+        case purchasable
+        /// The plan the active `neverblank_pro` entitlement comes from: never bought twice.
+        case current
+        /// A shorter plan while a longer one is active: changed in Apple's subscription settings,
+        /// not bought on top of it.
+        case managedByApple
+    }
+
+    /// Which plans the paywall may sell, from RevenueCat's CustomerInfo (never a local flag).
+    ///
+    /// The current plan is the offered product whose **store product id equals the entitlement's
+    /// `productIdentifier`** — no id parsing. A longer plan than the current one is an upgrade and
+    /// stays purchasable (StoreKit changes the subscription within the group); a shorter one is left
+    /// to Apple's subscription management. Inactive — including a Sandbox period that has lapsed —
+    /// everything is purchasable again. An active entitlement from a product the offering does not
+    /// contain cannot be placed, so nothing is marked current.
+    static func planAvailability(for plans: [PlanOffer], subscription: SubscriptionPresentation) -> [PlanKind: PlanAvailability] {
+        var result = Dictionary(uniqueKeysWithValues: plans.map { ($0.kind, PlanAvailability.purchasable) })
+        guard subscription.entitlementActive, let activeID = subscription.productIdentifier,
+              let current = plans.first(where: { $0.productIdentifier == activeID }) else { return result }
+        let currentWeeks = current.kind.weeks ?? .greatestFiniteMagnitude
+        for plan in plans {
+            if plan.kind == current.kind {
+                result[plan.kind] = .current
+            } else if let weeks = plan.kind.weeks, weeks > currentWeeks {
+                result[plan.kind] = .purchasable
+            } else {
+                result[plan.kind] = .managedByApple
+            }
+        }
+        return result
+    }
+
     /// "Monthly" for the active plan (the Home badge); nil when inactive or not yet described.
     var activePlanName: String? {
         let current = presentation()
@@ -455,6 +490,10 @@ final class EntitlementService {
         if packagesByPlan[plan] == nil { await loadOffering() }
         guard let package = packagesByPlan[plan] else {
             return .failed("This plan is unavailable right now. Please try again later.")
+        }
+        // Never start a StoreKit purchase for the product the active entitlement already comes from.
+        if case .premium = status, subscription?.productIdentifier == package.storeProduct.productIdentifier {
+            return .failed("This is already your current plan.")
         }
         isPurchasing = true
         defer { isPurchasing = false }

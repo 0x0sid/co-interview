@@ -28,6 +28,13 @@ struct NeverblankPaywallView: View {
     /// The store took the payment but the backend has not confirmed Pro: offer Retry verification,
     /// never a second purchase.
     private var isVerificationPending: Bool { access.needsVerification }
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// What each plan is for this customer right now — from RevenueCat CustomerInfo.
+    private var availability: [PlanKind: EntitlementService.PlanAvailability] {
+        EntitlementService.planAvailability(for: plans, subscription: entitlements.presentation())
+    }
+    private func isPurchasable(_ kind: PlanKind) -> Bool { availability[kind] == .purchasable }
 
     private var plans: [EntitlementService.PlanOffer] { entitlements.plans }
     private func plan(_ kind: PlanKind) -> EntitlementService.PlanOffer? { plans.first { $0.kind == kind } }
@@ -80,10 +87,17 @@ struct NeverblankPaywallView: View {
         .interactiveDismissDisabled(phase != .choosing)
         .task {
             access.log(.init(name: .paywallViewed, trigger: trigger))
+            // Fresh CustomerInfo and offering: the current plan is never judged from stale state.
+            await entitlements.refresh()
             if plans.isEmpty { await entitlements.loadOffering() }
             preselect()
         }
         .onChange(of: plans) { _, _ in preselect() }
+        .onChange(of: availability) { _, _ in preselect() }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await entitlements.refresh() }
+        }
         .onDisappear {
             if !finished { finish(false) }
         }
@@ -198,8 +212,10 @@ struct NeverblankPaywallView: View {
     }
 
     private func planRow(_ offer: EntitlementService.PlanOffer) -> some View {
-        let isSelected = selected == offer.kind
+        let state = availability[offer.kind] ?? .purchasable
+        let isSelected = selected == offer.kind && state == .purchasable
         return Button {
+            guard state == .purchasable else { return }
             userChose = true
             guard selected != offer.kind else { return }
             withAnimation(.snappy(duration: 0.2)) { selected = offer.kind }
@@ -217,6 +233,22 @@ struct NeverblankPaywallView: View {
                             .foregroundStyle(Theme.Color.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    switch state {
+                    case .current:
+                        Text("Current plan")
+                            .font(Typography.body(11.5, weight: .semibold))
+                            .foregroundStyle(Theme.Color.onDark)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Theme.Color.action, in: Capsule())
+                            .accessibilityIdentifier("plan-current-\(offer.kind.rawValue)")
+                    case .managedByApple:
+                        Text("Change in Apple subscriptions")
+                            .font(Typography.body(11.5))
+                            .foregroundStyle(Theme.Color.secondary)
+                    case .purchasable:
+                        EmptyView()
+                    }
                 }
                 .layoutPriority(1)
                 Spacer(minLength: 8)
@@ -233,16 +265,41 @@ struct NeverblankPaywallView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 11)
-            .background(isSelected ? Theme.Color.action.opacity(0.10) : .clear,
+            .background(isSelected || state == .current ? Theme.Color.action.opacity(0.10) : .clear,
                         in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .opacity(state == .managedByApple ? 0.55 : 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlanRowPressStyle())
+        .disabled(state != .purchasable)
         .accessibilityIdentifier("plan-\(offer.kind.rawValue)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(state == .current ? "Your current plan" : state == .managedByApple ? "Change plans in Apple subscription settings" : "")
     }
 
+    @ViewBuilder
     private var continueButton: some View {
+        if isPurchasable(selected) {
+            purchaseButton
+        } else {
+            // Nothing new to buy here: the active plan is kept, and plan changes go through Apple.
+            VStack(spacing: 8) {
+                Button {
+                    Task { await entitlements.showManageSubscriptions() }
+                } label: {
+                    Text("Manage subscription").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.prompterPrimary)
+                .accessibilityIdentifier("paywall-manage-subscription")
+                Text("You're subscribed to Neverblank Pro.")
+                    .font(Typography.body(12.5, weight: .medium))
+                    .foregroundStyle(Theme.Color.secondary)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private var purchaseButton: some View {
         VStack(spacing: 8) {
             Button {
                 Task { await purchase() }
@@ -254,7 +311,7 @@ struct NeverblankPaywallView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.prompterPrimary)
-            .disabled(plan(selected) == nil || phase != .choosing)
+            .disabled(plan(selected) == nil || !isPurchasable(selected) || phase != .choosing)
             .accessibilityIdentifier("paywall-continue")
             Text(selected == .lifetime ? "One-time purchase." : "Cancel anytime.")
                 .font(Typography.body(12.5, weight: .medium))
@@ -297,8 +354,19 @@ struct NeverblankPaywallView: View {
 
     /// Starts on the best value when the prices show one, otherwise Monthly, otherwise the first plan.
     private func preselect() {
-        guard phase == .choosing, !(userChose && plan(selected) != nil) else { return }
-        selected = bestValue ?? (plan(.monthly) != nil ? .monthly : Self.order.first { plan($0) != nil } ?? .monthly)
+        guard phase == .choosing, !(userChose && plan(selected) != nil && isPurchasable(selected)) else { return }
+        // Only a plan that can be bought is preselected; the current plan never is. With nothing to
+        // buy (the longest plan is active), the current plan stays shown and Continue becomes Manage.
+        let buyable = Self.order.filter { plan($0) != nil && isPurchasable($0) }
+        if let best = bestValue, buyable.contains(best) {
+            selected = best
+        } else if buyable.contains(.monthly) {
+            selected = .monthly
+        } else if let first = buyable.first {
+            selected = first
+        } else if let current = availability.first(where: { $0.value == .current })?.key {
+            selected = current
+        }
     }
 
     private func testStoreNotice(_ notice: String) -> some View {
@@ -338,7 +406,8 @@ struct NeverblankPaywallView: View {
     // MARK: Actions
 
     private func purchase() async {
-        guard phase == .choosing else { return }
+        // The current plan (or a downgrade) is never sent to StoreKit from here.
+        guard phase == .choosing, isPurchasable(selected) else { return }
         message = nil
         // A purchase must land on the customer the backend checks. Not registered, or RevenueCat not
         // yet on the server-issued id: do not take the payment.
