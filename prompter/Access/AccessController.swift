@@ -5,9 +5,9 @@ import Observation
 ///
 /// **The rule:** an authenticated installation AND (an active `neverblank_pro` OR free answers left).
 ///
-/// A free installation gets **2 free AI answers** in total (`backend/access.mjs`, "Free answers"). The
+/// A free installation gets **3 free AI answers** in total (`backend/access.mjs`, "Free answers"). The
 /// backend's ledger is the authority; this type mirrors it so the app can say how many are left and
-/// open the paywall on the third Generate **before** any request is sent.
+/// open the paywall on the next new question **before** any request is sent.
 /// The backend applies the same rule to every paid request and is the authority; this type decides
 /// what to *offer*, and it never unlocks anything on its own say-so:
 /// - a paywall opened by Generate resumes that request only after the **backend** confirms Pro

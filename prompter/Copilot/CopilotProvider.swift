@@ -30,7 +30,7 @@ struct ClassificationRequest: Sendable, Encodable {
     let knownQuestions: [KnownQuestion]
     let language: String
 
-    // Identity for the backend's decision comparison (docs/CO_INTERVIEW_AI_PIPELINE.md §15). All
+    // Identity for the backend's decision comparison (docs/AI_PIPELINE.md §15). All
     // optional and omitted when nil, so an older backend receives exactly the body it always did.
     // None of these change what the detector is asked or what it answers.
 

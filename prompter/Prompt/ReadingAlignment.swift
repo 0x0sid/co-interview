@@ -11,7 +11,7 @@ import SwiftUI
 /// session and delegates every alignment decision here; the rules, thresholds and comments below are
 /// the originals.
 ///
-/// **Deviation from §11.4 (logged in docs/DECISIONS.md, 2026-08-13)**: originally only `.final`
+/// **Deviation from §11.4 (logged in docs/prompter/DECISIONS.md, 2026-08-13)**: originally only `.final`
 /// deltas were fed to the matcher, per `TranscriptStream`'s "volatile is display-only" contract.
 /// Two rounds of on-device `[PromptDebug]` logging showed `.final` results arriving 2-15s apart
 /// even during continuous reading — since the cursor only ever moved on `.final`, this alone
@@ -118,7 +118,7 @@ final class ReadingAlignment {
             listeningText = delta.text
             let words = Tokenizer.normalize(delta.text)
             // Withhold the trailing word — the one word still in a position to be revised by whatever
-            // comes next in this same utterance (docs/ARCHITECTURE.md, "Volatile reconciliation") — it
+            // comes next in this same utterance (docs/prompter/ARCHITECTURE.md, "Volatile reconciliation") — it
             // only becomes safe to feed once a later word appears after it (proving it settled) or the
             // eventual `.final` confirms it via the catch-up diff below.
             let stableWordCount = max(0, words.count - 1)
@@ -219,7 +219,7 @@ final class ReadingAlignment {
 
         #if DEBUG
         // Direct and inferred coverage are reported separately, so inferred is never mistaken for
-        // recognition in evidence (M5.4, docs/DECISIONS.md).
+        // recognition in evidence (M5.4, docs/prompter/DECISIONS.md).
         if !direct.isEmpty || !bridged.isEmpty {
             let tokens = scriptIndex.tokenTexts
             func describe(_ set: Set<Int>) -> String {

@@ -58,7 +58,7 @@ final class Script {
     }
 
     /// §12.1's "~duration estimate" / §12.3's live speaking-time estimate — 150 wpm per
-    /// docs/BUILD_SPEC.md §12.3.
+    /// docs/prompter/BUILD_SPEC.md §12.3.
     static let wordsPerMinute = 150.0
 
     var estimatedDurationSeconds: Int {

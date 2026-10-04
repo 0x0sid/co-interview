@@ -4,7 +4,7 @@
 // route or an upstream URL; it asks for an answer and is told, in the response metadata, what
 // actually served it.
 //
-// Precedence, lowest to highest (docs/CO_INTERVIEW_AI_PIPELINE.md §4):
+// Precedence, lowest to highest (docs/AI_PIPELINE.md §4):
 //   1. built-in defaults
 //   2. the selected profile
 //   3. explicit operator overrides (environment variables)

@@ -18,7 +18,7 @@ struct PromptScreen: View {
     @State private var blockHeights: [Int: CGFloat] = [:]
     @State private var prefixMeasurement = PrefixMeasurement(block: -1, token: -1, height: 0)
     @State private var scrollPosition = ScrollPosition(idType: Int.self)
-    /// Scroll ownership and the rule for handing it back (M5.7, docs/DECISIONS.md). Automatic
+    /// Scroll ownership and the rule for handing it back (M5.7, docs/prompter/DECISIONS.md). Automatic
     /// following resumes on fresh reading evidence inside the region the reader chose; the
     /// "Resume following" button remains an immediate override, not a requirement.
     @State private var ownership = ScrollOwnership()

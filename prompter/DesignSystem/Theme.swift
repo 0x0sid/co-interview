@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// §13 v3 design system — light/dark semantic palette (M5.10, docs/DECISIONS.md).
+/// §13 v3 design system — light/dark semantic palette (M5.10, docs/prompter/DECISIONS.md).
 ///
 /// Supersedes the v2 single-appearance "liseuse" palette. Every colour is a **dynamic** provider
 /// resolved against the active `UITraitCollection`, so one token serves both appearances and

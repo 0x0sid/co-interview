@@ -20,7 +20,7 @@ struct ProviderConfiguration: Equatable, Sendable {
     /// developer's bearer token. Also `-CopilotInstallationAuth`. Release always does.
     static let useInstallationAuthDefaultsKey = "CopilotUseInstallationAuth"
 
-    /// Documented in docs/CO_INTERVIEW_AI_PIPELINE.md §2 and verified against OpenAI documentation on
+    /// Documented in docs/AI_PIPELINE.md §2 and verified against OpenAI documentation on
     /// 2026-09-16. The app only *labels* these; the backend decides what it actually calls.
     static let detectionModel = "gpt-5.4-nano"
     static let answerModel = "gpt-5.4-mini"

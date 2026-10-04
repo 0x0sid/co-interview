@@ -153,7 +153,7 @@ final class TranscriptionService: Transcribing, @unchecked Sendable {
 
                         #if DEBUG
                         // `[ClockAudit]` — **behaviour-neutral instrumentation only** (M5.2,
-                        // docs/MATCHING_ENGINE.md §M5.2.1). It logs; it changes nothing. `ingest`
+                        // docs/prompter/MATCHING_ENGINE.md §M5.2.1). It logs; it changes nothing. `ingest`
                         // below still receives `elapsed`, exactly as before.
                         //
                         // Why it exists: `elapsed` is wall-clock time at the moment this app

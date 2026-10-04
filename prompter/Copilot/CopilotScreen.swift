@@ -5,7 +5,7 @@ import SwiftUI
 ///
 /// Development-only for now (reached from the debug menu). It exercises the pipeline end to end —
 /// continuous listening, detection, grounded generation, streaming, reading — and is where the
-/// measurements in `docs/CO_INTERVIEW_AI_PIPELINE.md` come from. The full reader geometry
+/// measurements in `docs/AI_PIPELINE.md` come from. The full reader geometry
 /// (`readingOffset`, `ScrollOwnership`, pinch-to-scale, outdoor mode) is **not** wired in yet; that is
 /// plan Increment 3.
 ///

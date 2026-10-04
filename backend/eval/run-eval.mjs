@@ -1,4 +1,4 @@
-// Measures the copilot pipeline against synthetic scenarios (docs/CO_INTERVIEW_AI_PIPELINE.md §9).
+// Measures the copilot pipeline against synthetic scenarios (docs/AI_PIPELINE.md §9).
 //
 // What it measures, per scenario: detection latency, retrieval latency, time to first streamed text,
 // time to the first complete readable sentence, and completion time — plus detection correctness,

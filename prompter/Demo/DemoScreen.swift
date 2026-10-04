@@ -6,7 +6,7 @@ import AVFAudio
 /// demo script live-follows the user's voice. Never metered (no `PromptSession` is ever written
 /// for it — nothing meters yet in M5 either way, but this stays true once M6's `UsageMeter`
 /// exists). While the explainer shows, the speech asset pre-downloads with a small progress hint
-/// (closing the M2 deviation — see docs/ARCHITECTURE.md — `TranscriptionService.start()` keeps
+/// (closing the M2 deviation — see docs/prompter/ARCHITECTURE.md — `TranscriptionService.start()` keeps
 /// its own `ensureInstalled` call as a no-op safety net for callers that reach it without going
 /// through here, e.g. the debug screens).
 struct DemoScreen: View {

@@ -2,7 +2,7 @@ import Testing
 import Foundation
 @testable import prompter
 
-/// The M5.4 contextual-marking contract (docs/DECISIONS.md, 2026-09-12): a word may be confirmed by
+/// The M5.4 contextual-marking contract (docs/prompter/DECISIONS.md, 2026-09-12): a word may be confirmed by
 /// direct recognition **or** by strong surrounding evidence of continuous reading — bounded, and
 /// never across a landing the reader may have jumped over.
 struct ContextualMarkingTests {

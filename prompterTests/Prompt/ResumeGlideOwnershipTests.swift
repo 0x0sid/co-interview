@@ -12,7 +12,7 @@ import Foundation
 /// These tests exercise the decision logic that governs it. **Limitation stated plainly:** they
 /// verify which targets are *requested* and whether pacing state is rewritten. They cannot verify
 /// displayed motion — `simctl` cannot drag, and frame capture is too coarse — so glide smoothness
-/// remains a recording-only check (docs/DEVICE_TEST_M5.2.md).
+/// remains a recording-only check on a device.
 struct ResumeGlideOwnershipTests {
 
     /// Mirrors `applyScroll`'s no-op rule, which is what now absorbs the duplicate callback.

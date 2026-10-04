@@ -3,7 +3,7 @@ import Foundation
 @testable import prompter
 
 /// How the app treats the route metadata and failure signals the backend sends (§6, §7 of
-/// docs/CO_INTERVIEW_AI_PIPELINE.md). The gateway choice lives on the backend; what the app must get
+/// docs/AI_PIPELINE.md). The gateway choice lives on the backend; what the app must get
 /// right is recording what actually served an answer and never losing text a reader can already see.
 @MainActor
 struct ProviderRouteTests {

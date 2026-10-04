@@ -3,7 +3,7 @@ import Foundation
 /// Scripted, entirely synthetic interviews used to drive the pipeline without a microphone.
 ///
 /// **No captured speech.** Every line is written for this fixture, in the spirit of the repository's
-/// rule that no real utterance may enter the public tree (`CO_INTERVIEW_SNAPSHOT_NOTICE.md`). The
+/// rule that no real utterance may enter the public tree (docs/DEVELOPMENT.md, "Test fixtures"). The
 /// scenarios deliberately cover the cases that break naive detection: requests with no question mark,
 /// questions spread over several sentences, follow-ups that reuse the answer's own words, corrections,
 /// the user reading a suggestion that itself contains a question, overlapping speech, and two

@@ -1,4 +1,4 @@
-// Typed conversation decisions from Jev, alongside the existing detector (docs/CO_INTERVIEW_AI_PIPELINE.md §15).
+// Typed conversation decisions from Jev, alongside the existing detector (docs/AI_PIPELINE.md §15).
 //
 // **What this is for.** The existing detector is a generative model asked to return a small JSON
 // verdict. Jev (TypeSafe System One) is a decision model: it returns a probability distribution over

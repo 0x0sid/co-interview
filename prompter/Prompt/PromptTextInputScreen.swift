@@ -5,7 +5,7 @@ import SwiftUI
 
 /// Lets you paste or type any script to test live-mic tracking against, instead of being locked
 /// to a fixed fixture — replaces M3's original two separate debug entries ("Demo" and "Live Mic",
-/// see docs/DECISIONS.md) now that the live-mic path itself is confirmed working on-device. A real
+/// see docs/prompter/DECISIONS.md) now that the live-mic path itself is confirmed working on-device. A real
 /// SwiftData-backed script list/editor is M5's job (§12.1); this is just enough to keep testing
 /// unblocked with arbitrary text in the meantime.
 struct PromptTextInputScreen: View {

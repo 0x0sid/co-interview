@@ -1,4 +1,4 @@
-// Who may spend AI money: installation credentials, two free AI answers, and the `neverblank_pro`
+// Who may spend AI money: installation credentials, three free AI answers, and the `neverblank_pro`
 // entitlement.
 //
 // **The rule, in one line:** a paid request is served when the installation is authenticated AND
@@ -11,7 +11,7 @@
 //    always looked up for *that* id.
 // 2. **Failure never grants Pro.** A RevenueCat error, timeout or unknown response denies Pro, except
 //    that a previously *verified* expiration date is honoured until it passes.
-// 3. **Two free answers, counted exactly** (see "Free answers" below): capacity is reserved
+// 3. **Free answers, counted exactly** (see "Free answers" below): capacity is reserved
 //    atomically before a request is sent to the model, and settled once when the stream ends.
 //
 // Stored: installation id, a hash of its secret, timestamps, free-answer counters, reservation and

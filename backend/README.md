@@ -1,8 +1,9 @@
-# Co-Interview copilot backend (development)
+# Neverblank backend
 
-The boundary that keeps provider credentials **out of the iOS app**. Two gateways — direct OpenAI
-(Responses API) and OpenRouter (Chat Completions) — behind one streaming contract. Nothing here is
-deployed, and no credential is stored in this repository.
+The boundary that keeps provider credentials **out of the iOS app**: installations, free answers and
+Pro verification (`access.mjs`), and two gateways — direct OpenAI (Responses API) and OpenRouter (Chat
+Completions) — behind one streaming contract. Production runs on Fly from a mirror repository; see
+`docs/HOSTING.md`. No credential is stored in this repository.
 
 **Runtime.** No third-party dependencies, which narrows the supply chain but does not mean there is
 nothing to audit: this code, the runtime, the credentials it holds and the network it listens on all
@@ -51,7 +52,7 @@ COINTERVIEW_TOKENS=$(openssl rand -hex 24) OPENROUTER_API_KEY=sk-or-... \
 
 iOS will ask for local-network permission, and plain HTTP to a LAN address needs an App Transport
 Security exception that is **deliberately not configured** — see
-`docs/CO_INTERVIEW_AI_PIPELINE.md` §10 for the options. The Simulator needs none.
+`docs/AI_PIPELINE.md` §10 for the options. The Simulator needs none.
 
 Then in the app: **Debug → Debug: Copilot**, set the backend URL (`http://127.0.0.1:8787` in the
 Simulator) and the same token.
@@ -176,6 +177,6 @@ candidates on identical prompts; clients cannot point it at arbitrary models.
 - **No content logging.** Request lines carry method, path, status and duration only.
 - **No storage.** No database, no files, no transcript or document retention.
 - `store: false` on every provider request, so no response is retained as provider application state
-  (abuse-monitoring retention still applies — see `docs/CO_INTERVIEW_AI_PIPELINE.md` §8).
+  (abuse-monitoring retention still applies — see `docs/AI_PIPELINE.md` §8).
 - No user accounts, rate limiting beyond the provider's own, TLS termination, or deployment
   configuration. Those belong to a real deployment decision, which has not been made.

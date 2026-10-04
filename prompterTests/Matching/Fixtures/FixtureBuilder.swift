@@ -85,7 +85,7 @@ enum FixtureBuilder {
     /// Sustained (~1-in-4, ~25%) corruption throughout a normal, otherwise-linear read —
     /// heavier than `misrecognition`'s ~10% but well short of `adLibInsertion`-grade noise,
     /// reproducing the on-device "cursor gets stuck / slow to transition" report (M4,
-    /// docs/MATCHING_ENGINE.md): confidence hovers in the ambiguous middle band for a long
+    /// docs/prompter/MATCHING_ENGINE.md): confidence hovers in the ambiguous middle band for a long
     /// stretch rather than clearly failing, which used to reset the recovery timer on every tick
     /// and could stall indefinitely. Unlike `adLibInsertion`, the reader is never actually
     /// off-script here — ground truth tracks real linear progress.

@@ -50,6 +50,6 @@ enum ReadingLanguage: String, CaseIterable, Identifiable, Sendable {
     }
 
     /// Whether this language's text is segmented by whitespace. Traditional Chinese is not, which is
-    /// why `Tokenizer` cannot treat it the same way (see docs/DECISIONS.md, M5.12).
+    /// why `Tokenizer` cannot treat it the same way (see docs/prompter/DECISIONS.md, M5.12).
     var isWhitespaceSegmented: Bool { self != .traditionalChinese }
 }

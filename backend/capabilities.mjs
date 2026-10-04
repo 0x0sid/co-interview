@@ -75,7 +75,7 @@ export const OPENROUTER_MODELS = {
   },
 };
 
-/** Direct OpenAI models, verified 2026-09-16 (see docs/CO_INTERVIEW_AI_PIPELINE.md §2). */
+/** Direct OpenAI models, verified 2026-09-16 (see docs/AI_PIPELINE.md §2). */
 export const OPENAI_MODELS = {
   "gpt-5.4-nano": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"], inputModalities: ["text", "image"] },
   "gpt-5.4-mini": { structuredOutputs: true, supportedEfforts: ["none", "low", "medium", "high", "xhigh"], inputModalities: ["text", "image"] },

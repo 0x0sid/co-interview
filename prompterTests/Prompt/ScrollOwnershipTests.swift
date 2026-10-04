@@ -2,7 +2,7 @@ import Testing
 import Foundation
 @testable import prompter
 
-/// **M5.7 — automatic resumption after manual repositioning** (docs/DECISIONS.md).
+/// **M5.7 — automatic resumption after manual repositioning** (docs/prompter/DECISIONS.md).
 ///
 /// Tests the rule directly rather than through a rendered view, so each clause of the owner's
 /// contract has a named case that fails on its own.

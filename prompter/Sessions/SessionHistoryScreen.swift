@@ -3,8 +3,8 @@ import SwiftUI
 // Saved-interview history is shown **inline on the start screen** (`CopilotStartScreen.savedInterviews`),
 // not as a pushed screen. A pushed history list re-rendered without end: the list's preference
 // updates made the NavigationStack re-set the pushed view, which updated the list again. It looped
-// even with a minimal body over the same @Query, and the cause inside SwiftUI is unresolved (see
-// docs/CO_INTERVIEW_SESSION_HANDOFF.md). The start screen already queries the sessions and renders
+// even with a minimal body over the same @Query, and the cause inside SwiftUI is unresolved. The
+// start screen already queries the sessions and renders
 // them without trouble, so history lives there.
 
 /// One saved interview: title, when, how long, what is in it, and whether it was interrupted.

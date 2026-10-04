@@ -27,7 +27,7 @@ struct FixtureTranscript {
     /// This is what makes the M1 gate's timing change auditable rather than a silent denominator
     /// swap: the same 28 fixtures, the same 1307 checkpoints and the same 6395 spoken words can be
     /// scored under the historical constant cadence and under the measured one, and any difference
-    /// in the result is attributable to timing alone (M5.2, docs/MATCHING_ENGINE.md).
+    /// in the result is attributable to timing alone (M5.2, docs/prompter/MATCHING_ENGINE.md).
     ///
     /// `pause(seconds:)` checkpoints carry no tokens; their gap is preserved verbatim so the
     /// silence-freeze fixtures keep testing silence.
@@ -95,7 +95,7 @@ final class TranscriptBuilder {
     private var timingStep = 0
 
     /// Advances the clock by one word using the **measured** device inter-word gap distribution
-    /// rather than a flat 0.4 s (M5.2, docs/MATCHING_ENGINE.md — "timing fidelity"). Real ASR
+    /// rather than a flat 0.4 s (M5.2, docs/prompter/MATCHING_ENGINE.md — "timing fidelity"). Real ASR
     /// settles two or three words at once and then pauses; a constant hid a whole class of bug in
     /// which a time-based matcher rule passes every fixture and does nothing on device.
     private func advanceClock() {

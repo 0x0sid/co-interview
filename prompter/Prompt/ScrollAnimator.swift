@@ -44,7 +44,7 @@ enum ScrollAnimator {
     /// catching up". On device that meant *scrolling through every skipped paragraph*: a spring's
     /// settle time grows with distance, so a 30-token skip crawled. The requirement is the
     /// opposite — arrive promptly, then resume normal following (presentation contract §3,
-    /// docs/DECISIONS.md 2026-09-11).
+    /// docs/prompter/DECISIONS.md 2026-09-11).
     ///
     /// A fixed-duration ease also bounds how long a scroll can stay in flight, so a newer matching
     /// decision cannot find a long spring still travelling toward a stale destination.

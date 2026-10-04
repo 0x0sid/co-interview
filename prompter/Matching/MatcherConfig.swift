@@ -2,7 +2,7 @@ import Foundation
 
 /// All matcher thresholds live here (§10.5) so the fixture replay harness can tune
 /// them in one place. Values below are the shipping defaults; see
-/// docs/MATCHING_ENGINE.md for the reasoning and the fixture-suite results that
+/// docs/prompter/MATCHING_ENGINE.md for the reasoning and the fixture-suite results that
 /// validated them.
 struct MatcherConfig: Equatable {
     /// Ring buffer of most-recently-spoken normalized tokens (§10.2).
@@ -60,7 +60,7 @@ struct MatcherConfig: Equatable {
     /// This is a narrow correction to *alignment*, not to scoring generosity. It applies only where
     /// the ordinary 1:1 pairing has already failed, and only when the concatenation is a near-exact
     /// match (`joinedTokenMinSimilarity`), so it cannot hand partial credit to an unrelated
-    /// substitution. See docs/MATCHING_ENGINE.md §12.
+    /// substitution. See docs/prompter/MATCHING_ENGINE.md §12.
     var allowSplitScriptTokenJoin = true
 
     /// How close `spoken` must be to `script[i] + script[i+1]` for the join to be eligible.
@@ -114,7 +114,7 @@ struct MatcherConfig: Equatable {
     /// counted toward `recoverySustainedSeconds`) must persist before it also arms recovery
     /// search. Longer than `recoverySustainedSeconds` on purpose: a mid-band score is closer to
     /// correct than a clearly-low one, so it shouldn't trip recovery as eagerly (M4, on-device
-    /// "cursor gets stuck / slow to transition" report — docs/MATCHING_ENGINE.md).
+    /// "cursor gets stuck / slow to transition" report — docs/prompter/MATCHING_ENGINE.md).
     var mediocreConfidenceSustainedSeconds: TimeInterval = 4.0
 
     /// Recovery search first widens to [cursor, cursor + this], then the whole script (§10.2).
@@ -124,7 +124,7 @@ struct MatcherConfig: Equatable {
     /// keeps using `alignmentWindow`). A single ordinary ASR near-miss landing in the last
     /// position or two of a 9-token window can single-handedly veto an otherwise 7-of-9-exact
     /// candidate; a wider window dilutes one near-miss across more genuinely-matching tokens
-    /// (M4, docs/MATCHING_ENGINE.md — token-155 freeze on build 56ba154). Tuned empirically
+    /// (M4, docs/prompter/MATCHING_ENGINE.md — token-155 freeze on build 56ba154). Tuned empirically
     /// against the real failing window, not assumed — see MATCHING_ENGINE.md for the numbers.
     var recoveryAlignmentWindow = 12
 
@@ -145,7 +145,7 @@ struct MatcherConfig: Equatable {
     /// A short stall is most likely misrecognized *on-script* speech (an ASR stumble, a skipped
     /// line) — recovery should stay eager. A stall this long is much more likely to be genuine
     /// *off-script* speech, where any high-scoring candidate is more plausibly a coincidence than
-    /// a real reading position (M5.1, docs/MATCHING_ENGINE.md — the meta-commentary false jump).
+    /// a real reading position (M5.1, docs/prompter/MATCHING_ENGINE.md — the meta-commentary false jump).
     var extendedStallSeconds: TimeInterval = 8.0
 
     /// Recovery jump bar applied once a stall has lasted `extendedStallSeconds`. Deliberately set
@@ -158,7 +158,7 @@ struct MatcherConfig: Equatable {
 
     /// Shortest suffix of the alignment window that may be scored on its own when the full window
     /// fails to clear `advanceThreshold` (§ "M5.2 — the suffix-window re-acquisition rule",
-    /// docs/MATCHING_ENGINE.md).
+    /// docs/prompter/MATCHING_ENGINE.md).
     ///
     /// When a reader resumes reading after off-script speech, the window straddles the boundary:
     /// its older half is the ad-lib, its newer half is real reading, and no anchor scores well
@@ -278,7 +278,7 @@ struct MatcherConfig: Equatable {
     /// byte-identical, since discounting weight doesn't move a weighted average when every
     /// position in the window is already a match). A recovery candidate whose entire matching
     /// window is built from these words alone gets skipped outright, regardless of its raw score
-    /// (M4, docs/MATCHING_ENGINE.md — root-caused against `cookingIntro/adLibInsertion`, where a
+    /// (M4, docs/prompter/MATCHING_ENGINE.md — root-caused against `cookingIntro/adLibInsertion`, where a
     /// synthetic ad-lib phrase's common-word overlap alone scored a coincidental 1.00 against
     /// unrelated content).
     var commonWords: Set<String> = [

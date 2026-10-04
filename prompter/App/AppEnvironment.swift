@@ -28,8 +28,7 @@ enum AppEnvironment {
 
     static func makeModelContainer() -> ModelContainer {
         // NOTE (inherited): this schema is Prompter's. It is carried over as scaffolding so the app
-        // builds and runs; it is **not** an approved Co-Interview data model. See
-        // docs/CO_INTERVIEW_ARCHITECTURE.md.
+        // builds and runs; it is **not** an approved Co-Interview data model.
         let schema = Schema([
             Script.self,
             PromptSession.self,

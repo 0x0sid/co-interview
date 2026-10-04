@@ -51,7 +51,7 @@ enum ScriptStyling {
     ///
     /// Laid out invisibly at the block's own width, its rendered height is the vertical offset of
     /// the line the reader is on — real line geometry, where a token fraction was only an estimate
-    /// (M5.3.2, docs/DECISIONS.md).
+    /// (M5.3.2, docs/prompter/DECISIONS.md).
     static func prefixOfCurrentSentence(rawText: String, scriptIndex: ScriptIndex, cursor: PromptCursor) -> String {
         let index = currentSentenceIndex(scriptIndex: scriptIndex, cursor: cursor)
         guard index >= 0, index < scriptIndex.sentences.count else { return "" }

@@ -17,7 +17,7 @@ final class SlidingWindowMatcher {
     /// low band or the ambiguous middle band), cleared on any real advance. Shared across both
     /// bands — deliberately not reset when the score crosses between them mid-stall — so a
     /// sequence that hovers near the low/mediocre boundary accumulates one continuous stall
-    /// duration rather than resetting on every crossing (M4, docs/MATCHING_ENGINE.md).
+    /// duration rather than resetting on every crossing (M4, docs/prompter/MATCHING_ENGINE.md).
     private var stalledSince: TimeInterval?
     /// Best recovery candidate seen since `stalledSince` was set, snapshotted on *every* stalled
     /// tick (not just the tick the sustain timer arms on) and reset alongside `stalledSince`.
@@ -25,7 +25,7 @@ final class SlidingWindowMatcher {
     /// be evicted by newer speech before the timer allows a jump, so acting on a retained best
     /// snapshot — rather than a fresh search against whatever the ring buffer holds on the exact
     /// tick the timer happens to arm — is what actually fixes the freeze (M4,
-    /// docs/MATCHING_ENGINE.md — token-155 freeze/timer-eviction race on build 56ba154).
+    /// docs/prompter/MATCHING_ENGINE.md — token-155 freeze/timer-eviction race on build 56ba154).
     /// `capturedAt` is what stops this going stale: the snapshot must outlive the sustain timer,
     /// but retaining it indefinitely froze a mediocre early candidate for a whole session (M5.2 —
     /// see `stallCandidateFreshnessSeconds`).
@@ -148,7 +148,7 @@ final class SlidingWindowMatcher {
         let hasFreshest = RecoverySearch.hasFreshestTokenSupport(spokenWindow: spokenWindow, scriptTokens: scriptTokens, candidate: localBest, config: config)
 
         // A run of consistently advancing, freshest-supported local anchors is evidence in its own
-        // right that the alignment is following the reader (M5.5, docs/MATCHING_ENGINE.md). The run
+        // right that the alignment is following the reader (M5.5, docs/prompter/MATCHING_ENGINE.md). The run
         // is tracked here so a *tracked* read can clear a lower bar.
         //
         // Exact rule, because the boundaries matter more than the intent:
@@ -211,7 +211,7 @@ final class SlidingWindowMatcher {
             // The reader has resumed reading and the window straddles the boundary — its older
             // half is the ad-lib they just finished, its newer half is real reading, so no anchor
             // scores well against the whole thing. The newest few words do (§ M5.2,
-            // docs/MATCHING_ENGINE.md).
+            // docs/prompter/MATCHING_ENGINE.md).
             //
             // Classified as **recovery, not advance**, and that is load-bearing rather than
             // cosmetic. `PromptViewModel.applyCursor` marks every token between the old and new
@@ -242,7 +242,7 @@ final class SlidingWindowMatcher {
             // the low-confidence recovery path above — but sustained *mediocre* confidence is
             // its own stall that deserves a (longer) escape hatch too, or the cursor can sit
             // here indefinitely, which is exactly the on-device "stuck" report this fixed
-            // (docs/MATCHING_ENGINE.md, M4). Note this does NOT touch `recoveryJumpThreshold`:
+            // (docs/prompter/MATCHING_ENGINE.md, M4). Note this does NOT touch `recoveryJumpThreshold`:
             // escaping the stall still requires `RecoverySearch` to find a genuinely strong
             // match, same bar as the low-confidence path already uses.
             confidence = localBest.score
@@ -262,7 +262,7 @@ final class SlidingWindowMatcher {
 
     /// Re-scores the newest K spoken words against the same local range when the full window has
     /// failed, returning the **longest** suffix that clears `suffixJumpThreshold` (§ M5.2,
-    /// docs/MATCHING_ENGINE.md — the full rule table lives there).
+    /// docs/prompter/MATCHING_ENGINE.md — the full rule table lives there).
     ///
     /// Longer suffixes are preferred because they carry more evidence. Every suffix is held to the
     /// same `suffixJumpThreshold` (0.92) — measured, not assumed: off-script speech scores *higher*
@@ -296,7 +296,7 @@ final class SlidingWindowMatcher {
 
     /// Scores a recovery candidate against the *current* ring buffer and retains it if it beats
     /// whatever was previously seen during this stall (§ "Fix 2: stall-candidate snapshot",
-    /// docs/MATCHING_ENGINE.md). Called on every stalled tick, independent of whether the sustain
+    /// docs/prompter/MATCHING_ENGINE.md). Called on every stalled tick, independent of whether the sustain
     /// timer has armed — evidence-gathering is unconditional, only acting on it is gated.
     private func snapshotStallCandidate(now: TimeInterval) {
         // Expire first, so a candidate that has outlived its usefulness cannot outrank a fresh one

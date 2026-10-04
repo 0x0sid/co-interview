@@ -1,7 +1,7 @@
 import Foundation
 
 /// Decides when automatic following may resume after the reader has repositioned the text by hand
-/// (M5.7, docs/DECISIONS.md).
+/// (M5.7, docs/prompter/DECISIONS.md).
 ///
 /// Pure value type with no SwiftUI or matcher dependencies, so the rule can be tested directly
 /// rather than inferred from a rendered view. **It never touches matcher state** — it only observes

@@ -2,7 +2,7 @@ import Foundation
 
 /// Identifiers are **application-owned**, never derived from provider output or transcript text, so a
 /// repeated or revised transcript event can never create a second identity for the same speech
-/// (docs/CO_INTERVIEW_AI_PIPELINE.md §3).
+/// (docs/AI_PIPELINE.md §3).
 typealias UtteranceID = UUID
 typealias QuestionCardID = UUID
 typealias AnswerVersionID = UUID

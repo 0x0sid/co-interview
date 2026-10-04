@@ -6,7 +6,7 @@ import Observation
 
 /// Drives a `ReplayFixture` through a fresh `SlidingWindowMatcher` on a timer, publishing the
 /// live cursor so `ReplayDebugScreen` can animate it. UI-facing, so explicitly `@MainActor`
-/// (Matching/ itself stays off the main actor — see docs/DECISIONS.md).
+/// (Matching/ itself stays off the main actor — see docs/prompter/DECISIONS.md).
 @MainActor
 @Observable
 final class ReplayPlayer {

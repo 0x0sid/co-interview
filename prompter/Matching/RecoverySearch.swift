@@ -102,7 +102,7 @@ enum RecoverySearch {
     /// True if at least one aligned position is both a real match (similarity ≥
     /// `perTokenMatchThreshold`, i.e. counts as a match per §10.3) and a non-common word. A
     /// candidate built entirely from common-word coincidences — the root cause of
-    /// `cookingIntro/adLibInsertion`'s false jumps (docs/MATCHING_ENGINE.md, M4) — has none.
+    /// `cookingIntro/adLibInsertion`'s false jumps (docs/prompter/MATCHING_ENGINE.md, M4) — has none.
     private static func hasDistinctiveSupport(spokenWindow: [String], scriptWindow: [String], config: MatcherConfig) -> Bool {
         for i in 0..<min(spokenWindow.count, scriptWindow.count) {
             guard !config.commonWords.contains(scriptWindow[i]) else { continue }
@@ -212,7 +212,7 @@ enum RecoverySearch {
     /// ring buffer's useful content can be evicted by newer speech before the timer allows a
     /// jump, so by the time recovery is *permitted* to act, `recoverySearch`'s fresh, current-tick
     /// candidate may already be worse than one seen earlier in the same stall (M4,
-    /// docs/MATCHING_ENGINE.md — token-155 freeze on build 56ba154). The threshold check still
+    /// docs/prompter/MATCHING_ENGINE.md — token-155 freeze on build 56ba154). The threshold check still
     /// happens exactly once, at the moment the matcher acts on the retained snapshot.
     static func bestStallCandidate(
         spokenWindow: [String],

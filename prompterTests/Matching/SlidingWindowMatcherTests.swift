@@ -5,7 +5,7 @@ import Foundation
 /// Replays the full fixture suite (§16 M1 gate) through the real matcher and asserts the two
 /// required metrics: mean cursor error <= 2 tokens, false-jump rate <= 1 per 500 spoken words.
 /// Numbers are printed so a real, named test run backs every figure quoted in
-/// AGENT_PROGRESS.md / docs/MATCHING_ENGINE.md (§24.6 — no invented numbers).
+/// AGENT_PROGRESS.md / docs/prompter/MATCHING_ENGINE.md (§24.6 — no invented numbers).
 struct SlidingWindowMatcherTests {
     /// A cursor landing this far from the ground truth while the matcher reports it moved with
     /// real confidence (advancing/recovering, not holding/frozen) counts as a false jump. Chosen

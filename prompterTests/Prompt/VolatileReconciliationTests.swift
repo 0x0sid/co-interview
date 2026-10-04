@@ -3,7 +3,7 @@ import Foundation
 @testable import prompter
 
 /// Reproduces the real on-device volatile-retraction bug found during the M4 retest (build
-/// 0be5fb8, docs/ARCHITECTURE.md "Volatile reconciliation"): the first `.volatile` for a session
+/// 0be5fb8, docs/prompter/ARCHITECTURE.md "Volatile reconciliation"): the first `.volatile` for a session
 /// was a single truncated letter ("W" before "Welcome" resolved), fed immediately as a whole word
 /// since `PromptViewModel` had nothing to compare it against — then revised into a different word
 /// by the next volatile, permanently poisoning the matcher's ring buffer (no retraction) until

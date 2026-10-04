@@ -29,7 +29,7 @@ enum Typography {
     }
 
     /// §13 v2's UI face — Hanken Grotesk replaces Inter here as of M5 (the migration note in
-    /// docs/BUILD_SPEC.md §13 and docs/DECISIONS.md 2026-08-14).
+    /// docs/prompter/BUILD_SPEC.md §13 and docs/prompter/DECISIONS.md 2026-08-14).
     static func body(_ size: CGFloat, weight: Weight = .regular) -> Font {
         hankenGrotesk(size, weight: weight)
     }

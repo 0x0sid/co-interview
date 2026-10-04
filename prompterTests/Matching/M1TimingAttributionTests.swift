@@ -15,7 +15,7 @@ import Foundation
 /// timing, which is what makes the comparison trustworthy.
 struct M1TimingAttributionTests {
 
-    /// The figure quoted throughout AGENT_PROGRESS.md and docs/MATCHING_ENGINE.md before M5.2,
+    /// The figure quoted throughout AGENT_PROGRESS.md and docs/prompter/MATCHING_ENGINE.md before M5.2,
     /// produced by the constant 0.4 s/word cadence with no suffix rule.
     static let historicalMeanCursorError = 0.9074215761285387
     static let historicalFalseJumps = 0

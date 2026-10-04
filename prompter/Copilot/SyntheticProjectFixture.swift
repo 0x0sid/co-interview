@@ -3,7 +3,7 @@ import Foundation
 /// A synthetic, entirely fictional project used by the prototype and the evaluation harness.
 ///
 /// **Nothing here is real.** No personal data, no real organisation, no captured interview material —
-/// the same rule that governs test fixtures in this repository (`CO_INTERVIEW_SNAPSHOT_NOTICE.md`).
+/// the same rule that governs test fixtures in this repository (docs/DEVELOPMENT.md, "Test fixtures").
 /// It exists so the pipeline can be exercised and measured before the document-import system is built
 /// (plan Increment 5); it is replaced by satisfying `ProjectContextProviding` with real documents.
 ///
