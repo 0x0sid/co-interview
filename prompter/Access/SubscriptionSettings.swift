@@ -192,7 +192,7 @@ struct SubscriptionSettingsView: View {
                         .accessibilityIdentifier("subscription-renewal")
                 }
             }
-            primaryButton("Renew Pro", systemImage: "arrow.clockwise")
+            primaryButton("Become Pro", systemImage: "sparkles")
             // Apple's own subscription page is where a payment method is fixed; nothing else is offered.
             if billingIssue { manageButton("Fix billing", systemImage: "creditcard") }
         case .free:
@@ -201,7 +201,7 @@ struct SubscriptionSettingsView: View {
                 line(previewLine)
                     .accessibilityIdentifier("free-answers-disclosure")
             }
-            primaryButton("Upgrade to Pro", systemImage: "sparkles")
+            primaryButton("Become Pro", systemImage: "sparkles")
         }
     }
 

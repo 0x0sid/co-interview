@@ -80,7 +80,7 @@ enum AccessCopy {
         case let count where count >= limit: "\(limit) free interview answers included."
         case 1: "1 free interview answer remaining."
         case let count where count > 1: "\(count) free interview answers remaining."
-        default: "Your \(limit) free interview answers are used. Upgrade to Pro for more."
+        default: "Your \(limit) free interview answers are used. Become Pro for more."
         }
     }
 

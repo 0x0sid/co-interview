@@ -254,4 +254,71 @@ struct SubscriptionDisplayTests {
     func theCurrentPlanIsMatchedByStoreProductIDOnly() {
         #expect(Self.availability(activeProduct: "monthly", active: true) == [.monthly: .purchasable, .yearly: .purchasable])
     }
+
+    /// Monthly, then a change to Yearly: the next CustomerInfo moves "current" to Yearly and Monthly
+    /// stops being current. Nothing keeps the first product.
+    @Test
+    func aPlanChangeMovesTheCurrentPlan() {
+        let service = EntitlementService()
+        service.update(isActive: true, details: .init(productIdentifier: "io.neverblank.pro.monthly",
+                                                      expiration: Self.date(2026, 10, 29), willRenew: true))
+        #expect(EntitlementService.planAvailability(for: Self.offers, subscription: service.presentation(now: Self.now))
+                == [.monthly: .current, .yearly: .purchasable])
+        service.update(isActive: true, details: .init(productIdentifier: "io.neverblank.pro.yearly",
+                                                      expiration: Self.date(2027, 9, 29), willRenew: false))
+        #expect(EntitlementService.planAvailability(for: Self.offers, subscription: service.presentation(now: Self.now))
+                == [.monthly: .managedByApple, .yearly: .current])
+        service.update(isActive: false, details: .init(productIdentifier: "io.neverblank.pro.yearly",
+                                                       expiration: Self.date(2026, 9, 1), willRenew: false))
+        #expect(EntitlementService.planAvailability(for: Self.offers, subscription: service.presentation(now: Self.now))
+                == [.monthly: .purchasable, .yearly: .purchasable])
+    }
+
+    // MARK: Paywall main button
+
+    static func action(selected: PlanKind, activeProduct: String?, active: Bool,
+                       end: Date = date(2026, 10, 29)) -> EntitlementService.PaywallAction {
+        let service = EntitlementService()
+        if let activeProduct {
+            service.update(isActive: active, details: .init(productIdentifier: activeProduct, expiration: end, willRenew: true))
+        }
+        let subscription = service.presentation(now: now)
+        return EntitlementService.paywallAction(selected: selected,
+                                                availability: EntitlementService.planAvailability(for: offers, subscription: subscription),
+                                                subscription: subscription)
+    }
+
+    /// Never subscribed: every plan is sold as new, and the button says "Become Pro".
+    @Test(arguments: [PlanKind.monthly, .yearly])
+    func neverSubscribedIsBecomePro(selected: PlanKind) {
+        #expect(Self.action(selected: selected, activeProduct: nil, active: false) == .becomePro)
+    }
+
+    /// Expired (the entitlement inactive, a past plan on record): "Become Pro" too — never "Renew".
+    @Test(arguments: [PlanKind.monthly, .yearly])
+    func anExpiredSubscriptionIsBecomePro(selected: PlanKind) {
+        #expect(Self.action(selected: selected, activeProduct: "io.neverblank.pro.monthly", active: false,
+                            end: Self.date(2026, 9, 1)) == .becomePro)
+        #expect(Self.action(selected: selected, activeProduct: "io.neverblank.pro.yearly", active: false,
+                            end: Self.date(2026, 9, 1)) == .becomePro)
+    }
+
+    /// Monthly active with Yearly selected: an upgrade. The current plan itself is only managed.
+    @Test
+    func activeMonthlyUpgradesToYearly() {
+        #expect(Self.action(selected: .yearly, activeProduct: "io.neverblank.pro.monthly", active: true) == .upgrade(.yearly))
+        #expect(Self.action(selected: .monthly, activeProduct: "io.neverblank.pro.monthly", active: true) == .manageSubscription)
+    }
+
+    /// Yearly active: nothing to buy here, whichever plan is selected.
+    @Test(arguments: [PlanKind.monthly, .yearly])
+    func activeYearlyIsManageSubscription(selected: PlanKind) {
+        #expect(Self.action(selected: selected, activeProduct: "io.neverblank.pro.yearly", active: true) == .manageSubscription)
+    }
+
+    /// Active on a product the offering does not contain: subscribed, so managed — never "Become Pro".
+    @Test(arguments: [PlanKind.monthly, .yearly])
+    func activeOnAnUnofferedProductIsManageSubscription(selected: PlanKind) {
+        #expect(Self.action(selected: selected, activeProduct: "monthly", active: true) == .manageSubscription)
+    }
 }

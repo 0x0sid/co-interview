@@ -146,7 +146,7 @@ struct InterviewReviewSheet: View {
             isMarking = false
         } catch InterviewReviewClient.Failure.proRequired {
             if let expired = entitlements?.expiredAt {
-                failure = "Your Neverblank Pro subscription expired on \(expired.formatted(date: .abbreviated, time: .shortened)). Renew to score interviews; the transcript stays free to view and export."
+                failure = "Your Neverblank Pro subscription expired on \(expired.formatted(date: .abbreviated, time: .shortened)). Become Pro to score interviews; the transcript stays free to view and export."
             } else {
                 failure = "Scoring interviews needs Neverblank Pro."
             }

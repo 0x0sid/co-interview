@@ -221,6 +221,31 @@ final class EntitlementService {
         return result
     }
 
+    /// What the paywall's main button does. Two modes, from the entitlement alone:
+    /// **not subscribed** (never subscribed, expired, lapsed — `neverblank_pro` inactive) sells every
+    /// plan as new; **subscribed** (`neverblank_pro` active) never sells the active plan again.
+    enum PaywallAction: Equatable {
+        /// Not subscribed: buy the selected plan. "Become Pro" — never "Renew".
+        case becomePro
+        /// Subscribed, and the selected plan is a longer one than the current plan: StoreKit changes
+        /// the subscription within the group.
+        case upgrade(PlanKind)
+        /// Subscribed with nothing to buy here: the longest plan is active, or the active product is
+        /// not one the offering contains. Apple's subscription management.
+        case manageSubscription
+    }
+
+    static func paywallAction(selected: PlanKind, availability: [PlanKind: PlanAvailability],
+                              subscription: SubscriptionPresentation) -> PaywallAction {
+        guard subscription.entitlementActive else { return .becomePro }
+        // Upgrading needs a placed current plan: an active product the offering does not contain
+        // cannot be compared, so it is only ever managed.
+        if availability[selected] == .purchasable, availability.values.contains(.current) {
+            return .upgrade(selected)
+        }
+        return .manageSubscription
+    }
+
     /// "Monthly" for the active plan (the Home badge); nil when inactive or not yet described.
     var activePlanName: String? {
         let current = presentation()
@@ -411,14 +436,31 @@ final class EntitlementService {
     }
     #endif
 
+    /// Current CustomerInfo from RevenueCat's server, applied. Never the SDK's cache: a cached
+    /// CustomerInfo judges "active" against its own request date, so a plan that has changed or ended
+    /// since keeps reading as the old plan, still active (Monthly after a change to Yearly), for up to
+    /// the cache's five minutes — a whole Sandbox month. False when the fetch failed; nothing changes.
+    @discardableResult
+    private func fetchCurrentCustomerInfo() async -> Bool {
+        #if canImport(RevenueCat)
+        Purchases.shared.invalidateCustomerInfoCache()
+        do {
+            apply(try await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent))
+            return true
+        } catch {
+            return false
+        }
+        #else
+        return false
+        #endif
+    }
+
     func refresh() async {
         #if canImport(RevenueCat)
         guard BillingEnvironment.isConfigured else { status = .unconfigured; return }
-        do {
-            let info = try await Purchases.shared.customerInfo()
-            apply(info)
+        if await fetchCurrentCustomerInfo() {
             await loadOffering()
-        } catch {
+        } else {
             // Preserve whatever access was already verified; do not downgrade on a network blip.
             status = .unavailable(cachedPremium: status.allowsUnlimitedReading)
         }
@@ -491,25 +533,33 @@ final class EntitlementService {
         guard let package = packagesByPlan[plan] else {
             return .failed("This plan is unavailable right now. Please try again later.")
         }
-        // Never start a StoreKit purchase for the product the active entitlement already comes from.
+        isPurchasing = true
+        defer { isPurchasing = false }
+        // Never start a StoreKit purchase for the product the active entitlement already comes from —
+        // judged on current CustomerInfo, so a plan changed in Apple's settings is already known.
+        await fetchCurrentCustomerInfo()
         if case .premium = status, subscription?.productIdentifier == package.storeProduct.productIdentifier {
             return .failed("This is already your current plan.")
         }
-        isPurchasing = true
-        defer { isPurchasing = false }
+        let outcome: PurchaseOutcome
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            if result.userCancelled { return .cancelled }
-            if result.customerInfo.entitlements[BillingEnvironment.entitlementIdentifier]?.isActive == true {
-                apply(result.customerInfo)
-                return .purchased
+            apply(result.customerInfo)
+            if result.userCancelled {
+                outcome = .cancelled
+            } else {
+                outcome = result.customerInfo.entitlements[BillingEnvironment.entitlementIdentifier]?.isActive == true
+                    ? .purchased : .pending
             }
-            return .pending
         } catch {
-            if let code = error as? ErrorCode, code == .purchaseCancelledError { return .cancelled }
-            if let code = error as? ErrorCode, code == .paymentPendingError { return .pending }
-            return .failed(error.localizedDescription)
+            if let code = error as? ErrorCode, code == .purchaseCancelledError { outcome = .cancelled }
+            else if let code = error as? ErrorCode, code == .paymentPendingError { outcome = .pending }
+            else { outcome = .failed(error.localizedDescription) }
         }
+        // Whatever StoreKit answered — bought, pending, "already subscribed", cancelled — the plan
+        // shown afterwards is RevenueCat's current one.
+        await fetchCurrentCustomerInfo()
+        return outcome
         #else
         return .notConfigured
         #endif
@@ -559,11 +609,15 @@ final class EntitlementService {
         #endif
     }
 
-    /// Native manage-subscription sheet.
+    /// Native manage-subscription sheet. A plan changed or cancelled there is read back when the
+    /// sheet closes, and once more a few seconds later, when Apple has usually delivered the change.
     func showManageSubscriptions() async {
         #if canImport(RevenueCat)
         guard BillingEnvironment.isConfigured else { return }
         try? await Purchases.shared.showManageSubscriptions()
+        await fetchCurrentCustomerInfo()
+        try? await Task.sleep(for: .seconds(5))
+        await fetchCurrentCustomerInfo()
         #endif
     }
 

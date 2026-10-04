@@ -35,6 +35,23 @@ struct NeverblankPaywallView: View {
         EntitlementService.planAvailability(for: plans, subscription: entitlements.presentation())
     }
     private func isPurchasable(_ kind: PlanKind) -> Bool { availability[kind] == .purchasable }
+    /// A plan is active: any plan still buyable here is an upgrade from it.
+    private var hasCurrentPlan: Bool { availability.values.contains(.current) }
+
+    /// What the main button does for a plan: Become Pro, Upgrade, or Manage subscription.
+    private func action(for kind: PlanKind) -> EntitlementService.PaywallAction {
+        EntitlementService.paywallAction(selected: kind, availability: availability, subscription: entitlements.presentation())
+    }
+    /// A plan card can be chosen only when choosing it leads to a purchase.
+    private func isSelectable(_ kind: PlanKind) -> Bool {
+        isPurchasable(kind) && action(for: kind) != .manageSubscription
+    }
+    /// When the active entitlement ends, if the paywall is still open: CustomerInfo is fetched again so
+    /// the page leaves subscriber mode on RevenueCat's word, not on a local clock.
+    private var activeUntil: Date? {
+        let subscription = entitlements.presentation()
+        return subscription.entitlementActive ? subscription.expirationDate : nil
+    }
 
     private var plans: [EntitlementService.PlanOffer] { entitlements.plans }
     private func plan(_ kind: PlanKind) -> EntitlementService.PlanOffer? { plans.first { $0.kind == kind } }
@@ -97,6 +114,12 @@ struct NeverblankPaywallView: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { await entitlements.refresh() }
+        }
+        .task(id: activeUntil) {
+            guard let end = activeUntil, end > .now else { return }
+            try? await Task.sleep(for: .seconds(end.timeIntervalSinceNow + 2))
+            guard !Task.isCancelled else { return }
+            await entitlements.refresh()
         }
         .onDisappear {
             if !finished { finish(false) }
@@ -196,93 +219,144 @@ struct NeverblankPaywallView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else {
-            // One translucent group, rows divided by hairlines — whatever real plans the offering has.
-            let shown = Self.order.compactMap(plan)
-            VStack(spacing: 0) {
-                ForEach(Array(shown.enumerated()), id: \.element.kind) { index, offer in
-                    if index > 0 {
-                        Divider().overlay(Theme.Color.hairline).padding(.leading, 14)
-                    }
-                    planRow(offer)
+            // One complete card per real plan in the offering, each with its own full frame.
+            VStack(spacing: 10) {
+                ForEach(Self.order.compactMap(plan), id: \.kind) { offer in
+                    planCard(offer)
                 }
             }
-            .padding(4)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
-    private func planRow(_ offer: EntitlementService.PlanOffer) -> some View {
+    private func planCard(_ offer: EntitlementService.PlanOffer) -> some View {
         let state = availability[offer.kind] ?? .purchasable
-        let isSelected = selected == offer.kind && state == .purchasable
+        let selectable = isSelectable(offer.kind)
+        let isSelected = selected == offer.kind && selectable
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         return Button {
-            guard state == .purchasable else { return }
+            guard selectable else { return }
             userChose = true
             guard selected != offer.kind else { return }
             withAnimation(.snappy(duration: 0.2)) { selected = offer.kind }
             // The funnel's events name the two original plans; the plan field carries the rest.
             access.log(.init(name: offer.kind == .weekly ? .weeklySelected : .monthlySelected, plan: offer.kind, trigger: trigger))
         } label: {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(offer.kind.title)
-                        .font(Typography.body(16, weight: isSelected ? .semibold : .medium))
-                        .foregroundStyle(Theme.Color.ink)
+            HStack(alignment: .center, spacing: 12) {
+                selectionMark(selected: isSelected, selectable: selectable)
+                VStack(alignment: .leading, spacing: 3) {
+                    // Title and pill side by side; the pill drops under the title when space is short.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 8) { planTitle(offer, emphasized: isSelected); planBadge(offer.kind, state: state) }
+                        VStack(alignment: .leading, spacing: 4) { planTitle(offer, emphasized: isSelected); planBadge(offer.kind, state: state) }
+                    }
                     if let subtitle = subtitle(for: offer) {
                         Text(subtitle)
                             .font(Typography.body(12.5))
                             .foregroundStyle(Theme.Color.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    switch state {
-                    case .current:
-                        Text("Current plan")
-                            .font(Typography.body(11.5, weight: .semibold))
-                            .foregroundStyle(Theme.Color.onDark)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Theme.Color.action, in: Capsule())
-                            .accessibilityIdentifier("plan-current-\(offer.kind.rawValue)")
-                    case .managedByApple:
+                    if state == .managedByApple {
                         Text("Change in Apple subscriptions")
                             .font(Typography.body(11.5))
                             .foregroundStyle(Theme.Color.secondary)
-                    case .purchasable:
-                        EmptyView()
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .layoutPriority(1)
                 Spacer(minLength: 8)
                 Text(offer.pricePerPeriod)
                     .font(Typography.body(15, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(Theme.Color.ink)
+                    .foregroundStyle(state == .current ? Theme.Color.secondary : Theme.Color.ink)
                     .multilineTextAlignment(.trailing)
                     .fixedSize(horizontal: false, vertical: true)
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.Color.action)
-                    .opacity(isSelected ? 1 : 0)
-                    .accessibilityHidden(true)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 11)
-            .background(isSelected || state == .current ? Theme.Color.action.opacity(0.10) : .clear,
-                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            // A solid card on the page, a hairline frame all round; the selected card is tinted and
+            // framed in the accent. Nothing translucent, so no edge fades into the background.
+            .background {
+                shape.fill(Theme.Color.card)
+                if isSelected { shape.fill(Theme.Color.action.opacity(0.10)) }
+            }
+            .overlay {
+                shape.strokeBorder(isSelected ? Theme.Color.action : Theme.Color.hairline, lineWidth: isSelected ? 1.5 : 1)
+            }
             .opacity(state == .managedByApple ? 0.55 : 1)
-            .contentShape(Rectangle())
+            .contentShape(shape)
         }
         .buttonStyle(PlanRowPressStyle())
-        .disabled(state != .purchasable)
+        .disabled(!selectable)
         .accessibilityIdentifier("plan-\(offer.kind.rawValue)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityHint(state == .current ? "Your current plan" : state == .managedByApple ? "Change plans in Apple subscription settings" : "")
     }
 
+    private func planTitle(_ offer: EntitlementService.PlanOffer, emphasized: Bool) -> some View {
+        Text(offer.kind.title)
+            .font(Typography.body(16, weight: emphasized ? .semibold : .medium))
+            .foregroundStyle(Theme.Color.ink)
+            .lineLimit(1)
+            .fixedSize()
+    }
+
+    /// A radio mark: filled accent check when selected, an open ring when it can be chosen, a faint
+    /// ring on a plan that cannot (the current plan, or one Apple's settings change).
+    private func selectionMark(selected: Bool, selectable: Bool) -> some View {
+        ZStack {
+            if selected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(Theme.Color.action)
+            } else {
+                Circle()
+                    .strokeBorder(selectable ? Theme.Color.secondary.opacity(0.6) : Theme.Color.hairline, lineWidth: 1.5)
+            }
+        }
+        .frame(width: 22, height: 22)
+        .accessibilityHidden(true)
+    }
+
+    /// "Current plan": a soft accent pill. "Upgrade": solid accent, only while another plan is active.
+    @ViewBuilder
+    private func planBadge(_ kind: PlanKind, state: EntitlementService.PlanAvailability) -> some View {
+        switch state {
+        case .current:
+            Text("Current plan")
+                .font(Typography.body(11.5, weight: .semibold))
+                .foregroundStyle(Theme.Color.action)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Theme.Color.action.opacity(0.14), in: Capsule())
+                .fixedSize()
+                .accessibilityIdentifier("plan-current-\(kind.rawValue)")
+        case .purchasable where hasCurrentPlan:
+            Text("Upgrade")
+                .font(Typography.body(11.5, weight: .semibold))
+                .foregroundStyle(Theme.Color.onDark)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Theme.Color.action, in: Capsule())
+                .fixedSize()
+                .accessibilityIdentifier("plan-upgrade-\(kind.rawValue)")
+        default:
+            EmptyView()
+        }
+    }
+
+    /// Not subscribed: "Become Pro". Subscribed: "Upgrade to Yearly" with Manage subscription beside
+    /// it, or Manage subscription alone when there is nothing to buy (`EntitlementService.PaywallAction`).
     @ViewBuilder
     private var continueButton: some View {
-        if isPurchasable(selected) {
-            purchaseButton
-        } else {
-            // Nothing new to buy here: the active plan is kept, and plan changes go through Apple.
+        switch action(for: selected) {
+        case .becomePro:
+            purchaseButton(title: "Become Pro", caption: selected == .lifetime ? "One-time purchase." : "Cancel anytime.")
+        case .upgrade(let kind):
+            VStack(spacing: 4) {
+                purchaseButton(title: "Upgrade to \(kind.title)", caption: nil)
+                manageLink
+            }
+        case .manageSubscription:
             VStack(spacing: 8) {
                 Button {
                     Task { await entitlements.showManageSubscriptions() }
@@ -299,24 +373,36 @@ struct NeverblankPaywallView: View {
         }
     }
 
-    private var purchaseButton: some View {
+    /// A subscriber can always reach Apple's own subscription page, upgrade or not.
+    private var manageLink: some View {
+        Button("Manage subscription") { Task { await entitlements.showManageSubscriptions() } }
+            .font(Typography.body(13, weight: .medium))
+            .tint(Theme.Color.action)
+            .frame(maxWidth: .infinity, minHeight: 36)
+            .disabled(phase != .choosing)
+            .accessibilityIdentifier("paywall-manage-subscription")
+    }
+
+    private func purchaseButton(title: String, caption: String?) -> some View {
         VStack(spacing: 8) {
             Button {
                 Task { await purchase() }
             } label: {
                 HStack(spacing: 8) {
                     if phase == .purchasing || phase == .confirming { ProgressView().tint(Theme.Color.onDark) }
-                    Text(phase == .confirming ? "Confirming your subscription…" : "Continue")
+                    Text(phase == .confirming ? "Confirming your subscription…" : title)
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.prompterPrimary)
-            .disabled(plan(selected) == nil || !isPurchasable(selected) || phase != .choosing)
+            .disabled(plan(selected) == nil || !isSelectable(selected) || phase != .choosing)
             .accessibilityIdentifier("paywall-continue")
-            Text(selected == .lifetime ? "One-time purchase." : "Cancel anytime.")
-                .font(Typography.body(12.5, weight: .medium))
-                .foregroundStyle(Theme.Color.secondary)
-                .frame(maxWidth: .infinity)
+            if let caption {
+                Text(caption)
+                    .font(Typography.body(12.5, weight: .medium))
+                    .foregroundStyle(Theme.Color.secondary)
+                    .frame(maxWidth: .infinity)
+            }
         }
     }
 
@@ -327,16 +413,29 @@ struct NeverblankPaywallView: View {
                     .font(Typography.body(11))
                     .foregroundStyle(Theme.Color.secondary)
             }
-            HStack(spacing: 16) {
-                Button(phase == .restoring ? "Restoring…" : "Restore Purchases") { Task { await restore() } }
-                    .disabled(phase != .choosing)
-                    .accessibilityIdentifier("paywall-restore")
-                if let terms = LegalLinks.terms { Link("Terms of Use", destination: terms) }
-                if let privacy = LegalLinks.privacy { Link("Privacy Policy", destination: privacy) }
-                if let support = LegalLinks.support { Link("Support", destination: support) }
+            // One line when it fits; two on a small iPhone rather than a clipped link.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) { restoreButton; legalLinks }
+                VStack(alignment: .leading, spacing: 8) {
+                    restoreButton
+                    HStack(spacing: 16) { legalLinks }
+                }
             }
             .font(Typography.body(12, weight: .medium))
         }
+    }
+
+    private var restoreButton: some View {
+        Button(phase == .restoring ? "Restoring…" : "Restore Purchases") { Task { await restore() } }
+            .disabled(phase != .choosing)
+            .accessibilityIdentifier("paywall-restore")
+    }
+
+    @ViewBuilder
+    private var legalLinks: some View {
+        if let terms = LegalLinks.terms { Link("Terms of Use", destination: terms) }
+        if let privacy = LegalLinks.privacy { Link("Privacy Policy", destination: privacy) }
+        if let support = LegalLinks.support { Link("Support", destination: support) }
     }
 
     /// Only what the price itself says: a yearly plan's per-month equivalent, from its own store price.
@@ -354,10 +453,10 @@ struct NeverblankPaywallView: View {
 
     /// Starts on the best value when the prices show one, otherwise Monthly, otherwise the first plan.
     private func preselect() {
-        guard phase == .choosing, !(userChose && plan(selected) != nil && isPurchasable(selected)) else { return }
+        guard phase == .choosing, !(userChose && plan(selected) != nil && isSelectable(selected)) else { return }
         // Only a plan that can be bought is preselected; the current plan never is. With nothing to
         // buy (the longest plan is active), the current plan stays shown and Continue becomes Manage.
-        let buyable = Self.order.filter { plan($0) != nil && isPurchasable($0) }
+        let buyable = Self.order.filter { plan($0) != nil && isSelectable($0) }
         if let best = bestValue, buyable.contains(best) {
             selected = best
         } else if buyable.contains(.monthly) {
@@ -407,7 +506,7 @@ struct NeverblankPaywallView: View {
 
     private func purchase() async {
         // The current plan (or a downgrade) is never sent to StoreKit from here.
-        guard phase == .choosing, isPurchasable(selected) else { return }
+        guard phase == .choosing, isSelectable(selected) else { return }
         message = nil
         // A purchase must land on the customer the backend checks. Not registered, or RevenueCat not
         // yet on the server-issued id: do not take the payment.

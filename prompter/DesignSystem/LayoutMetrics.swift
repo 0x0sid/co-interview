@@ -18,7 +18,7 @@ struct LayoutMetrics: Equatable, Sendable {
     var cardCornerRadius: CGFloat
     /// The screen's one primary action (Start interview).
     var primaryControlHeight: CGFloat
-    /// A button inside a card (Download, Upgrade to Pro, Renew). Visual height; the hit area is ≥ 44.
+    /// A button inside a card (Download, Become Pro). Visual height; the hit area is ≥ 44.
     var cardControlHeight: CGFloat
     /// Vertical padding of a saved-interview card, and the gap between cards.
     var listCardVerticalPadding: CGFloat
@@ -82,7 +82,7 @@ private struct AdaptiveLayoutMetrics: ViewModifier {
     }
 }
 
-/// The filled button inside a card (Download, Renew, Upgrade to Pro): exactly
+/// The filled button inside a card (Download, Become Pro): exactly
 /// `metrics.cardControlHeight` tall — the system's bordered styles add their own padding on top — with
 /// a hit area of at least 44 points.
 struct CardPrimaryButtonStyle: ButtonStyle {

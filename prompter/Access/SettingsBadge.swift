@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Shown once per subscription state, and cleared for good when the subscription section in Settings
 /// has been seen — never re-added merely because the user has not subscribed. An active subscription
-/// never shows it. An expiry is a new state, so it shows once more, where Settings offers Renew.
+/// never shows it. An expiry is a new state, so it shows once more, where Settings offers Become Pro.
 ///
 /// Stored in UserDefaults as the key of the state last seen (the same "seen once" idea as
 /// `AppSettings.hasSeenPremiumAnnouncement`, without adding a property to the SwiftData store).

@@ -24,7 +24,7 @@ final class PaywallPlansUITests: XCTestCase {
         XCTAssertTrue(gear.waitForExistence(timeout: 10))
         gear.tap()
         let viewPlans = app.buttons["view-plans"]
-        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10), "no Upgrade to Pro on the Settings card")
+        XCTAssertTrue(viewPlans.waitForExistence(timeout: 10), "no Become Pro on the Settings card")
         viewPlans.tap()
         XCTAssertTrue(app.staticTexts["Never interview alone again."].waitForExistence(timeout: 10))
 
