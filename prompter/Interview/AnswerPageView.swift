@@ -11,6 +11,7 @@ import SwiftUI
 /// so the code is visible but never greyed out as if it had been spoken: `proseText` joins the prose
 /// blocks in order, and paragraph *i* of that text is prose block *i* here.
 struct AnswerPageView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.ultraContrast) private var ultraContrast
     let question: InterviewQuestion
     /// Settings › Answer text size, on top of Dynamic Type.
@@ -244,7 +245,8 @@ struct AnswerPageView: View {
             .font(InterviewTheme.Font.answer(answerFontSize, weight: role == .lead ? .medium : .regular))
             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
             .foregroundStyle(InterviewTheme.Color.ink)
-            .textRenderer(AnswerHighlightRenderer(color: InterviewTheme.Color.answerHighlight, outline: ultraContrast))
+            .textRenderer(AnswerHighlightRenderer(color: InterviewTheme.Color.answerHighlight, outline: ultraContrast,
+                                                  invertsHighlightedText: colorScheme == .dark))
             .frame(maxWidth: .infinity, alignment: .leading)
         if role == .bullet {
             HStack(alignment: .firstTextBaseline, spacing: InterviewTheme.Metric.answerBulletGap) {

@@ -19,13 +19,14 @@ import Foundation
 enum AnswerStructure {
     static let bulletPrefixes = ["- ", "• ", "* "]
     static let marker = "=="
-    /// More than this and emphasis stops meaning anything; later marks render as plain text.
-    static let maximumEmphasis = 3
-    /// A highlight is an anchor, not a sentence: longer phrases render as plain text.
-    static let maximumEmphasisWords = 5
-    static let maximumEmphasisLength = 40
+    /// The lead's highlight plus one key term in a few points; later marks render as plain text.
+    static let maximumEmphasis = 4
+    /// A highlight carries the answer (the lead's is up to about ten words) but is never a sentence:
+    /// longer phrases render as plain text.
+    static let maximumEmphasisWords = 12
+    static let maximumEmphasisLength = 90
     /// Without spaces (Chinese, Japanese) a "word" count says nothing, so length decides alone.
-    static let maximumUnspacedEmphasisLength = 12
+    static let maximumUnspacedEmphasisLength = 24
 
     struct Prose: Equatable {
         enum Role: Equatable { case lead, body, bullet }

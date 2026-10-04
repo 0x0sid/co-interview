@@ -235,10 +235,10 @@ extension DemoInterviewFeed.Exchange {
         "Java and Python are both general-purpose languages, but they trade type safety for speed of writing differently. Java is statically typed and compiled to bytecode that runs on the JVM, which catches many errors before runtime. Python is dynamically typed and interpreted, so it is quicker to write and read, especially for scripts and data work. Java tends to be faster and more predictable at scale, while Python leans on libraries like NumPy for heavy computation. For example, I'd pick Java with Spring Boot for a large backend service, and Python for data pipelines or automation."
     )]
     static let javaPythonStructured: [AnswerBlock] = AnswerBlock.parsed(from: """
-    Java and Python are both general-purpose languages, but they trade ==type safety== for speed of writing differently.
+    ==Java trades writing speed for type safety and performance==; Python trades them back for quick, readable code.
 
-    - Java is statically typed and compiled to bytecode that ==runs on the JVM==, which catches many errors before runtime.
-    - Python is dynamically typed and interpreted, so it is quicker to write and read, especially for scripts and data work.
+    - Java is ==statically typed== and compiled to bytecode for the JVM, which catches many errors before runtime.
+    - Python is ==dynamically typed== and interpreted, so it is quicker to write and read, especially for scripts and data work.
     - Java tends to be faster and more predictable at scale; Python leans on libraries like NumPy for heavy computation.
     - Example: I'd pick Java with Spring Boot for a large backend service, and Python for data pipelines or automation.
     """)

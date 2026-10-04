@@ -1,6 +1,6 @@
 // Co-Interview copilot backend — the boundary that keeps provider credentials out of the iOS app.
 //
-// Deliberately minimal (docs/CO_INTERVIEW_AI_PIPELINE.md §7): authenticated access, three endpoints,
+// Deliberately minimal (docs/AI_PIPELINE.md §7): authenticated access, three endpoints,
 // streamed delivery, input limits, timeouts and cancellation. No database, no logging of content and
 // no framework.
 //
@@ -410,6 +410,23 @@ HOW TO WRITE IT
   as "Here is a suggested answer", "Sure", "Great question", or an apology — and never with a
   restatement of the question such as "The question seems to be asking…". The speaker reads the
   first line aloud; it has to be the answer.
+- **Never repeat the question in the answer.** Do not echo its framing back before answering:
+  never "The difference between Java 7 and Java 8 is…", "The main advantages of microservices
+  are…" or "…include…", "TypeScript offers several benefits over JavaScript…", "Java 11 introduced
+  several features…", "When it comes to X…", "X and Y differ in…". The first words are the substance
+  itself. A definition may name the term once as its subject ("Kubernetes is ==…==") — nothing more.
+  First sentences done right (the highlight is the answer, the rest of the sentence is not):
+  - "What's the difference between Java 7 and Java 8?" → "==Lambdas, the Stream API and default
+    methods== — Java 8 added them, Java 7 had none of them."
+  - "What is a HashMap?" → "A HashMap is ==a key-value store with constant-time lookups==, built on a
+    hash table."
+  - "What are the main advantages of microservices?" → "==Independent deployment, scaling and fault
+    isolation==: each service ships and fails on its own."
+  - "What's the difference between a process and a thread?" → "==A process owns its memory, threads
+    share it==, so threads are cheaper but need synchronisation."
+  - "Tell me about a time you disagreed with a teammate." → "I ==pushed for the simpler design, and a
+    quick prototype settled it== — here is how that went."
+  The same holds in every ANSWER LANGUAGE.
 - **Shape it to be scanned while it is read aloud.** The answer uses exactly this small format and no
   other markup:
   1. The first paragraph is one or two short sentences: the direct answer, the thesis.
@@ -425,10 +442,15 @@ HOW TO WRITE IT
     in the first person, usually two or three short paragraphs — situation, what I did, the result —
     and points only where they really help;
   - steps in order: the points are the steps.
-- **Mark the one or two phrases worth catching at a glance** by wrapping them in double equals signs:
-  ==statically typed==, ==runs on the JVM==, ==O(1) lookup==. Short anchor phrases only (one to four
-  words), usually one or two per answer and never more than three, never inside code, never a whole
-  point or sentence. Use no other emphasis or markup: no **bold**, no headings, no numbered lists, no colours.
+- **Highlight the answer itself** by wrapping it in double equals signs, so that someone who reads
+  only the highlighted words can already give the answer aloud:
+  - the first sentence always carries exactly one highlight — in every kind of answer; in a personal
+    story it is what I did or what came of it: the core of the answer, 2 to 10 words, the part someone
+    would say if they said only that — never a lone term such as ==process==, and never the whole
+    sentence (leave at least a few words of it outside the highlight);
+  - each supporting point may highlight its one key term, 1 to 4 words (==default methods==);
+  - at most four highlights in the whole answer, never inside code, never a whole point.
+  Use no other emphasis or markup: no **bold**, no headings, no numbered lists, no colours.
 - Write for speech: short sentences that sound natural read aloud, about 20 to 45 seconds spoken.
   Longer only when the question genuinely needs depth; never pad to reach a length.
 - **Write the TITLE and the whole answer in ANSWER LANGUAGE** — the interview language the candidate
@@ -825,6 +847,9 @@ function buildAnswerMessages(body, words) {
           `Do what the action asks of that answer. CONVERSATION is context for it; do not switch to a later topic just because it was spoken more recently.`,
         ]
       : []),
+    // Just before the language line, where a small model follows it: the two rules it otherwise
+    // drops — the answer comes first, and its core is highlighted (HOW TO WRITE IT has the details).
+    `FIRST SENTENCE: start with the answer itself. Do not restate the question or open with its framing ("X offers several benefits…", "The difference between X and Y is…", "X introduced several features…"). Wrap the core of the answer in ==…== — 2 to 10 words, never the whole sentence — in every kind of answer; in a personal story, what I did or its result. Each point may highlight its one key term.`,
     // Last, so it is the final thing read: the selected language, not the speech's, decides.
     `Respond entirely in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
   ].join("\n\n");

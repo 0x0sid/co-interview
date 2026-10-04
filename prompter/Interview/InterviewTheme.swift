@@ -15,9 +15,10 @@ enum InterviewTheme {
         static let background = dynamic(light: 0xF8F5EF, dark: 0x1D2120, ultra: 0x000000)
         /// Primary: deep teal / pale mint. Carries highlights, the Generate button and detected questions.
         static let primary = dynamic(light: 0x2F6B5E, dark: 0xBEEBDC, ultra: 0xFFFFFF)
-        /// The answer's `==anchor==` marker: a soft mint stroke behind a few words, never yellow and
-        /// never a pill. Ultra Contrast outlines it in white instead (`AnswerHighlightRenderer`).
-        static let answerHighlight = dynamic(light: 0xCDEBDD, dark: 0x2E5C4F, ultra: 0xFFFFFF)
+        /// The answer's `==highlight==`: a highlighter band behind the words that carry the answer —
+        /// pale yellow in light, the icon's aqua-mint in dark (where the highlighted words are drawn
+        /// dark on it). Ultra Contrast outlines it in white instead (`AnswerHighlightRenderer`).
+        static let answerHighlight = dynamic(light: 0xFBEFA8, dark: 0xBEEBDC, ultra: 0xFFFFFF)
         /// Text on top of `primary`.
         static let onPrimary = dynamic(light: 0xFFFFFF, dark: 0x16211D, ultra: 0x000000)
         /// Body text.

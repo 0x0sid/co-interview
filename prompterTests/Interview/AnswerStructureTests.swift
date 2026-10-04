@@ -136,26 +136,36 @@ struct AnswerStructureTests {
     }
 
     @Test
-    func moreThanThreeHighlightsAreCappedAtThreeFirstComeFirstKept() {
+    func moreThanFourHighlightsAreCappedAtFourFirstComeFirstKept() {
         let blocks = AnswerBlock.parsed(from: """
         ==One== and ==two== matter.
         - ==Three== here, ==four== here.
         - And ==five==.
         """)
         let prose = AnswerStructure.prose(of: blocks)
-        #expect(prose.flatMap(Self.emphasised) == ["One", "two", "Three"])
+        #expect(prose.flatMap(Self.emphasised) == ["One", "two", "Three", "four"])
         #expect(prose.map(\.text) == ["One and two matter.", "Three here, four here.", "And five."])
     }
 
     @Test
     func aWholePointASentenceOrALongPhraseIsNotHighlighted() {
         let prose = AnswerStructure.prose(of: AnswerBlock.parsed(from: """
-        Lead with ==a phrase that runs on for far too many words== here.
+        Lead with ==a phrase that runs on and on for far too many words to count== here.
         - ==Java is statically typed.==
         - It is ==fast. Python is== flexible.
         """))
         #expect(prose.allSatisfy { $0.emphasis.isEmpty })
         #expect(prose[1].text == "Java is statically typed.")
+    }
+
+    /// The lead's highlight is the answer itself, so it may run to a short clause.
+    @Test
+    func theLeadHighlightCarriesTheAnswer() {
+        let prose = AnswerStructure.prose(of: AnswerBlock.parsed(from: """
+        ==Lambdas, the Stream API and default methods== arrived in Java 8.
+        - ==Default methods== let interfaces evolve.
+        """))
+        #expect(prose.flatMap(Self.emphasised) == ["Lambdas, the Stream API and default methods", "Default methods"])
     }
 
     @Test

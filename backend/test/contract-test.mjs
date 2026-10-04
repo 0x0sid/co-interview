@@ -307,11 +307,14 @@ try {
     }
     check("no instruction lets the speech's language decide", !/language of TO ANSWER NOW|language of the speech|conversation language/i.test(rules));
     check("asks for a fenced code block when code is wanted", /fenced code block/i.test(rules));
-    // Scannable answers: a lead, 3-5 points as "- " lines, and at most a few ==marked== anchor phrases.
+    // Scannable answers: a lead, 3-5 points as "- " lines, and ==highlights== that carry the answer.
     check("asks for a short lead then 3 to 5 points on \"- \" lines",
           /first paragraph is one or two short sentences/i.test(rules) && /3 to 5 supporting points, each on its own\s+line starting with "- "/i.test(rules));
-    check("marks anchor phrases with ==…==, one or two, never more than three",
-          /wrapping them in double equals signs/i.test(rules) && /never more than three/i.test(rules));
+    check("highlights the answer itself with ==…==: one in the first sentence, at most four",
+          /wrapping it in double equals signs/i.test(rules) && /first sentence always carries exactly one highlight/i.test(rules)
+          && /at most four highlights/i.test(rules));
+    check("never repeats the question before answering",
+          /Never repeat the question in the answer/i.test(rules) && /never "The difference between Java 7 and Java 8 is…"/.test(rules));
     check("allows no other markup (no bold, headings or colours)", /no \*\*bold\*\*, no headings, no numbered lists, no colours/i.test(rules));
     check("does not force points on code, definitions or short facts", /Do not force points where they do not fit/i.test(rules));
     check("no longer forbids lists outright", !/no lists, no\s+markdown headings/i.test(rules));
