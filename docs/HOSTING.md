@@ -5,21 +5,26 @@
 | | |
 | --- | --- |
 | **Source of truth** | `backend/` in this repository |
-| **Deployment mirror** | `~/Desktop/prompter-backend` → `github.com/0x0sid/backend` (private) |
+| **Deployment mirror** | `/Users/sidousan/Desktop/prompter-backend` → `github.com/0x0sid/backend` (private) |
 | **Deployed** | Fly app **`backend--d7y3w`**, region `ams`, https://backend--d7y3w.fly.dev |
+
+Paths are absolute on purpose: both checkouts belong to the `sidousan` account, and `~` from the
+`sid` account points elsewhere (where `~/Desktop/co-interview-public` is a stale clone). From `sid`,
+`rsync` cannot set the mirror's folder timestamps and reports `utimensat: Permission denied`; the
+files are still copied.
 
 Fix things in `backend/` first: the iOS tests and `backend/test/` run against it together. Then sync
 the mirror and deploy from there:
 
 ```bash
-cd ~/Desktop/co-interview-public
+cd /Users/sidousan/Desktop/co-interview-public
 rsync -a \
   --exclude='.env' --exclude='.env.*' --exclude='node_modules' --exclude='*.log' \
   --exclude='README.md' --exclude='DEPLOYMENT.md' --exclude='.gitignore' \
   --exclude='fly.toml' --exclude='Dockerfile' --exclude='.dockerignore' --exclude='data' \
-  backend/ ~/Desktop/prompter-backend/
-cp docs/AI_PIPELINE.md ~/Desktop/prompter-backend/docs/
-cd ~/Desktop/prompter-backend && npm test && git add -A && git commit && git push
+  backend/ /Users/sidousan/Desktop/prompter-backend/
+cp docs/AI_PIPELINE.md /Users/sidousan/Desktop/prompter-backend/docs/
+cd /Users/sidousan/Desktop/prompter-backend && npm test && git add -A && git commit && git push
 flyctl deploy -a backend--d7y3w          # run by the owner
 ```
 

@@ -7,7 +7,7 @@ Dated record of what was decided and why. Newer entries supersede older ones whe
 - **Forked from Prompter** (a voice-following teleprompter, now paused) at Prompter commit `8fcff26`,
   as a separate clone with its own remote. This repository was published with **fresh history** and
   without Prompter's device transcripts, recordings or capture-derived fixtures, which stay in the
-  private clone `~/Desktop/co-interview` (never pushed).
+  private clone `/Users/sidousan/Desktop/co-interview` (never pushed).
 - **Internal names stay**: the `prompter` target and module, `co-interview.xcodeproj`, the shared
   `Co-Interview` scheme and the `CoInterview.store` file. Renaming rewrites every project reference for
   no user-visible benefit.

@@ -59,7 +59,7 @@ logs `Release safety check passed: App Store billing, production backend, no bun
 ## Build and install on the phone
 
 ```bash
-cd ~/Desktop/co-interview-public
+cd /Users/sidousan/Desktop/co-interview-public
 xcodebuild build -project co-interview.xcodeproj -scheme "Neverblank (App Store billing)" \
   -configuration Release -destination 'generic/platform=iOS' -allowProvisioningUpdates
 APP=~/Library/Developer/Xcode/DerivedData/co-interview-*/Build/Products/Release-iphoneos/prompter.app

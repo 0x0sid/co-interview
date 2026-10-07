@@ -514,7 +514,7 @@ Everything below needs a provider credential, which this machine does not have.
 
 1. **Set the credential and start the backend** (the key never leaves your shell and never enters the app):
    ```bash
-   cd ~/Desktop/co-interview-public/backend
+   cd /Users/sidousan/Desktop/co-interview-public/backend
    COINTERVIEW_TOKENS=$(openssl rand -hex 24) \
      OPENROUTER_API_KEY=sk-or-...   \
      COPILOT_TEXT_PROVIDER=openrouter COPILOT_PROFILE=balanced \
