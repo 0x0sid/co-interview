@@ -444,7 +444,7 @@ users see no change — the app is still Neverblank, `io.neverblank.app`.
 
 Settings › Answers › Highlight offers Blue (default), Yellow, Pink and Off, so readers who find a
 marker distracting can turn it off and others can pick what reads best for them. Stored as a display
-preference in UserDefaults; ships with 1.3. Details: [`AI_PIPELINE.md`](AI_PIPELINE.md) §19.
+preference in UserDefaults; ships with the next app release (1.4 on `main`). Details: [`AI_PIPELINE.md`](AI_PIPELINE.md) §19.
 
 ## Launch screen: the logo on brand blue (2026-10-11)
 

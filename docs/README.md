@@ -7,13 +7,14 @@ notes and files, through Neverblank's backend. A few answers are free; Neverblan
 ## Status (2026-10-11)
 
 **1.2 (build 1) was submitted to App Review** on 2026-10-01 (commit `a0978ba`); App Store Connect has
-its current status. **1.3 is in development** on `main`.
+its current status. **`main` is version 1.4** (set 2026-10-11; commit `072681c` says 1.3 in its message, but
+carries 1.4).
 
 **Since 1.2** ([`AI_PIPELINE.md`](AI_PIPELINE.md) §19–20):
 - answers lead with a highlighted answer and never repeat the question — **live** (Fly v20, 2026-10-11);
 - answer instead of asking, `**bold**` shown as a highlight, and the `smart` profile — pushed to the
   mirror, **live after the next `flyctl deploy -a backend--d7y3w`**;
-- in 1.3: highlight colour setting (Blue default, Yellow, Pink, Off), the logo launch screen, and the
+- in the next app release (1.4 on `main`): highlight colour setting (Blue default, Yellow, Pink, Off), the logo launch screen, and the
   app-side bold fallback.
 
 | | |
