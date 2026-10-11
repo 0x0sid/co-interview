@@ -13,6 +13,8 @@ import SwiftUI
 struct AnswerPageView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.ultraContrast) private var ultraContrast
+    /// Settings › Answers › Highlight.
+    @AppStorage(AnswerHighlightStyle.storageKey) private var highlightStyle = AnswerHighlightStyle.default.rawValue
     let question: InterviewQuestion
     /// Settings › Answer text size, on top of Dynamic Type.
     @Environment(\.answerTextScale) private var answerTextScale
@@ -206,6 +208,14 @@ struct AnswerPageView: View {
 
     private var answerFontSize: CGFloat { InterviewTheme.Metric.answerSize * answerTextScale }
 
+    /// The chosen highlighter colour; Ultra Contrast keeps its white outline whatever the colour, and
+    /// Off draws nothing in either.
+    private var highlightColor: Color? {
+        let style = AnswerHighlightStyle(stored: highlightStyle)
+        guard style != .off else { return nil }
+        return ultraContrast ? .white : style.fill
+    }
+
     @ViewBuilder
     private func answerBlocks(_ answer: InterviewAnswer) -> some View {
         let structured = answer.usesStructuredPresentation
@@ -245,7 +255,7 @@ struct AnswerPageView: View {
             .font(InterviewTheme.Font.answer(answerFontSize, weight: role == .lead ? .medium : .regular))
             .lineSpacing(InterviewTheme.Metric.answerLineSpacing)
             .foregroundStyle(InterviewTheme.Color.ink)
-            .textRenderer(AnswerHighlightRenderer(color: InterviewTheme.Color.answerHighlight, outline: ultraContrast,
+            .textRenderer(AnswerHighlightRenderer(color: highlightColor, outline: ultraContrast,
                                                   invertsHighlightedText: colorScheme == .dark))
             .frame(maxWidth: .infinity, alignment: .leading)
         if role == .bullet {

@@ -36,6 +36,7 @@ struct NeverblankSettingsView: View {
 
     private var settings: AppSettings { settingsQuery.first ?? AppSettings.fetchOrCreate(in: modelContext) }
     private var appearance: AppearancePreference { settingsQuery.first?.appearance ?? .system }
+    @AppStorage(AnswerHighlightStyle.storageKey) private var highlightStyle = AnswerHighlightStyle.default.rawValue
     private var preference: InterviewLanguagePreference { .from(stored: settingsQuery.first?.interviewLanguageRaw) }
     /// What the next interview will use.
     private var selectedLanguage: InterviewLanguage { preference.resolved() }
@@ -138,6 +139,7 @@ struct NeverblankSettingsView: View {
 
                     Section {
                         answerTextSize
+                        answerHighlight
                     } header: {
                         sectionHeader("Answers")
                     }
@@ -244,6 +246,20 @@ struct NeverblankSettingsView: View {
             .accessibilityValue("\(textSize.percent) percent")
             .accessibilityIdentifier("answer-text-size")
             AnswerTextSizePreview(scale: textSize.displayed)
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// The highlighter colour behind the words that carry each answer, or none.
+    private var answerHighlight: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Highlight").font(Typography.body(metrics.bodySize + 1))
+            Picker("Highlight", selection: $highlightStyle) {
+                ForEach(AnswerHighlightStyle.allCases) { Text($0.title).tag($0.rawValue) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .accessibilityIdentifier("answer-highlight")
         }
         .padding(.vertical, 2)
     }

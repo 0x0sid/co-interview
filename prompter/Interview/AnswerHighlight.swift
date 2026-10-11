@@ -11,6 +11,39 @@ enum AnswerEmphasisKey: AttributedStringKey {
 /// The run-level tag the renderer looks for. It carries no styling of its own.
 struct AnswerHighlightAttribute: TextAttribute {}
 
+/// Settings › Answers › Highlight: the highlighter colour, or none. Stored in UserDefaults (a display
+/// preference; the SwiftData store is unchanged). Every colour is a light fill, so ink sits on it as
+/// is in light appearance and the highlighted words are drawn inverted in dark.
+enum AnswerHighlightStyle: String, CaseIterable, Identifiable {
+    case blue, yellow, pink, off
+
+    static let storageKey = "neverblank.answerHighlightStyle"
+    static let `default` = AnswerHighlightStyle.blue
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .blue: "Blue"
+        case .yellow: "Yellow"
+        case .pink: "Pink"
+        case .off: "Off"
+        }
+    }
+
+    /// The band colour; nil draws no highlight at all.
+    var fill: Color? {
+        switch self {
+        case .blue: Color(hex: 0xBEEBDC)      // the app icon's light blue-mint
+        case .yellow: Color(hex: 0xFBEFA8)
+        case .pink: Color(hex: 0xF8D3E2)
+        case .off: nil
+        }
+    }
+
+    init(stored: String) { self = AnswerHighlightStyle(rawValue: stored) ?? .default }
+}
+
 /// Draws a highlight as a highlighter band **behind** the glyphs.
 ///
 /// **No reflow, by construction.** A `TextRenderer` draws an already laid-out `Text`; it cannot
@@ -25,13 +58,18 @@ struct AnswerHighlightAttribute: TextAttribute {}
 /// a fill would erase white text, and an underline already means "spoken" there (`ScriptStyling`,
 /// `underlineSpoken`), so the highlight is a thin white outline instead.
 struct AnswerHighlightRenderer: TextRenderer {
-    var color: Color
+    /// Nil: highlighting is off — the text is drawn exactly as laid out.
+    var color: Color?
     /// Ultra Contrast: outline the phrase rather than fill behind it.
     var outline: Bool
     /// Dark appearance: draw highlighted glyphs inverted, dark on the light band.
     var invertsHighlightedText = false
 
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        guard let color else {
+            for line in layout { context.draw(line) }
+            return
+        }
         for line in layout {
             for band in bands(in: line) {
                 if outline {
