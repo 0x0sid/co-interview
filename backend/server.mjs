@@ -359,14 +359,17 @@ certification, their salary — is not an example and is never invented. If the 
 contain it, the whole reply is one short sentence naming the detail to add, such as "Add your current
 employer to the session note and I'll answer this.", and the TITLE line ends with " [needs: context]".
 
-ONE HARD STOP
+ANSWER, DON'T ASK
 
-**When you cannot tell what was asked, ask — and stop.** If a mis-transcription leaves two
-   readings that need different answers, the clarifying question is the **entire** answer. Write it
-   as the first sentence and write nothing after it: no "assuming you meant", no worked example of
-   the reading you guessed, no second paragraph. The speaker reads the whole reply aloud, so an
-   answer to a question nobody asked does more damage than a question back — and asking, then
-   answering the guess anyway, is the same mistake with a disclaimer in front of it.
+**The speaker needs something to say, so answer.** The transcript comes from speech recognition
+   and often mishears a term ("RWS" for "AWS", "cooper netties" for "Kubernetes"); read the likely
+   term from the subject and the conversation and answer it, without commenting on the mishearing.
+   A request that is unusual, informal or loosely worded is still answered: pick the most likely
+   meaning and give the answer. Never reply with "I'm not sure I understand", never ask the
+   interviewer to rephrase, and never ask about something you can reasonably infer.
+   **Only two cases get a question instead of an answer:** the two sides of a comparison transcribed
+   to the same words ("X versus X"), or no sensible reading exists at all. Then the clarifying question
+   is the **entire** answer, one sentence, nothing after it.
 
 WHAT YOU ANSWER FROM
 
@@ -555,8 +558,8 @@ INTERPRETING SPEECH-TO-TEXT MISTAKES
   answer explaining what you think was mis-heard.
 - If the wording is ambiguous in a way that **changes the answer**, state the assumption in one short
   clause and answer it.
-- If you genuinely cannot tell which of two different things was meant, do not guess. Ask the one
-  clarifying question that would settle it, in a single sentence, and stop there.
+- If two readings are both plausible, answer the more likely one, naming it in one short clause
+  ("if you mean X…"). Ask instead only in the two cases under ANSWER, DON'T ASK.
 - **A comparison whose two sides transcribed to the same words is the clearest case of this.** When
   both halves of "the difference between X and X" are identical, one of them was mis-heard and you
   cannot know which. Do not silently substitute a plausible second term and answer *that* comparison
@@ -849,7 +852,7 @@ function buildAnswerMessages(body, words) {
       : []),
     // Just before the language line, where a small model follows it: the two rules it otherwise
     // drops — the answer comes first, and its core is highlighted (HOW TO WRITE IT has the details).
-    `FIRST SENTENCE: start with the answer itself. Do not restate the question or open with its framing ("X offers several benefits…", "The difference between X and Y is…", "X introduced several features…"). Wrap the core of the answer in ==…== — 2 to 10 words, never the whole sentence — in every kind of answer; in a personal story, what I did or its result. Each point may highlight its one key term.`,
+    `ANSWER, DON'T ASK: if a term looks misheard (RWS → AWS), answer the likely term without remarking on it; never reply "I'm not sure I understand" or ask to rephrase when a sensible reading exists.\n\nFIRST SENTENCE: start with the answer itself. Do not restate the question or open with its framing ("X offers several benefits…", "The difference between X and Y is…", "X introduced several features…"). Wrap the core of the answer in ==…== — 2 to 10 words, never the whole sentence — in every kind of answer; in a personal story, what I did or its result. Each point may highlight its one key term.`,
     // Last, so it is the final thing read: the selected language, not the speech's, decides.
     `Respond entirely in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
   ].join("\n\n");
@@ -1052,6 +1055,46 @@ function writeEvent(response, payload) {
 }
 
 /**
+ * Turns `**bold**` into the answer's `==highlight==` as text streams through.
+ *
+ * The answer format allows no other emphasis, but small models still write `**kidney**` or
+ * `- **Compute:** …`; the app does not read Markdown, so the reader saw literal asterisks and the
+ * phrase lost its highlight. Inside fenced code and `inline code` nothing changes (`**kwargs`).
+ * A `*` or a run of backticks at the end of a chunk is held until the next chunk says what it is.
+ */
+export function makeBoldToHighlight() {
+  let pending = "";
+  let inFence = false;
+  let inInline = false;
+  let lineStart = true;
+  function convert(text, final) {
+    const s = pending + text;
+    pending = "";
+    let out = "";
+    let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (c === "\n") { out += c; i += 1; lineStart = true; inInline = false; continue; }
+      if (lineStart && c === "`") {
+        if (!final && s.length - i < 3 && "```".startsWith(s.slice(i))) { pending = s.slice(i); return out; }
+        if (s.startsWith("```", i)) { inFence = !inFence; out += "```"; i += 3; lineStart = false; continue; }
+      }
+      if (!(lineStart && (c === " " || c === "\t"))) lineStart = false;
+      if (inFence) { out += c; i += 1; continue; }
+      if (c === "`") { inInline = !inInline; out += c; i += 1; continue; }
+      if (c === "*" && !inInline) {
+        if (i + 1 >= s.length && !final) { pending = "*"; return out; }
+        if (s[i + 1] === "*") { out += "=="; i += 2; continue; }
+      }
+      out += c;
+      i += 1;
+    }
+    return out;
+  }
+  return { push: (text) => convert(text, false), end: () => convert("", true) };
+}
+
+/**
  * Forwards model text, holding back the leading `TITLE:` line and the trailing `SOURCES:` line so
  * neither ever reaches the reader.
  *
@@ -1060,6 +1103,7 @@ function writeEvent(response, payload) {
  * whichever transcript fragment happened to be last.
  */
 function makeSourceStripper(onTitle, onNeeds) {
+  const bold = makeBoldToHighlight();
   let carry = "";
   let sourcesText = "";
   let inSources = false;
@@ -1105,16 +1149,16 @@ function makeSourceStripper(onTitle, onNeeds) {
         sourcesText = carry.slice(markerIndex + MARKER.length);
         inSources = true;
         carry = "";
-        return emit;
+        return bold.push(emit) + bold.end();
       }
       const holdBack = MARKER.length - 1;
       if (carry.length <= holdBack) return "";
       const emit = carry.slice(0, carry.length - holdBack);
       carry = carry.slice(carry.length - holdBack);
-      return emit;
+      return bold.push(emit);
     },
     finish() {
-      const remainder = inSources ? "" : carry;
+      const remainder = bold.push(inSources ? "" : carry) + bold.end();
       carry = "";
       const ids = sourcesText
         .split(/[,\n]/)

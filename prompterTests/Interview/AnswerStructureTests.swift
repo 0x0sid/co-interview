@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The answer's closed format — lead, "- " points, `==anchor==` — parsed the way a stream delivers
 /// it: the whole text so far is re-parsed on every chunk (`InterviewScreenModel.appendChunk`), so
@@ -166,6 +166,29 @@ struct AnswerStructureTests {
         - ==Default methods== let interfaces evolve.
         """))
         #expect(prose.flatMap(Self.emphasised) == ["Lambdas, the Stream API and default methods", "Default methods"])
+    }
+
+    /// Settings › Answers › Highlight: Blue unless chosen otherwise; Off draws nothing; a value this
+    /// build does not know falls back to the default rather than switching highlighting off.
+    @Test
+    func theHighlightSettingDefaultsToBlueAndOffDrawsNothing() {
+        #expect(AnswerHighlightStyle.default == .blue)
+        #expect(AnswerHighlightStyle(stored: "pink") == .pink)
+        #expect(AnswerHighlightStyle(stored: "purple") == .blue)
+        #expect(AnswerHighlightStyle.off.fill == nil)
+        #expect([AnswerHighlightStyle.blue, .yellow, .pink].allSatisfy { $0.fill != nil })
+    }
+
+    /// Markdown bold the format forbids is read as a highlight, never shown as asterisks; code keeps it.
+    @Test
+    func boldIsReadAsAHighlightOutsideCode() {
+        let prose = AnswerStructure.prose(of: AnswerBlock.parsed(from: """
+        The organ is the **kidney**, which filters blood.
+        - **Compute:** EC2 and Lambda, called with `f(**kwargs)`.
+        """))
+        #expect(prose.flatMap(Self.emphasised) == ["kidney", "Compute:"])
+        #expect(prose.map(\.text) == ["The organ is the kidney, which filters blood.",
+                                      "Compute: EC2 and Lambda, called with `f(**kwargs)`."])
     }
 
     @Test

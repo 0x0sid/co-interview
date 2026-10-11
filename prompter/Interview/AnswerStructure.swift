@@ -60,7 +60,7 @@ enum AnswerStructure {
         if let prefix = bulletPrefixes.first(where: { body.hasPrefix($0) }) {
             body = body.dropFirst(prefix.count).drop { $0 == " " }
         }
-        let chars = Array(body)
+        let chars = Array(highlightingBold(String(body), isStreamTail: isStreamTail))
         var text = ""
         var ranges: [NSRange] = []
         var openAt: Int?                      // UTF-16 offset in `text` where an open phrase starts
@@ -130,6 +130,28 @@ enum AnswerStructure {
             return trimmed.count <= maximumUnspacedEmphasisLength
         }
         return words.count <= maximumEmphasisWords && (phrase as NSString).length <= maximumEmphasisLength
+    }
+
+    /// `**bold**` is not part of the format, but a model can still send it (and answers saved before
+    /// the backend converted it hold it): outside `inline code` it is read as the `==` marker, so the
+    /// reader never sees asterisks. A lone `*` at the end of a stream may be half of `**` and waits.
+    static func highlightingBold(_ text: String, isStreamTail: Bool = false) -> String {
+        guard text.contains("*") else { return text }
+        var out = ""
+        var inCode = false
+        let chars = Array(text)
+        var i = 0
+        while i < chars.count {
+            let c = chars[i]
+            if c == "`" { inCode.toggle() }
+            if c == "*", !inCode {
+                if i + 1 < chars.count, chars[i + 1] == "*" { out += "=="; i += 2; continue }
+                if i + 1 == chars.count, isStreamTail { break }
+            }
+            out.append(c)
+            i += 1
+        }
+        return out
     }
 
     private static func isUnspacedScript(_ scalar: Unicode.Scalar) -> Bool {

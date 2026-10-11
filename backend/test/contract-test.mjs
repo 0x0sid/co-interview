@@ -68,6 +68,13 @@ const upstream = createServer(async (request, response) => {
     "text]\n",
     "Which secret would you like me to share? ",
     "\nSOURCES: none",
+  ] : upstreamMode === "bold" ? [
+    // Markdown bold the format forbids, split mid-marker; and code whose `**` must survive.
+    "The organ is the *",
+    "*kidney**, which filters blood.\n- **Compute:** EC2 and Lambda.\n",
+    "Use `f(**kwargs)` here.\n```python\ndef f(**kw",
+    "args): pass\n```\n",
+    "\nSOURCES: none",
   ] : upstreamMode === "titled" ? [
     "TITLE: Compare Ja",
     "va 7, 8 and 9\n",
@@ -425,6 +432,17 @@ try {
     check("the title line is never shown to the reader", !/TITLE:/.test(titledText));
     check("the answer text survives the title line", /bound the queue/i.test(titledText));
     check("an ordinary answer reports no needs", !titled.some((event) => event.type === "needs"));
+
+    // **bold** from the model reaches the reader as ==highlight==, never as asterisks; code keeps **.
+    upstreamMode = "bold";
+    const bolded = (await send({ question: "Which organ regulates blood pressure?", newInput: ["Which organ regulates blood pressure?"] }))
+      .filter((e) => e.type === "delta").map((e) => e.text).join("");
+    upstreamMode = "ok";
+    check("**bold** split across deltas becomes a ==highlight==", /the ==kidney==, which/.test(bolded));
+    check("a bold label in a point becomes a highlight", /- ==Compute:== EC2/.test(bolded));
+    check("no ** reaches the reader outside code", !/\*\*/.test(bolded.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")));
+    check("inline code keeps its **", bolded.includes("`f(**kwargs)`"));
+    check("fenced code keeps its **", bolded.includes("def f(**kwargs): pass"));
 
     // An answer that asks for a missing detail says so structurally, so the app can offer "Add
     // context" instead of an example. The marker is split across deltas on purpose.
