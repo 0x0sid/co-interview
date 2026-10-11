@@ -4,22 +4,22 @@ Neverblank is an iPhone interview copilot. While Live is on it transcribes the c
 device; when the user taps Generate it writes a suggested answer from the conversation and the user's
 notes and files, through Neverblank's backend. A few answers are free; Neverblank Pro is a subscription.
 
-## Status (2026-10-07)
+## Status (2026-10-11)
 
-**1.2 (build 1) is in App Store review.** Archived 2026-10-01 with the *Neverblank (App Store billing)*
-scheme; commit `a0978ba` is the reviewed code.
+**1.2 (build 1) was submitted to App Review** on 2026-10-01 (commit `a0978ba`); App Store Connect has
+its current status. **1.3 is in development** on `main`.
 
-**Since 1.2 — answers lead with a highlighted answer** ([`AI_PIPELINE.md`](AI_PIPELINE.md) §19):
-- the backend prompt (highlight the answer itself, never repeat the question) is pushed to the
-  mirror (`0x0sid/backend` `2cf82fd`) but **not deployed** — `flyctl deploy -a backend--d7y3w` from the
-  mirror puts it live, also for 1.2 users;
-- the new highlight colours (yellow in light, aqua-mint in dark) are in the app and ship with the
-  next version after 1.2.
+**Since 1.2** ([`AI_PIPELINE.md`](AI_PIPELINE.md) §19–20):
+- answers lead with a highlighted answer and never repeat the question — **live** (Fly v20, 2026-10-11);
+- answer instead of asking, `**bold**` shown as a highlight, and the `smart` profile — pushed to the
+  mirror, **live after the next `flyctl deploy -a backend--d7y3w`**;
+- in 1.3: highlight colour setting (Blue default, Yellow, Pink, Off), the logo launch screen, and the
+  app-side bold fallback.
 
 | | |
 | --- | --- |
 | App name / bundle id | **Neverblank** / **`io.neverblank.app`**, team `P9Q6984LRS` |
-| Internal names | Xcode project `co-interview.xcodeproj`, app target and module **`prompter`**, local store `CoInterview.store`. Kept on purpose — do not rename |
+| Internal names | Xcode project `co-interview.xcodeproj`; app target and Swift module **`neverblank`** (renamed from `prompter` 2026-10-11; the source folders and test targets keep the `prompter` names); local store `CoInterview.store` |
 | Repository | `/Users/sidousan/Desktop/co-interview-public` → `github.com/0x0sid/co-interview` (**public**: no secret, key or personal data may be committed) |
 | Backend | `backend/` here is the source; deployed from the mirror `/Users/sidousan/Desktop/prompter-backend` (`0x0sid/backend`, private) to Fly app **`backend--d7y3w`** — see [`HOSTING.md`](HOSTING.md) |
 | Billing | RevenueCat project *Neverblank*, entitlement **`neverblank_pro`**, products **`io.neverblank.pro.monthly`** and **`io.neverblank.pro.yearly`**, offering `default` — see [`BILLING.md`](BILLING.md) |

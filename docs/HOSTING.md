@@ -39,7 +39,7 @@ flyctl deploy -a backend--d7y3w          # run by the owner
 ## Fly configuration
 
 `fly.toml` (in the mirror) sets `HOST=0.0.0.0`, `PORT=8787` with `internal_port = 8787`,
-`COPILOT_TEXT_PROVIDER=openrouter`, `COPILOT_PROFILE=balanced`, `COPILOT_DECISION_MODE=shadow`,
+`COPILOT_TEXT_PROVIDER=openrouter`, `COPILOT_PROFILE=smart` (DeepSeek V4.1 Flash, Flash-Lite fallback; was `balanced` until 2026-10-11), `COPILOT_DECISION_MODE=shadow`,
 `force_https`, and `min_machines_running = 1`. Content diagnostics are off.
 
 **Access database:** SQLite on the volume `neverblank_data`, mounted at `/data`
@@ -60,7 +60,7 @@ git-ignored `backend/.env`):
 
 `GET /health` must show:
 
-- `provider: configured`, gateway `openrouter`, profile `balanced`;
+- `provider: configured`, gateway `openrouter`, profile `smart` (after the 2026-10-11 deploy);
 - `access.entitlement_verification: configured`, `durable_path: true` (`entitlement_key` says which RevenueCat key);
 - `decisions.mode: shadow`, `decisions.key_configured: true`.
 

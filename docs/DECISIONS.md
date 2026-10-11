@@ -8,7 +8,7 @@ Dated record of what was decided and why. Newer entries supersede older ones whe
   as a separate clone with its own remote. This repository was published with **fresh history** and
   without Prompter's device transcripts, recordings or capture-derived fixtures, which stay in the
   private clone `/Users/sidousan/Desktop/co-interview` (never pushed).
-- **Internal names stay**: the `prompter` target and module, `co-interview.xcodeproj`, the shared
+- **Internal names stay** (the target was renamed `neverblank` on 2026-10-11, below): the `prompter` target and module, `co-interview.xcodeproj`, the shared
   `Co-Interview` scheme and the `CoInterview.store` file. Renaming rewrites every project reference for
   no user-visible benefit.
 - **Direction confirmed 2026-09-16:** an interview copilot on the iPhone that listens, detects
@@ -430,4 +430,27 @@ Light mode highlights in pale yellow like a marker pen; dark mode in the brand's
 text on it. Production's Flash-Lite follows the new rules only part of the time; DeepSeek V4.1 Flash
 (`smart`) followed them every time at the same speed — switching is open. Details and measurements:
 [`AI_PIPELINE.md`](AI_PIPELINE.md) §19.
+
+## The app target is `neverblank` (2026-10-11)
+
+The owner renamed the Xcode app target from `prompter` to `neverblank`, superseding "internal names
+stay" above for the target: the app builds as `neverblank.app`, the Swift module is `neverblank`
+(77 test files import it), and the test targets' host app follows. The `prompter/` source folders,
+the `prompterTests` / `prompterUITests` targets, `co-interview.xcodeproj` and `CoInterview.store` keep
+their names. Nothing persists the module name (no archived class names), so saved data is unaffected;
+users see no change — the app is still Neverblank, `io.neverblank.app`.
+
+## Highlight colour is a setting; blue by default (2026-10-11)
+
+Settings › Answers › Highlight offers Blue (default), Yellow, Pink and Off, so readers who find a
+marker distracting can turn it off and others can pick what reads best for them. Stored as a display
+preference in UserDefaults; ships with 1.3. Details: [`AI_PIPELINE.md`](AI_PIPELINE.md) §19.
+
+## Launch screen: the logo on brand blue (2026-10-11)
+
+Instead of a blank screen while the app starts, the launch screen shows the app icon's logo (120 pt,
+cut to the icon's rounded shape) centred on the brand light blue `#BEEBDC`, in light and dark alike.
+It is the Info.plist `UILaunchScreen` entry (both plists) pointing at the `LaunchLogo` image and
+`LaunchBackground` colour assets; no storyboard. iOS caches launch screens, so a device may show the
+old one until the app is reinstalled or the phone restarts.
 

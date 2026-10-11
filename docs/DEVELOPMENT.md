@@ -62,7 +62,7 @@ logs `Release safety check passed: App Store billing, production backend, no bun
 cd /Users/sidousan/Desktop/co-interview-public
 xcodebuild build -project co-interview.xcodeproj -scheme "Neverblank (App Store billing)" \
   -configuration Release -destination 'generic/platform=iOS' -allowProvisioningUpdates
-APP=~/Library/Developer/Xcode/DerivedData/co-interview-*/Build/Products/Release-iphoneos/prompter.app
+APP=~/Library/Developer/Xcode/DerivedData/co-interview-*/Build/Products/Release-iphoneos/neverblank.app
 xcrun devicectl list devices                                  # the phone's identifier
 xcrun devicectl device install app --device <id> $APP        # in place: data and Keychain kept
 xcrun devicectl device process launch --device <id> --terminate-existing io.neverblank.app
@@ -115,6 +115,9 @@ for the purpose.
 None of these exist in a Release build.
 
 ## Release
+
+The app target is `neverblank` (built as `neverblank.app`, module `neverblank`, so tests use
+`@testable import neverblank`); the test targets keep the names `prompterTests` and `prompterUITests`.
 
 1. Bump `MARKETING_VERSION` (six entries in `project.pbxproj`: app and test targets);
    `CURRENT_PROJECT_VERSION` stays 1 for a new version.

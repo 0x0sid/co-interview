@@ -1056,7 +1056,39 @@ sentence. Moving production to `smart` is the owner's decision (`COPILOT_PROFILE
 placeholders for "Why do you want to work here?" when the candidate has written no notes — a separate,
 older issue.
 
-**Colours.** Light: a pale yellow highlighter band (`#FBEFA8`) behind ink. Dark: the icon's aqua-mint
-(`#BEEBDC`) with the highlighted glyphs drawn colour-inverted, so light ink turns near-black and
-spoken grey stays a distinct grey. Ultra Contrast keeps the white outline. Drawn by
-`AnswerHighlightRenderer` behind laid-out text: nothing reflows when a highlight closes mid-stream.
+**Colours** (updated 2026-10-11). *Settings › Answers › Highlight* chooses **Blue** (default, the
+icon's light blue-mint `#BEEBDC`), **Yellow** (`#FBEFA8`), **Pink** (`#F8D3E2`) or **Off**
+(`AnswerHighlightStyle`, stored in UserDefaults). Every colour is a light band: ink sits on it in
+light appearance, and in dark the highlighted glyphs are drawn colour-inverted so light ink turns
+near-black and spoken grey stays a distinct grey. Ultra Contrast draws a white outline whatever the
+colour; Off draws nothing. `AnswerHighlightRenderer` paints behind laid-out text: nothing reflows
+when a highlight closes mid-stream.
+
+## 20. Answer, don't ask; bold becomes a highlight; `smart` in production (2026-10-11)
+
+A real phone session showed three faults: answers opening "I'm not sure I understand what 'RWS'
+refers to" (speech recognition had heard "AWS" as "RWS"), Markdown `**bold**` shown as literal
+asterisks, and only 2 of 8 answers with a lead highlight.
+
+- **ANSWER, DON'T ASK** replaces the old "ONE HARD STOP" (which told the model to ask whenever a
+  mis-transcription left two readings). The model now answers the likely meaning, fixing misheard
+  terms silently; it asks only when a comparison's two sides transcribed to the same words or no
+  sensible reading exists. Repeated as a line before `FIRST SENTENCE:` in the user message.
+- **Bold → highlight.** `makeBoldToHighlight` in `backend/server.mjs` turns `**…**` into `==…==` as
+  the answer streams (split markers held across chunks; fenced and inline code untouched), so 1.2
+  and later never show asterisks. The app does the same in `AnswerStructure.highlightingBold` for
+  answers saved before the change.
+- **Profile `smart`** (DeepSeek V4.1 Flash via `together`, Gemini Flash-Lite as the automatic fallback
+  when the route fails before any text) in the mirror's `fly.toml`.
+
+Replay of that session's five questions (real models, local backend, new prompt):
+
+| | Flash-Lite | DeepSeek (`smart`) |
+| --- | --- | --- |
+| Answered instead of asking | 5/5 | 5/5 |
+| Lead highlight | 5/5 | 5/5 |
+| Literal `**` | 0 | 0 |
+| "How do you call this?" after "how much data we can lose…" | "database migration" (wrong) | RPO and RTO (right) |
+| "functionality of RWS" | answers AWS but says "not RWS" first | answers AWS directly |
+
+Cost of `smart` versus Flash-Lite was not measured.
