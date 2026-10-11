@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The reported bug: after one question is answered, silence or another tap produces the same
 /// question again.

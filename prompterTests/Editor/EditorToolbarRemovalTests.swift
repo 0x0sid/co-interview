@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// **M5.10 — the editor's A / A / [ ] toolbar is gone, and user text is untouched.**
 ///

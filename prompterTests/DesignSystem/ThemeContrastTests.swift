@@ -1,7 +1,7 @@
 import Testing
 import SwiftUI
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// **M5.10 — the palette's contrast is measured, not eyeballed.**
 @MainActor

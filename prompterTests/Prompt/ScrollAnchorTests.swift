@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftUI
-@testable import prompter
+@testable import neverblank
 
 /// Presentation requirement 2: the line being read stays near the top, and the page follows
 /// **continuously** — including all the way through a long sentence.

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import Testing
 import UniformTypeIdentifiers
-@testable import prompter
+@testable import neverblank
 
 /// File context is fixed when Generate is accepted, survives failure and Retry unchanged, says when
 /// files are still being read, and reaches broad personal questions.

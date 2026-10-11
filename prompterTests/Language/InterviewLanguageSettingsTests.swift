@@ -3,7 +3,7 @@ import Foundation
 import Speech
 import SwiftData
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// One interview-language setting, chosen in Settings, snapshotted by each new interview; and the
 /// speech-model states Settings shows, driven through the real `SpeechLocaleAssets`.

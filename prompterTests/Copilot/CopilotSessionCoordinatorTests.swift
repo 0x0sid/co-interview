@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The guarantees this increment exists to establish (§3, §7, §8): listening never stops because of
 /// generation, events only ever reach the version that asked for them, and nothing the user is reading

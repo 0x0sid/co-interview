@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The requests the **real** request builder produces for the topic-change scenarios, captured so the
 /// same bytes can be replayed against the deployed answer path.

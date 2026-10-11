@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// **Attribution for the M1 gate's movement in M5.2.**
 ///

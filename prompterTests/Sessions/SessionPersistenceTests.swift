@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import SQLite3
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Sessions are saved as they happen, survive the app stopping, and come back as they were —
 /// without the microphone starting and without anything being sent again.

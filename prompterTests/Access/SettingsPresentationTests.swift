@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Settings' setup states: the leave warning for a missing speech model, the Neverblank Pro card, and
 /// the download controls behind them.

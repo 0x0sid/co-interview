@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Deterministic test doubles for the copilot pipeline. Nothing here touches the network, the
 /// microphone, or the development fake provider — every classification and every streamed token is

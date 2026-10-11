@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Retrieval behaviour and project isolation (§5).
 struct ProjectContextTests {

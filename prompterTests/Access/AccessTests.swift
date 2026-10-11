@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 // MARK: - Savings
 

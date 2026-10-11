@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftData
-@testable import prompter
+@testable import neverblank
 
 /// **M5.11 — script deletion, and the things it must not touch.**
 @MainActor

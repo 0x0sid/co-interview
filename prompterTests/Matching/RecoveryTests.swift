@@ -1,5 +1,5 @@
 import Testing
-@testable import prompter
+@testable import neverblank
 
 struct RecoveryTests {
     let config = MatcherConfig.default

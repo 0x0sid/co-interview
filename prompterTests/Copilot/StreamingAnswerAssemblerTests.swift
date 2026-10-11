@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The reader-stability contract (§7): text becomes readable only in whole sentences, and committed
 /// text is **append-only** — never rewritten under a cursor.

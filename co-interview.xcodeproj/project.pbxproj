@@ -29,7 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		15004F7D3027AAF800C22261 /* prompter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = prompter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		15004F7D3027AAF800C22261 /* neverblank.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = neverblank.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15004F8C3027AAFA00C22261 /* prompterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = prompterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15004F963027AAFA00C22261 /* prompterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = prompterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F6F4F1C306C593D0041AFD9 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
@@ -39,7 +39,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BB11223344556677889900AA /* Exceptions for "prompter" folder in "prompter" target */ = {
+		BB11223344556677889900AA /* Exceptions for "prompter" folder in "neverblank" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Billing/Prompter.storekit,
@@ -52,7 +52,7 @@
 				"Resources/Info-Debug.plist",
 				Resources/Info.plist,
 			);
-			target = 15004F7C3027AAF700C22261 /* prompter */;
+			target = 15004F7C3027AAF700C22261 /* neverblank */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -60,7 +60,7 @@
 		15004F7F3027AAF800C22261 /* prompter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BB11223344556677889900AA /* Exceptions for "prompter" folder in "prompter" target */,
+				BB11223344556677889900AA /* Exceptions for "prompter" folder in "neverblank" target */,
 			);
 			path = prompter;
 			sourceTree = "<group>";
@@ -119,7 +119,7 @@
 		15004F7E3027AAF800C22261 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				15004F7D3027AAF800C22261 /* prompter.app */,
+				15004F7D3027AAF800C22261 /* neverblank.app */,
 				15004F8C3027AAFA00C22261 /* prompterTests.xctest */,
 				15004F963027AAFA00C22261 /* prompterUITests.xctest */,
 			);
@@ -147,9 +147,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		15004F7C3027AAF700C22261 /* prompter */ = {
+		15004F7C3027AAF700C22261 /* neverblank */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 15004FA03027AAFA00C22261 /* Build configuration list for PBXNativeTarget "prompter" */;
+			buildConfigurationList = 15004FA03027AAFA00C22261 /* Build configuration list for PBXNativeTarget "neverblank" */;
 			buildPhases = (
 				15004F793027AAF700C22261 /* Sources */,
 				15004F7A3027AAF700C22261 /* Frameworks */,
@@ -164,12 +164,12 @@
 			fileSystemSynchronizedGroups = (
 				15004F7F3027AAF800C22261 /* prompter */,
 			);
-			name = prompter;
+			name = neverblank;
 			packageProductDependencies = (
 				AA11223344556677889900BB /* RevenueCat */,
 			);
 			productName = prompter;
-			productReference = 15004F7D3027AAF800C22261 /* prompter.app */;
+			productReference = 15004F7D3027AAF800C22261 /* neverblank.app */;
 			productType = "com.apple.product-type.application";
 		};
 		15004F8B3027AAFA00C22261 /* prompterTests */ = {
@@ -258,7 +258,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				15004F7C3027AAF700C22261 /* prompter */,
+				15004F7C3027AAF700C22261 /* neverblank */,
 				15004F8B3027AAFA00C22261 /* prompterTests */,
 				15004F953027AAFA00C22261 /* prompterUITests */,
 			);
@@ -357,12 +357,12 @@
 /* Begin PBXTargetDependency section */
 		15004F8E3027AAFA00C22261 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15004F7C3027AAF700C22261 /* prompter */;
+			target = 15004F7C3027AAF700C22261 /* neverblank */;
 			targetProxy = 15004F8D3027AAFA00C22261 /* PBXContainerItemProxy */;
 		};
 		15004F983027AAFA00C22261 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15004F7C3027AAF700C22261 /* prompter */;
+			target = 15004F7C3027AAF700C22261 /* neverblank */;
 			targetProxy = 15004F973027AAFA00C22261 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -506,7 +506,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.4;
 				NEVERBLANK_PRIVACY_URL = "https://www.neverblank.io/privacy";
 				NEVERBLANK_SUPPORT_URL = "https://www.neverblank.io/support";
 				NEVERBLANK_TERMS_URL = "https://www.neverblank.io/terms";
@@ -542,7 +542,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.4;
 				NEVERBLANK_PRIVACY_URL = "https://www.neverblank.io/privacy";
 				NEVERBLANK_SUPPORT_URL = "https://www.neverblank.io/support";
 				NEVERBLANK_TERMS_URL = "https://www.neverblank.io/terms";
@@ -579,7 +579,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/prompter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/prompter";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/neverblank.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/neverblank";
 			};
 			name = Debug;
 		};
@@ -601,7 +601,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/prompter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/prompter";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/neverblank.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/neverblank";
 			};
 			name = Release;
 		};
@@ -621,7 +621,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = prompter;
+				TEST_TARGET_NAME = neverblank;
 			};
 			name = Debug;
 		};
@@ -641,7 +641,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = prompter;
+				TEST_TARGET_NAME = neverblank;
 			};
 			name = Release;
 		};
@@ -657,7 +657,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		15004FA03027AAFA00C22261 /* Build configuration list for PBXNativeTarget "prompter" */ = {
+		15004FA03027AAFA00C22261 /* Build configuration list for PBXNativeTarget "neverblank" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				15004FA13027AAFA00C22261 /* Debug */,

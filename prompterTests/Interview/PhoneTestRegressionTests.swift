@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Regressions from the 2026-09-24 phone test: the typed note, the scope of a compound request, the
 /// recovery offered when an answer asks for something, and inline code in the answer.

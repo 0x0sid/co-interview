@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Settings › Neverblank Pro, from RevenueCat's facts through the one normalized state
 /// (`EntitlementService.SubscriptionPresentation`) to the words on the card.

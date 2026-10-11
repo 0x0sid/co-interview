@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The home screen's red "1" on Settings: once per subscription state, cleared for good once seen,
 /// never for an active subscription.

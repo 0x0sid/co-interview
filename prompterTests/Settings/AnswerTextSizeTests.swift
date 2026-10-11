@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Settings › Answer text size: the drag moves only the Settings draft and its preview; the stored
 /// preference is written once, on release. Nothing about a running interview is touched by the drag.

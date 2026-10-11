@@ -1,7 +1,7 @@
 import Testing
 import SwiftUI
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// Ultra Contrast is genuinely black and white, light and dark are unchanged, and the screen stays
 /// awake for exactly the life of a foreground interview session.

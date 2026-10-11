@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The interview language chosen in Settings is the language of every answer request, on every path,
 /// and the same locale the transcriber uses. Driven through the real feed, coordinator and model.

@@ -1,7 +1,7 @@
 import Foundation
 import Speech
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Speech-model reservations: the system allows `maximumReservedLocales` per app and the app used to
 /// reserve implicitly and never release, so the sixth language tried failed with

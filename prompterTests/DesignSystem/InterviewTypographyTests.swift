@@ -1,6 +1,6 @@
 import Testing
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// Proves the v2.5 screen gets the faces it asks for.
 ///

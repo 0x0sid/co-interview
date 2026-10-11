@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Reproduces the real on-device volatile-retraction bug found during the M4 retest (build
 /// 0be5fb8, docs/prompter/ARCHITECTURE.md "Volatile reconciliation"): the first `.volatile` for a session

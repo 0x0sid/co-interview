@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The presentation contract's first requirement: **a word goes grey only when it was individually
 /// confirmed spoken.** Greyness may never be deduced from where the cursor went.

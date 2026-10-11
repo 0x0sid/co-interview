@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// One synthetic Generate tap driven through the **real** path — `InterviewScreenModel` →
 /// `LiveInterviewFeed` → `CopilotSessionCoordinator` → `BackendCopilotProvider` → the local backend →

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Code examples must reach the code card, whatever way the stream is chunked.
 ///

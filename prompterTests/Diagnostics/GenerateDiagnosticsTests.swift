@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// What the diagnostics record, what they refuse to record, and what they must never affect.
 ///

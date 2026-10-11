@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Short speech is where two opposite mistakes meet: a two-word backchannel that blocks the queue
 /// forever, and a two-word question that is silently never answered.

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The lifecycle invariant: **no active interview session = no microphone, no transcription stream, no
 /// detection loop.** Driven with fake transcribers whose start can be held at an explicit gate, so every

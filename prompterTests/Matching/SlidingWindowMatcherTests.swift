@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Replays the full fixture suite (§16 M1 gate) through the real matcher and asserts the two
 /// required metrics: mean cursor error <= 2 tokens, false-jump rate <= 1 per 500 spoken words.

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The expanded Live transcript follows the newest speech like a terminal, and answer pages share one
 /// navigation state whether reached by arrows or by swiping.

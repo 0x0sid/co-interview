@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftUI
-@testable import prompter
+@testable import neverblank
 
 /// Keyword emphasis and follow-up actions: what gets picked, and what deliberately does not.
 ///

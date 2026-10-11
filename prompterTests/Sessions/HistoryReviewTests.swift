@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import prompter
+@testable import neverblank
 
 @MainActor
 struct HistoryReviewTests {

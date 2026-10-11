@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftUI
-@testable import prompter
+@testable import neverblank
 
 /// Live read styling — grey means "you actually said this", nothing else.
 ///

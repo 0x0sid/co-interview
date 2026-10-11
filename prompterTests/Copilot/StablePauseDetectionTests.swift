@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The path a spoken question actually takes on a device, and the bug that lost it.
 ///

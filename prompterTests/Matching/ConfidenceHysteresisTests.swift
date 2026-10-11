@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Dedicated tests for the §10.4 hysteresis rules, each isolated with hand-crafted scripts so
 /// the expected cursor position can be computed by hand rather than relying on the fixture

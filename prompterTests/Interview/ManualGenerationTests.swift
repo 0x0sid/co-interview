@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Generate as the user actually uses it: without waiting for detection, repeatedly, while speech
 /// keeps arriving.

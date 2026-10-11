@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Home's Meetings: newest five first, then five more at a time, no duplicates, and a deletion
 /// refilled from the next meeting.

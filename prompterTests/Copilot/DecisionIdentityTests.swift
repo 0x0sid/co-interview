@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// What the app adds to a classification for the backend's decision comparison (pipeline §15), and
 /// what it must leave alone.

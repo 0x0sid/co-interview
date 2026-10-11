@@ -2,7 +2,7 @@ import Testing
 import Foundation
 import AVFAudio
 import Speech
-@testable import prompter
+@testable import neverblank
 
 /// The live path, end to end through the real pipeline with a stub provider.
 ///

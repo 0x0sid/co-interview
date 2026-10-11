@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// Adding typed context, the home screen's speech-model setup, and the appearance applied to windows.
 struct InterviewUXTests {

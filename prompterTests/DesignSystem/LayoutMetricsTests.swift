@@ -1,6 +1,6 @@
 import CoreGraphics
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Compact metrics on small iPhones, regular on the rest — from the window's real size.
 struct LayoutMetricsTests {

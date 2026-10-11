@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// **M5.9 — the resume glide owns its transition and pacing update.**
 ///

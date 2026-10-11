@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import Testing
 import UniformTypeIdentifiers
-@testable import prompter
+@testable import neverblank
 
 /// Real answers from the configured backend, grounded in session files. Opt-in
 /// (`TEST_RUNNER_COINTERVIEW_LIVE_GROUNDING=1`): two small billed requests. The CV and the job

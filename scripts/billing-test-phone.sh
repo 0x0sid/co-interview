@@ -15,7 +15,7 @@ GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*' \
   xcodebuild build -project co-interview.xcodeproj -scheme Co-Interview -configuration Debug \
   -destination 'generic/platform=iOS' -derivedDataPath "$DERIVED" -allowProvisioningUpdates \
   NEVERBLANK_INSTALLATION_ACCESS=YES -quiet
-APP="$DERIVED/Build/Products/Debug-iphoneos/prompter.app"
+APP="$DERIVED/Build/Products/Debug-iphoneos/neverblank.app"
 echo "commit:              $(/usr/libexec/PlistBuddy -c 'Print :GitCommitHash' "$APP/Info.plist")"
 echo "installation access: $(/usr/libexec/PlistBuddy -c 'Print :NeverblankInstallationAccess' "$APP/Info.plist")"
 if [ -n "${DEVICE:-}" ]; then

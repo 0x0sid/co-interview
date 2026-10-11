@@ -1,5 +1,5 @@
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Generates the six required noise scenarios (§16 M1) from a script's real tokens, so every
 /// fixture has exact, programmatically-derived ground truth rather than hand-guessed positions.

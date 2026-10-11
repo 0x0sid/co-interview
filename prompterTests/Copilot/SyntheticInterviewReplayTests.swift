@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Runs the scripted synthetic interviews through the **whole** pipeline — audio input, conversation
 /// log, turn segmentation, detection policy, detector, retrieval, generation, reader.

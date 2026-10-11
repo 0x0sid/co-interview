@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// Stores, containers and generated files for the session and file tests. Every file here is made
 /// by the test itself (or is the committed .docx fixture) — no personal data.

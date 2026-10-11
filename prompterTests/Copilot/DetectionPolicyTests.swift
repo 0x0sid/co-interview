@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// When the detector may be called at all (§4). Every rule here exists to stop the model being asked
 /// on every partial token, every sentence, or every silence.

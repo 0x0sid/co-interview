@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Runs the evaluation dialogues (`backend/eval/dialogues`) through the **real** app pipeline and
 /// records, at every tap, the decision snapshot the tracker would send and the answer request the

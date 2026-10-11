@@ -1,7 +1,7 @@
 import SwiftUI
 import Testing
 import UIKit
-@testable import prompter
+@testable import neverblank
 
 /// The collapsed Live transcript is exactly three lines tall from the start — whatever the transcript
 /// holds — and always shows the newest speech. Heights are measured from the real views.

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import Testing
 import UniformTypeIdentifiers
-@testable import prompter
+@testable import neverblank
 
 /// Importing, extracting and using session files — and every way that can go wrong, said out loud.
 @MainActor

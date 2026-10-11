@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// **Pages are what the user asked for, and each asks exactly its own question.**
 ///

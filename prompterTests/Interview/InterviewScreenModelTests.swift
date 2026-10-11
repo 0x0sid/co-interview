@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The rules of the v2.5 interview screen, tested through the model rather than through pixels.
 ///

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// Replay of a real, *working* device read (M5.1, 2026-08-22) — the regression guard for the
 /// freshest-token gate.

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// A saved question is answerable from its saved context, and a request blocked by the paywall goes
 /// out once, in its own session, after verified access.

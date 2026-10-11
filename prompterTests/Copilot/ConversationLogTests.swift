@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The dedupe and windowing rules that make everything downstream idempotent (§4).
 struct ConversationLogTests {

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The state rules around focused decisions (pipeline §18). Deterministic: a stub decides, a gate
 /// holds it in flight, and nothing waits on a real clock. What Jev actually decides is measured

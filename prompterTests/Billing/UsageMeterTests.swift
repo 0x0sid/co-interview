@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// **M5.13 — the free allowance rules, each asserted against the pure meter.**
 struct UsageMeterTests {

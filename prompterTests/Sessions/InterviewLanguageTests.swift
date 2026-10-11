@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// The interview language is any locale the transcriber supports, and stored values from before that
 /// change still decode.

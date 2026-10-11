@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The precedence rule for finding the backend, and the line the development defaults must not cross.
 ///

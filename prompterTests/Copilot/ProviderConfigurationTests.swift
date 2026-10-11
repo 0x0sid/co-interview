@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The configuration rules that keep a shipping build honest (§9): no credentials in the app, no
 /// invented answers when the backend is missing, and no fake provider outside development.

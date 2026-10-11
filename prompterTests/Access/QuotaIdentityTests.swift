@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// **Quota identity is the page, not the request.** Each new answer page gets one stable generation
 /// key for its lifetime — its first answer, Regenerate, follow-ups, Retry, and reopening it later — and

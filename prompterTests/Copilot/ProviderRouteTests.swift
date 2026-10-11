@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// How the app treats the route metadata and failure signals the backend sends (§6, §7 of
 /// docs/AI_PIPELINE.md). The gateway choice lives on the backend; what the app must get

@@ -1,6 +1,6 @@
 import Testing
 import SwiftUI
-@testable import prompter
+@testable import neverblank
 
 /// M5.1-D: auto-detected direction per dominant language, manual override always wins.
 struct TextDirectionDetectorTests {

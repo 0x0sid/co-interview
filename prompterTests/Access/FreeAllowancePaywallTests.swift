@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import prompter
+@testable import neverblank
 
 /// Once the 3 free answers are used, the paywall opens **by itself** only once — on the first blocked
 /// new question. After it is dismissed, later blocked questions get the quiet inline lock ("Upgrade to

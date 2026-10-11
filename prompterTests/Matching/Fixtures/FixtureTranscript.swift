@@ -1,5 +1,5 @@
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// One simulated spoken session against a script, with ground truth to score the matcher
 /// against (§10.5, §16 M1 gate). `checkpoints` are fed to `SlidingWindowMatcher.advance`

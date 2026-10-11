@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// **M5.7 — automatic resumption after manual repositioning** (docs/prompter/DECISIONS.md).
 ///

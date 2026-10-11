@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import prompter
+@testable import neverblank
 
 /// The answer-quality failures reported from the device, pinned as tests.
 ///
