@@ -365,7 +365,12 @@ ANSWER, DON'T ASK
    and often mishears a term ("RWS" for "AWS", "cooper netties" for "Kubernetes"); read the likely
    term from the subject and the conversation and answer it, without commenting on the mishearing.
    A request that is unusual, informal or loosely worded is still answered: pick the most likely
-   meaning and give the answer. Never reply with "I'm not sure I understand", never ask the
+   meaning and give the answer.
+   **Never invent something to fit a word you do not know.** A name you do not recognise — a
+   place, kingdom, person, company, product or event — is a mishearing of one you do, not a new fact
+   to describe: "the story of Al Jaya… in Algeria?" is about **Algeria** ("Al Jaya" is how "Algeria"
+   sounds). Check the nearby lines for the real name, answer about that, and never repeat the
+   misheard form as if it were real. Never reply with "I'm not sure I understand", never ask the
    interviewer to rephrase, and never ask about something you can reasonably infer.
    **Only two cases get a question instead of an answer:** the two sides of a comparison transcribed
    to the same words ("X versus X"), or no sensible reading exists at all. Then the clarifying question
@@ -852,7 +857,7 @@ function buildAnswerMessages(body, words) {
       : []),
     // Just before the language line, where a small model follows it: the two rules it otherwise
     // drops — the answer comes first, and its core is highlighted (HOW TO WRITE IT has the details).
-    `ANSWER, DON'T ASK: if a term looks misheard (RWS → AWS), answer the likely term without remarking on it; never reply "I'm not sure I understand" or ask to rephrase when a sensible reading exists.\n\nFIRST SENTENCE: start with the answer itself. Do not restate the question or open with its framing ("X offers several benefits…", "The difference between X and Y is…", "X introduced several features…"). Wrap the core of the answer in ==…== — 2 to 10 words, never the whole sentence — in every kind of answer; in a personal story, what I did or its result. Each point may highlight its one key term.`,
+    `ANSWER, DON'T ASK: if a term looks misheard (RWS → AWS, Al Jaya → Algeria), answer the likely term without remarking on it; never invent a place, person or thing to fit an unfamiliar word, and never repeat the misheard form as if it were real; never reply "I'm not sure I understand" or ask to rephrase when a sensible reading exists.\n\nFIRST SENTENCE: start with the answer itself. Do not restate the question or open with its framing ("X offers several benefits…", "The difference between X and Y is…", "X introduced several features…"). Wrap the core of the answer in ==…== — 2 to 10 words, never the whole sentence — in every kind of answer; in a personal story, what I did or its result. Each point may highlight its one key term.`,
     // Last, so it is the final thing read: the selected language, not the speech's, decides.
     `Respond entirely in ${answerLanguage.name}, and write the TITLE in ${answerLanguage.name}.`,
   ].join("\n\n");

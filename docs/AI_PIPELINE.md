@@ -1092,3 +1092,11 @@ Replay of that session's five questions (real models, local backend, new prompt)
 | "functionality of RWS" | answers AWS but says "not RWS" first | answers AWS directly |
 
 Cost of `smart` versus Flash-Lite was not measured.
+
+**Never invent to fit a misheard name** (same day). A later session heard "Algeria" as "Al Jaya", and
+Flash-Lite described "the Al Jaya kingdom" as real history, which the candidate read aloud. ANSWER,
+DON'T ASK now also forbids inventing a place, person or thing to fit an unfamiliar word or repeating
+the misheard form. Replayed: the deployed v20 prompt on Flash-Lite still invents "Al Jaya"; the new
+prompt answers about Algeria on both models, Flash-Lite with a clumsy "The question seems to be
+asking…" opening, `smart` cleanly (Numidia, Masinissa). Two unseen sound-alikes (Morocco, Nestlé)
+were resolved by every setup.
