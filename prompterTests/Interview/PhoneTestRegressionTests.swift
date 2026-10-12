@@ -212,7 +212,7 @@ struct PhoneTestRegressionTests {
 
         #expect(feed.discussionRequests.count == 1, "Add context sent a request")
         #expect(model.noteFocusRequest == focusBefore + 1)
-        #expect(model.isTranscriptExpanded && model.isContextPanelOpen)
+        #expect(model.isTranscriptExpanded)
         #expect(model.uncoveredLines.map(\.text) == ["And what about your hobbies?"], "pending speech was consumed")
     }
 

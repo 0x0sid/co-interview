@@ -33,6 +33,15 @@ struct FreeAllowancePaywallTests {
     }
 
     // 1–5: three free answers, one automatic paywall, then only the inline lock.
+    /// The interview screen's short status beside Upgrade.
+    @Test
+    func theInterviewStatusSaysHowManyFreeAnswersAreLeft() {
+        #expect(AccessCopy.freeAnswersLeft(remaining: 3, limit: 3) == "3 free answers left")
+        #expect(AccessCopy.freeAnswersLeft(remaining: 2, limit: 3) == "2 free answers left")
+        #expect(AccessCopy.freeAnswersLeft(remaining: 1, limit: 3) == "1 free answer left")
+        #expect(AccessCopy.freeAnswersLeft(remaining: 0, limit: 3) == "3 free answers used")
+    }
+
     @Test
     func theFirstBlockedNewQuestionOpensThePaywallOnceAndLaterOnesDoNot() throws {
         let gate = FakeGate(allows: true, freeRemaining: 3)

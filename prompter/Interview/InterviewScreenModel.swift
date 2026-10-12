@@ -43,7 +43,6 @@ final class InterviewScreenModel {
     /// **Closed until the user opens it.** It opened itself with the transcript, which cost the
     /// answer most of the screen the moment anyone wanted to read two more lines of what was said.
     /// Expanding the transcript is not a request to see the note and the attachments.
-    var isContextPanelOpen = false
     var context = ContextState()
     private(set) var recording: RecordingState = .live
     /// Set when an answer becomes ready on a page the user is not looking at: "Q3 ready →".
@@ -331,9 +330,6 @@ final class InterviewScreenModel {
         if mode == .demo, arguments.contains("-InterviewSyntheticFiles") {
             context.note = "Focus on Java 17"
             isTranscriptExpanded = true
-            // Context is closed by default now, so the screenshot fixture opens it deliberately —
-            // which is also what a person has to do.
-            isContextPanelOpen = true
         }
         #endif
     }
@@ -1408,7 +1404,6 @@ final class InterviewScreenModel {
     /// tap snapshots.
     func openContextNote() {
         isTranscriptExpanded = true
-        isContextPanelOpen = true
         noteFocusRequest += 1
     }
 

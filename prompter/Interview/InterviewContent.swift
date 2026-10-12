@@ -259,16 +259,59 @@ struct TranscriptLine: Identifiable, Equatable, Sendable {
 struct ContextState: Equatable, Sendable {
     var note: String = ""
 
+    /// Additions are separated by a blank line, so one addition may itself span several lines.
+    /// (A note saved before multi-line additions reads as a single addition.)
+    static let separator = "\n\n"
+
     /// The note after adding a typed draft, or nil when there is nothing to add: a blank draft, or
-    /// one already in the note (a second tap, or the same text again). Each addition is its own line,
-    /// so earlier context is kept and the answers see all of it.
+    /// one already in the note (a second tap, or the same text again). Each addition is its own
+    /// paragraph, so earlier context is kept and the answers see all of it.
     static func adding(_ draft: String, to note: String) -> String? {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
+        let current = ContextState(note: note).entries
+        // Also any single line, so a note saved before multi-line additions still catches repeats.
         let lines = note.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        guard !lines.contains(text) else { return nil }
-        let existing = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        return existing.isEmpty ? text : existing + "\n" + text
+        guard !current.contains(text), !lines.contains(text) else { return nil }
+        return (current + [text]).joined(separator: separator)
+    }
+
+    /// Each addition, in the order it was added.
+    var entries: [String] {
+        note.components(separatedBy: Self.separator)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// The note without one addition — its Clear in the transcript.
+    func removing(_ entry: String) -> String {
+        entries.filter { $0 != entry }.joined(separator: Self.separator)
+    }
+
+    /// Speech and added context in the order they happened, for the expanded transcript: each
+    /// addition right after the speech line that was newest when it was added (`anchors`). One with
+    /// no known place — added before anything was said, or kept from a reopened session — comes first.
+    static func rows(lines: [TranscriptLine], entries: [String], anchors: [String: UUID]) -> [TranscriptRow] {
+        let shown = Set(lines.map(\.id))
+        var rows = entries.filter { anchors[$0].map { !shown.contains($0) } ?? true }.map(TranscriptRow.context)
+        for line in lines {
+            rows.append(.speech(line))
+            rows += entries.filter { anchors[$0] == line.id }.map(TranscriptRow.context)
+        }
+        return rows
+    }
+}
+
+/// One row of the expanded transcript: something said, or context the user added.
+enum TranscriptRow: Identifiable, Equatable {
+    case speech(TranscriptLine)
+    case context(String)
+
+    var id: String {
+        switch self {
+        case .speech(let line): line.id.uuidString
+        case .context(let text): "context:" + text
+        }
     }
 }
 

@@ -98,18 +98,18 @@ final class FreeAnswersFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.buttons["Generate an answer"].waitForExistence(timeout: 15), "the Live interview never opened")
         XCTAssertTrue(element(app, "free-answers-status").waitForExistence(timeout: 20))
-        XCTAssertEqual(status(app), "3 free interview answers included.")
+        XCTAssertEqual(status(app), "3 free answers left")
         save(app, "free-2-three-included")
 
-        generateAndWait(app, expectStatus: "2 free interview answers remaining")
-        generateAndWait(app, expectStatus: "1 free interview answer remaining")
+        generateAndWait(app, expectStatus: "2 free answers left")
+        generateAndWait(app, expectStatus: "1 free answer left")
         save(app, "free-3-one-remaining")
 
         // A. The third new answer succeeds and uses the last free answer.
         generateAndWait(app, expectStatus: "3 free answers used")
         let headline = app.staticTexts["Never interview alone again."]
         XCTAssertFalse(headline.exists, "the third answer was covered by the paywall")
-        XCTAssertEqual(status(app), "3 free answers used. The transcript keeps going.")
+        XCTAssertEqual(status(app), "3 free answers used")
         XCTAssertEqual(element(app, "upgrade-inline").label, "Upgrade", "no inline Upgrade after the third answer")
         XCTAssertTrue(pageCounter(app, "3/3").exists)
         save(app, "free-4-used-inline-upgrade")
@@ -134,7 +134,7 @@ final class FreeAnswersFlowUITests: XCTestCase {
             XCTAssertFalse(headline.waitForExistence(timeout: 4), "attempt \(attempt) reopened the paywall by itself")
         }
         XCTAssertFalse(pageCounter(app, "/4").exists, "a blocked question made a page")
-        XCTAssertEqual(status(app), "3 free answers used. The transcript keeps going.")
+        XCTAssertEqual(status(app), "3 free answers used")
         XCTAssertEqual(element(app, "upgrade-inline").label, "Upgrade to continue")
         save(app, "free-6-quiet-lock")
 
@@ -167,7 +167,7 @@ final class FreeAnswersFlowUITests: XCTestCase {
         XCTAssertTrue(pageCounter(app, "4/4").waitForExistence(timeout: 30), "the follow-up did not open its page")
         XCTAssertTrue(element(app, "answer-complete").waitForExistence(timeout: 30), "the follow-up was not answered")
         XCTAssertFalse(headline.exists, "a follow-up opened the paywall")
-        XCTAssertEqual(status(app), "3 free answers used. The transcript keeps going.", "credited pages used no allowance")
+        XCTAssertEqual(status(app), "3 free answers used", "credited pages used no allowance")
         save(app, "free-8-regenerate-and-follow-up")
 
         // Settings › Subscription is reachable mid-interview.

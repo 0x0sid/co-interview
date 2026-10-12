@@ -11,7 +11,6 @@ import SwiftUI
 struct TranscriptStripView: View {
     let lines: [TranscriptLine]
     @Binding var isExpanded: Bool
-    @Binding var isContextOpen: Bool
     let context: ContextState
     let onNoteChanged: (String) -> Void
     /// "1 file", "2 files" — images and documents together — or nil when nothing is attached.
@@ -26,8 +25,14 @@ struct TranscriptStripView: View {
     /// What is being typed. It becomes part of the interview's context only when "Add context" (or
     /// Return) is used — never keystroke by keystroke.
     @State private var draft: String = ""
-    /// While the note has the keyboard, neither panel collapses under the user: a tap on a chevron
-    /// first puts the keyboard away (the draft is kept), and only the next tap collapses. Losing a
+    /// The cursor in the note, so "New line" breaks the line where it is.
+    @State private var selection: TextSelection?
+    /// Set by "New line" so its line break is kept rather than read as Return.
+    @State private var insertingLineBreak = false
+    /// Where each addition goes in the transcript: the speech line that was newest when it was added.
+    @State private var contextAnchors: [String: UUID] = [:]
+    /// While the note has the keyboard, the transcript does not collapse under the user: a tap on its
+    /// chevron first puts the keyboard away (the draft is kept), and only the next tap collapses. Losing a
     /// half-typed note to a mistimed tap is not a trade worth making for a few points of height.
     @FocusState private var isEditingNote: Bool
     /// The expanded transcript's natural height, so a short transcript takes only the room it needs.
@@ -133,8 +138,11 @@ struct TranscriptStripView: View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
                 LazyVStack(alignment: .leading, spacing: 5) {
-                    ForEach(visibleLines) { line in
-                        lineView(line)
+                    ForEach(ContextState.rows(lines: visibleLines, entries: context.entries, anchors: contextAnchors)) { row in
+                        switch row {
+                        case .speech(let line): lineView(line)
+                        case .context(let entry): contextRow(entry)
+                        }
                     }
                     Color.clear.frame(height: 1).id(Self.bottomID)
                 }
@@ -164,6 +172,12 @@ struct TranscriptStripView: View {
             .onChange(of: lines.last.map { "\($0.id)|\($0.text.count)" }) { _, _ in
                 guard follow.shouldScrollForNewContent() else { return }
                 proxy.scrollTo(Self.bottomID, anchor: .bottom)
+            }
+            // Just-added context shows where it lands, at the bottom.
+            .onChange(of: context.entries.count) { old, new in
+                guard new > old else { return }
+                follow.jumpToLatest()
+                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
             }
             .overlay(alignment: .bottomTrailing) {
                 if follow.showsLatestButton {
@@ -196,6 +210,31 @@ struct TranscriptStripView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Added context, in the transcript where it was added: green, marked as added rather than said,
+    /// with its own Clear.
+    private func contextRow(_ entry: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
+            Image(systemName: "text.badge.plus")
+                .font(.system(size: 12, weight: .semibold))
+                .accessibilityHidden(true)
+            Text(entry)
+                .font(InterviewTheme.Font.ui(14, weight: .medium, relativeTo: .subheadline))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Clear") {
+                contextAnchors[entry] = nil
+                onNoteChanged(context.removing(entry))
+            }
+            .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .footnote))
+            .buttonStyle(.plain)
+            .accessibilityLabel("Clear this context")
+        }
+        .foregroundStyle(InterviewTheme.Color.primary)
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Added context: \(entry)")
+        .accessibilityIdentifier("added-context")
+    }
+
     // MARK: Context
 
     /// The note and the files the answers should take into account.
@@ -204,31 +243,50 @@ struct TranscriptStripView: View {
     /// actions live in the Files sheet. The note stays inline because it is typed mid-interview.
     private var contextPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Button {
-                    guard !isEditingNote else { isEditingNote = false; return }
-                    withAnimation(.easeInOut(duration: 0.2)) { isContextOpen.toggle() }
-                } label: {
-                    HStack {
-                        Text("Context")
-                            .font(InterviewTheme.Font.ui(15, weight: .medium, relativeTo: .subheadline))
-                        Image(systemName: isContextOpen ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12, weight: .semibold))
-                        Spacer()
-                    }
-                    .foregroundStyle(InterviewTheme.Color.muted)
-                    .contentShape(Rectangle())
+            // No heading: a roomy field says what it is for, and is always there with the transcript.
+            TextField("Anything the answers should know", text: $draft, selection: $selection, axis: .vertical)
+                .lineLimit(3...6)
+                .focused($isEditingNote)
+                .submitLabel(.done)
+                .onSubmit(addDraft)
+                // A multi-line field types Return as a line break instead of submitting. Return ends
+                // the entry (adds it, or just puts the keyboard away when there is nothing to add);
+                // a line break from "New line", or inside pasted text, is kept.
+                .onChange(of: draft) { old, typed in
+                    if insertingLineBreak { insertingLineBreak = false; return }
+                    let breaks = { (text: String) in text.filter { $0 == "\n" }.count }
+                    guard typed.count == old.count + 1, breaks(typed) == breaks(old) + 1 else { return }
+                    draft = old
+                    addDraft()
                 }
-                .buttonStyle(.plain)
+                .toolbar {
+                    if isEditingNote {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button(action: insertLineBreak) {
+                                Label("New line", systemImage: "return")
+                                    .labelStyle(.titleAndIcon)
+                            }
+                            .accessibilityIdentifier("context-new-line")
+                        }
+                    }
+                }
+                .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
+                .foregroundStyle(InterviewTheme.Color.ink)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
+                .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
+                .accessibilityLabel("Context")
+                .accessibilityIdentifier("context-note-field")
 
+            HStack(spacing: 10) {
                 Button(action: onOpenFiles) {
                     HStack(spacing: 5) {
                         Image(systemName: "paperclip")
                             .font(.system(size: 13, weight: .semibold))
-                        if let filesLabel {
-                            Text(filesLabel)
-                                .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .caption1))
-                        }
+                        Text(filesLabel ?? "Files")
+                            .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .caption1))
                     }
                     .foregroundStyle(InterviewTheme.Color.primary)
                     .padding(.horizontal, 10)
@@ -238,27 +296,8 @@ struct TranscriptStripView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(filesLabel.map { "\($0) attached. Show files" } ?? "Attach files")
-            }
-
-            if isContextOpen {
-                HStack(spacing: 8) {
-                    TextField("Anything the answers should know", text: $draft, axis: .vertical)
-                        .lineLimit(1...3)
-                        .focused($isEditingNote)
-                        .submitLabel(.done)
-                        .onSubmit(addDraft)
-                        .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
-                        .foregroundStyle(InterviewTheme.Color.ink)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(InterviewTheme.Color.background, in: RoundedRectangle(cornerRadius: 11))
-                        .overlay(RoundedRectangle(cornerRadius: 11).stroke(InterviewTheme.Color.hairline, lineWidth: 1))
-                        .accessibilityIdentifier("context-note-field")
-                    addContextButton
-                }
-                if !context.note.isEmpty {
-                    addedContext
-                }
+                Spacer()
+                addContextButton
             }
         }
         .padding(13)
@@ -289,24 +328,17 @@ struct TranscriptStripView: View {
         .accessibilityIdentifier("add-context")
     }
 
-    /// What the answers already take into account, with a way to clear it.
-    private var addedContext: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(InterviewTheme.Color.primary)
-            Text(context.note)
-                .font(InterviewTheme.Font.ui(12.5, relativeTo: .footnote))
-                .foregroundStyle(InterviewTheme.Color.muted)
-                .lineLimit(isEditingNote ? 1 : 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Button("Clear") { onNoteChanged("") }
-                .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .footnote))
-                .foregroundStyle(InterviewTheme.Color.primary)
-                .accessibilityLabel("Clear added context")
+    /// Breaks the line at the cursor (or at the end), and keeps the cursor just after the break.
+    private func insertLineBreak() {
+        var range = draft.endIndex..<draft.endIndex
+        if case .selection(let selected)? = selection?.indices,
+           selected.lowerBound <= draft.endIndex, selected.upperBound <= draft.endIndex {
+            range = selected
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("added-context")
+        let offset = draft.distance(from: draft.startIndex, to: range.lowerBound)
+        insertingLineBreak = true
+        draft.replaceSubrange(range, with: "\n")
+        selection = TextSelection(insertionPoint: draft.index(draft.startIndex, offsetBy: offset + 1))
     }
 
     /// Adds the draft to the interview's context once, then clears the field and puts the keyboard
@@ -317,6 +349,7 @@ struct TranscriptStripView: View {
             isEditingNote = false
             return
         }
+        contextAnchors[draft.trimmingCharacters(in: .whitespacesAndNewlines)] = lines.last?.id
         onNoteChanged(updated)
         draft = ""
         isEditingNote = false

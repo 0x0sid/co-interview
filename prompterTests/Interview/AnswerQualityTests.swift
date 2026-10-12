@@ -185,14 +185,11 @@ struct AnswerQualityTests {
 
     // MARK: - Layout
 
-    /// Expanding the transcript is not a request to open Context, and the answer keeps its room.
+    /// The interview starts with the transcript collapsed, so the answer has the room; the context
+    /// field appears only with the expanded transcript.
     @Test
-    func contextStartsClosed() {
+    func theTranscriptStartsCollapsed() {
         let (model, _) = ManualGenerationTests.make()
         #expect(model.isTranscriptExpanded == false)
-        #expect(model.isContextPanelOpen == false, "Context opened itself and took the answer's space")
-
-        model.isTranscriptExpanded = true
-        #expect(model.isContextPanelOpen == false, "expanding the transcript opened Context too")
     }
 }

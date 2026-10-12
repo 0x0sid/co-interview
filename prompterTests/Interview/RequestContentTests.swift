@@ -140,9 +140,7 @@ struct RequestContentTests {
             H.speak("And idempotency.", in: model)
         }
         expandedModel.isTranscriptExpanded = true
-        expandedModel.isContextPanelOpen = true
         collapsedModel.isTranscriptExpanded = false
-        collapsedModel.isContextPanelOpen = false
         H.tap(expandedModel, at: 0)
         H.tap(collapsedModel, at: 0)
 

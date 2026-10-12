@@ -63,10 +63,8 @@ final class LiveProviderCaptureTests: XCTestCase {
         waitForTranscript(app, containing: "secret")
 
         app.buttons["Expand live transcript"].tap()
-        let context = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Context'")).firstMatch
-        XCTAssertTrue(context.waitForExistence(timeout: 5))
+        // The context field is part of the expanded transcript: no heading to open.
         let field = app.descendants(matching: .any)["context-note-field"]
-        if !field.exists { context.tap() }
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.tap()
         field.typeText("Secret: I love pizza")

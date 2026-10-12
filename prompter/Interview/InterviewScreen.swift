@@ -110,54 +110,33 @@ struct InterviewScreen: View {
         )
     }
 
-    /// Free answers left, or — once they are used — the quiet locked state: "3 free answers used" and
-    /// an Upgrade button. After the paywall has opened by itself once, a blocked new question lands
-    /// here ("Upgrade to continue") instead of in another modal. Tapping Upgrade is explicit intent
-    /// and opens the paywall every time.
+    /// For a free user: how many free answers are left ("3 free answers left") — or that they are
+    /// used — beside one mint Upgrade. Shown in the empty answer area before the first question, and
+    /// above the question card after, so the transcript stays at the top. After the paywall has opened
+    /// by itself once, a blocked new question reads "Upgrade to continue" here instead of another
+    /// modal. Tapping Upgrade is explicit intent and opens the paywall every time.
     @ViewBuilder
     private var accessStatus: some View {
         if enforcesAccess, let access, !access.isPro {
-            if access.areFreeAnswersUsed {
-                // The locked state: muted status, one mint Upgrade — the screen's own primary, not a
-                // warning. After a blocked new question it reads "Upgrade to continue".
-                HStack(spacing: 10) {
-                    Text(AccessCopy.freeAnswersUsed(limit: access.freeAnswerLimit))
-                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
-                        .foregroundStyle(InterviewTheme.Color.muted)
-                        .lineLimit(2)
-                        .accessibilityIdentifier("free-answers-status")
-                    Spacer(minLength: 0)
-                    Button { access.requestPaywall(.freeAnswersExhausted) } label: {
-                        Text(model.freeAllowanceBlockedAt != nil ? "Upgrade to continue" : "Upgrade")
-                            .font(InterviewTheme.Font.ui(12, weight: .semibold, relativeTo: .caption1))
-                            .foregroundStyle(InterviewTheme.Color.onPrimary)
-                            .lineLimit(1)
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 5)
-                            .background(InterviewTheme.Color.primary, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .fixedSize()
-                    .accessibilityIdentifier("upgrade-inline")
+            HStack(spacing: 10) {
+                Text(AccessCopy.freeAnswersLeft(remaining: access.areFreeAnswersUsed ? 0 : access.freeAnswersRemaining,
+                                                limit: access.freeAnswerLimit))
+                    .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
+                    .foregroundStyle(InterviewTheme.Color.muted)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("free-answers-status")
+                Button { access.requestPaywall(.freeAnswersExhausted) } label: {
+                    Text(model.freeAllowanceBlockedAt != nil ? "Upgrade to continue" : "Upgrade")
+                        .font(InterviewTheme.Font.ui(12.5, weight: .semibold, relativeTo: .caption1))
+                        .foregroundStyle(InterviewTheme.Color.onPrimary)
+                        .lineLimit(1)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(InterviewTheme.Color.primary, in: Capsule())
                 }
-            } else {
-                HStack(spacing: 10) {
-                    Button { access.requestPaywall(.freeAnswersExhausted) } label: {
-                        Text("Trial period")
-                            .font(InterviewTheme.Font.ui(11, weight: .semibold, relativeTo: .caption1))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(AccessStatusBadge.orange, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("trial-badge")
-                    Text(AccessCopy.freeAnswersStatus(remaining: access.freeAnswersRemaining, limit: access.freeAnswerLimit))
-                        .font(InterviewTheme.Font.ui(12, relativeTo: .caption1))
-                        .foregroundStyle(InterviewTheme.Color.muted)
-                        .accessibilityIdentifier("free-answers-status")
-                    Spacer(minLength: 0)
-                }
+                .buttonStyle(.plain)
+                .fixedSize()
+                .accessibilityIdentifier("upgrade-inline")
             }
         }
     }
@@ -165,6 +144,10 @@ struct InterviewScreen: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             InterviewTheme.Color.background.ignoresSafeArea()
+                // A tap on any empty part of the screen puts the context keyboard away, like a web
+                // form; controls on top keep their own taps.
+                .contentShape(Rectangle())
+                .onTapGesture { if isEditingContext { dismissKeyboard() } }
 
             VStack(spacing: 14) {
                 InterviewHeaderView(
@@ -182,11 +165,9 @@ struct InterviewScreen: View {
                 )
 
                 VStack(spacing: 12) {
-                    accessStatus
                     TranscriptStripView(
                         lines: model.transcript,
                         isExpanded: $model.isTranscriptExpanded,
-                        isContextOpen: $model.isContextPanelOpen,
                         context: model.context,
                         onNoteChanged: { model.context.note = $0; model.syncSessionNote() },
                         filesLabel: files?.countLabel,
@@ -194,9 +175,16 @@ struct InterviewScreen: View {
                         noteFocusRequest: model.noteFocusRequest,
                         onEditingNoteChanged: { isEditingContext = $0 }
                     )
+                    // Before the first question the status sits in the empty answer area instead.
+                    if !model.questions.isEmpty {
+                        accessStatus
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     pager
-                        // Like a web form: a tap on the answer, or a scroll, puts the context
-                        // keyboard away. Simultaneous, so answer swipes and buttons still work.
+                        // Like a web form: a tap on the answer — or on its empty space while it is
+                        // still listening — or a scroll puts the context keyboard away.
+                        // Simultaneous, so answer swipes and buttons still work.
+                        .contentShape(Rectangle())
                         .simultaneousGesture(TapGesture().onEnded { if isEditingContext { dismissKeyboard() } })
                         .scrollDismissesKeyboard(.immediately)
                 }
@@ -343,12 +331,15 @@ struct InterviewScreen: View {
             Text(model.mode == .demo ? "Playing the demo interview…" : "Listening…")
                 .font(InterviewTheme.Font.ui(15, weight: .medium, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.muted)
-            Text(enforcesAccess && access?.allowsPaidRequests == false
-                 ? "The transcript keeps going. With Pro, questions appear here and Generate writes answers."
-                 : "Questions appear here as they are detected. Answers are written only when you tap Generate.")
-                .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
-                .foregroundStyle(InterviewTheme.Color.muted.opacity(ultraContrast ? 1 : 0.8))
-                .multilineTextAlignment(.center)
+            if enforcesAccess, let access, !access.isPro {
+                accessStatus
+                    .padding(.top, 4)
+            } else {
+                Text("Questions appear here as they are detected. Answers are written only when you tap Generate.")
+                    .font(InterviewTheme.Font.ui(13, relativeTo: .footnote))
+                    .foregroundStyle(InterviewTheme.Color.muted.opacity(ultraContrast ? 1 : 0.8))
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 20)

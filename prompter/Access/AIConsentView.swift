@@ -91,4 +91,14 @@ enum AccessCopy {
 
     /// The quiet locked state once the free answers are used.
     static func freeAnswersUsed(limit: Int) -> String { "\(limit) free answers used. The transcript keeps going." }
+
+    /// The interview screen's short line beside Upgrade: "3 free answers left", "1 free answer left",
+    /// "3 free answers used".
+    static func freeAnswersLeft(remaining: Int, limit: Int = FreeAnswersRecord.limit) -> String {
+        switch remaining {
+        case 1: "1 free answer left"
+        case let count where count > 1: "\(min(count, limit)) free answers left"
+        default: "\(limit) free answers used"
+        }
+    }
 }

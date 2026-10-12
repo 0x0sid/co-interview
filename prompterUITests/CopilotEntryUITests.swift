@@ -229,14 +229,14 @@ final class CopilotEntryUITests: XCTestCase {
         app.launch()
         openDemo(app)
 
-        XCTAssertTrue(app.staticTexts["Context"].waitForExistence(timeout: 20),
-                      "the expanded transcript does not show Context")
+        XCTAssertTrue(app.descendants(matching: .any)["context-note-field"].waitForExistence(timeout: 20),
+                      "the expanded transcript does not show the context field")
         XCTAssertTrue(app.staticTexts["2 files"].waitForExistence(timeout: 10), "the file count is missing")
         attach(app, "07-expanded-context")
 
         app.buttons["Collapse live transcript"].tap()
         XCTAssertTrue(app.buttons["Expand live transcript"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Context"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["context-note-field"].exists)
 
         // Re-expanding shows the same files: collapsing is a view change, not a discard.
         app.buttons["Expand live transcript"].tap()

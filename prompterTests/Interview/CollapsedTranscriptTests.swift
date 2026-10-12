@@ -56,14 +56,14 @@ struct CollapsedTranscriptTests {
     func expandingAndCollapsingChangeTheStripHeight() {
         let lines = (0..<12).map { Self.line("Line \($0): \(Self.long)") }
         func strip(_ expanded: Bool) -> some View {
-            TranscriptStripView(lines: lines, isExpanded: .constant(expanded), isContextOpen: .constant(false),
+            TranscriptStripView(lines: lines, isExpanded: .constant(expanded), 
                                 context: ContextState(), onNoteChanged: { _ in })
         }
         let collapsed = Self.height(strip(false))
         let expanded = Self.height(strip(true))
         #expect(expanded > collapsed, "expanded \(expanded) vs collapsed \(collapsed)")
         #expect(collapsed == Self.height(TranscriptStripView(lines: [Self.line("Hi.")], isExpanded: .constant(false),
-                                                             isContextOpen: .constant(false), context: ContextState(),
+                                                             context: ContextState(),
                                                              onNoteChanged: { _ in })),
                 "the collapsed strip is the same height for one short line and a long transcript")
     }
@@ -71,5 +71,26 @@ struct CollapsedTranscriptTests {
     @Test
     func theExpandedFeedStillCarriesTheFullHistory() {
         #expect(TranscriptStripView.expandedLineLimit >= 300)
+    }
+
+    // MARK: Added context in the transcript
+
+    /// Each addition shows right after the speech that was newest when it was added; one with no
+    /// known place comes first. Clear removes only that addition from the note.
+    @Test
+    func addedContextSitsWhereItWasAddedAndClearsAlone() {
+        let a = Self.line("Tell me about yourself."), b = Self.line("And your last project?")
+        var context = ContextState()
+        context.note = ContextState.adding("I led the Kafka migration", to: context.note)!
+        context.note = ContextState.adding("Focus on Java 17", to: context.note)!
+        context.note = ContextState.adding("Old note from a reopened session", to: context.note)!
+        let anchors = ["I led the Kafka migration": a.id, "Focus on Java 17": b.id]
+
+        let rows = ContextState.rows(lines: [a, b], entries: context.entries, anchors: anchors)
+        #expect(rows == [.context("Old note from a reopened session"), .speech(a),
+                         .context("I led the Kafka migration"), .speech(b), .context("Focus on Java 17")])
+
+        #expect(context.removing("Focus on Java 17") == "I led the Kafka migration\n\nOld note from a reopened session")
+        #expect(ContextState(note: context.removing("Focus on Java 17")).entries.count == 2)
     }
 }

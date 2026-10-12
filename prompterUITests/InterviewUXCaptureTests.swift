@@ -26,9 +26,6 @@ final class InterviewUXCaptureTests: XCTestCase {
         let expand = app.buttons["Expand live transcript"]
         XCTAssertTrue(expand.waitForExistence(timeout: 20))
         expand.tap()
-        let context = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Context'")).firstMatch
-        XCTAssertTrue(context.waitForExistence(timeout: 5))
-        context.tap()
 
         let field = app.descendants(matching: .any)["context-note-field"]
         let add = app.buttons["add-context"]

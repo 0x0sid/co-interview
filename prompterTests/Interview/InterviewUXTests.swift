@@ -19,10 +19,19 @@ struct InterviewUXTests {
     }
 
     @Test
-    func laterDraftsAreAddedOnTheirOwnLineKeepingEarlierContext() {
+    func laterDraftsAreAddedAsTheirOwnParagraphKeepingEarlierContext() {
         let first = ContextState.adding("Senior backend role", to: "")!
         let second = ContextState.adding("I led the Kafka migration", to: first)
-        #expect(second == "Senior backend role\nI led the Kafka migration")
+        #expect(second == "Senior backend role\n\nI led the Kafka migration")
+    }
+
+    /// An addition typed over several lines ("New line") stays one addition: one row, one Clear.
+    @Test
+    func aMultiLineAdditionStaysOneEntry() {
+        let note = ContextState.adding("Projects:\n- Kafka migration\n- Billing rewrite", to: "Senior backend role")!
+        let context = ContextState(note: note)
+        #expect(context.entries == ["Senior backend role", "Projects:\n- Kafka migration\n- Billing rewrite"])
+        #expect(context.removing("Projects:\n- Kafka migration\n- Billing rewrite") == "Senior backend role")
     }
 
     /// A second tap, or the same text typed again, never duplicates it.
