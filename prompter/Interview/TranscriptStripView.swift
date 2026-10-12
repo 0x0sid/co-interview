@@ -26,8 +26,9 @@ struct TranscriptStripView: View {
     /// What is being typed. It becomes part of the interview's context only when "Add context" (or
     /// Return) is used — never keystroke by keystroke.
     @State private var draft: String = ""
-    /// While the note has the keyboard, neither panel collapses under the user. Losing a half-typed
-    /// note to a mistimed tap on a chevron is not a trade worth making for a few points of height.
+    /// While the note has the keyboard, neither panel collapses under the user: a tap on a chevron
+    /// first puts the keyboard away (the draft is kept), and only the next tap collapses. Losing a
+    /// half-typed note to a mistimed tap is not a trade worth making for a few points of height.
     @FocusState private var isEditingNote: Bool
     /// The expanded transcript's natural height, so a short transcript takes only the room it needs.
     @State private var expandedContentHeight: CGFloat = 0
@@ -121,7 +122,7 @@ struct TranscriptStripView: View {
     }
 
     private func toggle() {
-        guard !isEditingNote else { return }
+        guard !isEditingNote else { isEditingNote = false; return }
         withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
         if isExpanded { follow.jumpToLatest() }
     }
@@ -205,7 +206,7 @@ struct TranscriptStripView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Button {
-                    guard !isEditingNote else { return }
+                    guard !isEditingNote else { isEditingNote = false; return }
                     withAnimation(.easeInOut(duration: 0.2)) { isContextOpen.toggle() }
                 } label: {
                     HStack {
@@ -309,9 +310,13 @@ struct TranscriptStripView: View {
     }
 
     /// Adds the draft to the interview's context once, then clears the field and puts the keyboard
-    /// away. Nothing is generated: the context is used by the next Generate.
+    /// away. Nothing is generated: the context is used by the next Generate. With nothing to add
+    /// (Done on an empty field) the keyboard still goes away: typing is never required to leave.
     private func addDraft() {
-        guard let updated = ContextState.adding(draft, to: context.note) else { return }
+        guard let updated = ContextState.adding(draft, to: context.note) else {
+            isEditingNote = false
+            return
+        }
         onNoteChanged(updated)
         draft = ""
         isEditingNote = false

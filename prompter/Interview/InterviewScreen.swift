@@ -83,7 +83,12 @@ struct InterviewScreen: View {
     /// "End meeting": the one way a meeting finishes — the canonical teardown (`endSession`: capture,
     /// transcription, detection, ticker and audio session stop; the recorder saves the meeting), then
     /// back to Home, where it is listed.
-    private func finishMeeting() {
+    /// Resigns whichever field has the keyboard (the context note); its draft is kept.
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+        private func finishMeeting() {
         endSession()
         dismiss()
     }
@@ -190,6 +195,10 @@ struct InterviewScreen: View {
                         onEditingNoteChanged: { isEditingContext = $0 }
                     )
                     pager
+                        // Like a web form: a tap on the answer, or a scroll, puts the context
+                        // keyboard away. Simultaneous, so answer swipes and buttons still work.
+                        .simultaneousGesture(TapGesture().onEnded { if isEditingContext { dismissKeyboard() } })
+                        .scrollDismissesKeyboard(.immediately)
                 }
                 .padding(.horizontal, 18)
             }
