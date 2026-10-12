@@ -179,7 +179,7 @@ struct LiveInterviewFeedTests {
 
         #expect(blocks.count == 3)
         if case .prose(let first) = blocks[0] { #expect(first == "We bound the queue.") } else { Issue.record("first block is not prose") }
-        if case .code(let code) = blocks[1] { #expect(code.contains("BoundedQueue")) } else { Issue.record("the code block left its position") }
+        if case .code(let code, _) = blocks[1] { #expect(code.contains("BoundedQueue")) } else { Issue.record("the code block left its position") }
         if case .prose(let last) = blocks[2] { #expect(last == "That is the whole trick.") } else { Issue.record("last block is not prose") }
 
         let answer = InterviewAnswer(version: 1, blocks: blocks, isComplete: true)
@@ -190,7 +190,7 @@ struct LiveInterviewFeedTests {
     @Test
     func anUnterminatedCodeFenceStillShowsItsText() {
         let blocks = AnswerBlock.parsed(from: "Here it is:\n\n```\nlet x = 1")
-        #expect(blocks.contains { if case .code(let c) = $0 { return c.contains("let x = 1") } else { return false } })
+        #expect(blocks.contains { if case .code(let c, _) = $0 { return c.contains("let x = 1") } else { return false } })
     }
 
     // MARK: Session end

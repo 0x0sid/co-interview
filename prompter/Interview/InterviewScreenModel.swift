@@ -460,7 +460,7 @@ final class InterviewScreenModel {
                     .selectedAnswer?.version,
                 text: blocks.compactMap { block in
                     if case .prose(let prose) = block { return prose }
-                    if case .code(let code) = block { return code }
+                    if case .code(let code, _) = block { return code }
                     return nil
                 }.joined(separator: "\n\n")
             )
@@ -1496,7 +1496,7 @@ final class InterviewScreenModel {
     static func hasVisibleText(_ blocks: [AnswerBlock]) -> Bool {
         blocks.contains { block in
             switch block {
-            case .prose(let text), .code(let text): !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            case .prose(let text), .code(let text, _): !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }
         }
     }

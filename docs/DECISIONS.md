@@ -468,3 +468,12 @@ old one until the app is reinstalled or the phone restarts.
   left" (or "… used") with Upgrade in the empty answer area before the first question, and above the
   question card after; Upgrade reads "Upgrade to continue" after a blocked question.
 
+## Code samples coloured by language (2026-10-13)
+
+A code block keeps its fence's language (```java → `AnswerBlock.code(_, language: "java")`, saved with
+the answer; older saved code has none) and the code card colours it with `CodeHighlighter`: keywords
+purple, types mint, strings amber, numbers coral, calls light blue, comments grey, per language (Java,
+Kotlin, Python, JavaScript/TypeScript, Swift, C/C++, C#, Go, Rust, SQL, shell, Ruby, PHP; anything else
+gets a generic set). A scanner, not a parser, so a half-streamed block never breaks it. Ultra Contrast
+stays plain white.
+

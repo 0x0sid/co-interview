@@ -259,7 +259,7 @@ extension DemoInterviewFeed.Exchange {
                 for await batch in upstream {
                     try await queue.enqueue(batch)   // suspends when full
                 }
-                """),
+                """, language: "swift"),
                 .prose("So memory stays flat under load, and slowness shows up as latency rather than as an out-of-memory crash at three in the morning. The capacity is a deliberate choice: we sized it from the p99 write time.")
             ],
             highlight: "bound the queue",
@@ -273,7 +273,7 @@ extension DemoInterviewFeed.Exchange {
                 .code("""
                 let queue = BoundedQueue(capacity: 512)
                 try await queue.enqueue(batch)       // suspends when full
-                """),
+                """, language: "swift"),
                 .prose("What that buys us is a flat memory profile and an honest latency number. A slow writer becomes visible as waiting, which is something we can alert on.")
             ]
         ),

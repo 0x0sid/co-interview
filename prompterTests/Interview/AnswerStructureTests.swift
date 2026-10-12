@@ -200,7 +200,7 @@ struct AnswerStructureTests {
         if (a == b && ==c==) { return; }
         ```
         """)
-        #expect(blocks.contains(.code("if (a == b && ==c==) { return; }")), "code is kept verbatim")
+        #expect(blocks.contains(.code("if (a == b && ==c==) { return; }", language: "java")), "code is kept verbatim")
         let prose = AnswerStructure.prose(of: blocks)
         #expect(prose.count == 1)
         #expect(prose[0].text == "Compare values with `a==b==c` in the guard clause.")

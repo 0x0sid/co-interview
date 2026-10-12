@@ -45,7 +45,7 @@ struct CodeFenceStreamingTests {
     }
 
     private static func codeBlocks(_ blocks: [AnswerBlock]) -> [String] {
-        blocks.compactMap { if case .code(let code) = $0 { return code } else { return nil } }
+        blocks.compactMap { if case .code(let code, _) = $0 { return code } else { return nil } }
     }
 
     @Test

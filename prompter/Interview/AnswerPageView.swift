@@ -237,8 +237,8 @@ struct AnswerPageView: View {
                             streamingText(raw: raw, prose: positioned.prose, structured: structured)
                         }
                         prose(text, role: structured ? positioned.prose?.role ?? .body : .body)
-                    case .code(let code):
-                        CodeCardView(code: code)
+                    case .code(let code, let language):
+                        CodeCardView(code: code, language: language)
                     }
                 }
                 .padding(.top, positioned.spacing)
@@ -497,6 +497,8 @@ struct AnswerPageView: View {
 /// construction, so there is no way for a code sample to be greyed out as if it had been spoken.
 struct CodeCardView: View {
     let code: String
+    /// The fence's tag, for syntax colours; nil colours it as generic code.
+    var language: String? = nil
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.ultraContrast) private var ultraContrast
     @State private var didCopy = false
@@ -504,7 +506,8 @@ struct CodeCardView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             ScrollView(.horizontal, showsIndicators: false) {
-                Text(code)
+                // Ultra Contrast stays pure white; otherwise coloured by language.
+                Text(ultraContrast ? AttributedString(code) : CodeHighlighter.attributed(code, language: language))
                     .font(InterviewTheme.Font.code())
                     .foregroundStyle(InterviewTheme.Color.codeInk)
                     .lineSpacing(12.5 * 0.5)

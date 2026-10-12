@@ -43,7 +43,12 @@ enum InterviewTheme {
         static let codeCardLight = dynamic(light: 0x14171A, dark: 0x14171A, ultra: 0x000000)
         static let codeInk = dynamic(light: 0xE9EDEB, dark: 0xD9E2DE, ultra: 0xFFFFFF)
         static let codeType = dynamic(light: 0x8FD9C4, dark: 0xBEEBDC, ultra: 0xFFFFFF)
-        static let codeKeyword = SwiftUI.Color(uiColor: UIColor(rgb: 0xC7A6F0))
+        /// Syntax colours on the near-black code card (`CodeHighlighter`); all white in Ultra Contrast.
+        static let codeKeyword = dynamic(light: 0xC7A6F0, dark: 0xC7A6F0, ultra: 0xFFFFFF)
+        static let codeString = dynamic(light: 0xF2C38F, dark: 0xF2C38F, ultra: 0xFFFFFF)
+        static let codeNumber = dynamic(light: 0xF4A3A3, dark: 0xF4A3A3, ultra: 0xFFFFFF)
+        static let codeComment = dynamic(light: 0x7E8A86, dark: 0x7E8A86, ultra: 0xFFFFFF)
+        static let codeFunction = dynamic(light: 0x9CC8FF, dark: 0x9CC8FF, ultra: 0xFFFFFF)
 
         /// Follow-up likelihood dots. Green, amber, grey — **never red** (§1: red is the recording mark).
         static let likely = dynamic(light: 0x2F8B5E, dark: 0x86D6A8, ultra: 0xFFFFFF)

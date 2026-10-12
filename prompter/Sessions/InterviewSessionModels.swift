@@ -205,12 +205,14 @@ final class FileExtractionRecord {
 struct StoredBlock: Codable, Equatable {
     let kind: String
     let text: String
+    /// A code block's language; absent in answers saved before it was kept.
+    var language: String? = nil
 
     static func encode(_ blocks: [AnswerBlock]) -> Data {
         let stored = blocks.map { block -> StoredBlock in
             switch block {
             case .prose(let text): StoredBlock(kind: "prose", text: text)
-            case .code(let text): StoredBlock(kind: "code", text: text)
+            case .code(let text, let language): StoredBlock(kind: "code", text: text, language: language)
             }
         }
         return (try? JSONEncoder().encode(stored)) ?? Data()
@@ -218,7 +220,7 @@ struct StoredBlock: Codable, Equatable {
 
     static func decode(_ data: Data) -> [AnswerBlock] {
         guard let stored = try? JSONDecoder().decode([StoredBlock].self, from: data) else { return [] }
-        return stored.map { $0.kind == "code" ? .code($0.text) : .prose($0.text) }
+        return stored.map { $0.kind == "code" ? .code($0.text, language: $0.language) : .prose($0.text) }
     }
 }
 

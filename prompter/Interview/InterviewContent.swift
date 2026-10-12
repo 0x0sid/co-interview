@@ -12,12 +12,13 @@ import SwiftUI
 /// token sequence at all.
 enum AnswerBlock: Equatable, Sendable, Identifiable {
     case prose(String)
-    case code(String)
+    /// `language` is the fence's tag (```java), for syntax colours; nil when there was none.
+    case code(String, language: String? = nil)
 
     var id: String {
         switch self {
         case .prose(let text): "p:\(text)"
-        case .code(let text): "c:\(text)"
+        case .code(let text, _): "c:\(text)"
         }
     }
 
@@ -33,19 +34,23 @@ enum AnswerBlock: Equatable, Sendable, Identifiable {
         }
         var blocks: [AnswerBlock] = []
         var isCode = false
+        var language: String?
         var current: [String] = []
 
         func flush() {
             let joined = current.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
             current = []
             guard !joined.isEmpty else { return }
-            blocks.append(contentsOf: isCode ? [.code(joined)] : paragraphs(of: joined))
+            blocks.append(contentsOf: isCode ? [.code(joined, language: language)] : paragraphs(of: joined))
         }
 
         for line in text.components(separatedBy: .newlines) {
-            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            if trimmedLine.hasPrefix("```") {
                 flush()
                 isCode.toggle()
+                let tag = trimmedLine.dropFirst(3).trimmingCharacters(in: .whitespaces)
+                language = isCode && !tag.isEmpty ? tag : nil
                 continue
             }
             current.append(line)
@@ -145,7 +150,7 @@ struct InterviewAnswer: Identifiable, Equatable, Sendable {
 
     var codeBlocks: [String] {
         blocks.compactMap { block -> String? in
-            if case .code(let code) = block { return code }
+            if case .code(let code, _) = block { return code }
             return nil
         }
     }
