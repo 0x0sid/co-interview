@@ -457,10 +457,9 @@ old one until the app is reinstalled or the phone restarts.
 ## Interview screen: context and free-answer status (2026-10-12)
 
 - **Context field:** no "Context" heading; a 3-line field (grows to 6) shows with the expanded
-  transcript, with the files button and Add context beneath. Return adds the context, or just puts
-  the keyboard away when the field is empty; "New line" in the bar above the keyboard breaks the line.
-  Done, a tap or scroll anywhere outside, or a tap on the transcript chevron always puts the keyboard
-  away, keeping the draft.
+  transcript, with the files button and Add context beneath. The keyboard's Return key is an ordinary
+  new line (owner's choice: notes can span lines); Add context adds. A tap or scroll anywhere outside,
+  or a tap on the transcript chevron, puts the keyboard away, keeping the draft.
 - **Added context lives in the transcript:** each addition is a green row after the speech that was
   newest when it was added, with its own Clear. The note stores additions separated by a blank line
   (`ContextState.separator`), so a multi-line addition is one entry; a note saved earlier reads as one.

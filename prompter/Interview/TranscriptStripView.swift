@@ -25,10 +25,6 @@ struct TranscriptStripView: View {
     /// What is being typed. It becomes part of the interview's context only when "Add context" (or
     /// Return) is used — never keystroke by keystroke.
     @State private var draft: String = ""
-    /// The cursor in the note, so "New line" breaks the line where it is.
-    @State private var selection: TextSelection?
-    /// Set by "New line" so its line break is kept rather than read as Return.
-    @State private var insertingLineBreak = false
     /// Where each addition goes in the transcript: the speech line that was newest when it was added.
     @State private var contextAnchors: [String: UUID] = [:]
     /// While the note has the keyboard, the transcript does not collapse under the user: a tap on its
@@ -244,33 +240,11 @@ struct TranscriptStripView: View {
     private var contextPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
             // No heading: a roomy field says what it is for, and is always there with the transcript.
-            TextField("Anything the answers should know", text: $draft, selection: $selection, axis: .vertical)
+            TextField("Anything the answers should know", text: $draft, axis: .vertical)
                 .lineLimit(3...6)
                 .focused($isEditingNote)
-                .submitLabel(.done)
-                .onSubmit(addDraft)
-                // A multi-line field types Return as a line break instead of submitting. Return ends
-                // the entry (adds it, or just puts the keyboard away when there is nothing to add);
-                // a line break from "New line", or inside pasted text, is kept.
-                .onChange(of: draft) { old, typed in
-                    if insertingLineBreak { insertingLineBreak = false; return }
-                    let breaks = { (text: String) in text.filter { $0 == "\n" }.count }
-                    guard typed.count == old.count + 1, breaks(typed) == breaks(old) + 1 else { return }
-                    draft = old
-                    addDraft()
-                }
-                .toolbar {
-                    if isEditingNote {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button(action: insertLineBreak) {
-                                Label("New line", systemImage: "return")
-                                    .labelStyle(.titleAndIcon)
-                            }
-                            .accessibilityIdentifier("context-new-line")
-                        }
-                    }
-                }
+                // Return is an ordinary new line, as in any multi-line field: Add context adds it, and
+                // a tap anywhere outside puts the keyboard away.
                 .font(InterviewTheme.Font.ui(14, relativeTo: .subheadline))
                 .foregroundStyle(InterviewTheme.Color.ink)
                 .padding(.horizontal, 12)
@@ -326,19 +300,6 @@ struct TranscriptStripView: View {
         .accessibilityLabel("Add context")
         .accessibilityHint("Adds what you typed to this interview's context for the next answers")
         .accessibilityIdentifier("add-context")
-    }
-
-    /// Breaks the line at the cursor (or at the end), and keeps the cursor just after the break.
-    private func insertLineBreak() {
-        var range = draft.endIndex..<draft.endIndex
-        if case .selection(let selected)? = selection?.indices,
-           selected.lowerBound <= draft.endIndex, selected.upperBound <= draft.endIndex {
-            range = selected
-        }
-        let offset = draft.distance(from: draft.startIndex, to: range.lowerBound)
-        insertingLineBreak = true
-        draft.replaceSubrange(range, with: "\n")
-        selection = TextSelection(insertionPoint: draft.index(draft.startIndex, offsetBy: offset + 1))
     }
 
     /// Adds the draft to the interview's context once, then clears the field and puts the keyboard
