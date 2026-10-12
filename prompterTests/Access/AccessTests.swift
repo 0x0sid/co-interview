@@ -370,7 +370,6 @@ final class FakeGate: InterviewAccessGate {
     }
     func requestAutomaticPaywall(_ trigger: PaywallTrigger) -> AutomaticPaywallOutcome {
         if isShowingPaywall { return .alreadyShowing }
-        guard !automaticPaywallSeen else { return .suppressed }
         automaticPaywallSeen = true
         isShowingPaywall = true
         paywalls.append(trigger)

@@ -189,9 +189,8 @@ final class InterviewScreenModel {
         queuedRequestIDs.append(requestID)
         if !allowed {
             heldRequestIDs.insert(requestID)
-            // No paywall is coming (it already opened by itself once): nothing may wait for one.
-            // The entry is marked as needing Pro, keeps its snapshot for Retry, and the inline
-            // Upgrade is the way on.
+            // If no paywall is coming (Pro, or no access gate), nothing may wait for one: the entry
+            // is marked as needing Pro, keeps its snapshot for Retry, and Upgrade is the way on.
             if !offerAutomaticPaywall(trigger) { abandonHeldRequests() }
         }
     }
@@ -200,9 +199,9 @@ final class InterviewScreenModel {
     /// "Upgrade to continue". Nil until that happens this session.
     private(set) var freeAllowanceBlockedAt: Date?
 
-    /// A new answer was blocked by the used-up free answers. The paywall opens by itself only the
-    /// first time ever (`InterviewAccessGate.requestAutomaticPaywall`); a duplicate tap while it is
-    /// up joins that one. Returns whether a paywall is showing for this attempt to wait on.
+    /// A new answer was blocked by the used-up free answers: the paywall opens
+    /// (`InterviewAccessGate.requestAutomaticPaywall`, every time); a duplicate tap while it is up
+    /// joins that one. Returns whether a paywall is showing for this attempt to wait on.
     private func offerAutomaticPaywall(_ trigger: PaywallTrigger) -> Bool {
         guard let accessGate else { return true }
         switch accessGate.requestAutomaticPaywall(trigger) {

@@ -48,9 +48,9 @@ never from the package slot. The code also handles Weekly and Lifetime; the offe
 - Capacity is reserved atomically before the model is called, so simultaneous taps cannot exceed the
   limit. Abuse bounds: `FREE_MAX_UNCOUNTED`, `FREE_MAX_DETECTIONS`, `FREE_REDELIVERIES`,
   `FREE_RESERVATION_TTL_MS`.
-- When they are used up, a new question opens the paywall **once** per installation, before any request
-  is sent; after that an inline Upgrade is shown instead. History, files and on-device transcription
-  keep working.
+- When they are used up, **every Generate on a new question opens the paywall**, before any request is
+  sent (since 2026-10-13; it used to open by itself only once per installation). "3 free answers used ·
+  Upgrade" stays on the interview screen. History, files and on-device transcription keep working.
 
 ## Purchase continuity
 

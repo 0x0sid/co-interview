@@ -181,14 +181,16 @@ final class AccessController {
     /// free-answer record, so relaunches, new meetings and reopened ones all remember it).
     var hasSeenFreeAllowancePaywall: Bool { record.automaticPaywallSeen }
 
-    /// A new question blocked by the free allowance. **The only automatic paywall**, and it opens at
-    /// most once per installation: the first blocked attempt presents it; every later one is answered
-    /// by the inline "Upgrade" instead. Pro never gets here (nothing is blocked).
+    /// A new question blocked by the used-up free answers: Generate opens the paywall, **every time**
+    /// (owner's decision, 2026-10-13 — before, it opened by itself only once per installation). A
+    /// tap while one is already up joins it. Pro never gets here (nothing is blocked).
     func requestAutomaticPaywall(_ trigger: PaywallTrigger) -> AutomaticPaywallOutcome {
         if paywall != nil { return .alreadyShowing }
-        guard !record.automaticPaywallSeen, !isPro else { return .suppressed }
-        record.automaticPaywallSeen = true
-        ledger.save(record)
+        guard !isPro else { return .suppressed }
+        if !record.automaticPaywallSeen {
+            record.automaticPaywallSeen = true
+            ledger.save(record)
+        }
         paywall = PaywallRequest(trigger: trigger)
         return .presented
     }

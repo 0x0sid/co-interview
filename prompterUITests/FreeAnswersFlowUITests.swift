@@ -2,8 +2,8 @@ import XCTest
 
 /// The first-run funnel on a real (local) backend: a fresh install gets its credential, consents, uses
 /// its **3 free interview answers**, and the fourth Generate opens the paywall **once** by itself — with
-/// the session intact and nothing sent. After that, blocked questions meet the quiet inline lock
-/// ("Upgrade to continue") and only an explicit Upgrade opens the paywall; answered pages keep working.
+/// the session intact and nothing sent — and every later Generate on a new question opens it again;
+/// Upgrade opens it too, and answered pages keep working.
 ///
 /// Opt-in: start `backend/` locally with `COINTERVIEW_FAKE=1` and a temporary `ACCESS_DB_PATH`, then
 /// run with `TEST_RUNNER_NEVERBLANK_ACCESS_URL=http://127.0.0.1:<port>`. The backend is the fake
@@ -127,16 +127,17 @@ final class FreeAnswersFlowUITests: XCTestCase {
         XCTAssertFalse(pageCounter(app, "/4").exists)
         XCTAssertTrue(app.buttons["Generate an answer"].exists, "not back in the interview")
 
-        // D. More new questions: no modal, no page, the quiet lock says Upgrade to continue.
+        // D. Every further Generate opens the paywall again; still no page for a blocked question.
         for attempt in 1...3 {
             pause(3.5)
             app.buttons["Generate an answer"].tap()
-            XCTAssertFalse(headline.waitForExistence(timeout: 4), "attempt \(attempt) reopened the paywall by itself")
+            XCTAssertTrue(headline.waitForExistence(timeout: 10), "attempt \(attempt) did not open the paywall")
+            app.buttons["paywall-close"].tap()
+            XCTAssertTrue(headline.waitForNonExistence(timeout: 10))
         }
         XCTAssertFalse(pageCounter(app, "/4").exists, "a blocked question made a page")
         XCTAssertEqual(status(app), "3 free answers used")
-        XCTAssertEqual(element(app, "upgrade-inline").label, "Upgrade to continue")
-        save(app, "free-6-quiet-lock")
+        save(app, "free-6-generate-reopens-paywall")
 
         // E. Left alone for several minutes: nothing opens by itself.
         pause(200)
@@ -193,9 +194,8 @@ final class FreeAnswersFlowUITests: XCTestCase {
         pause(4)
         again.buttons["Generate an answer"].tap()
         let againHeadline = again.staticTexts["Never interview alone again."]
-        XCTAssertFalse(againHeadline.waitForExistence(timeout: 5), "the new meeting reopened the paywall by itself")
-        XCTAssertEqual(element(again, "upgrade-inline").label, "Upgrade to continue")
-        save(again, "free-9-new-meeting-quiet-lock")
+        XCTAssertTrue(againHeadline.waitForExistence(timeout: 10), "Generate in a new meeting did not open the paywall")
+        save(again, "free-9-new-meeting-paywall")
     }
 
     /// The question bar's "n/N" (its accessibility label is "Question n/N. …").

@@ -2,10 +2,9 @@ import Foundation
 import Testing
 @testable import neverblank
 
-/// Once the 3 free answers are used, the paywall opens **by itself** only once — on the first blocked
-/// new question. After it is dismissed, later blocked questions get the quiet inline lock ("Upgrade to
-/// continue"), never another modal; tapping Upgrade opens it on purpose, as often as asked. Pages that
-/// already used their credit (Regenerate, follow-ups, reopened pages) are never blocked at all.
+/// Once the 3 free answers are used, **every** Generate on a new question opens the paywall before
+/// anything is sent (owner's decision, 2026-10-13); tapping Upgrade opens it too. Pages that already
+/// used their credit (Regenerate, follow-ups, reopened pages) are never blocked at all.
 @MainActor
 struct FreeAllowancePaywallTests {
     typealias Support = ManualGenerationTests
@@ -43,7 +42,7 @@ struct FreeAllowancePaywallTests {
     }
 
     @Test
-    func theFirstBlockedNewQuestionOpensThePaywallOnceAndLaterOnesDoNot() throws {
+    func everyBlockedNewQuestionOpensThePaywall() throws {
         let gate = FakeGate(allows: true, freeRemaining: 3)
         let (model, feed) = try Self.exhausted(gate)
         #expect(feed.discussionRequests.count == 3 && gate.freeRemaining == 0, "three free new answers succeed")
@@ -53,14 +52,14 @@ struct FreeAllowancePaywallTests {
         #expect(gate.paywalls == [.generate], "the first blocked new question opens the paywall")
         #expect(model.pendingNewQuestion != nil, "held for the open paywall")
         Self.dismiss(gate, model)
-        #expect(model.pendingNewQuestion == nil && model.freeAllowanceBlockedAt == nil)
+        #expect(model.pendingNewQuestion == nil)
 
         _ = Self.ask("E?", model, feed, at: 50)
-        #expect(gate.paywalls == [.generate], "the second blocked question: no modal")
-        #expect(model.freeAllowanceBlockedAt != nil, "the inline lock says Upgrade to continue")
+        #expect(gate.paywalls == [.generate, .generate], "the next blocked question opens it again")
+        Self.dismiss(gate, model)
         _ = Self.ask("F?", model, feed, at: 60)
-        #expect(gate.paywalls == [.generate], "nor the third")
-        #expect(model.pendingNewQuestion == nil, "nothing waits for a paywall that is not coming")
+        #expect(gate.paywalls.count == 3, "and every one after")
+        Self.dismiss(gate, model)
         #expect(feed.discussionRequests.count == 3 && model.questions.count == 3, "nothing sent, no empty page")
     }
 
@@ -68,8 +67,8 @@ struct FreeAllowancePaywallTests {
     @Test
     func tappingUpgradeOpensThePaywallEveryTime() {
         let h = AccessControllerTests.make(ledger: .inMemory(FreeAnswersRecord(used: 3, automaticPaywallSeen: true)))
-        #expect(h.controller.requestAutomaticPaywall(.generate) == .suppressed)
-        #expect(h.controller.paywall == nil)
+        #expect(h.controller.requestAutomaticPaywall(.generate) == .presented, "Generate opens it, seen before or not")
+        h.controller.paywall = nil
         h.controller.requestPaywall(.freeAnswersExhausted)
         #expect(h.controller.paywall?.trigger == .freeAnswersExhausted, "Upgrade opens it")
         h.controller.paywall = nil                                             // closed
@@ -77,9 +76,9 @@ struct FreeAllowancePaywallTests {
         #expect(h.controller.paywall != nil, "and again, because the user asked")
     }
 
-    // 7: relaunch — the flag is persisted with the free-answer record.
+    // 7: relaunch — Generate still opens it; the seen flag is only recorded.
     @Test
-    func aRelaunchRemembersTheAutomaticPaywallWasSeen() {
+    func aRelaunchStillOpensThePaywallOnGenerate() {
         let ledger = FreeAnswersLedger.inMemory(FreeAnswersRecord(used: 3))
         let first = AccessControllerTests.make(ledger: ledger)
         #expect(!first.controller.hasSeenFreeAllowancePaywall)
@@ -87,8 +86,7 @@ struct FreeAllowancePaywallTests {
         first.controller.paywall = nil
         let relaunched = AccessControllerTests.make(ledger: ledger)             // a new process, same Keychain
         #expect(relaunched.controller.hasSeenFreeAllowancePaywall)
-        #expect(relaunched.controller.requestAutomaticPaywall(.generate) == .suppressed)
-        #expect(relaunched.controller.paywall == nil)
+        #expect(relaunched.controller.requestAutomaticPaywall(.generate) == .presented)
         #expect(relaunched.controller.freeAnswersUsed == 3, "presentation state only: usage untouched")
     }
 
@@ -103,14 +101,14 @@ struct FreeAllowancePaywallTests {
         let updated = AccessControllerTests.make(ledger: FreeAnswersLedger(load: { spent }, save: { _ in }))
         #expect(updated.controller.freeAnswersUsed == 3 && updated.controller.areFreeAnswersUsed)
         #expect(updated.controller.requestAutomaticPaywall(.generate) == .presented,
-                "it still gets its one automatic paywall after the update")
+                "an updated installation gets the paywall on Generate")
         let round = try JSONDecoder().decode(FreeAnswersRecord.self, from: JSONEncoder().encode(FreeAnswersRecord(used: 3, automaticPaywallSeen: true)))
         #expect(round.automaticPaywallSeen && round.used == 3)
     }
 
     // 8: a new meeting uses the same app-wide gate.
     @Test
-    func aNewMeetingDoesNotOpenItAgain() throws {
+    func aNewMeetingOpensItToo() throws {
         let gate = FakeGate(allows: true, freeRemaining: 3)
         let (first, firstFeed) = try Self.exhausted(gate)
         _ = Self.ask("D?", first, firstFeed, at: 40)
@@ -120,8 +118,8 @@ struct FreeAllowancePaywallTests {
         let (meeting, feed) = Support.make()                                   // a new meeting
         meeting.accessGate = gate
         _ = Self.ask("New meeting, first question?", meeting, feed, at: 0)
-        #expect(gate.paywalls.count == 1, "no automatic paywall in the new meeting")
-        #expect(meeting.freeAllowanceBlockedAt != nil && feed.discussionRequests.isEmpty)
+        #expect(gate.paywalls.count == 2, "the new meeting's Generate opens it as well")
+        #expect(meeting.pendingNewQuestion != nil && feed.discussionRequests.isEmpty)
     }
 
     // 9–10: credited pages stay usable, with no paywall.
@@ -189,17 +187,16 @@ struct FreeAllowancePaywallTests {
         let pagesBefore = model.questions.map(\.id)
         _ = Self.ask("D?", model, feed, at: 40)
         Self.dismiss(gate, model)
-        _ = Self.ask("E?", model, feed, at: 50)
-        #expect(model.freeAllowanceBlockedAt != nil)
+        _ = Self.ask("E?", model, feed, at: 50)                                 // the paywall is open for E
+        #expect(model.pendingNewQuestion != nil)
 
-        gate.requestPaywall(.freeAnswersExhausted)                              // Upgrade
         gate.becomePro()                                                        // purchase verified
         model.releaseHeldRequests()                                             // the screen, on verified access
-        #expect(model.freeAllowanceBlockedAt == nil, "the inline lock is gone")
+        #expect(feed.discussionRequests.count == 4, "the held question is answered once Pro is verified")
+        Support.completeActiveRequest(model, feed)
         _ = Self.ask("F?", model, feed, at: 70)
-        #expect(feed.discussionRequests.count == 4, "a new question is answered without restarting")
-        #expect(model.questions.count == 4 && Array(model.questions.prefix(3).map(\.id)) == pagesBefore,
-                "the meeting and its pages are intact")
+        #expect(feed.discussionRequests.count == 5, "a new question is answered without restarting")
+        #expect(Array(model.questions.prefix(3).map(\.id)) == pagesBefore, "the meeting and its pages are intact")
     }
 
     // 14: Pro never meets any of this.
